@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.manager.ldp.LdpManager;
+import ioc.liturgical.ws.models.ResultJsonObjectArray;
 
 public class LdpController {
 	
@@ -25,18 +26,20 @@ public class LdpController {
 			String date = request.queryParams("d"); // date ISO String, ex: "2016-11-19T12:00:00.000Z" 
 			boolean noType = (calendarType == null || calendarType.length() < 0);
 			boolean noDate = (date == null || date.length() < 0);
+			ResultJsonObjectArray result = null;
 			if (noType && noDate) {
-	        	return gson.toJson(manager.getLdpForToday());
+				result = manager.getLdpForToday();
 			} else {
 				if (noType) {
-		        	return gson.toJson(manager.getLdpForToday(calendarType));
+		        	result = manager.getLdpForToday(calendarType);
 				} else {
-		        	return gson.toJson(manager.getLdpForDate(
+		        	result = manager.getLdpForDate(
 		        			date
 		        			, calendarType
-		        			));
+		        			);
 				}
 			}
+			return result.toJsonString();
 		});
 	}
 

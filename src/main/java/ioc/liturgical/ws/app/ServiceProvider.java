@@ -297,6 +297,9 @@ public class ServiceProvider {
 				}
 				if ((! externalDbAccessIsProtected && request.pathInfo().startsWith("/db/api"))
 						|| (
+								request.pathInfo().toLowerCase().startsWith("/ldp/api")
+							)
+						|| (
 								request.requestMethod().toLowerCase().startsWith("options")
 							)
 					) {

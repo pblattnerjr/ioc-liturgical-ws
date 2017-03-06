@@ -87,7 +87,7 @@ public class LdpManager {
 	 * @return
 	 */
 	public ResultJsonObjectArray getLdpForDate(String date, String calendarType) {
-		ResultJsonObjectArray result = new ResultJsonObjectArray(true); // true means PrettyPrint the json
+		ResultJsonObjectArray result = new ResultJsonObjectArray(false); // true means PrettyPrint the json
 		try {
 			LiturgicalDayPropertiesForm form = new LiturgicalDayPropertiesForm();
 			LITURGICAL_CALENDAR_TYPE type = LITURGICAL_CALENDAR_TYPE.forWsname(calendarType);
