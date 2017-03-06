@@ -202,10 +202,13 @@ public class InternalDbManager {
 							schema.add("schema", schemaObject);
 						}
 						result.put(id, schema);
+						logger.info("id: " + id + " schema: " + schema.toString());
 					}
 				} catch (Exception e) {
 					ErrorUtils.report(logger, e);
 				}
+			} else {
+				logger.info("missing schema id for " + json.toString());
 			}
 		}
 		return result;
@@ -580,11 +583,14 @@ public class InternalDbManager {
             	manager.truncateTable();
         	}
         	
+			addSchemas(); // this adds the schemas used by the system
+
         	// check to see if table has values
            	List<JsonObject> jsonList = manager.queryForJson();  
            	if (jsonList.isEmpty()) {
            		initializeTable();
-           	}
+           	} 
+
 
 		} catch (Exception e) {
 			ErrorUtils.report(logger, e);
@@ -619,9 +625,8 @@ public class InternalDbManager {
 		 * TODO: change authentication to use /users/hash/username
 		 */
 		try {
-			addSchemas(); // this adds the schemas used by the system
 			addRoles();
-
+			
 			// add the ws admin user
 			UserCreateForm user = new UserCreateForm();
 			user.setFirstname("IOC Liturgical");
@@ -1469,7 +1474,16 @@ public class InternalDbManager {
 	private void addSchemas() {
 		for (SCHEMA_CLASSES s :SCHEMA_CLASSES.values()) {
 			ValueSchema schema = new ValueSchema(s.obj);
-			addSchema(s.obj.schemaIdAsString(), schema.toJsonObject());
+			String id = new IdManager(
+					DB_TOPICS.SCHEMAS.lib
+					, DB_TOPICS.SCHEMAS.topic
+					, s.obj.schemaIdAsString()
+					).getId();
+			if (existsUnique(id)) {
+				updateSchema(s.obj.schemaIdAsString(), schema.toJsonObject());
+			} else {
+				addSchema(s.obj.schemaIdAsString(), schema.toJsonObject());
+			}
 		}
 		logger.info("Schemas added");
 	}

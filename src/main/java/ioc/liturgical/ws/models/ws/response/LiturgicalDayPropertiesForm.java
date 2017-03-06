@@ -50,7 +50,7 @@ public class LiturgicalDayPropertiesForm extends AbstractModel {
 	@Attributes(readonly = true, description = "")
 	@Expose boolean isTriodion = false;
 	@Attributes(readonly = true, description = "")
-	@Expose boolean isPentecotarion = false;
+	@Expose boolean isPentecostarion = false;
 	
 	SimpleDateFormat ymd = new SimpleDateFormat("yyyy/MM/dd");
 	SimpleDateFormat eymd = new SimpleDateFormat("EEEE yyyy/MM/dd");
@@ -151,11 +151,11 @@ public class LiturgicalDayPropertiesForm extends AbstractModel {
 	public void setTriodion(boolean isTriodion) {
 		this.isTriodion = isTriodion;
 	}
-	public boolean isPentecotarion() {
-		return isPentecotarion;
+	public boolean isPentecostarion() {
+		return isPentecostarion;
 	}
-	public void setPentecotarion(boolean isPentecotarion) {
-		this.isPentecotarion = isPentecotarion;
+	public void setPentecostarion(boolean isPentecostarion) {
+		this.isPentecostarion = isPentecostarion;
 	}
 
 	
