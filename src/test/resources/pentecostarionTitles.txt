@@ -1,0 +1,120 @@
+en_us_dedes~pe.d00P~peShortCommemoration1.text,The Resurrection
+gr_gr_cog~pe.d00P~peShortCommemoration1.text,Ἡ Ἀνάστασις.
+en_us_dedes~pe.d071~peShortCommemoration1.text,Pascha
+gr_gr_cog~pe.d071~peShortCommemoration1.text,Πάσχα
+en_us_dedes~pe.d072~peShortCommemoration1.text,Bright Monday
+gr_gr_cog~pe.d072~peShortCommemoration1.text,Δευτέρα τῆς Διακαινησίμου
+en_us_dedes~pe.d073~peShortCommemoration1.text,Bright Tuesday
+gr_gr_cog~pe.d073~peShortCommemoration1.text,Τρίτη τῆς Διακαινησίμου
+en_us_dedes~pe.d074~peShortCommemoration1.text,Bright Wednesday
+gr_gr_cog~pe.d074~peShortCommemoration1.text,Τετάρτη τῆς Διακαινησίμου
+en_us_dedes~pe.d075~peShortCommemoration1.text,Bright Thursday
+gr_gr_cog~pe.d075~peShortCommemoration1.text,Πέμπτη τῆς Διακαινησίμου
+en_us_dedes~pe.d076~peShortCommemoration1.text,Bright Friday - The Life-bearing Spring
+gr_gr_cog~pe.d076~peShortCommemoration1.text,Παρασκευὴ τῆς Διακαινησίμου - Ζωοδόχος Πηγή
+en_us_dedes~pe.d077~peShortCommemoration1.text,Bright Saturday
+gr_gr_cog~pe.d077~peShortCommemoration1.text,Σάββατον τῆς Διακαινησίμου
+en_us_dedes~pe.d078~peShortCommemoration1.text,Thomas Sunday
+gr_gr_cog~pe.d078~peShortCommemoration1.text,Κυριακὴ τοῦ Θωμᾶ
+en_us_dedes~pe.d079~peShortCommemoration1.text,Monday of the Second Week
+gr_gr_cog~pe.d079~peShortCommemoration1.text,Δευτέρα τῆς Βʹ Ἑβδομάδος
+en_us_dedes~pe.d080~peShortCommemoration1.text,Tuesday of the Second Week
+gr_gr_cog~pe.d080~peShortCommemoration1.text,Τρίτη τῆς Βʹ Ἑβδομάδος
+en_us_dedes~pe.d081~peShortCommemoration1.text,Wednesday of the Second Week
+gr_gr_cog~pe.d081~peShortCommemoration1.text,Τετάρτη τῆς Βʹ Ἑβδομάδος
+en_us_dedes~pe.d082~peShortCommemoration1.text,Thursday of the Second Week
+gr_gr_cog~pe.d082~peShortCommemoration1.text,Πέμπτη τῆς Βʹ Ἑβδομάδος
+en_us_dedes~pe.d083~peShortCommemoration1.text,Friday of the Second Week
+gr_gr_cog~pe.d083~peShortCommemoration1.text,Παρασκευὴ τῆς Βʹ Ἑβδομάδος
+en_us_dedes~pe.d084~peShortCommemoration1.text,Saturday of the Second Week
+gr_gr_cog~pe.d084~peShortCommemoration1.text,Σάββατον τῆς Βʹ Ἑβδομάδος
+en_us_dedes~pe.d085~peShortCommemoration1.text,Myrrh-bearers Sunday
+gr_gr_cog~pe.d085~peShortCommemoration1.text,Κυριακὴ τῶν Μυροφόρων
+en_us_dedes~pe.d086~peShortCommemoration1.text,Monday of the Third Week
+gr_gr_cog~pe.d086~peShortCommemoration1.text,Δευτέρα τῆς Γʹ Ἑβδομάδος
+en_us_dedes~pe.d087~peShortCommemoration1.text,Tuesday of the Third Week
+gr_gr_cog~pe.d087~peShortCommemoration1.text,Τρίτη τῆς Γʹ Ἑβδομάδος
+en_us_dedes~pe.d088~peShortCommemoration1.text,Wednesday of the Third Week
+gr_gr_cog~pe.d088~peShortCommemoration1.text,Τετάρτη τῆς Γʹ Ἑβδομάδος
+en_us_dedes~pe.d089~peShortCommemoration1.text,Thursday of the Third Week
+gr_gr_cog~pe.d089~peShortCommemoration1.text,Πέμπτη τῆς Γʹ Ἑβδομάδος
+en_us_dedes~pe.d090~peShortCommemoration1.text,Friday of the Third Week
+gr_gr_cog~pe.d090~peShortCommemoration1.text,Παρασκευὴ τῆς Γʹ Ἑβδομάδος
+en_us_dedes~pe.d091~peShortCommemoration1.text,Saturday of the Third Week
+gr_gr_cog~pe.d091~peShortCommemoration1.text,Σάββατον τῆς Γʹ Ἑβδομάδος
+en_us_dedes~pe.d092~peShortCommemoration1.text,Sunday of the Paralytic
+gr_gr_cog~pe.d092~peShortCommemoration1.text,Κυριακὴ τοῦ Παραλύτου
+en_us_dedes~pe.d093~peShortCommemoration1.text,Monday of the Fourth Week
+gr_gr_cog~pe.d093~peShortCommemoration1.text,Δευτέρα τῆς Δʹ Ἑβδομάδος
+en_us_dedes~pe.d094~peShortCommemoration1.text,Tuesday of the Fourth Week
+gr_gr_cog~pe.d094~peShortCommemoration1.text,Τρίτη τῆς Δʹ Ἑβδομάδος
+en_us_dedes~pe.d095~peShortCommemoration1.text,Wednesday of Mid-Pentecost
+gr_gr_cog~pe.d095~peShortCommemoration1.text,Τετάρτη τῆς Μεσοπεντηκοστῆς
+en_us_dedes~pe.d096~peShortCommemoration1.text,Thursday of the Fourth Week
+gr_gr_cog~pe.d096~peShortCommemoration1.text,Πέμπτη τῆς Δʹ Ἑβδομάδος
+en_us_dedes~pe.d097~peShortCommemoration1.text,Friday of the Fourth Week
+gr_gr_cog~pe.d097~peShortCommemoration1.text,Παρασκευὴ τῆς Δʹ Ἑβδομάδος
+en_us_dedes~pe.d098~peShortCommemoration1.text,Saturday of the Fourth Week
+gr_gr_cog~pe.d098~peShortCommemoration1.text,Σάββατον τῆς Δʹ Ἑβδομάδος
+en_us_dedes~pe.d099~peShortCommemoration1.text,Sunday of the Samaritan Woman
+gr_gr_cog~pe.d099~peShortCommemoration1.text,Κυριακὴ τῆς Σαμαρείτιδος
+en_us_dedes~pe.d100~peShortCommemoration1.text,Monday of the Fifth Week
+gr_gr_cog~pe.d100~peShortCommemoration1.text,Δευτέρα τῆς Εʹ Ἑβδομάδος
+en_us_dedes~pe.d101~peShortCommemoration1.text,Tuesday of the Fifth Week
+gr_gr_cog~pe.d101~peShortCommemoration1.text,Τρίτη τῆς Εʹ Ἑβδομάδος
+en_us_dedes~pe.d102~peShortCommemoration1.text,Leave-taking of Mid-Pentecost
+gr_gr_cog~pe.d102~peShortCommemoration1.text,Ἀπόδοσις τῆς Μεσοπεντηκοστῆς
+en_us_dedes~pe.d103~peShortCommemoration1.text,Thursday of the Fifth Week
+gr_gr_cog~pe.d103~peShortCommemoration1.text,Πέμπτη τῆς Εʹ Ἑβδομάδος
+en_us_dedes~pe.d104~peShortCommemoration1.text,Friday of the Fifth Week
+gr_gr_cog~pe.d104~peShortCommemoration1.text,Παρασκευὴ τῆς Εʹ Ἑβδομάδος
+en_us_dedes~pe.d105~peShortCommemoration1.text,Saturday of the Fifth Week
+gr_gr_cog~pe.d105~peShortCommemoration1.text,Σάββατον τῆς Εʹ Ἑβδομάδος
+en_us_dedes~pe.d106~peShortCommemoration1.text,Sunday of the Blindman
+gr_gr_cog~pe.d106~peShortCommemoration1.text,Κυριακὴ τοῦ Τυφλοῦ
+en_us_dedes~pe.d107~peShortCommemoration1.text,Monday of the Sixth Week
+gr_gr_cog~pe.d107~peShortCommemoration1.text,Δευτέρα τῆς Ϛʹ Ἑβδομάδος
+en_us_dedes~pe.d108~peShortCommemoration1.text,Tuesday of the Sixth Week
+gr_gr_cog~pe.d108~peShortCommemoration1.text,Τρίτη τῆς Ϛʹ Ἑβδομάδος
+en_us_dedes~pe.d108b~peShortCommemoration1.text,Leave-taking of the Feast of the Blindman
+gr_gr_cog~pe.d108b~peShortCommemoration1.text,ΑΠΟΔΟΣΙΣ ΤΗΣ ΕΟΡΤΗΣ ΤΟΥ ΤΥΦΛΟΥ
+en_us_dedes~pe.d109~peShortCommemoration1.text,Leavetaking of Pascha
+gr_gr_cog~pe.d109~peShortCommemoration1.text,Ἀπόδοσις τοῦ Πάσχα
+en_us_dedes~pe.d109alt~peShortCommemoration1.text,Leave-taking of Pascha
+gr_gr_cog~pe.d109alt~peShortCommemoration1.text,Ἀπόδοσις τοῦ Πάσχα
+en_us_dedes~pe.d110~peShortCommemoration1.text,Thursday of Ascension
+gr_gr_cog~pe.d110~peShortCommemoration1.text,Πέμπτη τῆς Ἀναλήψεως
+en_us_dedes~pe.d111~peShortCommemoration1.text,Friday of the Sixth Week
+gr_gr_cog~pe.d111~peShortCommemoration1.text,Παρασκευὴ τῆς Ϛʹ Ἑβδομάδος
+en_us_dedes~pe.d112~peShortCommemoration1.text,Saturday of the Sixth Week
+gr_gr_cog~pe.d112~peShortCommemoration1.text,Σάββατον τῆς Ϛʹ Ἑβδομάδος
+en_us_dedes~pe.d113~peShortCommemoration1.text,Sunday of the Holy Fathers
+gr_gr_cog~pe.d113~peShortCommemoration1.text,Κυριακὴ τῶν Ἁγ. Πατέρων
+en_us_dedes~pe.d114~peShortCommemoration1.text,Monday of the Seventh Week
+gr_gr_cog~pe.d114~peShortCommemoration1.text,Δευτέρα τῆς Ζʹ Ἑβδομάδος
+en_us_dedes~pe.d115~peShortCommemoration1.text,Tuesday of the Seventh Week
+gr_gr_cog~pe.d115~peShortCommemoration1.text,Τρίτη τῆς Ζʹ Ἑβδομάδος
+en_us_dedes~pe.d116~peShortCommemoration1.text,Wednesday of the Seventh Week
+gr_gr_cog~pe.d116~peShortCommemoration1.text,Τετάρτη τῆς Ζʹ Ἑβδομάδος
+en_us_dedes~pe.d117~peShortCommemoration1.text,Thursday of the Seventh Week
+gr_gr_cog~pe.d117~peShortCommemoration1.text,Πέμπτη τῆς Ζʹ Ἑβδομάδος
+en_us_dedes~pe.d118~peShortCommemoration1.text,Friday of the Seventh Week
+gr_gr_cog~pe.d118~peShortCommemoration1.text,Ἀπόδοσις τῆς Ἀναλήψεως
+en_us_dedes~pe.d119~peShortCommemoration1.text,Soul Saturday
+gr_gr_cog~pe.d119~peShortCommemoration1.text,Ψυχοσάββατον
+en_us_dedes~pe.d120~peShortCommemoration1.text,Pentecost Sunday
+gr_gr_cog~pe.d120~peShortCommemoration1.text,Κυριακὴ τῆς Πεντηκοστῆς
+en_us_dedes~pe.d121~peShortCommemoration1.text,Monday of the Holy Spirit
+gr_gr_cog~pe.d121~peShortCommemoration1.text,Δευτέρα τοῦ Ἁγίου Πνεύματος
+en_us_dedes~pe.d122~peShortCommemoration1.text,Tuesday after Pentecost
+gr_gr_cog~pe.d122~peShortCommemoration1.text,Τρίτη μετὰ τὴν Πεντηκοστήν
+en_us_dedes~pe.d123~peShortCommemoration1.text,Wednesday after Pentecost
+gr_gr_cog~pe.d123~peShortCommemoration1.text,Τετάρτη μετὰ τὴν Πεντηκοστήν
+en_us_dedes~pe.d124~peShortCommemoration1.text,Thursday after Pentecost
+gr_gr_cog~pe.d124~peShortCommemoration1.text,Πέμπτη μετὰ τὴν Πεντηκοστήν
+en_us_dedes~pe.d125~peShortCommemoration1.text,Friday after Pentecost
+gr_gr_cog~pe.d125~peShortCommemoration1.text,Παρασκευὴ μετὰ τὴν Πεντηκοστήν
+en_us_dedes~pe.d126~peShortCommemoration1.text,Saturday after Pentecost
+gr_gr_cog~pe.d126~peShortCommemoration1.text,Ἀπόδοσις τῆς Πεντηκοστῆς
+en_us_dedes~pe.d127~peShortCommemoration1.text,Sunday of All Saints
+gr_gr_cog~pe.d127~peShortCommemoration1.text,Κυριακὴ τῶ Αγίων Πάντων

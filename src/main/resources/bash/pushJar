@@ -1,0 +1,36 @@
+#!/bin/bash
+#
+# run this on your development machine to push the web service jar to
+# the remote servers.
+#
+# if you have a permission denied problem, try ssh-ing to server, then
+# sudo chown -R $USER:$USER repos
+
+repoPath="/Users/mac002/Git/mcolburn/ioc-liturgical-ws/target"
+servicePath="$HOME/repos/jars"
+readOnlyServer=ioc-liturgical-ws.org
+writeServer=ioc-liturgical-ws.net
+
+function mostRecentJar {
+i=0
+while read line
+do
+array[ $i ]="$line"
+(( i++ ))
+done < <(ls -r $repoPath/liturgical-ws-v*.jar)
+
+jarFile=${array[0]}
+echo Most recent jar is $jarFile
+}
+
+if [ $# -eq 0 ]
+then
+mostRecentJar
+else
+arg=$1
+jarFile=$servicePath/liturgical-ws-v${arg}.jar
+fi
+
+echo pushing jar $jarFile to remote server
+sftp macadmin@$readOnlyServer:repos/jars <<< $'put '$jarFile
+sftp macadmin@$writeServer:repos/jars <<< $'put '$jarFile
