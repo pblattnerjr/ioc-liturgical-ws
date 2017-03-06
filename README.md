@@ -14,16 +14,6 @@ Note: if the Java compiler complains about jfxrt, then follow the instructions h
 
 http://stackoverflow.com/questions/22812488/using-javafx-in-jre-8
 
-## Needs to be Explained
-
-I am confused!  We have:
-
-ADMIN_ENDPOINTS
-DB_TOPICS
-SYSTEM_LIBS
-USER_TOPICS
-WS_TOPICS
-
 ## Forms
 
 Docs returned by the api include uischema, a schema, and the json for the doc.  This allows use of the npm package react-jsonschema-form client side.  Using this package results in automatically producing a form for the doc, with a submit button, and automatic error checking.
