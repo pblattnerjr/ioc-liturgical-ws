@@ -38,6 +38,8 @@ import ioc.liturgical.ws.manager.auth.UserStatus;
 import ioc.liturgical.ws.manager.database.external.neo4j.ExternalDbManager;
 import ioc.liturgical.ws.manager.database.internal.InternalDbManager;
 import ioc.liturgical.ws.manager.ldp.LdpManager;
+import ioc.liturgical.ws.models.ws.response.AbstractResponse;
+import ioc.liturgical.ws.models.ws.response.Login;
 import net.ages.alwb.utils.core.datastores.json.manager.JsonObjectStoreManager;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 
@@ -327,6 +329,7 @@ public class ServiceProvider {
 						// we do not require authorization to attempt to login, or to get the Liturgical Day Properties
 						if (
 								request.pathInfo().startsWith(Constants.INTERNAL_DATASTORE_API_PATH +"/login")
+								|| request.pathInfo().startsWith(Constants.INTERNAL_DATASTORE_API_PATH +"/info")
 								|| request.pathInfo().startsWith(Constants.INTERNAL_LITURGICAL_DAY_PROPERTIES_API_PATH)
 								) {
 							// pass through to handler
@@ -424,6 +427,18 @@ public class ServiceProvider {
 				return storeManager.getWhereLike(query).toString();
 			});			
 			
+			/**
+			 * Return the version number for the overall web service.  This
+			 * needs to be updated in Constants every time a new jar is created.
+			 */
+			get(Constants.INTERNAL_DATASTORE_API_PATH  + "/info", (request, response) -> {
+				response.type(Constants.UTF_JSON);
+				JsonObject json = new JsonObject();
+				json.addProperty("wsVersion", Constants.VERSION);
+				json.addProperty("dbServerDomain", externalDbDomain);
+				json.addProperty("databaseReadOnly", externalDbIsReadOnly);
+				return json.toString();
+			});
 
 			get("user", (request, response) -> {
 				response.type(Constants.UTF_JSON);
