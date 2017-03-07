@@ -112,6 +112,8 @@ public class ServiceProvider {
 	static boolean externalDbAccessIsProtected = true;
 	public static String externalDbDomain = "localhost";
 	static boolean debug = false; // can be overridden by serviceProvider.config
+	static boolean logAllQueries = false; // can be overridden by serviceProvider.config
+	static boolean logQueriesWithNoMatches = false; // can be overridden by serviceProvider.config
 	static boolean createTestUsers = false; // can be overridden by serviceProvider.config
 	static boolean runningJUnitTests = false; // can be overridden by serviceProvider.config
 	static boolean useExternalStaticFiles = true; // can be overridden by serviceProvider.config
@@ -181,6 +183,12 @@ public class ServiceProvider {
 			
 			debug = toBoolean(debug, prop.getProperty("debug"));
 			logger.info("debug: " + debug);
+
+			logAllQueries = toBoolean(logAllQueries, prop.getProperty("logQueries"));
+			logger.info("logQueries: " + logAllQueries);
+
+			logQueriesWithNoMatches = toBoolean(logQueriesWithNoMatches, prop.getProperty("logQueriesWithNoMatches"));
+			logger.info("logQueriesWithNoMatches: " + logQueriesWithNoMatches);
 
 			createTestUsers = toBoolean(createTestUsers, prop.getProperty("createTestUsers"));
 			logger.info("create test users: " + debug);
@@ -276,7 +284,11 @@ public class ServiceProvider {
 			storeManager.setMaxInactiveMinutes(maxInactiveMinutes);
 			
 			if (initializeExternalDb) {
-				docService = new ExternalDbManager(externalDbDomain);
+				docService = new ExternalDbManager(
+						externalDbDomain
+						, logAllQueries
+						, logQueriesWithNoMatches
+						);
 			} else {
 				docService = null;
 			}

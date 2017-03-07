@@ -28,6 +28,8 @@ public class ExternalDbManager {
 	 * invalidates them.
 	 */
 	private static final Logger logger = LoggerFactory.getLogger(ExternalDbManager.class);
+	  private boolean logAllQueries = false;
+	  private boolean logQueriesWithNoMatches = false;
 	  
 	  JsonParser parser = new JsonParser();
 	  Pattern punctPattern = Pattern.compile("[˙·,.;!?(){}\\[\\]<>%]"); // punctuation 
@@ -35,12 +37,18 @@ public class ExternalDbManager {
 	  JsonObject dropdownItems = new JsonObject();
 	  public static QueryToDb queryToDb = null;
 	  
-	  public ExternalDbManager(String domain) {
+	  public ExternalDbManager(
+			  String domain
+			  , boolean logQueries
+			  , boolean logQueriesWithNoMatches
+			  ) {
 		  queryToDb = new QueryToDb(
 				  domain
 				  ,ServiceProvider.ws_usr
 				  , ServiceProvider.ws_pwd
 				  );
+		  this.logAllQueries = logQueries;
+		  this.logQueriesWithNoMatches = logQueriesWithNoMatches;
 		  buildDomainTopicMap();
 	  }
 	  
@@ -50,6 +58,13 @@ public class ExternalDbManager {
 	  
 	  public JsonObject getForQuery(String query) {
 			ResultJsonObjectArray result = queryToDb.getResultObjectForQuery(query, true);
+			if (logAllQueries
+					|| 
+					(logQueriesWithNoMatches && result.getResultCount() == 0) 
+					) {
+				logger.info(query);
+				logger.info("Result count: " + result.getResultCount());
+			}
 			return result.toJsonObject();
 	}
 	  
