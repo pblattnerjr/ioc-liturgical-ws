@@ -11,7 +11,7 @@ import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.constants.ADMIN_ENDPOINTS;
 import ioc.liturgical.ws.constants.NEW_FORM_CLASSES;
-import ioc.liturgical.ws.manager.database.internal.InternalDbManager;
+import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.models.RequestStatus;
 
 public class UsersContactController {

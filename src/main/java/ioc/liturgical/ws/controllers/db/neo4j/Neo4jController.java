@@ -5,7 +5,7 @@ import static spark.Spark.get;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.manager.database.external.neo4j.ExternalDbManager;
+import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 
 public class Neo4jController {
 	

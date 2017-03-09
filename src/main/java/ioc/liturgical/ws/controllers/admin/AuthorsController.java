@@ -9,7 +9,7 @@ import ioc.liturgical.ws.constants.ADMIN_ENDPOINTS;
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.constants.SYSTEM_LIBS;
-import ioc.liturgical.ws.manager.database.internal.InternalDbManager;
+import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 
 public class AuthorsController {
 	

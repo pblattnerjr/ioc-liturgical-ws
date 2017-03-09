@@ -5,7 +5,7 @@ import static spark.Spark.get;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.manager.ldp.LdpManager;
+import ioc.liturgical.ws.managers.ldp.LdpManager;
 import ioc.liturgical.ws.models.ResultJsonObjectArray;
 
 public class LdpController {

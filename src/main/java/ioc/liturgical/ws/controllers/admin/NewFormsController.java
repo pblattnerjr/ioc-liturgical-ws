@@ -17,8 +17,8 @@ import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.constants.NEW_FORM_CLASSES;
 import ioc.liturgical.ws.constants.SYSTEM_LIBS;
 import ioc.liturgical.ws.constants.USER_TOPICS;
-import ioc.liturgical.ws.manager.auth.AuthDecoder;
-import ioc.liturgical.ws.manager.database.internal.InternalDbManager;
+import ioc.liturgical.ws.managers.auth.AuthDecoder;
+import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.models.RequestStatus;
 
 /**

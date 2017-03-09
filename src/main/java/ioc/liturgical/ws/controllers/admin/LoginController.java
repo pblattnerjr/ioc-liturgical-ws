@@ -3,7 +3,7 @@ package ioc.liturgical.ws.controllers.admin;
 import static spark.Spark.get;
 
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.manager.database.internal.InternalDbManager;
+import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.models.ws.response.AbstractResponse;
 import ioc.liturgical.ws.models.ws.response.Login;
 
