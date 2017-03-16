@@ -1,4 +1,4 @@
-package ioc.liturgical.ws.controllers.admin;
+package ioc.liturgical.ws.controllers.db.neo4j;
 
 import static spark.Spark.get;
 import static spark.Spark.post;
@@ -12,26 +12,27 @@ import com.google.gson.JsonObject;
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
-import ioc.liturgical.ws.constants.ADMIN_ENDPOINTS;
-import ioc.liturgical.ws.constants.NEW_FORM_CLASSES;
+import ioc.liturgical.ws.constants.ENDPOINTS_DB_API;
+import ioc.liturgical.ws.constants.NEW_FORM_CLASSES_DB_API;
+import ioc.liturgical.ws.controllers.admin.ControllerUtils;
 import ioc.liturgical.ws.managers.auth.AuthDecoder;
-import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
+import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 import ioc.liturgical.ws.models.RequestStatus;
 
 public class ReferencesController {
 	private static final Logger logger = LoggerFactory.getLogger(ReferencesController.class);
 	
-	public ReferencesController(InternalDbManager storeManager) {
+	public ReferencesController(ExternalDbManager storeManager) {
 
 		/**
 		 * GET controllers
 		 */
-		String path = ADMIN_ENDPOINTS.REFERENCES.toLibraryTopicKeyPath();
+		String path = ENDPOINTS_DB_API.REFERENCES.toLibraryTopicKeyPath();
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
-			JsonObject json = storeManager.getForId(query);
+			JsonObject json = storeManager.getForQuery(query);
 			if (json.get("valueCount").getAsInt() > 0) {
 				response.status(HTTP_RESPONSE_CODES.OK.code);
 			} else {
@@ -40,7 +41,7 @@ public class ReferencesController {
 			return json.toString();
 		});
 
-		path = ADMIN_ENDPOINTS.REFERENCES.toLibraryTopicPath();
+		path = ENDPOINTS_DB_API.REFERENCES.toLibraryTopicPath();
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
@@ -54,8 +55,8 @@ public class ReferencesController {
 			return json.toString();
 		});
 
-		path = ADMIN_ENDPOINTS.REFERENCES.toLibraryPath();
-		String db = ADMIN_ENDPOINTS.REFERENCES.toDbLibraryTopic(); // yes, this is correct.  references is a topic.
+		path = ENDPOINTS_DB_API.REFERENCES.toLibraryPath();
+		String db = ENDPOINTS_DB_API.REFERENCES.toDbLibraryTopic(); // yes, this is correct.  references is a topic.
 		ControllerUtils.reportPath(logger, "GET", path + " maps to database id " + db);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
@@ -71,7 +72,7 @@ public class ReferencesController {
 		/**
 		 * POST controllers
 		 */
-		path = NEW_FORM_CLASSES.NEW_REFERENCE.toPostPath();
+		path = NEW_FORM_CLASSES_DB_API.NEW_REFERENCE.toPostPath();
 		ControllerUtils.reportPath(logger, "POST", path);
 		post(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
@@ -84,13 +85,13 @@ public class ReferencesController {
 		/**
 		 * PUT controllers
 		 */
-		path = ADMIN_ENDPOINTS.REFERENCES.toLibraryTopicPath();
+		path = ENDPOINTS_DB_API.REFERENCES.toLibraryTopicPath();
 		ControllerUtils.reportPath(logger, "PUT", path);
 		put(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
-			String key = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
-			RequestStatus requestStatus = storeManager.updateReference(requestor, key, request.body());
+			String id = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
+			RequestStatus requestStatus = storeManager.updateReference(requestor, id, request.body());
 			response.status(requestStatus.getCode());
 			return requestStatus.toJsonString();
 		});

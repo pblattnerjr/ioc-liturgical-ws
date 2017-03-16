@@ -5,32 +5,38 @@ public class CypherQuery {
 	private String LABEL = "";
 	private String WHERE = "";
 	private String CONTAINS = "";
+	private String EQUALS = "";
 	private String STARTS_WITH = "";
 	private String ENDS_WITH = "";
 	private String MATCHES_PATTERN = "";
 	private String RETURN = "";
 	private String ORDER_BY = "";
+	private boolean prefixProperties = true;
 	
 	public CypherQuery(
 			String MATCH
 			, String LABEL
 			, String WHERE
 			, String CONTAINS
+			, String EQUALS
 			, String STARTS_WITH
 			, String ENDS_WITH
 			, String MATCHES_PATTERN
 			, String RETURN
 			, String ORDER_BY
+			, boolean prefixProperties
 			) {
 		this.MATCH = MATCH; // empty string--just used to make builder look like cypher.
 		this.LABEL = LABEL;
 		this.WHERE = WHERE;
 		this.CONTAINS = CONTAINS;
+		this.EQUALS = EQUALS;
 		this.STARTS_WITH = STARTS_WITH;
 		this.ENDS_WITH = ENDS_WITH;
 		this.MATCHES_PATTERN = MATCHES_PATTERN;
 		this.RETURN = RETURN;
 		this.ORDER_BY = ORDER_BY;
+		this.prefixProperties = prefixProperties;
 	};
 	
 
@@ -44,6 +50,8 @@ public class CypherQuery {
 
 		if (STARTS_WITH.length() > 0) {
 			sb.append("WHERE doc." + WHERE + " STARTS WITH '" + STARTS_WITH + "' ");
+		} else if (EQUALS.length() > 0 ) {
+			sb.append("WHERE doc." + WHERE + " = '" + EQUALS + "' ");
 		} else 	if (ENDS_WITH.length() > 0) {
 			sb.append("WHERE doc." + WHERE + " ENDS WITH '" + ENDS_WITH + "' ");
 		} else if (CONTAINS.length() > 0) {
@@ -53,11 +61,25 @@ public class CypherQuery {
 		} 
 
 		if (RETURN.contains("split")) {
-			sb.append("RETURN " + RETURN);
+			sb.append(" RETURN " + RETURN);
+		} else if (RETURN.equals("*") || RETURN.length() == 0){
+			sb.append(" RETURN doc");
 		} else {
-			sb.append("RETURN doc." + RETURN.replaceAll(" ", "").replaceAll(",", ", doc."));
+			if (prefixProperties) {
+				sb.append(" RETURN doc." + RETURN.replaceAll(" ", "").replaceAll(",", ", doc."));
+			} else {
+				String [] props = RETURN.split(",");
+				sb.append(" RETURN doc." + props[0] + " as " + props[0]);
+				for (int i=1; i < props.length; i++) {
+					sb.append(", doc." + props[i] + " as " + props[i] );
+				}
+			}
 		}
-		sb.append(" ORDER BY " + ORDER_BY);
+		if (ORDER_BY.length() == 0) {
+			sb.append(" ORDER BY doc.id");
+		} else {
+			sb.append(" ORDER BY " + ORDER_BY);
+		}
 		return sb.toString();
 	}
 
@@ -135,6 +157,16 @@ public class CypherQuery {
 
 	public void setORDER_BY(String oRDER_BY) {
 		ORDER_BY = oRDER_BY;
+	}
+
+
+	public String getEQUALS() {
+		return EQUALS;
+	}
+
+
+	public void setEQUALS(String eQUALS) {
+		EQUALS = eQUALS;
 	}
 
 

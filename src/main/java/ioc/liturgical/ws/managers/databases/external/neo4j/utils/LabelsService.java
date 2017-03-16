@@ -18,7 +18,11 @@ public class LabelsService {
 
 	public List<String> getLabelsFor(String type) {
 		List<String> result = new ArrayList<String>();
-		JsonObject json = ExternalDbManager.queryToDb.getForQuery("match (doc:" + type + ") return distinct labels(doc)");
+		JsonObject json = 
+				ExternalDbManager
+				.neo4jManager
+				.getForQuery("match (doc:" + type + ") return distinct labels(doc)")
+				.toJsonObject();
 		JsonArray values = json.get("values").getAsJsonArray();
 		for (int i=0; i < values.size(); i++) {
 			JsonElement e = values.get(i);

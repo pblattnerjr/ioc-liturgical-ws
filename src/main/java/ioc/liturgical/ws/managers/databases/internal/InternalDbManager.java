@@ -21,6 +21,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import ioc.liturgical.ws.managers.interfaces.HighLevelDataStoreInterface;
 import ioc.liturgical.ws.models.RequestStatus;
 import ioc.liturgical.ws.models.ResultJsonObjectArray;
 import ioc.liturgical.ws.models.db.docs.Reference;
@@ -41,11 +42,11 @@ import ioc.liturgical.ws.models.ws.forms.UserCreateForm;
 import ioc.liturgical.ws.models.ws.forms.UserPasswordChangeForm;
 import ioc.liturgical.ws.models.ws.forms.UserPasswordForm;
 import ioc.liturgical.ws.app.ServiceProvider;
-import ioc.liturgical.ws.constants.ADMIN_ENDPOINTS;
+import ioc.liturgical.ws.constants.ENDPOINTS_ADMIN_API;
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.constants.DB_TOPICS;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
-import ioc.liturgical.ws.constants.NEW_FORM_CLASSES;
+import ioc.liturgical.ws.constants.NEW_FORM_CLASSES_ADMIN_API;
 import ioc.liturgical.ws.constants.RESTRICTION_FILTERS;
 import ioc.liturgical.ws.constants.ROLES;
 import ioc.liturgical.ws.constants.SCHEMA_CLASSES;
@@ -53,6 +54,7 @@ import ioc.liturgical.ws.constants.USER_TOPICS;
 import ioc.liturgical.ws.constants.VERBS;
 import ioc.liturgical.ws.id.manager.IdManager;
 import ioc.liturgical.ws.managers.auth.UserStatus;
+import ioc.liturgical.ws.managers.exceptions.DbException;
 import net.ages.alwb.utils.core.auth.PasswordHasher;
 import net.ages.alwb.utils.core.datastores.db.factory.DbConnectionFactory;
 import net.ages.alwb.utils.core.datastores.db.h2.manager.H2ConnectionManager;
@@ -68,7 +70,7 @@ import net.ages.alwb.utils.core.error.handling.ErrorUtils;
  * @author mac002
  *
  */
-public class InternalDbManager {
+public class InternalDbManager implements HighLevelDataStoreInterface {
 
 	private static final Logger logger = LoggerFactory.getLogger(InternalDbManager.class);
 	private boolean suppressAuth = false; // for debugging purposes, if true, causes authorized() to always return true
@@ -552,7 +554,7 @@ public class InternalDbManager {
 		result.setQuery(query);
 		List<JsonObject> dbResults = new ArrayList<JsonObject>();
 		try {
-			for (NEW_FORM_CLASSES e : NEW_FORM_CLASSES.values()) {
+			for (NEW_FORM_CLASSES_ADMIN_API e : NEW_FORM_CLASSES_ADMIN_API.values()) {
 				if (userAuthorizedForThisForm(requestor, e.restriction)) {
 					LTKVJsonObject record = 
 							new LTKVJsonObject(
@@ -1041,6 +1043,7 @@ public class InternalDbManager {
 			try {
 				Label label = new Label();
 				label.setLabel(form.getLabel());
+				label.setTitle(form.getTitle());
 				label.setDescription(form.getDescription());
 				label.setCreatedBy(requestor);
 				label.setModifiedBy(requestor);
@@ -1069,47 +1072,6 @@ public class InternalDbManager {
 		return result;
 	}
 
-	public RequestStatus addReference(String requestor, String json) {
-		RequestStatus result = new RequestStatus();
-		ReferenceCreateForm form = new ReferenceCreateForm();
-		form = (ReferenceCreateForm) form.fromJsonString(json);
-		String validation = form.validate(json);
-		if (validation.length() == 0) {
-			try {
-				Reference ref = new Reference();
-				ref.setIdReferredByText(form.getIdReferredByText());
-				ref.setIdReferredToText(form.getIdReferredToText());
-				ref.setBibMaterial(form.getBibMaterial());
-				ref.setExenote(form.getExenote());
-				ref.setLexnote(form.getLexnote());
-				ref.setTargetedTerms(form.getTargetedTerms());
-				ref.setTextWitness(form.getTextWitness());
-				ref.setCreatedBy(requestor);
-				ref.setModifiedBy(requestor);
-				ref.setCreatedWhen(getTimestamp());
-				ref.setModifiedWhen(ref.getCreatedWhen());
-				result = addLTKVJsonObject(
-						DB_TOPICS.REFERENCES.lib
-						, DB_TOPICS.REFERENCES.topic
-						, ref.getIdReferredByText()+ref.getIdReferredToText()
-						, ref.schemaIdAsString()
-						, ref.toJsonObject()
-						);
-			} catch (Exception e) {
-				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-				result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
-			}
-		} else {
-			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-			JsonObject message = stringToJson(validation);
-			if (message == null) {
-				result.setMessage(validation);
-			} else {
-				result.setMessage(message.get("message").getAsString());
-			}
-		}
-		return result;
-	}
 
 	public RequestStatus addAuthorization(String requestor, String json) {
 		RequestStatus result = new RequestStatus();
@@ -1364,48 +1326,6 @@ public class InternalDbManager {
 
 	}
 
-	public RequestStatus updateReference(String requestor, String key, String json) {
-		RequestStatus result = new RequestStatus();
-		Reference obj = new Reference();
-		String validation = obj.validate(json);
-		if (validation.length() == 0) {
-			try {
-				obj = (Reference) obj.fromJsonString(json);
-				obj.setModifiedBy(requestor);
-				obj.setModifiedWhen(getTimestamp());
-				result = updateReference(key, obj);
-			} catch (Exception e) {
-				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-				result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
-			}
-		} else {
-			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-			result.setMessage(validation);
-		}
-		return result;
-	}
-	
-	private RequestStatus updateReference(String key, Reference obj) {
-		RequestStatus result = new RequestStatus();
-		try {
-	    	result = updateLTKVJsonObject(
-	    			DB_TOPICS.REFERENCES.lib
-	    			, DB_TOPICS.REFERENCES.topic
-	    			, key
-	    			, obj.schemaIdAsString()
-	    			, obj.toJsonObject()
-	    			);
-		} catch (MissingSchemaIdException e) {
-			ErrorUtils.report(logger, e);
-			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
-		} catch (Exception e) {
-			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-			result.setMessage(e.getMessage());
-		}
-		return result;
-
-	}
 
 	public RequestStatus updateUserContact(String key, String json) {
 		RequestStatus result = new RequestStatus();
@@ -1542,7 +1462,7 @@ public class InternalDbManager {
 			, String key
 			, String schemaId
 			, JsonObject json
-			) throws SQLException, MissingSchemaIdException, BadIdException {
+			) throws DbException, MissingSchemaIdException, BadIdException {
 		RequestStatus result = new RequestStatus();
 		if (existsSchema(schemaId)) {
 			String id = new IdManager(library,topic,key).getId();
@@ -1558,7 +1478,17 @@ public class InternalDbManager {
 							, schemaId
 							, json
 							);
-			    	manager.insert(record.toJsonObject());		
+				   try {
+				    	manager.insert(record.toJsonObject());		
+				   } catch (SQLException e) {
+					   throw new DbException(
+							   "Error adding " 
+							   + library
+							   +":" + topic 
+							   +":" + key 
+							   , e
+							   );
+				   }
 			    	result.setCode(HTTP_RESPONSE_CODES.CREATED.code);
 			    	result.setMessage(HTTP_RESPONSE_CODES.CREATED.message + ": " + id);
 			}
@@ -1600,7 +1530,7 @@ public class InternalDbManager {
 			, String key
 			, String schemaId
 			, JsonObject json
-			) throws BadIdException, MissingSchemaIdException, SQLException {
+			) throws BadIdException, MissingSchemaIdException, DbException {
 		RequestStatus result = new RequestStatus();
 		if (existsSchema(schemaId)) {
 			String id = new IdManager(library,topic,key).getId();
@@ -1613,7 +1543,17 @@ public class InternalDbManager {
 						, schemaId
 						, json
 						);
-				manager.updateWhereEqual(record.toJsonObject());		
+				   try {
+						manager.updateWhereEqual(record.toJsonObject());		
+				   } catch (SQLException e) {
+					   throw new DbException(
+							   "Error updating " 
+							   + library
+							   +":" + topic 
+							   +":" + key 
+							   , e
+							   );
+				   }
 			} else {
 				result.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 				result.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message + ": " + id);
@@ -1662,6 +1602,7 @@ public class InternalDbManager {
 	private String getTimestamp() {
 		return Instant.now().toString();
 	}
+
 	public User getUser(String username) {
 		try {			
 			JsonObject obj = getForId(DB_TOPICS.USERS.toId(username));
@@ -1927,7 +1868,7 @@ public class InternalDbManager {
 		if (path.matches(Constants.RESOURCES_PATH)) {
 			return true;
 		} else {
-			for (ADMIN_ENDPOINTS e : ADMIN_ENDPOINTS.values()) {
+			for (ENDPOINTS_ADMIN_API e : ENDPOINTS_ADMIN_API.values()) {
 				if (e.library.equals(path)) {
 					return true;
 				}
@@ -2076,6 +2017,12 @@ public class InternalDbManager {
 
 	public void setPrettyPrint(boolean prettyPrint) {
 		this.prettyPrint = prettyPrint;
+	}
+
+	@Override
+	public RequestStatus deleteForId(String id) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

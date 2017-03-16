@@ -6,7 +6,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.constants.ADMIN_ENDPOINTS;
+import ioc.liturgical.ws.constants.ENDPOINTS_ADMIN_API;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 
@@ -25,7 +25,7 @@ public class ResourcesController {
 			JsonObject json = new JsonObject();
 			JsonArray endpoints = new JsonArray();
 			
-			for (ADMIN_ENDPOINTS e : ADMIN_ENDPOINTS.values()) {
+			for (ENDPOINTS_ADMIN_API e : ENDPOINTS_ADMIN_API.values()) {
 				if (e.includeInResourcesList) {
 					JsonObject endpoint = new JsonObject();
 					endpoint.addProperty("value", e.pathname);

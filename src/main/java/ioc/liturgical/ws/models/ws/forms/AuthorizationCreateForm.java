@@ -2,14 +2,8 @@ package ioc.liturgical.ws.models.ws.forms;
 
 import com.google.gson.annotations.Expose;
 
-import ioc.liturgical.ws.forms.manager.FormRegExConstants;
-import ioc.liturgical.ws.models.SchemaException;
-import ioc.liturgical.ws.annotations.UiWidget;
-import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.forms.manager.FormFieldLengths;
 import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
 
-import java.util.List;
 
 import com.github.reinert.jjschema.Attributes;
 

@@ -27,19 +27,17 @@ import ioc.liturgical.ws.controllers.admin.DomainsController;
 import ioc.liturgical.ws.controllers.admin.LabelsController;
 import ioc.liturgical.ws.controllers.admin.LoginController;
 import ioc.liturgical.ws.controllers.admin.NewFormsController;
-import ioc.liturgical.ws.controllers.admin.ReferencesController;
 import ioc.liturgical.ws.controllers.admin.ResourcesController;
 import ioc.liturgical.ws.controllers.admin.UsersContactController;
 import ioc.liturgical.ws.controllers.admin.UsersPasswordController;
 import ioc.liturgical.ws.controllers.db.neo4j.Neo4jController;
+import ioc.liturgical.ws.controllers.db.neo4j.ReferencesController;
 import ioc.liturgical.ws.controllers.ldp.LdpController;
 import ioc.liturgical.ws.managers.auth.AuthDecoder;
 import ioc.liturgical.ws.managers.auth.UserStatus;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.managers.ldp.LdpManager;
-import ioc.liturgical.ws.models.ws.response.AbstractResponse;
-import ioc.liturgical.ws.models.ws.response.Login;
 import net.ages.alwb.utils.core.datastores.json.manager.JsonObjectStoreManager;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 
@@ -288,6 +286,7 @@ public class ServiceProvider {
 						externalDbDomain
 						, logAllQueries
 						, logQueriesWithNoMatches
+						, storeManager
 						);
 			} else {
 				docService = null;
@@ -376,7 +375,7 @@ public class ServiceProvider {
 			new LoginController(storeManager);
 			new NewFormsController(storeManager);
 			new Neo4jController(docService);
-			new ReferencesController(storeManager);
+			new ReferencesController(docService);
 			new ResourcesController(storeManager);
 			new UsersContactController(storeManager);
 			new UsersPasswordController(storeManager);

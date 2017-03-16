@@ -12,8 +12,8 @@ import com.google.gson.JsonObject;
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
-import ioc.liturgical.ws.constants.ADMIN_ENDPOINTS;
-import ioc.liturgical.ws.constants.NEW_FORM_CLASSES;
+import ioc.liturgical.ws.constants.ENDPOINTS_ADMIN_API;
+import ioc.liturgical.ws.constants.NEW_FORM_CLASSES_ADMIN_API;
 import ioc.liturgical.ws.managers.auth.AuthDecoder;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.models.RequestStatus;
@@ -26,7 +26,7 @@ public class LabelsController {
 		/**
 		 * GET controllers
 		 */
-		String path = ADMIN_ENDPOINTS.LABELS.toLibraryTopicKeyPath();
+		String path = ENDPOINTS_ADMIN_API.LABELS.toLibraryTopicKeyPath();
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
@@ -40,7 +40,7 @@ public class LabelsController {
 			return json.toString();
 		});
 
-		path = ADMIN_ENDPOINTS.LABELS.toLibraryTopicPath();
+		path = ENDPOINTS_ADMIN_API.LABELS.toLibraryTopicPath();
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
@@ -54,8 +54,8 @@ public class LabelsController {
 			return json.toString();
 		});
 
-		path = ADMIN_ENDPOINTS.LABELS.toLibraryPath();
-		String db = ADMIN_ENDPOINTS.LABELS.toDbLibraryTopic(); // yes, this is correct.  labels is a topic.
+		path = ENDPOINTS_ADMIN_API.LABELS.toLibraryPath();
+		String db = ENDPOINTS_ADMIN_API.LABELS.toDbLibraryTopic(); // yes, this is correct.  labels is a topic.
 		ControllerUtils.reportPath(logger, "GET", path + " maps to database id " + db);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
@@ -71,7 +71,7 @@ public class LabelsController {
 		/**
 		 * POST controllers
 		 */
-		path = NEW_FORM_CLASSES.NEW_LABEL.toPostPath();
+		path = NEW_FORM_CLASSES_ADMIN_API.NEW_LABEL.toPostPath();
 		ControllerUtils.reportPath(logger, "POST", path);
 		post(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
@@ -84,7 +84,7 @@ public class LabelsController {
 		/**
 		 * PUT controllers
 		 */
-		path = ADMIN_ENDPOINTS.LABELS.toLibraryTopicPath();
+		path = ENDPOINTS_ADMIN_API.LABELS.toLibraryTopicPath();
 		ControllerUtils.reportPath(logger, "PUT", path);
 		put(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);

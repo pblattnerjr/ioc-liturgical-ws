@@ -4,15 +4,21 @@ public class CypherQueryBuilder {
 	private String MATCH = "";
 	private String LABEL = "";
 	private String WHERE = "";
+	private String EQUALS = "";
 	private String STARTS_WITH = "";
 	private String ENDS_WITH = "";
 	private String MATCHES_PATTERN = "";
 	private String CONTAINS = "";
 	private String RETURN = "";
 	private String ORDER_BY = "";
-
+    private boolean prefixProperties = true;
+    
 	public CypherQueryBuilder(){};
 	
+	public CypherQueryBuilder(boolean prefixProperties) { 
+		this.prefixProperties = prefixProperties;
+	}
+
 	public CypherQueryBuilder MATCH() {
 		return this;
 	}
@@ -48,6 +54,11 @@ public class CypherQueryBuilder {
         return this;
     }
 
+    public CypherQueryBuilder EQUALS(String EQUALS) {
+        this.EQUALS = EQUALS;
+        return this;
+    }
+
     public CypherQueryBuilder ENDS_WITH(String ENDS_WITH) {
         this.ENDS_WITH = ENDS_WITH;
         return this;
@@ -70,6 +81,18 @@ public class CypherQueryBuilder {
     }
     
     public CypherQuery build() {
-        return new CypherQuery(MATCH, LABEL, WHERE, CONTAINS, STARTS_WITH, ENDS_WITH, MATCHES_PATTERN, RETURN, ORDER_BY);
+        return new CypherQuery(
+        		MATCH
+        		, LABEL
+        		, WHERE
+        		, CONTAINS
+        		, EQUALS
+        		, STARTS_WITH
+        		, ENDS_WITH
+        		, MATCHES_PATTERN
+        		, RETURN
+        		, ORDER_BY
+        		, prefixProperties
+        		);
     }
 }

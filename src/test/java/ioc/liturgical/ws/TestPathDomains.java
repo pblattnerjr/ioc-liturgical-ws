@@ -15,7 +15,7 @@ import ioc.liturgical.test.framework.TestConstants;
 import ioc.liturgical.test.framework.TestUsers;
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
-import ioc.liturgical.ws.constants.NEW_FORM_CLASSES;
+import ioc.liturgical.ws.constants.NEW_FORM_CLASSES_ADMIN_API;
 import ioc.liturgical.ws.models.ws.forms.DomainCreateForm;
 
 public class TestPathDomains {
@@ -52,7 +52,7 @@ public class TestPathDomains {
 				, TestUsers.WS_ADMIN.password)
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.CREATED.code)
-    	.when().post(NEW_FORM_CLASSES.NEW_DOMAIN.toPostPath());
+    	.when().post(NEW_FORM_CLASSES_ADMIN_API.NEW_DOMAIN.toPostPath());
 	}
 
 }

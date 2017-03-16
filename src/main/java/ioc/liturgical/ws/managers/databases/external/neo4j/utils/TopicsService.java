@@ -35,7 +35,10 @@ public class TopicsService {
 				.ORDER_BY("doc.seq")
 				.build();
 		
-		JsonObject json = ExternalDbManager.queryToDb.getForQuery(q.toString());
+		JsonObject json = ExternalDbManager
+				.neo4jManager
+				.getForQuery(q.toString())
+				.toJsonObject();
 		JsonArray values = json.get("values").getAsJsonArray();
 		for (int i=0; i < values.size(); i++) {
 			JsonElement e = values.get(i);
@@ -62,7 +65,10 @@ public class TopicsService {
 				.ORDER_BY("doc.seq")
 				.build();
 		
-		JsonObject json = ExternalDbManager.queryToDb.getForQuery(q.toString());
+		JsonObject json = ExternalDbManager
+				.neo4jManager
+				.getForQuery(q.toString())
+				.toJsonObject();
 		JsonArray values = json.get("values").getAsJsonArray();
 		for (int i=0; i < values.size(); i++) {
 			JsonElement e = values.get(i);

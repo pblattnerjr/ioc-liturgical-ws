@@ -9,7 +9,7 @@ import com.google.gson.JsonObject;
 
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.constants.ADMIN_ENDPOINTS;
+import ioc.liturgical.ws.constants.ENDPOINTS_ADMIN_API;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.managers.auth.AuthDecoder;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
@@ -30,7 +30,7 @@ public class NewFormsController {
 	
 	public NewFormsController(InternalDbManager storeManager) {
 
-		String path = ADMIN_ENDPOINTS.NEW.toLibraryPath();
+		String path = ENDPOINTS_ADMIN_API.NEW.toLibraryPath();
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);

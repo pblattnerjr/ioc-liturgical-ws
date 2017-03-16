@@ -12,8 +12,8 @@ import com.google.gson.JsonObject;
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
-import ioc.liturgical.ws.constants.ADMIN_ENDPOINTS;
-import ioc.liturgical.ws.constants.NEW_FORM_CLASSES;
+import ioc.liturgical.ws.constants.ENDPOINTS_ADMIN_API;
+import ioc.liturgical.ws.constants.NEW_FORM_CLASSES_ADMIN_API;
 import ioc.liturgical.ws.managers.auth.AuthDecoder;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.models.RequestStatus;
@@ -46,7 +46,7 @@ public class UsersPasswordController {
 		/**
 		 * PUT controllers
 		 */
-		path = ADMIN_ENDPOINTS.USERS_PASSWORD.toLibraryTopicPath();
+		path = ENDPOINTS_ADMIN_API.USERS_PASSWORD.toLibraryTopicPath();
 		ControllerUtils.reportPath(logger, "PUT", path);
 		put(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);

@@ -1,7 +1,7 @@
 package ioc.liturgical.ws.constants;
 
 /**
- * Enum for REST endpoints.
+ * Enum for REST endpoints for the Database api.
  * Used to give info to requestor about what endpoints are available.
  * The order in which they are listed below is the order in which they
  * will appear in the list in the UI.  So add new ones at the appropriate
@@ -11,38 +11,22 @@ package ioc.liturgical.ws.constants;
  * @author mac002
  *
  */
-public enum ADMIN_ENDPOINTS {
-	ADMINS(
-			"admins"
-			, ""
-			, "Users allowed to administer a given library."
-			, SYSTEM_LIBS.ADMINS.libname
-			,""
-			, INCLUDE_IN_RESOURCE_LIST.YES.value
-			)
-	, AUTHORIZATION_NEW(
-			"authorizations"
-			, "new"
-			,"Create a new authorization."
-			, SYSTEM_LIBS.ADMINS.libname
-			, ""
-			, INCLUDE_IN_RESOURCE_LIST.NO.value
-			)
-	, AUTHORS(
-			"authors"
-			, ""
-			, "Users allowed to author docs in a given library"
-			, SYSTEM_LIBS.AUTHORS.libname
-			,""
-			, INCLUDE_IN_RESOURCE_LIST.YES.value
-			)
-	, DOMAINS(
+public enum ENDPOINTS_DB_API {
+	DOMAINS(
 			""
 			, "domains"
 			,"Docs for domains."
 			, DB_TOPICS.DOMAINS.lib
 			, DB_TOPICS.DOMAINS.topic
 			, INCLUDE_IN_RESOURCE_LIST.YES.value
+			)
+	, DELETE(
+			"doc"
+			, "delete"
+			,"Delete a doc."
+			, ""
+			, ""
+			, INCLUDE_IN_RESOURCE_LIST.NO.value
 			)
 	, DOMAINS_NEW(
 			"domains"
@@ -76,16 +60,8 @@ public enum ADMIN_ENDPOINTS {
 			, ""
 			, INCLUDE_IN_RESOURCE_LIST.YES.value
 			)
-	, READERS(
-			"readers"
-			, ""
-			, "Users allowed to read docs in a given library"
-			, SYSTEM_LIBS.READERS.libname
-			,""
-			, INCLUDE_IN_RESOURCE_LIST.YES.value
-			)
 	, REFERENCES(
-			""
+			"references"
 			, "references"
 			,"Docs for references."
 			, DB_TOPICS.REFERENCES.lib
@@ -93,52 +69,20 @@ public enum ADMIN_ENDPOINTS {
 			, INCLUDE_IN_RESOURCE_LIST.YES.value
 			)
 	, REFERENCES_NEW(
-			"labels"
+			"references"
 			, "new"
 			,"Create a new reference."
 			, DB_TOPICS.REFERENCES.lib
 			, ""
 			, INCLUDE_IN_RESOURCE_LIST.NO.value
 			)
-	, USERS(
-			"users"
-			, ""
-			,"People who have access to the system."
-			, SYSTEM_LIBS.USERS.libname
-			, ""
-			, INCLUDE_IN_RESOURCE_LIST.YES.value
-			)
-	, USERS_CONTACT(
-			"users"
-			, "contact"
-			,"Contact information for people who have access to the system."
-			, SYSTEM_LIBS.USERS.libname
-			, USER_TOPICS.CONTACT.lib
-			, INCLUDE_IN_RESOURCE_LIST.YES.value
-			)
-	, USERS_NEW(
-			"users"
-			, "new"
-			,"Create a new user."
-			, SYSTEM_LIBS.USERS.libname
-			, ""
+	, WILDCARD_LIBRARY(
+			"*"
+			, "/*/*"
+			,"Wildcard Library."
+			, "*"
+			, "/*/*"
 			, INCLUDE_IN_RESOURCE_LIST.NO.value
-			)
-	, USERS_PASSWORD(
-			"users"
-			, "password"
-			,"change a user's password."
-			, SYSTEM_LIBS.USERS.libname
-			, USER_TOPICS.HASH.lib
-			, INCLUDE_IN_RESOURCE_LIST.YES.value
-			)
-	, USERS_STATISTICS(
-			"users"
-			, "statistics"
-			,"System access statistics for people who have access to the system."
-			, SYSTEM_LIBS.USERS.libname
-			, USER_TOPICS.STATISTICS.lib
-			, INCLUDE_IN_RESOURCE_LIST.YES.value
 			)
 	;
 
@@ -161,7 +105,7 @@ public enum ADMIN_ENDPOINTS {
 	 * @param mapsToTopic - which DB topic to map to
 	 * @param includeInResourcesList - include as an endpoint when user asks for Resources?
 	 */
-	private ADMIN_ENDPOINTS(
+	private ENDPOINTS_DB_API(
 			String library
 			, String topic
 			, String description
@@ -213,7 +157,20 @@ public enum ADMIN_ENDPOINTS {
 	public String toLibraryPath() {
 		return this.pathPrefix + "/" + this.pathname;
 	}
-	
+
+	/**
+	 * Can be used to insert a specific library into the wildcard library,
+	 * leaving the topic and key as wildcards.
+	 * @param library
+	 * @return
+	 */
+	public String toParameterizedWildcardLibrary(String library) {
+		return this.pathPrefix 
+				+ "/" 
+				+ library 
+				+ ENDPOINTS_DB_API.WILDCARD_LIBRARY.topic;
+	}
+
 	public String toDbLibrary() {
 		return this.mapsToLibrary;
 	}
@@ -233,7 +190,7 @@ public enum ADMIN_ENDPOINTS {
 	 */
 	public static String pathToDbId(String path) {
 		String result = path;
-			for (ADMIN_ENDPOINTS e : ADMIN_ENDPOINTS.values()) {
+			for (ENDPOINTS_DB_API e : ENDPOINTS_DB_API.values()) {
 				if (e.toLibraryTopicKeyPath().equals(path)) {
 					result = e.mapsToLibrary + "|" + e.mapsToTopic + "|" + "";
 				} else if (e.toLibraryTopicPath().equals(path)) {

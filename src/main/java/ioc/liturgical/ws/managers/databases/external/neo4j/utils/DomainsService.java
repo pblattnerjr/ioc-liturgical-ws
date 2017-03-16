@@ -46,7 +46,10 @@ public class DomainsService {
 	DropdownArray getDomainsFor(DOMAIN_QUERIES subject) {
 		List<DropdownItem> theDomains = new ArrayList<DropdownItem>();
 		theDomains.add(new DropdownItem("All","*"));
-		JsonObject json = ExternalDbManager.queryToDb.getForQuery(subject.query);
+		JsonObject json = ExternalDbManager
+				.neo4jManager
+				.getForQuery(subject.query)
+				.toJsonObject();
 		JsonArray values = json.get("values").getAsJsonArray();
 		for (int i=0; i < values.size(); i++) {
 			JsonElement e = values.get(i);

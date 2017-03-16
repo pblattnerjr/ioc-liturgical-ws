@@ -20,6 +20,9 @@ public class Constants {
 		public static final String INTERNAL_DATASTORE_API_PATH = "/admin/api/v1";
 		public static final String INTERNAL_LITURGICAL_DAY_PROPERTIES_API_PATH = "/ldp/api/v1";
 		public static final String EXTERNAL_DATASTORE_API_PATH = "/db/api/v1";
+		public static final String PATH_LIBRARY_WILDCARD = "/*";
+		public static final String PATH_LIBRARY_TOPIC_WILDCARD = "/*/*";
+		public static final String PATH_LIBRARY_TOPIC_KEY_WILDCARD = "/*/*/*";
 		public static final String VALUE_SCHEMA_ID = "_valueSchemaId";
 		public static final String UI_WIDGET_TEXTAREA = "textarea";
 		public static final String UI_WIDGET_PASSWORD = "password";

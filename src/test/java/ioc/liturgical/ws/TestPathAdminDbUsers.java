@@ -14,10 +14,10 @@ import org.hamcrest.Matchers;
 import ioc.liturgical.test.framework.TestConstants;
 import ioc.liturgical.test.framework.TestUsers;
 import ioc.liturgical.ws.app.ServiceProvider;
-import ioc.liturgical.ws.constants.ADMIN_ENDPOINTS;
+import ioc.liturgical.ws.constants.ENDPOINTS_ADMIN_API;
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
-import ioc.liturgical.ws.constants.NEW_FORM_CLASSES;
+import ioc.liturgical.ws.constants.NEW_FORM_CLASSES_ADMIN_API;
 import ioc.liturgical.ws.models.ws.db.UserContact;
 import ioc.liturgical.ws.models.ws.forms.UserCreateForm;
 import ioc.liturgical.ws.models.ws.forms.UserUpdateForm;
@@ -58,7 +58,7 @@ public class TestPathAdminDbUsers {
 		.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, TestUsers.WS_ADMIN.password)
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.CREATED.code)
-    	.when().post(NEW_FORM_CLASSES.NEW_USER.toPostPath());
+    	.when().post(NEW_FORM_CLASSES_ADMIN_API.NEW_USER.toPostPath());
 	}
 	
 	@Test 
@@ -81,7 +81,7 @@ public class TestPathAdminDbUsers {
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.CREATED.code)
     	.when().post(
-    			NEW_FORM_CLASSES.NEW_USER.toPostPath() 
+    			NEW_FORM_CLASSES_ADMIN_API.NEW_USER.toPostPath() 
     	);
 	}
 	
@@ -100,7 +100,7 @@ public class TestPathAdminDbUsers {
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.OK.code)
     	.when().put(
-    			ADMIN_ENDPOINTS.USERS_CONTACT.toLibraryPath()
+    			ENDPOINTS_ADMIN_API.USERS_CONTACT.toLibraryPath()
     			+ "/"
     			+ username
     			);
@@ -121,7 +121,7 @@ public class TestPathAdminDbUsers {
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code)
 	    	.when().put(
-	    			ADMIN_ENDPOINTS.USERS_CONTACT.toLibraryPath()
+	    			ENDPOINTS_ADMIN_API.USERS_CONTACT.toLibraryPath()
 	    			+ "/"
 	    			+ username
 	    			);
@@ -146,7 +146,7 @@ public class TestPathAdminDbUsers {
 		.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, TestUsers.WS_ADMIN.password)
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code)
-    	.when().post(NEW_FORM_CLASSES.NEW_USER.toPostPath() );
+    	.when().post(NEW_FORM_CLASSES_ADMIN_API.NEW_USER.toPostPath() );
 	}
 
 	@Test 
@@ -166,7 +166,7 @@ public class TestPathAdminDbUsers {
 		.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, TestUsers.WS_ADMIN.password)
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code)
-    	.when().post(NEW_FORM_CLASSES.NEW_USER.toPostPath() );
+    	.when().post(NEW_FORM_CLASSES_ADMIN_API.NEW_USER.toPostPath() );
 	}
 
 	@Test 
@@ -188,7 +188,7 @@ public class TestPathAdminDbUsers {
 				, TestUsers.WS_ADMIN.password)
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code)
-    	.when().post(NEW_FORM_CLASSES.NEW_USER.toPostPath());
+    	.when().post(NEW_FORM_CLASSES_ADMIN_API.NEW_USER.toPostPath());
 	}
 
 	@Test
@@ -209,7 +209,7 @@ public class TestPathAdminDbUsers {
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code)
 //	       .expect().body("userMessage", org.hamcrest.Matchers.containsString("Expected email to match emailReenter"))
-    	.when().post(NEW_FORM_CLASSES.NEW_USER.toPostPath() );
+    	.when().post(NEW_FORM_CLASSES_ADMIN_API.NEW_USER.toPostPath() );
 	}
 
 
@@ -232,7 +232,7 @@ public class TestPathAdminDbUsers {
 		.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, TestUsers.WS_ADMIN.password)
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.CREATED.code)
-    	.when().post(NEW_FORM_CLASSES.NEW_USER.toPostPath() );
+    	.when().post(NEW_FORM_CLASSES_ADMIN_API.NEW_USER.toPostPath() );
 
 		io.restassured.RestAssured
     	.given()
@@ -241,7 +241,7 @@ public class TestPathAdminDbUsers {
 		.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, TestUsers.WS_ADMIN.password)
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.CONFLICT.code)
-    	.when().post(NEW_FORM_CLASSES.NEW_USER.toPostPath() );
+    	.when().post(NEW_FORM_CLASSES_ADMIN_API.NEW_USER.toPostPath() );
 
 	}
 
@@ -260,7 +260,7 @@ public class TestPathAdminDbUsers {
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.NOT_FOUND.code)
 	      	.when().put(
-	    			ADMIN_ENDPOINTS.USERS_CONTACT.toLibraryPath()
+	    			ENDPOINTS_ADMIN_API.USERS_CONTACT.toLibraryPath()
 	    			+ "/"
 	    			+ username
 	    			);
@@ -276,7 +276,7 @@ public class TestPathAdminDbUsers {
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code)
 	      	.when().put(
-	    			ADMIN_ENDPOINTS.USERS_CONTACT.toLibraryPath()
+	    			ENDPOINTS_ADMIN_API.USERS_CONTACT.toLibraryPath()
 	    			+ "/"
 	    			+ username
 	    			);

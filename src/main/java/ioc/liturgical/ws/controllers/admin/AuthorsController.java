@@ -5,7 +5,7 @@ import static spark.Spark.get;
 import com.google.gson.JsonObject;
 
 import ioc.liturgical.ws.app.ServiceProvider;
-import ioc.liturgical.ws.constants.ADMIN_ENDPOINTS;
+import ioc.liturgical.ws.constants.ENDPOINTS_ADMIN_API;
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.constants.SYSTEM_LIBS;
@@ -14,7 +14,7 @@ import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 public class AuthorsController {
 	
 	public AuthorsController(InternalDbManager storeManager) {
-		get(ADMIN_ENDPOINTS.AUTHORS.toLibraryTopicKeyPath(), (request, response) -> {
+		get(ENDPOINTS_ADMIN_API.AUTHORS.toLibraryTopicKeyPath(), (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
 			JsonObject json = storeManager.getForId(SYSTEM_LIBS.AUTHORS + Constants.ID_DELIMITER + query);
@@ -26,7 +26,7 @@ public class AuthorsController {
 			return json.toString();
 		});
 
-		get(ADMIN_ENDPOINTS.AUTHORS.toLibraryTopicPath(), (request, response) -> {
+		get(ENDPOINTS_ADMIN_API.AUTHORS.toLibraryTopicPath(), (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
 			JsonObject json = storeManager.getWhereStartsWith(SYSTEM_LIBS.AUTHORS + Constants.ID_DELIMITER + query);
@@ -39,7 +39,7 @@ public class AuthorsController {
 		});
 
 
-		get(ADMIN_ENDPOINTS.AUTHORS.toLibraryTopicKeyPath(), (request, response) -> {
+		get(ENDPOINTS_ADMIN_API.AUTHORS.toLibraryTopicKeyPath(), (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
 			JsonObject json = storeManager.getWhereStartsWith(SYSTEM_LIBS.AUTHORS + Constants.ID_DELIMITER + query);

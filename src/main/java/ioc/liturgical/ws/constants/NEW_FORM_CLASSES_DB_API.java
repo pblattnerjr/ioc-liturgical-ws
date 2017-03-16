@@ -27,40 +27,17 @@ import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
  * @author mac002
  *
  */
-public enum NEW_FORM_CLASSES {
-	NEW_AUTHORIZATION(
-			"authorization"
-			, new AuthorizationCreateForm()
-			, ADMIN_ENDPOINTS.AUTHORIZATION_NEW
-			, RESTRICTION_FILTERS.NONE
-			)
-	, NEW_DOMAIN(
-			"domain"
-			, new DomainCreateForm()
-			, ADMIN_ENDPOINTS.DOMAINS_NEW
-			, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
-			)
-	, NEW_LABEL(
-			"label"
-			, new LabelCreateForm()
-			, ADMIN_ENDPOINTS.LABELS_NEW
-			, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
-			)
-	, NEW_REFERENCE(
+public enum NEW_FORM_CLASSES_DB_API {
+	NEW_REFERENCE(
 			"reference"
 			, new ReferenceCreateForm()
-			, ADMIN_ENDPOINTS.REFERENCES_NEW
+			, ENDPOINTS_DB_API.REFERENCES_NEW
 			, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
 			)
-	, NEW_USER(
-			"user"
-			, new UserCreateForm()
-			, ADMIN_ENDPOINTS.USERS_NEW
-			, RESTRICTION_FILTERS.DOMAIN_ADMIN)
 	;
 
 	public AbstractModel obj;
-	public ADMIN_ENDPOINTS endpoint;
+	public ENDPOINTS_DB_API endpoint;
 	public String name;
 	public RESTRICTION_FILTERS restriction;
 	
@@ -71,10 +48,10 @@ public enum NEW_FORM_CLASSES {
 	 * @param endpoint that is used with this form
 	 * @param restriction what type of role is allowed to use this form
 	 */
-	private NEW_FORM_CLASSES(
+	private NEW_FORM_CLASSES_DB_API(
 			String name
 			 , AbstractModel obj
-			 , ADMIN_ENDPOINTS endpoint
+			 , ENDPOINTS_DB_API endpoint
 			 , RESTRICTION_FILTERS restriction
 			) {
 		this.name = name;
@@ -90,4 +67,5 @@ public enum NEW_FORM_CLASSES {
 	public String toPostPath() {
 		return this.endpoint.toLibraryPath() + "/" + this.name;
 	}
+	
 }

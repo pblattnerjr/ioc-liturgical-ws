@@ -9,8 +9,8 @@ import org.slf4j.LoggerFactory;
 
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.constants.ADMIN_ENDPOINTS;
-import ioc.liturgical.ws.constants.NEW_FORM_CLASSES;
+import ioc.liturgical.ws.constants.ENDPOINTS_ADMIN_API;
+import ioc.liturgical.ws.constants.NEW_FORM_CLASSES_ADMIN_API;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.models.RequestStatus;
 
@@ -27,7 +27,7 @@ public class UsersContactController {
 		 * POST controllers
 		 */
 		// combines create (POST) UserContact and UserHash
-		String path = NEW_FORM_CLASSES.NEW_USER.toPostPath();
+		String path = NEW_FORM_CLASSES_ADMIN_API.NEW_USER.toPostPath();
 		ControllerUtils.reportPath(logger, "POST", path);
 		post(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
@@ -39,7 +39,7 @@ public class UsersContactController {
 		/**
 		 * PUT controllers
 		 */
-		path = ADMIN_ENDPOINTS.USERS_CONTACT.toLibraryTopicPath();
+		path = ENDPOINTS_ADMIN_API.USERS_CONTACT.toLibraryTopicPath();
 		ControllerUtils.reportPath(logger, "PUT", path);
 		put(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);

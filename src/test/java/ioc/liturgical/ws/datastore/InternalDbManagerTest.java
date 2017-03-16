@@ -15,7 +15,7 @@ import junit.framework.TestSuite;
  * @author mac002
  *
  */
-public class AccessManagerTest extends TestCase {
+public class InternalDbManagerTest extends TestCase {
 	
 	private InternalDbManager accessManager;
 	private static final String password = "secret";
@@ -54,7 +54,7 @@ public class AccessManagerTest extends TestCase {
      */
     public static Test suite()
     {
-        return new TestSuite( AccessManagerTest.class );
+        return new TestSuite( InternalDbManagerTest.class );
     }
 
     public void testApp()
