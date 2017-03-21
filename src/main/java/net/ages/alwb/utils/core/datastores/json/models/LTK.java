@@ -5,7 +5,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 
 import net.ages.alwb.utils.core.datastores.json.exceptions.BadIdException;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import net.ages.alwb.utils.core.id.managers.LTKIdManager;
+import net.ages.alwb.utils.core.misc.Constants;
 
 /**
  * 
@@ -27,12 +28,13 @@ public class LTK extends AbstractModel {
 	String library = null;
 	String topic = null;
 	String key = null;
+	LTKIdManager ltkIdManager = null;
 	Object value = null;
-	String delimiter = "|";
+	String delimiter = Constants.ID_DELIMITER;
 
 	/**
 	 * 
-	 * @param id format must be library|topic|key 
+	 * @param id format must be library + delimiter + topic + delimiter + key and cannot have an embedded ID 
 	 */
 	public LTK(String id) throws BadIdException {
 		super();
@@ -40,7 +42,8 @@ public class LTK extends AbstractModel {
 		parseId();
 	}
 	/**
-	 * Constructs an id in the format of library|topic|key
+	 * Constructs an id in the format of library + delimiter + topic + delimiter + key.
+	 * Any of the parts (library, topic, or key) may be an embedded ID.
 	 * @param library
 	 * @param topic
 	 * @param key
@@ -55,6 +58,7 @@ public class LTK extends AbstractModel {
 		this.library = library;
 		this.topic = topic;
 		this.key = key;
+		this.ltkIdManager = new LTKIdManager(library, topic, key);
 		set_id();
 	}
 
@@ -64,7 +68,6 @@ public class LTK extends AbstractModel {
 	
 	public void set_id() throws BadIdException {
 		this._id = this.library + delimiter + this.topic + delimiter + this.key;
-		parseId();
 	}
 	
 	/**
@@ -121,17 +124,19 @@ public class LTK extends AbstractModel {
 		set_id();
 	}
 
+	/**
+	 * @throws BadIdException
+	 */
 	private void parseId() throws BadIdException {
 		boolean ok = false;
-			if (_id.contains("|")) {
+			if (_id.contains(Constants.ID_DELIMITER)) {
 				try {
-					String[] parts = _id.split("\\|");
+					String[] parts = _id.split(Constants.ID_SPLITTER);
 					if (parts.length == 3) { // e.g. id = gr_gr_cog|actors|Priest.text, where gr_gr_cog|actors is the topic
 						this.library = parts[0];
 						this.topic = parts[1];
 						this.key = parts[2];
 						ok = true;
-					} else {
 					}
 				} catch (Exception e) {
 					ok = false;
@@ -140,7 +145,14 @@ public class LTK extends AbstractModel {
 				ok = false;
 			}
 		if (!ok) {
-			throw new BadIdException("_id must have exactly three parts, delimited by the pipe symbol | e.g. gr_gr_cog|actors|priest ");
+			throw new BadIdException(
+					"_id must have exactly three parts, delimited by " 
+			+ Constants.ID_DELIMITER 
+			+  " gr_gr_cog" + Constants.ID_DELIMITER  
+			+ "actors" + Constants.ID_DELIMITER  
+			+ "priest "
+			+ " If you are embedding an ID into the Library or topic or key, you must use the constructor that takes library, topic, and key as parameters."
+			);
 		}
 	}
 	public String toJsonString() {
@@ -158,4 +170,13 @@ public class LTK extends AbstractModel {
 	public void setValue(Object value) {
 		this.value = value;
 	}
+
+	public LTKIdManager getLtkIdManager() {
+		return ltkIdManager;
+	}
+	public void setLtkIdManager(LTKIdManager ltkIdManager) {
+		this.ltkIdManager = ltkIdManager;
+	}
+
+
 }

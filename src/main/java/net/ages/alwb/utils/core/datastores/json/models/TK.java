@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import net.ages.alwb.utils.core.misc.Constants;
 
 /**
  * 
@@ -53,7 +54,7 @@ public class TK extends AbstractModel {
 	
 	public void set_Id() {
 		if (this.topic != null && this.key != null) {
-			this._id = topic + "|" + key;
+			this._id = topic +  Constants.ID_DELIMITER + key;
 		}
 	}
 
@@ -89,17 +90,17 @@ public class TK extends AbstractModel {
 	private void parseId() {
 		if (this._id == null) {
 			if (this.topic != null && this.key != null) {
-				this._id = topic + "|" + key;
+				this._id = topic + Constants.ID_DELIMITER + key;
 			}
 		} else {
-			if (_id.contains("|")) {
+			if (_id.contains(Constants.ID_DELIMITER)) {
 				try {
-					String[] parts = _id.split("\\|");
+					String[] parts = _id.split(Constants.ID_SPLITTER);
 					if (parts.length == 2) {
 						this.topic = parts[0];
 						this.key = parts[1];
 					} else if (parts.length == 3) { // e.g. id = gr_gr_cog|actors|Priest.text, where gr_gr_cog|actors is the topic
-						this.topic = parts[0] + "|" + parts[1];
+						this.topic = parts[0] + Constants.ID_DELIMITER + parts[1];
 						this.key = parts[2];
 					} else {
 						this.topic = _id;

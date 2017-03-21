@@ -345,7 +345,7 @@ public class H2ConnectionManager {
     }
 
     public List<JsonObject> queryForJsonWhereStartsWith(String with) throws SQLException {
-    	return queryForJson(currentQuery.getSelectQueryWhereLike(), with +"|%");
+    	return queryForJson(currentQuery.getSelectQueryWhereLike(), with + Constants.ID_DELIMITER +"%");
     }
 
     public List<JsonObject> queryForJsonWhereLike(String like) throws SQLException {

@@ -19,11 +19,13 @@ import ioc.liturgical.ws.models.ws.forms.DomainCreateForm;
 
 public class ServiceProviderTest {
 	
+	public static String pwd = "";
+	
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
+		pwd = System.getenv("pwd");
 		ServiceProvider.main(new String[] {
-				TestUsers.WS_ADMIN.password
-//				, TestConstants.DISABLE_EXTERNAL_DB
+				pwd
 				});
 	}
 
@@ -56,7 +58,7 @@ public class ServiceProviderTest {
 	    .body(obj.toJsonString())
 		.auth(). preemptive().basic(
 				TestUsers.WS_ADMIN.id
-				, TestUsers.WS_ADMIN.password)
+				, pwd)
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.CREATED.code)
     	.when().post(NEW_FORM_CLASSES_ADMIN_API.NEW_DOMAIN.toPostPath());
@@ -74,7 +76,7 @@ public class ServiceProviderTest {
 	    .body(obj.toJsonString())
 		.auth(). preemptive().basic(
 				TestUsers.WS_ADMIN.id
-				, TestUsers.WS_ADMIN.password)
+				, pwd)
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.CREATED.code)
     	.when().post(NEW_FORM_CLASSES_DB_API.NEW_REFERENCE.toPostPath());
@@ -84,7 +86,7 @@ public class ServiceProviderTest {
 		.baseUri(TestConstants.BASE_URL)
 		.auth(). preemptive().basic(
 				TestUsers.WS_ADMIN.id
-				, TestUsers.WS_ADMIN.password)
+				, pwd)
 		.param("id", obj.getId())
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.OK.code)

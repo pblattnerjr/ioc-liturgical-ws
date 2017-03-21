@@ -27,7 +27,7 @@ public enum DB_TOPICS {
 			) {
 		this.topic = topic;
 		this.description = description;
-		this.libTopic = lib + "|" + topic;
+		this.libTopic = lib + Constants.ID_DELIMITER + topic;
 	}
 	
 	/**

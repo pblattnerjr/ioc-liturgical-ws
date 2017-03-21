@@ -52,7 +52,6 @@ import ioc.liturgical.ws.constants.ROLES;
 import ioc.liturgical.ws.constants.SCHEMA_CLASSES;
 import ioc.liturgical.ws.constants.USER_TOPICS;
 import ioc.liturgical.ws.constants.VERBS;
-import ioc.liturgical.ws.id.manager.IdManager;
 import ioc.liturgical.ws.managers.auth.UserStatus;
 import ioc.liturgical.ws.managers.exceptions.DbException;
 import net.ages.alwb.utils.core.auth.PasswordHasher;
@@ -63,6 +62,7 @@ import net.ages.alwb.utils.core.datastores.json.exceptions.MissingSchemaIdExcept
 import net.ages.alwb.utils.core.datastores.json.models.LTKVJsonObject;
 import net.ages.alwb.utils.core.datastores.json.models.LTKVString;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import net.ages.alwb.utils.core.id.managers.IdManager;
 
 /**
  * 
@@ -148,7 +148,14 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		ResultJsonObjectArray result = new ResultJsonObjectArray(prettyPrint);
 		result.setQuery(pattern);
 		try {
-			result.setResult(manager.queryForJsonWhereIdRegEx(".*\\|" + pattern + "\\|.*"));
+			result.setResult(
+					manager.queryForJsonWhereIdRegEx(
+							".*" 
+					+ Constants.ID_SPLITTER
+					+ pattern 
+					+ Constants.ID_SPLITTER 
+					+ ".*")
+					);
 		} catch (SQLException e) {
 			result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 			result.setStatusMessage(e.getMessage());
@@ -399,7 +406,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		List<String> userIds = getUserIds();
 		for (String id: userIds) {
 			try {
-				String [] parts = id.split("\\|");
+				String [] parts = id.split(Constants.ID_SPLITTER);
 				result.add(parts[2]);
 			} catch (Exception e) {
 				ErrorUtils.report(logger, e);
@@ -437,10 +444,10 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		List<String> idsList = new ArrayList<String>();
 		
 		if (isWsAdmin(username)) { // add in the web_service as a library and all_domains as a library
-			idsList.add("|"+Constants.SYSTEM_LIB+"|");
-			idsList.add("|"+Constants.DOMAINS_LIB+"|");
+			idsList.add(Constants.ID_DELIMITER+Constants.SYSTEM_LIB+Constants.ID_DELIMITER);
+			idsList.add(Constants.ID_DELIMITER+Constants.DOMAINS_LIB+Constants.ID_DELIMITER);
 		} else if (isDbAdmin(username)) { // add in all_domains as a library
-			idsList.add("|"+Constants.DOMAINS_LIB+"|");
+			idsList.add(Constants.ID_DELIMITER+Constants.DOMAINS_LIB+Constants.ID_DELIMITER);
 		}
 
 		if (isDbAdmin(username)) { // get all domains
@@ -455,6 +462,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		String[] labelsArray = new String[idsList.size()];
 		
 		for (int i=0; i < idsList.size(); i++) {
+			String x = "";
 			IdManager idManager = new IdManager(idsList.get(i));
 			if (idManager.get(0).startsWith(DB_TOPICS.DOMAINS.lib)) {
 				idsArray[i] = idManager.get(2);

@@ -24,15 +24,19 @@ import ioc.liturgical.ws.models.ws.forms.UserUpdateForm;
 
 public class TestPathAdminDbUsers {
 	
+	public static String pwd = "";
+	
 	/**
 	 * TODO: test missing required field
 	 */
 	
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
+		pwd = System.getenv("pwd");
+		
 		ServiceProvider.main(
 				new String[] {
-						TestUsers.WS_ADMIN.password
+						pwd
 						, TestConstants.DISABLE_EXTERNAL_DB
 						});
 	}
@@ -55,7 +59,7 @@ public class TestPathAdminDbUsers {
     	.given()
 		.baseUri(TestConstants.BASE_URL)
 	    .body(user.toJsonString())
-		.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, TestUsers.WS_ADMIN.password)
+		.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, pwd)
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.CREATED.code)
     	.when().post(NEW_FORM_CLASSES_ADMIN_API.NEW_USER.toPostPath());
@@ -77,7 +81,7 @@ public class TestPathAdminDbUsers {
 	    .body(user.toJsonString())
 		.auth(). preemptive().basic(
 				TestUsers.WS_ADMIN.id
-				, TestUsers.WS_ADMIN.password)
+				, pwd)
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.CREATED.code)
     	.when().post(
@@ -96,7 +100,7 @@ public class TestPathAdminDbUsers {
     	.given()
 		.baseUri(TestConstants.BASE_URL)
 	    .body(user.toJsonString())
-		.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, TestUsers.WS_ADMIN.password)
+		.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, pwd)
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.OK.code)
     	.when().put(
@@ -117,7 +121,7 @@ public class TestPathAdminDbUsers {
     	.given()
 		.baseUri(TestConstants.BASE_URL)
 	    .body(user.toJsonString())
-		.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, TestUsers.WS_ADMIN.password)
+		.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, pwd)
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code)
 	    	.when().put(
@@ -143,7 +147,7 @@ public class TestPathAdminDbUsers {
     	.given()
 		.baseUri(TestConstants.BASE_URL)
 	    .body(obj.toString())
-		.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, TestUsers.WS_ADMIN.password)
+		.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, pwd)
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code)
     	.when().post(NEW_FORM_CLASSES_ADMIN_API.NEW_USER.toPostPath() );
@@ -163,7 +167,7 @@ public class TestPathAdminDbUsers {
     	.given()
 		.baseUri(TestConstants.BASE_URL)
 	    .body(user.toJsonString())
-		.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, TestUsers.WS_ADMIN.password)
+		.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, pwd)
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code)
     	.when().post(NEW_FORM_CLASSES_ADMIN_API.NEW_USER.toPostPath() );
@@ -185,7 +189,7 @@ public class TestPathAdminDbUsers {
 	    .body(user.toJsonString())
 		.auth(). preemptive().basic(
 				TestUsers.WS_ADMIN.id
-				, TestUsers.WS_ADMIN.password)
+				, pwd)
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code)
     	.when().post(NEW_FORM_CLASSES_ADMIN_API.NEW_USER.toPostPath());
@@ -205,7 +209,7 @@ public class TestPathAdminDbUsers {
     	.given()
 		.baseUri(TestConstants.BASE_URL)
 	    .body(user.toJsonString())
-		.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, TestUsers.WS_ADMIN.password)
+		.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, pwd)
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code)
 //	       .expect().body("userMessage", org.hamcrest.Matchers.containsString("Expected email to match emailReenter"))
@@ -229,7 +233,7 @@ public class TestPathAdminDbUsers {
     	.given()
 		.baseUri(TestConstants.BASE_URL)
 	    .body(user.toJsonString())
-		.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, TestUsers.WS_ADMIN.password)
+		.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, pwd)
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.CREATED.code)
     	.when().post(NEW_FORM_CLASSES_ADMIN_API.NEW_USER.toPostPath() );
@@ -238,7 +242,7 @@ public class TestPathAdminDbUsers {
     	.given()
 		.baseUri(TestConstants.BASE_URL)
 	    .body(user.toJsonString())
-		.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, TestUsers.WS_ADMIN.password)
+		.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, pwd)
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.CONFLICT.code)
     	.when().post(NEW_FORM_CLASSES_ADMIN_API.NEW_USER.toPostPath() );
@@ -256,7 +260,7 @@ public class TestPathAdminDbUsers {
     	.given()
 		.baseUri(TestConstants.BASE_URL)
 	    .body(user.toJsonString())
-		.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, TestUsers.WS_ADMIN.password)
+		.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, pwd)
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.NOT_FOUND.code)
 	      	.when().put(
@@ -272,7 +276,7 @@ public class TestPathAdminDbUsers {
 	    io.restassured.RestAssured
     	.given()
 		.baseUri(TestConstants.BASE_URL)
-		.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, TestUsers.WS_ADMIN.password)
+		.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, pwd)
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code)
 	      	.when().put(

@@ -26,7 +26,7 @@ public class KeyNameParts {
 	private String altPeriod = "$"; 
 	
 	public String getCouchDbKey() {
-		return topic + "|" + key;
+		return topic + Constants.ID_DELIMITER + key;
 	}
 	
 	public String getAresKey() {
@@ -35,7 +35,7 @@ public class KeyNameParts {
 
 	public void parseCouchDbDomainAndKey(String domainAndKey) {
 		try {
-			String [] parts = domainAndKey.split("\\|");
+			String [] parts = domainAndKey.split(Constants.ID_SPLITTER);
 			if (parts.length == 2) {
 				this.key = parts[1];
 				String [] domainParts = parts[0].split("_");
@@ -53,13 +53,13 @@ public class KeyNameParts {
 	public void parseCouchDbKey(String domain, String key) {
 		this.domain = domain;
 		try {
-			String[] parts = key.split("\\|");
+			String[] parts = key.split(Constants.ID_SPLITTER);
 			if (parts.length == 2) {
 				this.topic = parts[0];
 				this.key = parts[1];
 			}
 		} catch (Exception e) {
-			logger.error(e.getMessage() + " using | to split " + key);
+			logger.error(e.getMessage() + " using " + Constants.ID_DELIMITER + " to split "+ key);
 		}
 	}
 	public  void parseAresKey(String key) {

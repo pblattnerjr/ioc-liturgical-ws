@@ -303,7 +303,9 @@ public class ReferenceCreateForm extends AbstractModel {
 	}
 	
 	public String getId() {
-		return this.domain + "|" + DB_TOPICS.REFERENCES.topic + "|" +  this.getIdReferredByText() + "~" + this.getIdReferredToText();
+		return this.domain + Constants.ID_DELIMITER 
+				+ this.getIdReferredByText() + Constants.ID_DELIMITER 
+			    + this.getIdReferredToText();
 	}
 
 	/**
@@ -312,11 +314,11 @@ public class ReferenceCreateForm extends AbstractModel {
 	 * @return
 	 */
 	public String getIdAsPath() {
-		return "/" + this.domain + "/" + DB_TOPICS.REFERENCES.topic + "/" +  this.getIdReferredByText() + "~" + this.getIdReferredToText();
+		return "/" + this.domain + "/" + this.getIdReferredByText() + "/" +  this.getIdReferredToText();
 	}
 
 	public String getKey() {
-		return this.getIdReferredByText() + "~" + this.getIdReferredToText();
+		return this.getIdReferredToText();
 	}
 
 }

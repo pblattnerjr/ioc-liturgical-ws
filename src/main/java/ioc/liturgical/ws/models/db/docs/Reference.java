@@ -8,6 +8,9 @@ import ioc.liturgical.ws.constants.DB_TOPICS;
 import ioc.liturgical.ws.models.db.forms.ReferenceCreateForm;
 import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.github.reinert.jjschema.Attributes;
 
 /**
@@ -19,6 +22,12 @@ import com.github.reinert.jjschema.Attributes;
 public class Reference extends AbstractModel {
 	
 	@Expose String Id = "";
+
+	@Expose String domain = "";
+
+	@Expose String idReferredByText = "";
+
+	@Expose String idReferredToText = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Notes on the Text")
@@ -96,7 +105,9 @@ public class Reference extends AbstractModel {
 	@Attributes(required = false, description = "Theater, Dance, and Film")
 	@Expose String tdf = "";
 
-
+	@Attributes(readonly=true, description="Labels to use when searching for this Reference.")
+	@Expose String labels = "";
+	
 	@UiWidget(Constants.UI_WIDGET_RADIO)
 	@Attributes(required = true, description = "Is this domain active?")
 	@Expose boolean active = true;
@@ -123,6 +134,9 @@ public class Reference extends AbstractModel {
 		super();
 		this.serialVersionUID = 1.1;
 		this.setId(form.getId());
+		this.setDomain(form.getDomain());
+		this.setIdReferredByText(form.getIdReferredByText());
+		this.setIdReferredToText(form.getIdReferredToText());
 		this.setAnc(form.getAnc());
 		this.setBib(form.getBib());
 		this.setChr(form.getChr());
@@ -132,6 +146,7 @@ public class Reference extends AbstractModel {
 		this.setHge(form.getHge());
 		this.setIsl(form.getIsl());
 		this.setJew(form.getJew());
+		this.setLabels(form.getLabels());
 		this.setLit(form.getLit());
 		this.setLitt(form.getLitt());
 		this.setMus(form.getMus());
@@ -142,6 +157,15 @@ public class Reference extends AbstractModel {
 		this.setTheo(form.getTheo());
 		this.setVis(form.getVis());
 		this.setVoc(form.getVoc());
+	}
+    
+
+	public String getLabels() {
+		return labels;
+	}
+
+	public void setLabels(String labels) {
+		this.labels = labels;
 	}
 
 	public String getText() {
@@ -388,6 +412,30 @@ public class Reference extends AbstractModel {
 
 	public void setId(String id) {
 		Id = id;
+	}
+
+	public String getDomain() {
+		return domain;
+	}
+
+	public void setDomain(String domain) {
+		this.domain = domain;
+	}
+
+	public String getIdReferredByText() {
+		return idReferredByText;
+	}
+
+	public void setIdReferredByText(String idReferredByText) {
+		this.idReferredByText = idReferredByText;
+	}
+
+	public String getIdReferredToText() {
+		return idReferredToText;
+	}
+
+	public void setIdReferredToText(String idReferredToText) {
+		this.idReferredToText = idReferredToText;
 	}
 
 }

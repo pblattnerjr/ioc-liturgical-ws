@@ -5,15 +5,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
 
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import net.ages.alwb.utils.core.misc.Constants;
 
 public class JsonProperty<T> extends SimpleObjectProperty<T> {
     private static final Logger logger = LoggerFactory.getLogger(JsonProperty.class);
@@ -73,7 +70,7 @@ public class JsonProperty<T> extends SimpleObjectProperty<T> {
 		}
 
 	public String get_Id() {
-		return getTopic() + "|" + super.getName();
+		return getTopic() + Constants.ID_DELIMITER + super.getName();
 	}
 	
 	public String getTopic() {

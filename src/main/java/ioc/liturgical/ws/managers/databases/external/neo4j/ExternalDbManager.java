@@ -18,7 +18,6 @@ import ioc.liturgical.ws.managers.interfaces.HighLevelDataStoreInterface;
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.DB_TOPICS;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
-import ioc.liturgical.ws.id.manager.IdManager;
 import ioc.liturgical.ws.managers.databases.external.neo4j.constants.MATCHERS;
 import ioc.liturgical.ws.managers.databases.external.neo4j.utils.DomainTopicMapBuilder;
 import ioc.liturgical.ws.managers.databases.external.neo4j.utils.Neo4jConnectionManager;
@@ -32,7 +31,8 @@ import ioc.liturgical.ws.models.ws.db.User;
 import net.ages.alwb.utils.core.datastores.json.exceptions.BadIdException;
 import net.ages.alwb.utils.core.datastores.json.exceptions.MissingSchemaIdException;
 import net.ages.alwb.utils.core.datastores.json.models.LTKVJsonObject;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;;
+import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import net.ages.alwb.utils.core.id.managers.IdManager;;
 
 
 /**
@@ -101,11 +101,20 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		 dropdownItems = domainTopicMapbuilder.getDropdownItems();
 	  }
 	  
-		public RequestStatus addReference(String requestor, String json) {
+		public RequestStatus addReference(
+				String requestor
+				, String fromLibrary
+				, String fromTopic
+			    , String fromKey
+				, String toLibrary
+				, String toTopic
+				, String toKey
+				, String relationshipJson
+				) {
 			RequestStatus result = new RequestStatus();
 			ReferenceCreateForm form = new ReferenceCreateForm();
-			form = (ReferenceCreateForm) form.fromJsonString(json);
-			String validation = form.validate(json);
+			form = (ReferenceCreateForm) form.fromJsonString(relationshipJson);
+			String validation = form.validate(relationshipJson);
 			if (validation.length() == 0) {
 				try {
 					Reference ref = new Reference(form); // set ref values from the form values
@@ -115,8 +124,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					ref.setModifiedWhen(ref.getCreatedWhen());
 					result = addLTKVJsonObject(
 							form.getDomain()
-							, DB_TOPICS.REFERENCES.topic
-							, form.getIdReferredByText() + "~" + form.getIdReferredToText()
+							, form.getIdReferredByText()
+							, form.getIdReferredToText()
 							, ref.schemaIdAsString()
 							, ref.toJsonObject()
 							);
@@ -355,11 +364,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				) {
 			RequestStatus result = new RequestStatus();
 			try {
-				IdManager idManager = new IdManager(obj.getId());
 		    	result = updateLTKVJsonObject(
-		    			idManager.get(0)
-		    			, DB_TOPICS.REFERENCES.topic
-		    			, idManager.get(2)
+		    			obj.getDomain()
+		    			, obj.getIdReferredByText()
+		    			, obj.getIdReferredToText()
 		    			, obj.schemaIdAsString()
 		    			, obj.toJsonObject()
 		    			);

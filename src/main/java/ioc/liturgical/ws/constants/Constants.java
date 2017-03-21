@@ -2,7 +2,10 @@ package ioc.liturgical.ws.constants;
 
 public class Constants {
 		public static final String VERSION = "1.2.5"; // should match most recent jar
-		public static final String ID_DELIMITER = "|";
+		public static final String ID_DELIMITER = "~";
+		public static final String ID_SPLITTER = "~";
+		public static final String PIPE_SPLITTER = "\\|";
+		public static final String ALT_ID_DELIMITER = "~"; // TODO reconcile pipe vs tilde
 		public static final String APP_DATA_PATH = "app_data_do_not_delete/";
 		public static final String DB_NAME = "app_data";
 		public static final String TABLE_SYNCH_HISTORY = "SYNCH_HISTORY";

@@ -27,7 +27,7 @@ public class TestPathDomains {
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		ServiceProvider.main(new String[] {
-				TestUsers.WS_ADMIN.password
+				System.getenv("pwd")
 				, TestConstants.DISABLE_EXTERNAL_DB
 				});
 	}
@@ -49,7 +49,7 @@ public class TestPathDomains {
 	    .body(obj.toJsonString())
 		.auth(). preemptive().basic(
 				TestUsers.WS_ADMIN.id
-				, TestUsers.WS_ADMIN.password)
+				, System.getenv("pwd"))
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.CREATED.code)
     	.when().post(NEW_FORM_CLASSES_ADMIN_API.NEW_DOMAIN.toPostPath());

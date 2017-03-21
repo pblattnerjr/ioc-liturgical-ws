@@ -1,5 +1,7 @@
 package ioc.liturgical.ws.constants;
 
+import ioc.liturgical.ws.constants.Constants;
+
 /**
  * Enum for REST endpoints for the Database api.
  * Used to give info to requestor about what endpoints are available.
@@ -176,11 +178,11 @@ public enum ENDPOINTS_DB_API {
 	}
 	
 	public String toDbLibraryTopic() {
-		return this.toDbLibrary() + "|" + this.mapsToTopic;
+		return this.toDbLibrary() +  Constants.ID_DELIMITER + this.mapsToTopic;
 	}
 	
 	public String toDbLibraryTopicKey(String key) {
-		return this.toDbLibraryTopic() + "|" + key;
+		return this.toDbLibraryTopic() +  Constants.ID_DELIMITER + key;
 	}
 	
 	/**
@@ -192,13 +194,13 @@ public enum ENDPOINTS_DB_API {
 		String result = path;
 			for (ENDPOINTS_DB_API e : ENDPOINTS_DB_API.values()) {
 				if (e.toLibraryTopicKeyPath().equals(path)) {
-					result = e.mapsToLibrary + "|" + e.mapsToTopic + "|" + "";
+					result = e.mapsToLibrary +  Constants.ID_DELIMITER + e.mapsToTopic + Constants.ID_DELIMITER + "";
 				} else if (e.toLibraryTopicPath().equals(path)) {
-					result = e.mapsToLibrary + "|" + e.mapsToTopic;
+					result = e.mapsToLibrary +  Constants.ID_DELIMITER + e.mapsToTopic;
 				} else if (e.toLibraryPath().equals(path)) {
 					result = e.mapsToLibrary;
 				} else if (path.length() == 0) {
-					result = e.mapsToLibrary + "|" + e.mapsToTopic;
+					result = e.mapsToLibrary +  Constants.ID_DELIMITER + e.mapsToTopic;
 				}
 			}
 			return result;

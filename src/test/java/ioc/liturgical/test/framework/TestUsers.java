@@ -10,7 +10,7 @@ public enum TestUsers {
 	;
 	
 	public String id = "";
-	public String password = System.getenv("pwd");
+	public String password = "";
 	
 	private TestUsers(
 			String id

@@ -12,6 +12,8 @@ import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.models.RequestStatus;
 import ioc.liturgical.ws.models.db.docs.Reference;
+import ioc.liturgical.ws.models.db.forms.ReferenceCreateForm;
+import net.ages.alwb.utils.core.id.managers.IdManager;
 
 public class ExternalDbManagerTest {
 
@@ -19,11 +21,12 @@ public class ExternalDbManagerTest {
 	private static ExternalDbManager externalManager;
 
 	private static TestReferences testReferences;
+	private static String pwd = "";
 	
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 
-		String pwd = System.getenv("pwd");
+		pwd = System.getenv("pwd");
 		
 		internalManager = new InternalDbManager(
 				"test-db" // store name
@@ -66,9 +69,18 @@ public class ExternalDbManagerTest {
 	   public void testReferenceCrud() {
 		
 		// create
-	    	RequestStatus status = externalManager.addReference(
+		   ReferenceCreateForm form = testReferences.getCreateForm(0);
+			IdManager fromIdManager = new IdManager(form.getIdReferredByText());
+			IdManager toIdManager = new IdManager(form.getIdReferredToText());
+		   RequestStatus status = externalManager.addReference(
 	    			TestUsers.WS_ADMIN.id
-	    			, testReferences.getCreateForm(0).toJsonString()
+	    			, fromIdManager.get(0)
+	    			, fromIdManager.get(1)
+	    			, fromIdManager.get(2)
+	    			, toIdManager.get(0)
+	    			, toIdManager.get(1)
+	    			, toIdManager.get(2)
+	    			, form.toJsonString()
 	    			);
 	    	assertTrue(status.getCode() == 201); // created
 	    	
@@ -81,7 +93,11 @@ public class ExternalDbManagerTest {
 	    	// update
 	    	String update = "updated Bib";
 	    	ref.setBib(update);
-	    	externalManager.updateReference(TestUsers.WS_ADMIN.id, ref.getId(), ref.toJsonString());
+	    	externalManager.updateReference(
+	    			TestUsers.WS_ADMIN.id
+	    			, ref.getId()
+	    			, ref.toJsonString()
+	    			);
 	    	ref = externalManager.getReference(ref.getId());
 	    	assertTrue(ref.getBib().equals(update));
 	    	

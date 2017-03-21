@@ -77,7 +77,22 @@ public class ReferencesController {
 		post(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
-			RequestStatus requestStatus = storeManager.addReference(requestor,request.body());
+			String fromLibrary = "";
+			String fromTopic = "";
+			String fromKey = "";
+			String toLibrary = "";
+			String toTopic = "";
+			String toKey = "";
+			RequestStatus requestStatus = storeManager.addReference(
+					requestor
+					, fromLibrary
+					, fromTopic
+				    , fromKey
+					, toLibrary
+					, toTopic
+					, toKey
+					, request.body()
+					);
 			response.status(requestStatus.getCode());
 			return requestStatus.toJsonString();
 		});

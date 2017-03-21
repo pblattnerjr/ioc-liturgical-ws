@@ -13,11 +13,14 @@ import ioc.liturgical.ws.constants.Constants;
 public class TestPathAdminAdmins {
 	
 	String testPath = "/admins/";
+	public static String pwd = "";
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
+		pwd = System.getenv("pwd");
+		
 		ServiceProvider.main(new String [] {
-				TestUsers.WS_ADMIN.password
+				pwd
 				, TestConstants.DISABLE_EXTERNAL_DB // so test runs faster
 				});
 	}
@@ -34,7 +37,7 @@ public class TestPathAdminAdmins {
 				.basePath(Constants.INTERNAL_DATASTORE_API_PATH)
 				.auth(). preemptive().basic(
 						TestUsers.WS_ADMIN.id
-						, TestUsers.WS_ADMIN.password
+						, pwd
 						)
 			    .expect().statusCode(200)
 		    	.when().get(testPath);
@@ -48,7 +51,7 @@ public class TestPathAdminAdmins {
 				.basePath(Constants.INTERNAL_DATASTORE_API_PATH)
 				.auth(). preemptive().basic(
 						TestUsers.WS_ADMIN.id
-						, TestUsers.WS_ADMIN.password)
+						, pwd)
 			       .accept(ContentType.JSON)
 			       .expect().statusCode(200)
 		    	.when().get(testPath + "en_us_dedes");
@@ -60,7 +63,7 @@ public class TestPathAdminAdmins {
 		    	.given()
 				.baseUri(TestConstants.BASE_URL)
 				.basePath(Constants.INTERNAL_DATASTORE_API_PATH)
-				.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, TestUsers.WS_ADMIN.password)
+				.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, pwd)
 			       .accept(ContentType.JSON)
 			       .expect().statusCode(200)
 		    	.when().get(testPath+"en_us_dedes/adminForEnUsDedes");
@@ -83,7 +86,7 @@ public class TestPathAdminAdmins {
 		    	.given()
 				.baseUri(TestConstants.BASE_URL)
 				.basePath(Constants.INTERNAL_DATASTORE_API_PATH)
-				.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, TestUsers.WS_ADMIN.password)
+				.auth(). preemptive().basic(TestUsers.WS_ADMIN.id, pwd)
 			       .accept(ContentType.JSON)
 			       .expect().statusCode(404)
 		    	.when().get(testPath+"junk");
