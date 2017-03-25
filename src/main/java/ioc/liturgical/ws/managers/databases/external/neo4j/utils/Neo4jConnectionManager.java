@@ -133,15 +133,6 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 	public void setConnectionOK(boolean connectionOK) {
 		this.connectionOK = connectionOK;
 	}
-
-	private String getLabelForSchema(String schema) {
-		String result = schema;
-		String [] parts = schema.split(":");
-		if (parts.length == 2) {
-			result = parts[0];
-		}
-		return result;
-	}
 	
 	/**
 	 * The purpose of this method is to ensure that any node with 
@@ -187,6 +178,42 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		}
 	}
 
+	/**
+	 * 
+	 * @param fromId - ID of the node on the 'from' side of the relationship
+	 * @param doc - properties to set for the relationship
+	 * @param toId - ID of the node on the 'to' side of the relationship
+	 * @return 
+	 * @throws DbException
+	 */
+	public RequestStatus createRelationship(
+			String fromId
+			, LTKVJsonObject doc
+			, String toId
+			) throws DbException {
+		RequestStatus result = new RequestStatus();
+		setIdConstraint(doc.getSchemaAsLabel());
+		String matchFrom = "MATCH (f) where f.id = \'" + fromId + "\' match (t) where t.id = \'" + toId + "\'";
+        String queryCreate = " CREATE (f)-[r:REFERS_TO]->(t) set r = {props} return r";
+		String query = matchFrom + queryCreate;
+		try (org.neo4j.driver.v1.Session session = driver.session()) {
+			StatementResult neoResult = session.run(query, doc.getAsPropertiesMap());
+			int count = neoResult.consume().counters().relationshipsCreated();
+			if (count == 0) {
+		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + "   " + doc.get_id());
+			} else {
+		    	result.setCode(HTTP_RESPONSE_CODES.CREATED.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.CREATED.message + ": created " + doc.get_id());
+			}
+		} catch (Exception e){
+			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+			result.setDeveloperMessage(e.getMessage());
+		}
+		return result;
+	}
+
 	@Override
 	public RequestStatus updateWhereEqual(LTKVJsonObject doc) throws DbException {
 		RequestStatus result = new RequestStatus();
@@ -198,6 +225,26 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		try (org.neo4j.driver.v1.Session session = driver.session()) {
 			StatementResult neoResult = session.run(query, doc.getAsPropertiesMap());
 			int count = neoResult.consume().counters().nodesCreated();
+	    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
+	    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": updated " + doc.get_id());
+		} catch (Exception e){
+			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+			result.setDeveloperMessage(e.getMessage());
+		}
+		return result;
+	}
+
+	public RequestStatus updateWhereReferenceEqual(LTKVJsonObject doc) throws DbException {
+		RequestStatus result = new RequestStatus();
+		setIdConstraint(doc.getSchemaAsLabel());
+		String query = 
+				"match ()-[r]->() where r.id = \"" 
+				+ doc.get_id() 
+		        + "\" set r = {props} return count(r)";
+		try (org.neo4j.driver.v1.Session session = driver.session()) {
+			StatementResult neoResult = session.run(query, doc.getAsPropertiesMap());
+			int count = neoResult.consume().counters().propertiesSet();
 	    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
 	    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": updated " + doc.get_id());
 		} catch (Exception e){
@@ -233,4 +280,21 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		return result;
 	}
 
+	public RequestStatus deleteRelationshipWhereEqual(String id) throws DbException {
+		RequestStatus result = new RequestStatus();
+		String query = 
+				"match ()-[r]->() where r.id = \"" 
+				+ id 
+		        + "\" delete r";
+		try (org.neo4j.driver.v1.Session session = driver.session()) {
+			StatementResult neoResult = session.run(query);
+	    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
+	    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": deleted " + id);
+		} catch (Exception e){
+			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+			result.setDeveloperMessage(e.getMessage());
+		}
+		return result;
+	}
 }

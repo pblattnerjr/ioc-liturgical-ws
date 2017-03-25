@@ -1,4 +1,4 @@
-package ioc.liturgical.ws.datastore;
+package delete.me;
 
 import static org.junit.Assert.*;
 
@@ -18,7 +18,7 @@ import ioc.liturgical.ws.models.db.docs.Reference;
 import ioc.liturgical.ws.models.db.forms.ReferenceCreateForm;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 
-public class ExternalDbManagerTest {
+public class CreateABunchOfReferences {
 
 	private static InternalDbManager internalManager;
 	private static ExternalDbManager externalManager;
@@ -60,20 +60,11 @@ public class ExternalDbManagerTest {
 	}
 	
 	@Test
-	   public void testGetForIdStartswith() {
-			assertTrue(externalManager.getForIdStartsWith("gr_gr_cog~actors").get("valueCount").getAsInt() > 0);
-	    }
-	
-	@Test
-	   public void testGetForId() {
-    		assertTrue(externalManager.getForId("gr_gr_cog~actors~ClergyAndPeople").get("valueCount").getAsInt() == 1);
-	    }
-	
-	@Test
-	   public void testReferenceCrud() {
+	   public void testCreateRefs() {
 		
 		// create
-		   ReferenceCreateForm form = testReferences.getCreateForm(0);
+		for (int i=1; i < 5; i++) {
+		   ReferenceCreateForm form = testReferences.getCreateForm(i);
 			IdManager fromIdManager = new IdManager(form.getIdReferredByText());
 			IdManager toIdManager = new IdManager(form.getIdReferredToText());
 		   RequestStatus status = externalManager.addReference(
@@ -87,30 +78,6 @@ public class ExternalDbManagerTest {
 	    			, form.toJsonString()
 	    			);
 	    	assertTrue(status.getCode() == 201); // created
-	    	
-	    	// read
-	    	ResultJsonObjectArray result = externalManager.getReferenceObjectByRefId(
-	    			testReferences.getCreateForm(0).getId()
-	    			);
-			Reference ref = (Reference) gson.fromJson(
-					result.getValues().get(0)
-					, Reference.class
-			);	
-    	assertTrue(ref.getId().equals(testReferences.getCreateForm(0).getId()));
-	    	
-	    	// update
-	    	String update = "updated Bib";
-	    	ref.setBib(update);
-	    	externalManager.updateReference(
-	    			TestUsers.WS_ADMIN.id
-	    			, ref.getId()
-	    			, ref.toJsonString()
-	    			);
-	    	ref = externalManager.getReference(ref.getId());
-	    	assertTrue(ref.getBib().equals(update));
-	    	
-	    	// delete
-	    	status = externalManager.deleteRelationshipForId(ref.getId());
-	    	assertTrue(status.getCode() == 200);
-	    }
+		}
+	}
 }

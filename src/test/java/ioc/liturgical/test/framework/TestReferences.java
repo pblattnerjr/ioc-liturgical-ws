@@ -36,23 +36,28 @@ public class TestReferences {
 	
 	private void initializeBiblicalIds() {
 		for (int i=0; i < instanceSize + 1; i++) {
-			biblicalIds.add(
-				baseBibDomain + "~" 
-			    + baseBibTopic + "~" 
-				+ baseBibKeyPart1 
-				+ i 
-				);
+			String id = 
+					baseBibDomain + "~" 
+						    + baseBibTopic + "~" 
+							+ baseBibKeyPart1 
+							+ (i+1) 
+							;
+			biblicalIds.add(id);
+			System.out.println(id);
 		}
 	}
+	
 	private void initializeLiturgicalIds() {
 		for (int i=0; i < instanceSize + 1; i++) {
-			liturgicalIds.add(
-				baseLitDomain + "~" 
-			    + baseLitTopic + "~" 
-				+ baseLitKeyPart1 
-				+ i 
-				+ baseLitKeyPart2
-				);
+			String id = 
+							baseLitDomain + "~" 
+						    + baseLitTopic + "~" 
+							+ baseLitKeyPart1 
+							+ (i+1) 
+							+ baseLitKeyPart2
+			;
+			liturgicalIds.add(id);
+			System.out.println(id);
 		}
 	}
 

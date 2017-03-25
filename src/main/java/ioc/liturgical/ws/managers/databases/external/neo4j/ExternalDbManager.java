@@ -1,6 +1,5 @@
 package ioc.liturgical.ws.managers.databases.external.neo4j;
 
-import java.sql.SQLException;
 import java.text.Normalizer;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -16,8 +15,8 @@ import com.google.gson.JsonParser;
 
 import ioc.liturgical.ws.managers.interfaces.HighLevelDataStoreInterface;
 import ioc.liturgical.ws.app.ServiceProvider;
-import ioc.liturgical.ws.constants.DB_TOPICS;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
+import ioc.liturgical.ws.constants.VERBS;
 import ioc.liturgical.ws.managers.databases.external.neo4j.constants.MATCHERS;
 import ioc.liturgical.ws.managers.databases.external.neo4j.utils.DomainTopicMapBuilder;
 import ioc.liturgical.ws.managers.databases.external.neo4j.utils.Neo4jConnectionManager;
@@ -27,7 +26,6 @@ import ioc.liturgical.ws.models.RequestStatus;
 import ioc.liturgical.ws.models.ResultJsonObjectArray;
 import ioc.liturgical.ws.models.db.docs.Reference;
 import ioc.liturgical.ws.models.db.forms.ReferenceCreateForm;
-import ioc.liturgical.ws.models.ws.db.User;
 import net.ages.alwb.utils.core.datastores.json.exceptions.BadIdException;
 import net.ages.alwb.utils.core.datastores.json.exceptions.MissingSchemaIdException;
 import net.ages.alwb.utils.core.datastores.json.models.LTKVJsonObject;
@@ -114,33 +112,42 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			RequestStatus result = new RequestStatus();
 			ReferenceCreateForm form = new ReferenceCreateForm();
 			form = (ReferenceCreateForm) form.fromJsonString(relationshipJson);
-			String validation = form.validate(relationshipJson);
-			if (validation.length() == 0) {
-				try {
-					Reference ref = new Reference(form); // set ref values from the form values
-					ref.setCreatedBy(requestor);
-					ref.setModifiedBy(requestor);
-					ref.setCreatedWhen(getTimestamp());
-					ref.setModifiedWhen(ref.getCreatedWhen());
-					result = addLTKVJsonObject(
-							form.getDomain()
-							, form.getIdReferredByText()
-							, form.getIdReferredToText()
-							, ref.schemaIdAsString()
-							, ref.toJsonObject()
-							);
-				} catch (Exception e) {
+			if (internalManager.authorized(requestor, VERBS.POST, form.getDomain())) {
+				String validation = form.validate(relationshipJson);
+				if (validation.length() == 0) {
+					try {
+						IdManager fromIdManager = new IdManager(fromLibrary, fromTopic, fromKey);
+						IdManager toIdManager = new IdManager(toLibrary, toTopic, toKey);
+						Reference ref = new Reference(form); // set ref values from the form values
+						ref.setCreatedBy(requestor);
+						ref.setModifiedBy(requestor);
+						ref.setCreatedWhen(getTimestamp());
+						ref.setModifiedWhen(ref.getCreatedWhen());
+						result = addLTKVJsonObjectAsRelationship(
+								fromIdManager.getId()
+								, toIdManager.getId()
+								, form.getDomain()
+								, form.getIdReferredByText()
+								, form.getIdReferredToText()
+								, ref.schemaIdAsString()
+								, ref.toJsonObject()
+								);
+					} catch (Exception e) {
+						result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+						result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+					}
+				} else {
 					result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-					result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+					JsonObject message = stringToJson(validation);
+					if (message == null) {
+						result.setMessage(validation);
+					} else {
+						result.setMessage(message.get("message").getAsString());
+					}
 				}
 			} else {
-				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-				JsonObject message = stringToJson(validation);
-				if (message == null) {
-					result.setMessage(validation);
-				} else {
-					result.setMessage(message.get("message").getAsString());
-				}
+				result.setCode(HTTP_RESPONSE_CODES.UNAUTHORIZED.code);
+				result.setMessage(HTTP_RESPONSE_CODES.UNAUTHORIZED.message);
 			}
 			return result;
 		}
@@ -304,6 +311,87 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
+		public RequestStatus addLTKVJsonObjectAsRelationship(
+				String fromId
+				, String toId
+				, String library
+				, String topic
+				, String key
+				, String schemaId
+				, JsonObject json
+				) throws 
+					BadIdException
+					, DbException
+					, MissingSchemaIdException {
+			RequestStatus result = new RequestStatus();
+			if (internalManager.existsSchema(schemaId)) {
+				String id = new IdManager(library,topic,key).getId();
+				if (this.existsUniqueRelationship(id)) {
+					result.setCode(HTTP_RESPONSE_CODES.CONFLICT.code);
+					result.setMessage(HTTP_RESPONSE_CODES.CONFLICT.message + ": " + id);
+				} else {
+					LTKVJsonObject record = 
+							new LTKVJsonObject(
+								library
+								, topic
+								, key
+								, schemaId
+								, json
+								);
+					    result = neo4jManager.createRelationship(fromId, record, toId);		
+				}
+			} else {
+				throw new MissingSchemaIdException(schemaId);
+			}
+			return result;
+		}
+		
+		public RequestStatus getRelationshipById(String id) {
+			String query = "match (f)-[r]->(t) where r.id = \"" + id + "\" return f.id, f.value, r.value, t.id, t.value";
+			return new RequestStatus();
+		}
+
+		public RequestStatus getRelationshipByType(String type) {
+			String query = "match (f)-[r:" + type + "]->(t) return f.id, f.value, r.value, t.id, t.value";
+			return new RequestStatus();
+		}
+
+		/**
+		 * Converts a comma delimited string of labels into
+		 * a Cyper query statement.
+		 * @param labels e.g. a, b
+		 * @param operator and or or
+		 * @return e.g. "r.labels contains "a" or r.labels contains "b"
+		 */
+		public String labelsAsQuery(String labels, String operator) {
+			StringBuffer result = new StringBuffer();
+			String [] parts = labels.split(",");
+			result.append("\"" + parts[0].trim() + "\"");
+			if (parts.length > 1) {
+				for (int i=1; i < parts.length; i++) {
+					result.append(" " + operator + " r.labels contains \"" + parts[i].trim() + "\"");
+				}
+			}
+			return result.toString();
+		}
+		
+		public RequestStatus getRelationshipByLabels(String labels) {
+			String query = "match (f)-[r]->(t) where r.labels contains " + labelsAsQuery(labels, "and") + " return f.id, f.value, r.value, t.id, t.value";
+			return new RequestStatus();
+		}
+
+		public RequestStatus getRelationshipByFromId(String id) {
+			return new RequestStatus();
+		}
+
+		public RequestStatus getRelationshipByToId(String id) {
+			return new RequestStatus();
+		}
+
+		public RequestStatus getRelationshipByNodeIds(String fromId, String toId) {
+			return new RequestStatus();
+		}
+
 		@Override
 		public RequestStatus updateLTKVJsonObject(
 				String library
@@ -325,6 +413,36 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 							, json
 							);
 					neo4jManager.updateWhereEqual(record);		
+				} else {
+					result.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
+					result.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message + ": " + id);
+				}
+			} else {
+				throw new MissingSchemaIdException(schemaId);
+			}
+			return result;
+		}
+
+		public RequestStatus updateLTKVJsonObjectAsReference(
+				String library
+				, String topic
+				, String key
+				, String schemaId
+				, JsonObject json
+				) throws BadIdException, DbException, MissingSchemaIdException {
+			RequestStatus result = new RequestStatus();
+			if (internalManager.existsSchema(schemaId)) {
+				String id = new IdManager(library,topic,key).getId();
+				if (existsUniqueRelationship(id)) {
+					LTKVJsonObject record;
+					record = new LTKVJsonObject(
+							library
+							, topic
+							, key
+							, schemaId
+							, json
+							);
+					neo4jManager.updateWhereReferenceEqual(record);		
 				} else {
 					result.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 					result.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message + ": " + id);
@@ -364,7 +482,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				) {
 			RequestStatus result = new RequestStatus();
 			try {
-		    	result = updateLTKVJsonObject(
+		    	result = updateLTKVJsonObjectAsReference(
 		    			obj.getDomain()
 		    			, obj.getIdReferredByText()
 		    			, obj.getIdReferredToText()
@@ -393,6 +511,15 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			}
 		}
 		
+		public boolean existsUniqueRelationship(String id) {
+			try {
+				JsonObject json = this.getForIdOfRelationship(id);
+				return json.get("valueCount").getAsInt() == 1;
+			} catch (Exception e) {
+				return false;
+			}
+		}
+
 		private String getTimestamp() {
 			return Instant.now().toString();
 		}
@@ -427,6 +554,95 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result.toJsonObject();
 		}
 
+		public JsonObject getForIdOfRelationship(String id) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
+				String q = "match ()-[r]->() where r.id =\"" + id + "\" return r.value";
+				result  = neo4jManager.getForQuery(q.toString());
+				result.setQuery(q);
+				result.setValueSchemas(internalManager.getSchemas(result.getResult(), null));
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result.toJsonObject();
+		}
+
+		public ResultJsonObjectArray getReferenceObjectByRefId(String id) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
+				String q = "match (f)-[r]->(t) where r.id = \"" + id + "\" return r.value";
+				result  = neo4jManager.getForQuery(q);
+				List<JsonObject> refs = new ArrayList<JsonObject>();
+				List<JsonObject> objects = result.getValues();
+				for (JsonObject object : objects) {
+					try {
+						
+						Reference ref = (Reference) gson.fromJson(
+								object.get("r.value").getAsString()
+								, Reference.class
+						);
+						refs.add(ref.toJsonObject());
+					} catch (Exception e) {
+						ErrorUtils.report(logger, e);
+					}
+				}
+				result.setResult(refs);
+				result.setQuery(q.toString());
+				result.setValueSchemas(internalManager.getSchemas(result.getResult(), null));
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+
+		/**
+		 * Gets by id the reference, and returns the id and value of the from and to sides
+		 * and the reference properties, with the reference labels also split out.
+		 * @param id
+		 * @return
+		 */
+		public ResultJsonObjectArray getReferenceObjectAndNodesByRefId(String id) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
+				String q = "match (f)-[r]->(t) where r.id = \"" + id + "\" return f.id, f.value, r, t.id, t.value";
+				result  = neo4jManager.getForQuery(q);
+				result.setQuery(q.toString());
+				result.setValueSchemas(internalManager.getSchemas(result.getResult(), null));
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+
+		/**
+		 * Get all references of the specified type.
+		 * Returns the id and value for the from and to nodes.
+		 * Returns all properties of the relationship and r.labels.
+		 * 
+		 * This is useful for listing references in a table, and when selected, you
+		 * have the details of the reference immediately available without calling
+		 * the REST api again.
+		 * 
+		 * @param type
+		 * @return
+		 */
+		public ResultJsonObjectArray getReferenceObjectsAndNodes(String type) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
+				String q = "match (f)-[r:" + type + "]->(t)  return f.id, f.value, r.value, t.id, t.value";
+				result  = neo4jManager.getForQuery(q);
+				result.setQuery(q.toString());
+				result.setValueSchemas(internalManager.getSchemas(result.getResult(), null));
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+
 		@Override
 		public JsonObject getForIdStartsWith(String id) {
 			CypherQueryBuilder builder = new CypherQueryBuilder()
@@ -443,32 +659,12 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 
 		
 		public Reference getReference(String id) {
-			try {			
-				JsonObject obj = getForId(id);
-				int count = obj.getAsJsonPrimitive("valueCount").getAsInt();
-				if (count != 1) {
-					return null;
-				} else {
-					JsonObject json = 	
-							obj.get("values")
-							.getAsJsonArray()
-							.get(0)
-							.getAsJsonObject()
-							.get("value")
-							.getAsJsonObject();
-					
-					Reference ref = (Reference) gson.fromJson(
-							json
-							, Reference.class
-					);
-					ref.setPrettyPrint(true);
-					
-					return ref;
-				}
-			} catch (Exception e) {
-				ErrorUtils.report(logger, e);
-				return null;
-			}
+		    	ResultJsonObjectArray result = getReferenceObjectByRefId(id);
+				Reference ref = (Reference) gson.fromJson(
+						result.getValues().get(0)
+						, Reference.class
+				);	
+				return ref;
 		}
 
 		public RequestStatus deleteForId(String requestor, String id) {
@@ -490,7 +686,41 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				result.setMessage(e.getMessage());
 			}
 			return result;
+		}
 
+		public RequestStatus deleteRelationshipForId(String id) {
+			RequestStatus result = new RequestStatus();
+			try {
+		    	result = neo4jManager.deleteRelationshipWhereEqual(id);
+			} catch (DbException e) {
+				ErrorUtils.report(logger, e);
+				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+			} catch (Exception e) {
+				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setMessage(e.getMessage());
+			}
+			return result;
+		}
+
+		/**
+		 * 
+		 * @param id of the relationship
+		 * @return
+		 */
+		public RequestStatus deleteForRelationshipId(String id) {
+			RequestStatus result = new RequestStatus();
+			try {
+		    	result = neo4jManager.deleteRelationshipWhereEqual(id);
+			} catch (DbException e) {
+				ErrorUtils.report(logger, e);
+				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+			} catch (Exception e) {
+				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setMessage(e.getMessage());
+			}
+			return result;
 		}
 
 		public boolean isPrettyPrint() {
