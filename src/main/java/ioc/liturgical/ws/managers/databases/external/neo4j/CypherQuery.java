@@ -68,10 +68,11 @@ public class CypherQuery {
 			if (prefixProperties) {
 				sb.append(" RETURN doc." + RETURN.replaceAll(" ", "").replaceAll(",", ", doc."));
 			} else {
+				RETURN = RETURN.replaceAll(" ", "");
 				String [] props = RETURN.split(",");
 				sb.append(" RETURN doc." + props[0] + " as " + props[0]);
 				for (int i=1; i < props.length; i++) {
-					sb.append(", doc." + props[i] + " as " + props[i] );
+					sb.append(", doc." + props[i] + " as " + props[i]);
 				}
 			}
 		}

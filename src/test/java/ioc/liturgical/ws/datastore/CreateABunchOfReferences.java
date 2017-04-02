@@ -1,4 +1,4 @@
-package delete.me;
+package ioc.liturgical.ws.datastore;
 
 import static org.junit.Assert.*;
 
@@ -13,10 +13,7 @@ import ioc.liturgical.test.framework.TestUsers;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.models.RequestStatus;
-import ioc.liturgical.ws.models.ResultJsonObjectArray;
-import ioc.liturgical.ws.models.db.docs.Reference;
-import ioc.liturgical.ws.models.db.forms.ReferenceCreateForm;
-import net.ages.alwb.utils.core.id.managers.IdManager;
+import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
 
 public class CreateABunchOfReferences {
 
@@ -48,6 +45,7 @@ public class CreateABunchOfReferences {
 				, TestUsers.WS_ADMIN.id
 				, pwd
 				, false // do not build domainMap
+				, false // not read only
 				, internalManager
 				);
 		
@@ -64,17 +62,9 @@ public class CreateABunchOfReferences {
 		
 		// create
 		for (int i=1; i < 5; i++) {
-		   ReferenceCreateForm form = testReferences.getCreateForm(i);
-			IdManager fromIdManager = new IdManager(form.getIdReferredByText());
-			IdManager toIdManager = new IdManager(form.getIdReferredToText());
+		   LinkRefersToBiblicalTextCreateForm form = testReferences.getCreateForm(i);
 		   RequestStatus status = externalManager.addReference(
 	    			TestUsers.WS_ADMIN.id
-	    			, fromIdManager.get(0)
-	    			, fromIdManager.get(1)
-	    			, fromIdManager.get(2)
-	    			, toIdManager.get(0)
-	    			, toIdManager.get(1)
-	    			, toIdManager.get(2)
 	    			, form.toJsonString()
 	    			);
 	    	assertTrue(status.getCode() == 201); // created

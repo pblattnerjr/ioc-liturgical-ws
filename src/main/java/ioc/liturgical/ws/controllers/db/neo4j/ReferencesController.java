@@ -27,7 +27,7 @@ public class ReferencesController {
 		/**
 		 * GET controllers
 		 */
-		String path = ENDPOINTS_DB_API.REFERENCES.toLibraryTopicKeyPath();
+		String path = ENDPOINTS_DB_API.LINK_REFERS_TO_BIBLICAL_TEXT.toLibraryTopicKeyPath();
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
@@ -41,7 +41,7 @@ public class ReferencesController {
 			return json.toString();
 		});
 
-		path = ENDPOINTS_DB_API.REFERENCES.toLibraryTopicPath();
+		path = ENDPOINTS_DB_API.LINK_REFERS_TO_BIBLICAL_TEXT.toLibraryTopicPath();
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
@@ -55,12 +55,12 @@ public class ReferencesController {
 			return json.toString();
 		});
 
-		path = ENDPOINTS_DB_API.REFERENCES.toLibraryPath();
-		String db = ENDPOINTS_DB_API.REFERENCES.toDbLibraryTopic(); // yes, this is correct.  references is a topic.
-		ControllerUtils.reportPath(logger, "GET", path + " maps to database id " + db);
+		path = ENDPOINTS_DB_API.LINK_REFERS_TO_BIBLICAL_TEXT.toLibraryPath();
+		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
-			JsonObject json = storeManager.getForIdStartsWith(db);
+			String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
+			JsonObject json = storeManager.getForIdStartsWith(query);
 			if (json.get("valueCount").getAsInt() > 0) {
 				response.status(HTTP_RESPONSE_CODES.OK.code);
 			} else {
@@ -72,25 +72,14 @@ public class ReferencesController {
 		/**
 		 * POST controllers
 		 */
-		path = NEW_FORM_CLASSES_DB_API.NEW_REFERENCE.toPostPath();
+		
+		path = NEW_FORM_CLASSES_DB_API.NEW_LINK_REFERS_TO_BIBLICAL_TEXT.toPostPath();
 		ControllerUtils.reportPath(logger, "POST", path);
 		post(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
-			String fromLibrary = "";
-			String fromTopic = "";
-			String fromKey = "";
-			String toLibrary = "";
-			String toTopic = "";
-			String toKey = "";
 			RequestStatus requestStatus = storeManager.addReference(
 					requestor
-					, fromLibrary
-					, fromTopic
-				    , fromKey
-					, toLibrary
-					, toTopic
-					, toKey
 					, request.body()
 					);
 			response.status(requestStatus.getCode());
@@ -100,7 +89,7 @@ public class ReferencesController {
 		/**
 		 * PUT controllers
 		 */
-		path = ENDPOINTS_DB_API.REFERENCES.toLibraryTopicPath();
+		path = ENDPOINTS_DB_API.LINK_REFERS_TO_BIBLICAL_TEXT.toLibraryTopicPath();
 		ControllerUtils.reportPath(logger, "PUT", path);
 		put(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);

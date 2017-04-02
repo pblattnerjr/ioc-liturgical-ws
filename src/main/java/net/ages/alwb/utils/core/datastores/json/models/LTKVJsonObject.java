@@ -2,9 +2,7 @@ package net.ages.alwb.utils.core.datastores.json.models;
 
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -190,32 +188,4 @@ public class LTKVJsonObject extends LTK {
 		return sb.toString();
 	}
 
-	/**
-	 * Turns the POJO into a map with a value for:
-	 * id
-	 * library
-	 * topic
-	 * key
-	 * _valueSchemaId
-	 * value
-	 * labels
-	 * 
-	 * which can then be passed as parameters to a consuming method,
-	 * e.g. the Neo4j bolt interface.
-	 * 
-	 * @return
-	 */
-	public Map<String, Object> getAsPropertiesMap() {
-		Map<String, Object> parameters = new HashMap<String, Object>();
-		 parameters.put("id", this.get_id());
-		 parameters.put("domain", this.getLibrary());
-		 parameters.put("topic", this.getTopic());
-		 parameters.put("key", this.getKey());
-		 parameters.put("_valueSchemaId", this.get_valueSchemaId());
-		 parameters.put("value", this.getValue().toString());
-		 parameters.put("labels", getDelimitedLabels(":"));
-		Map<String, Object> props = new HashMap<String, Object>();
-		props.put("props", parameters);
-		return props;
-	}
 }

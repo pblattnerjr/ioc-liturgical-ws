@@ -24,8 +24,8 @@ import com.google.gson.JsonParser;
 import ioc.liturgical.ws.managers.interfaces.HighLevelDataStoreInterface;
 import ioc.liturgical.ws.models.RequestStatus;
 import ioc.liturgical.ws.models.ResultJsonObjectArray;
-import ioc.liturgical.ws.models.db.docs.Reference;
-import ioc.liturgical.ws.models.db.forms.ReferenceCreateForm;
+import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
+import ioc.liturgical.ws.models.db.links.LinkRefersToBiblicalText;
 import ioc.liturgical.ws.models.ws.db.Domain;
 import ioc.liturgical.ws.models.ws.db.Label;
 import ioc.liturgical.ws.models.ws.db.User;
@@ -44,7 +44,7 @@ import ioc.liturgical.ws.models.ws.forms.UserPasswordForm;
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.ENDPOINTS_ADMIN_API;
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.constants.DB_TOPICS;
+import ioc.liturgical.ws.constants.SYSTEM_MISC_LIBRARY_TOPICS;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.constants.NEW_FORM_CLASSES_ADMIN_API;
 import ioc.liturgical.ws.constants.RESTRICTION_FILTERS;
@@ -65,7 +65,6 @@ import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 
 /**
- * 
  * 
  * @author mac002
  *
@@ -417,7 +416,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 
 
 	private List<String> getDomainIds() {
-		return getIds(DB_TOPICS.DOMAINS.toId(""));
+		return getIds(SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.toId(""));
 	}
 
 	private JsonObject getUserIdsSelectionWidgetSchema() {
@@ -429,7 +428,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	 * @return
 	 */
 	private JsonObject getDomainIdsSelectionWidgetSchema() {
-		return getIdsAsSelectionWidgetSchema("Domains", DB_TOPICS.DOMAINS.toId(""), false, true);
+		return getIdsAsSelectionWidgetSchema("Domains", SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.toId(""), false, true);
 	}
 
 	/**
@@ -451,7 +450,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		}
 
 		if (isDbAdmin(username)) { // get all domains
-			idsList.addAll(getIds(DB_TOPICS.DOMAINS.toId("")));
+			idsList.addAll(getIds(SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.toId("")));
 		} else { // only get domains for which the user is authorized to be an administrator
 			idsList.addAll(getIds(ROLES.ADMIN.keyname + "%" + username));
 		}
@@ -464,7 +463,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		for (int i=0; i < idsList.size(); i++) {
 			String x = "";
 			IdManager idManager = new IdManager(idsList.get(i));
-			if (idManager.get(0).startsWith(DB_TOPICS.DOMAINS.lib)) {
+			if (idManager.get(0).startsWith(SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.lib)) {
 				idsArray[i] = idManager.get(2);
 				labelsArray[i] = idManager.get(2);
 			} else {
@@ -764,7 +763,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	}
 	
 	public boolean isDomainLibrary(String library) {
-		JsonObject json = getForId(DB_TOPICS.DOMAINS.toId(library));
+		JsonObject json = getForId(SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.toId(library));
 		return json.get("valueCount").getAsInt() > 0;
 	}
 
@@ -1020,8 +1019,8 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 				domain.setModifiedWhen(domain.getCreatedWhen());
 				String key = Joiner.on("_").join(form.getLanguageCode(), form.getCountryCode(), form.getRealm());
 				result = addLTKVJsonObject(
-						DB_TOPICS.DOMAINS.lib
-						, DB_TOPICS.DOMAINS.topic
+						SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.lib
+						, SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.topic
 						, key
 						, domain.schemaIdAsString()
 						, domain.toJsonObject()
@@ -1058,8 +1057,8 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 				label.setCreatedWhen(getTimestamp());
 				label.setModifiedWhen(label.getCreatedWhen());
 				result = addLTKVJsonObject(
-						DB_TOPICS.LABELS.lib
-						, DB_TOPICS.LABELS.topic
+						SYSTEM_MISC_LIBRARY_TOPICS.LABELS.lib
+						, SYSTEM_MISC_LIBRARY_TOPICS.LABELS.topic
 						, label.getLabel()
 						, label.schemaIdAsString()
 						, label.toJsonObject()
@@ -1273,8 +1272,8 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		RequestStatus result = new RequestStatus();
 		try {
 	    	result = updateLTKVJsonObject(
-	    			DB_TOPICS.DOMAINS.lib
-	    			, DB_TOPICS.DOMAINS.topic
+	    			SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.lib
+	    			, SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.topic
 	    			, key
 	    			, obj.schemaIdAsString()
 	    			, obj.toJsonObject()
@@ -1316,8 +1315,8 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		RequestStatus result = new RequestStatus();
 		try {
 	    	result = updateLTKVJsonObject(
-	    			DB_TOPICS.LABELS.lib
-	    			, DB_TOPICS.LABELS.topic
+	    			SYSTEM_MISC_LIBRARY_TOPICS.LABELS.lib
+	    			, SYSTEM_MISC_LIBRARY_TOPICS.LABELS.topic
 	    			, key
 	    			, obj.schemaIdAsString()
 	    			, obj.toJsonObject()
@@ -1405,8 +1404,8 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		for (SCHEMA_CLASSES s :SCHEMA_CLASSES.values()) {
 			ValueSchema schema = new ValueSchema(s.obj);
 			String id = new IdManager(
-					DB_TOPICS.SCHEMAS.lib
-					, DB_TOPICS.SCHEMAS.topic
+					SYSTEM_MISC_LIBRARY_TOPICS.SCHEMAS.lib
+					, SYSTEM_MISC_LIBRARY_TOPICS.SCHEMAS.topic
 					, s.obj.schemaIdAsString()
 					).getId();
 			if (existsUnique(id)) {
@@ -1512,15 +1511,15 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	 * @return
 	 */
 	public boolean existsSchema(String schemaId) {
-		return existsUnique(DB_TOPICS.SCHEMAS.toId(schemaId));
+		return existsUnique(SYSTEM_MISC_LIBRARY_TOPICS.SCHEMAS.toId(schemaId));
 	}
 	
 	public JsonObject getSchema(String key) {
 		JsonObject result = null;
 		try {
-			List<JsonObject> schemas = manager.queryForJsonWhereEqual(DB_TOPICS.SCHEMAS.toId(key));
+			List<JsonObject> schemas = manager.queryForJsonWhereEqual(SYSTEM_MISC_LIBRARY_TOPICS.SCHEMAS.toId(key));
 			if (schemas.size() > 0) {
-				result = manager.queryForJsonWhereEqual(DB_TOPICS.SCHEMAS.toId(key)).get(0);
+				result = manager.queryForJsonWhereEqual(SYSTEM_MISC_LIBRARY_TOPICS.SCHEMAS.toId(key)).get(0);
 			}
 			if (result != null) {
 				result = result.get("value").getAsJsonObject();
@@ -1613,7 +1612,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 
 	public User getUser(String username) {
 		try {			
-			JsonObject obj = getForId(DB_TOPICS.USERS.toId(username));
+			JsonObject obj = getForId(SYSTEM_MISC_LIBRARY_TOPICS.USERS.toId(username));
 			int count = obj.getAsJsonPrimitive("valueCount").getAsInt();
 			if (count != 1) {
 				return null;
@@ -1978,8 +1977,8 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			try {
 				LTKVJsonObject record;
 				record = new LTKVJsonObject(
-						DB_TOPICS.SCHEMAS.lib
-						, DB_TOPICS.SCHEMAS.topic
+						SYSTEM_MISC_LIBRARY_TOPICS.SCHEMAS.lib
+						, SYSTEM_MISC_LIBRARY_TOPICS.SCHEMAS.topic
 						, schemaId
 						, schemaId
 						, json
@@ -1996,13 +1995,13 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	
 	public RequestStatus updateSchema(String schemaId, JsonObject json) {
 		RequestStatus result = new RequestStatus();
-		String id = new IdManager(DB_TOPICS.SCHEMAS.lib,DB_TOPICS.SCHEMAS.topic,schemaId).getId();
+		String id = new IdManager(SYSTEM_MISC_LIBRARY_TOPICS.SCHEMAS.lib,SYSTEM_MISC_LIBRARY_TOPICS.SCHEMAS.topic,schemaId).getId();
 		if (existsUnique(id)) {
 			try {
 				LTKVJsonObject record;
 				record = new LTKVJsonObject(
-						DB_TOPICS.SCHEMAS.lib
-						, DB_TOPICS.SCHEMAS.topic
+						SYSTEM_MISC_LIBRARY_TOPICS.SCHEMAS.lib
+						, SYSTEM_MISC_LIBRARY_TOPICS.SCHEMAS.topic
 						, schemaId
 						, schemaId
 						, json

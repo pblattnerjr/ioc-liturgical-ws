@@ -25,7 +25,7 @@ public enum USER_TOPICS {
 	
 	/**
 	 * Turns the topic and key into a delimited ID
-	 * @param topic
+	 * @param name
 	 * @param key
 	 * @return
 	 */

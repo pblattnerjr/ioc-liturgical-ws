@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -42,12 +41,11 @@ import net.ages.alwb.utils.core.error.handling.ErrorUtils;
  */
 public class AbstractModel {
     private static final Logger logger = LoggerFactory.getLogger(AbstractModel.class);
-	protected double serialVersionUID = 0.0;
+	protected double serialVersionUID = 1.1;
 
-	protected Gson gson = null;
+	protected static Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
 	
 	public AbstractModel() {
-		gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
 	}
 
 	/**
@@ -207,5 +205,7 @@ public class AbstractModel {
 	    	} else {
 	        	gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();        		
 	    	}
-		}
+	}
+	
+
 }

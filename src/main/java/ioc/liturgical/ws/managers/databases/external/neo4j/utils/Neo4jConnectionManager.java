@@ -1,7 +1,5 @@
 package ioc.liturgical.ws.managers.databases.external.neo4j.utils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,12 +16,20 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
+import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
+import ioc.liturgical.ws.constants.SCHEMA_CLASSES;
 import ioc.liturgical.ws.managers.exceptions.DbException;
 import ioc.liturgical.ws.managers.interfaces.LowLevelDataStoreInterface;
+import net.ages.alwb.utils.core.datastores.json.models.ModelHelpers;
 import ioc.liturgical.ws.models.RequestStatus;
 import ioc.liturgical.ws.models.ResultJsonObjectArray;
+import ioc.liturgical.ws.models.db.returns.LTKVString;
+import ioc.liturgical.ws.models.db.stats.QueryStatistics;
+import ioc.liturgical.ws.models.db.supers.LTKDb;
+import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
 import net.ages.alwb.utils.core.datastores.json.models.LTKVJsonObject;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import net.ages.alwb.utils.core.misc.Constants;
 
 /**
  * Methods for interacting with a Neo4j database through the bolt interface
@@ -41,17 +47,31 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 	  private String password = "";
 	  private Driver driver = null;
 	  private boolean connectionOK = false;
+	  private boolean readOnly = false;
+	  private static String doc = "doc.";
+	  private static String id = "id";
 
-	  public Neo4jConnectionManager(String username,String password) {
+	  public Neo4jConnectionManager(
+			  String username
+			  ,String password
+			  , boolean readOnly
+			  ) {
 		  this.username = username;
 		  this.password = password;
+		  this.readOnly  = readOnly;
 		  initializeDriver();
 		  }
 
-	  public Neo4jConnectionManager(String boltUrl, String username, String password) {
+	  public Neo4jConnectionManager(
+			  String boltUrl
+			  , String username
+			  , String password
+			  , boolean readOnly
+			  ) {
 		  this.boltUrl = "bolt://"+boltUrl;
 		  this.username = username;
 		  this.password = password;
+		  this.readOnly  = readOnly;
 		  initializeDriver();
 	  }
 	  
@@ -63,7 +83,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 	  
 
 	  private void testConnection() {
-		  ResultJsonObjectArray result = getResultObjectForQuery("match (n) return count(n)", false);
+		  ResultJsonObjectArray result = getResultObjectForQuery("match (n) return count(n)");
 
 		  if (result.getValueCount() > 0) {
 			  logger.info("Connection to Neo4j database is OK.");
@@ -76,12 +96,21 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 	  }
 
 	public ResultJsonObjectArray getForQuery(String query) {
-			return getResultObjectForQuery(query, true);
+			return getResultObjectForQuery(query);
 	}
 
+	/**
+	 * If the result of the query contains records with an id and value,
+	 * they will be converted to either LTKVString or LTKVJsonObject
+	 * depending on whether the value is simple or complex.
+	 * 
+	 * Otherwise, it will return a JsonObject based on the record map.
+	 * 
+	 * @param query
+	 * @return
+	 */
 	  public ResultJsonObjectArray getResultObjectForQuery(
 			  String query
-			  , boolean splitId
 			  ) {
 			ResultJsonObjectArray result = new ResultJsonObjectArray(true);
 			try (org.neo4j.driver.v1.Session session = driver.session()) {
@@ -89,40 +118,56 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 				while (neoResult.hasNext()) {
 					org.neo4j.driver.v1.Record record = neoResult.next();
 						JsonObject o = parser.parse(gson.toJson(record.asMap())).getAsJsonObject();
-						if (o.has("value")) {
-							try {
-								String strValue = o.get("value").getAsString();
-								JsonObject objValue = parser.parse(strValue).getAsJsonObject();
-								o.add("value", objValue);
-							} catch (Exception e) {
-								// move on.  Forget it...
-							}
-						}
-						if (splitId && record.containsKey("doc.id")) {
-							String [] idParts = record.get("doc.id").asString().split("~");
-							if (idParts.length == 3) {
-								o.addProperty("doc.domain", idParts[0]);
-								o.addProperty("doc.topic", idParts[1]);
-								o.addProperty("doc.key", idParts[2]);
-							}
+						if (o.has("properties(r)")) {
+							o = parser.parse(gson.toJson(record.get("properties(r)").asMap())).getAsJsonObject();
 						}
 						result.addValue(o);
 				}
-				session.close();
 			} catch (Exception e) {
 				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 				result.setStatusMessage(e.getMessage());
 			}
+			recordQuery(query, result.getStatus().getCode(), result.getCount());
 			return result;
 	}
 
+	  /**
+	   * Record in the database the results of running a query.
+	   * The query can be a create, read, update, or delete.
+	   * 
+	   * To view the queries that have been recorded, open the Neo4j browser
+	   * and run this query:
+	   * 
+	   * match (n:stats) 
+	   * with n.dayOfYear as day 
+	   * return distinct day, count(day)
+	   * order by day
+	   * 
+	   * @param query
+	   * @param statusCode
+	   * @param resultCount
+	   */
+	 public void recordQuery(String query, int statusCode, long resultCount) {
+		 try {
+			  QueryStatistics stats = new QueryStatistics(
+					  Constants.STATS_LIBRARY
+					  , Constants.STATS_TOPIC
+					  , query
+					  , statusCode
+					  , resultCount);
+			  recordQuery(stats);
+		 } catch (Exception e) {
+			 ErrorUtils.report(logger, e);
+		 }
+	  }
+	  
 	  protected void finalize() throws Throwable {
 		  super.finalize();
 		  driver.close();
 		}
 	  
 	  public static void main(String [] args) {
-		  Neo4jConnectionManager q = new Neo4jConnectionManager(args[0], args[1], args[2]);
+		  Neo4jConnectionManager q = new Neo4jConnectionManager(args[0], args[1], args[2], false);
 		  System.out.println(q.isConnectionOK());
 	  }
 
@@ -155,146 +200,208 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 	@Override
 	public RequestStatus insert(LTKVJsonObject doc) throws DbException {
 		RequestStatus result = new RequestStatus();
+		int count = 0;
 		setIdConstraint(doc.getSchemaAsLabel());
 		String query = "create (n:" + doc.getDelimitedLabels(":") + ") set n = {props} return n";
 		try (org.neo4j.driver.v1.Session session = driver.session()) {
-			StatementResult neoResult = session.run(query, doc.getAsPropertiesMap());
-			int count = neoResult.consume().counters().nodesCreated();
-	    	result.setCode(HTTP_RESPONSE_CODES.CREATED.code);
-	    	result.setMessage(HTTP_RESPONSE_CODES.CREATED.message + ": created " + doc.get_id());
-		} catch (Exception e){
-			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
-			result.setDeveloperMessage(e.getMessage());
-		}
-		return result;
-	}
-
-	@Override
-	public void insert(List<JsonObject> docs) throws DbException {
-		// TODO Auto-generated method stub
-		for (JsonObject doc : docs) {
-			System.out.println(doc.toString());
-		}
-	}
-
-	/**
-	 * 
-	 * @param fromId - ID of the node on the 'from' side of the relationship
-	 * @param doc - properties to set for the relationship
-	 * @param toId - ID of the node on the 'to' side of the relationship
-	 * @return 
-	 * @throws DbException
-	 */
-	public RequestStatus createRelationship(
-			String fromId
-			, LTKVJsonObject doc
-			, String toId
-			) throws DbException {
-		RequestStatus result = new RequestStatus();
-		setIdConstraint(doc.getSchemaAsLabel());
-		String matchFrom = "MATCH (f) where f.id = \'" + fromId + "\' match (t) where t.id = \'" + toId + "\'";
-        String queryCreate = " CREATE (f)-[r:REFERS_TO]->(t) set r = {props} return r";
-		String query = matchFrom + queryCreate;
-		try (org.neo4j.driver.v1.Session session = driver.session()) {
-			StatementResult neoResult = session.run(query, doc.getAsPropertiesMap());
-			int count = neoResult.consume().counters().relationshipsCreated();
-			if (count == 0) {
-		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + "   " + doc.get_id());
-			} else {
+			Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
+			StatementResult neoResult = session.run(query, props);
+			count = neoResult.consume().counters().nodesCreated();
+			if (count > 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.CREATED.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.CREATED.message + ": created " + doc.get_id());
+			} else {
+		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + "  " + doc.get_id());
 			}
 		} catch (Exception e){
 			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
 			result.setDeveloperMessage(e.getMessage());
 		}
+    	recordQuery(query, result.getCode(), count);
+		return result;
+	}
+
+	@Override
+	public void insert(List<JsonObject> docs) throws DbException {
+		// TODO Need to implement
+		for (JsonObject doc : docs) {
+			System.out.println(doc.toString());
+		}
+	}
+
+	/**
+	 * @see recordQuery(String, int, long)
+	 * @param doc
+	 * @throws DbException
+	 */
+	public void recordQuery(QueryStatistics doc) throws DbException {
+		if (! readOnly) {
+			String query = "create (n:stats) set n = {props} return n";
+			try (org.neo4j.driver.v1.Session session = driver.session()) {
+				StatementResult neoResult = session.run(
+						query
+						, ModelHelpers.getAsPropertiesMap(doc)
+						);
+			} catch (Exception e){
+				ErrorUtils.report(logger, e);
+			}
+		}
+	}
+
+
+	public RequestStatus createRelationship(
+			String fromId
+			, LTKDb doc
+			, String toId
+			, RELATIONSHIP_TYPES type
+			) throws DbException {
+		RequestStatus result = new RequestStatus();
+		setIdConstraint(doc.getSchemaAsLabel());
+		String matchFrom = "MATCH (f) where f.id = \'" 
+				+ fromId 
+				+ "\' match (t) where t.id = \'" 
+				+ toId 
+				+ "\'"
+				;
+        String queryCreate = " CREATE (f)-[r:" 
+        		+ type.typename 
+        		+ "]->(t) set r = {props} return r";
+		String query = matchFrom + queryCreate;
+		int count = 0;
+		try (org.neo4j.driver.v1.Session session = driver.session()) {
+			Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
+			StatementResult neoResult = session.run(query, props);
+			count = neoResult.consume().counters().relationshipsCreated();
+			if (count == 0) {
+		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + "   " + doc.getId());
+			} else {
+		    	result.setCode(HTTP_RESPONSE_CODES.CREATED.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.CREATED.message + ": created " + doc.getId());
+			}
+		} catch (Exception e){
+			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+			result.setDeveloperMessage(e.getMessage());
+		}
+		recordQuery(query, result.getCode(), count);
 		return result;
 	}
 
 	@Override
 	public RequestStatus updateWhereEqual(LTKVJsonObject doc) throws DbException {
 		RequestStatus result = new RequestStatus();
+		int count = 0;
 		setIdConstraint(doc.getSchemaAsLabel());
 		String query = 
 				"match (n) where n.id = \"" 
 				+ doc.get_id() 
 		        + "\" set n = {props} return count(n)";
 		try (org.neo4j.driver.v1.Session session = driver.session()) {
-			StatementResult neoResult = session.run(query, doc.getAsPropertiesMap());
-			int count = neoResult.consume().counters().nodesCreated();
-	    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
-	    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": updated " + doc.get_id());
+			Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
+			StatementResult neoResult = session.run(query, props);
+			count = neoResult.consume().counters().propertiesSet();
+			if (count > 0) {
+		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": updated " + doc.get_id());
+			} else {
+		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + " " + doc.get_id());
+			}
 		} catch (Exception e){
 			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
 			result.setDeveloperMessage(e.getMessage());
 		}
+    	recordQuery(query, result.getCode(), count);
 		return result;
 	}
 
-	public RequestStatus updateWhereReferenceEqual(LTKVJsonObject doc) throws DbException {
+	public RequestStatus updateWhereRelationshipEqual(LTKDb doc) throws DbException {
 		RequestStatus result = new RequestStatus();
+		int count = 0;
 		setIdConstraint(doc.getSchemaAsLabel());
 		String query = 
 				"match ()-[r]->() where r.id = \"" 
-				+ doc.get_id() 
+				+ doc.getId() 
 		        + "\" set r = {props} return count(r)";
 		try (org.neo4j.driver.v1.Session session = driver.session()) {
-			StatementResult neoResult = session.run(query, doc.getAsPropertiesMap());
-			int count = neoResult.consume().counters().propertiesSet();
-	    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
-	    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": updated " + doc.get_id());
+			Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
+			StatementResult neoResult = session.run(query, props);
+			count = neoResult.consume().counters().propertiesSet();
+			if (count > 0) {
+		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": updated " + doc.getId());
+			} else {
+		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + " " + doc.getId());
+			}
 		} catch (Exception e){
 			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
 			result.setDeveloperMessage(e.getMessage());
 		}
+    	recordQuery(query, result.getCode(), count);
 		return result;
 	}
 
 	@Override
 	public void insert(JsonObject doc) throws DbException {
-		// TODO Auto-generated method stub
-		
+		// TODO need to implement?
 	}
 
 	@Override
 	public RequestStatus deleteWhereEqual(String id) throws DbException {
 		RequestStatus result = new RequestStatus();
+		int count = 0;
 		String query = 
 				"match (n) where n.id = \"" 
 				+ id 
 		        + "\" delete n";
 		try (org.neo4j.driver.v1.Session session = driver.session()) {
 			StatementResult neoResult = session.run(query);
-	    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
-	    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": deleted " + id);
+			count = neoResult.consume().counters().nodesDeleted();
+			if (count > 0) {
+		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": deleted " + id);
+			} else {
+		    	result.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message + " " + id);
+			}
 		} catch (Exception e){
 			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
 			result.setDeveloperMessage(e.getMessage());
 		}
+		recordQuery(query, result.getCode(), count);
 		return result;
 	}
 
 	public RequestStatus deleteRelationshipWhereEqual(String id) throws DbException {
 		RequestStatus result = new RequestStatus();
+		int count = 0;
 		String query = 
 				"match ()-[r]->() where r.id = \"" 
 				+ id 
 		        + "\" delete r";
 		try (org.neo4j.driver.v1.Session session = driver.session()) {
 			StatementResult neoResult = session.run(query);
-	    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
-	    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": deleted " + id);
+			count = neoResult.consume().counters().relationshipsDeleted();
+			if (count > 0) {
+		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": deleted " + id);
+			} else {
+		    	result.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message + " " + id);
+			}
 		} catch (Exception e){
 			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
 			result.setDeveloperMessage(e.getMessage());
 		}
+		recordQuery(query, result.getCode(), count);
 		return result;
 	}
 }

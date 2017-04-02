@@ -1,7 +1,8 @@
 package ioc.liturgical.ws.constants;
 
-import ioc.liturgical.ws.models.db.docs.Reference;
-import ioc.liturgical.ws.models.db.forms.ReferenceCreateForm;
+import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
+import ioc.liturgical.ws.models.db.links.LinkRefersToBiblicalText;
+import ioc.liturgical.ws.models.db.returns.LTKVString;
 import ioc.liturgical.ws.models.ws.db.Domain;
 import ioc.liturgical.ws.models.ws.db.Label;
 import ioc.liturgical.ws.models.ws.db.User;
@@ -31,8 +32,9 @@ public enum SCHEMA_CLASSES {
 	, LABEL_NEW(new LabelCreateForm())
 	, LITURGICAL_DAY_PROPERTIES_FORM(new LiturgicalDayPropertiesForm())
 	, LOGIN(new Login())
-	, REFERENCE(new Reference())
-	, REFERENCE_NEW(new ReferenceCreateForm())
+	, LTKVSTRING(new LTKVString())
+	, REFERENCE(new LinkRefersToBiblicalText("","",""))
+	, REFERENCE_NEW(new LinkRefersToBiblicalTextCreateForm("","",""))
 	, USER(new User())
 	, USER_AUTH(new UserAuth())
 	, USER_CONTACT(new UserContact())
@@ -48,5 +50,14 @@ public enum SCHEMA_CLASSES {
 			 AbstractModel obj
 			) {
 		this.obj = obj;
+	}
+
+	public static AbstractModel modelForSchemaName(String name) {
+		for (SCHEMA_CLASSES s : SCHEMA_CLASSES.values()) {
+			if (s.obj.schemaIdAsString().equals(name)) {
+				return s.obj;
+			}
+		}
+		return null;
 	}
 }

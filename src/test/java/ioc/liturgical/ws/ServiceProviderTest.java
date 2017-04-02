@@ -14,7 +14,8 @@ import ioc.liturgical.ws.constants.ENDPOINTS_DB_API;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.constants.NEW_FORM_CLASSES_ADMIN_API;
 import ioc.liturgical.ws.constants.NEW_FORM_CLASSES_DB_API;
-import ioc.liturgical.ws.models.db.forms.ReferenceCreateForm;
+import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
+import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
 import ioc.liturgical.ws.models.ws.forms.DomainCreateForm;
 
 public class ServiceProviderTest {
@@ -67,9 +68,9 @@ public class ServiceProviderTest {
 	// Reference Controller Tests
 
 	@Test 
-	public void testCreateReference() {
+	public void testCreateAndDeleteReference() {
 		TestReferences testReferences = new TestReferences();
-		ReferenceCreateForm obj = testReferences.getCreateForm(0);
+		LinkRefersToBiblicalTextCreateForm obj = testReferences.getCreateForm(0);
 	    io.restassured.RestAssured
     	.given()
 		.baseUri(TestConstants.BASE_URL)
@@ -79,7 +80,7 @@ public class ServiceProviderTest {
 				, pwd)
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.CREATED.code)
-    	.when().post(NEW_FORM_CLASSES_DB_API.NEW_REFERENCE.toPostPath());
+    	.when().post(NEW_FORM_CLASSES_DB_API.NEW_LINK_REFERS_TO_BIBLICAL_TEXT.toPostPath());
 
 	    io.restassured.RestAssured
     	.given()
@@ -90,6 +91,21 @@ public class ServiceProviderTest {
 		.param("id", obj.getId())
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.OK.code)
-    	.when().delete(Constants.EXTERNAL_DATASTORE_API_PATH + obj.getIdAsPath());
+    	.when().delete(ENDPOINTS_DB_API.LINKS.pathname + obj.getIdAsPath());
+	}
+	@Test 
+	public void testGetReferences() {
+	    io.restassured.RestAssured
+    	.given()
+		.baseUri(TestConstants.BASE_URL)
+		.auth(). preemptive().basic(
+				TestUsers.WS_ADMIN.id
+				, pwd)
+	       .accept(ContentType.JSON)
+	       .param("t", RELATIONSHIP_TYPES.REFERS_TO_BIBLICAL_TEXT.name())
+	       .param("d", "en_us_pentiuc")
+	       .param("l", "a, b")
+	       .expect().statusCode(HTTP_RESPONSE_CODES.OK.code)
+    	.when().get(ENDPOINTS_DB_API.LINKS.pathname);
 	}
 }

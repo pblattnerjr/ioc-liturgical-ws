@@ -3,16 +3,14 @@ package ioc.liturgical.ws.constants;
 import com.google.common.base.Joiner;
 
 /**
- * These are topics for the System DB library.
+ * These are topics for the SYSTEM_LIBS.MISC library.
  * All docs are stored with an ID of library|topic|key.
- * All topics enumerated here belong to the same library, i.e. SYSTEM_LIBS.DB.
  * @author mac002
  *
  */
-public enum DB_TOPICS {
+public enum SYSTEM_MISC_LIBRARY_TOPICS {
 	DOMAINS("domains", "Contains docs for the domains topic in the DB library.")
 	, LABELS("labels", "Contains docs for the labels topic in the DB library.")
-	, REFERENCES("references", "Contains docs for the references topic in the DB library.")
 	, SCHEMAS("schemas", "Library topics and docs relating to schemas")
 	,USERS("users", "Constains docs for the users topic in the DB library.");
 	;
@@ -21,7 +19,7 @@ public enum DB_TOPICS {
 	public String description;
 	public String libTopic;
 	
-	private DB_TOPICS(
+	private SYSTEM_MISC_LIBRARY_TOPICS(
 			String topic
 			, String description
 			) {
@@ -32,7 +30,7 @@ public enum DB_TOPICS {
 	
 	/**
 	 * Turns the topic and key into a delimited ID
-	 * @param topic
+	 * @param name
 	 * @param key
 	 * @return
 	 */

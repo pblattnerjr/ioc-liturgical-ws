@@ -39,6 +39,9 @@ public class IdManager {
 	
 	/**
 	 * This constructor expects the id to have parts delimited by Constants.ID_DELIMTER
+	 * and it should be a simple ID.  That is, there should not be other IDs embedded
+	 * into the ID.  If there are, use the constructor that allows you to indicate
+	 * where the topic and key parts start.
 	 * @param id
 	 */
 	public IdManager(String id) {
@@ -46,6 +49,11 @@ public class IdManager {
 			String[] parts = id.split(splitter);
 			for (String part : parts) {
 					idParts.add(part);
+			}
+			if (parts.length == 3) {
+				this.libaryParts.add(parts[0]);
+				this.topicParts.add(parts[1]);
+				this.keyParts.add(parts[2]);
 			}
 		} catch (Exception e) {
 			ErrorUtils.report(logger, e);

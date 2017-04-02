@@ -42,15 +42,15 @@ public enum ENDPOINTS_ADMIN_API {
 			""
 			, "domains"
 			,"Docs for domains."
-			, DB_TOPICS.DOMAINS.lib
-			, DB_TOPICS.DOMAINS.topic
+			, SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.lib
+			, SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.topic
 			, INCLUDE_IN_RESOURCE_LIST.YES.value
 			)
 	, DOMAINS_NEW(
 			"domains"
 			, "new"
 			,"Create a new domain."
-			, DB_TOPICS.DOMAINS.lib
+			, SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.lib
 			, ""
 			, INCLUDE_IN_RESOURCE_LIST.NO.value
 			)
@@ -58,15 +58,15 @@ public enum ENDPOINTS_ADMIN_API {
 			""
 			, "labels"
 			,"Docs for labels."
-			, DB_TOPICS.LABELS.lib
-			, DB_TOPICS.LABELS.topic
+			, SYSTEM_MISC_LIBRARY_TOPICS.LABELS.lib
+			, SYSTEM_MISC_LIBRARY_TOPICS.LABELS.topic
 			, INCLUDE_IN_RESOURCE_LIST.YES.value
 			)
 	, LABELS_NEW(
 			"labels"
 			, "new"
 			,"Create a new label."
-			, DB_TOPICS.LABELS.lib
+			, SYSTEM_MISC_LIBRARY_TOPICS.LABELS.lib
 			, ""
 			, INCLUDE_IN_RESOURCE_LIST.NO.value
 			)

@@ -1,6 +1,5 @@
 package net.ages.alwb.utils.core.datastores.json.models;
 
-import com.google.common.base.Joiner;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 
@@ -25,9 +24,9 @@ import net.ages.alwb.utils.core.misc.Constants;
  */
 public class LTK extends AbstractModel {
 	@Expose String _id;
-	String library = null;
-	String topic = null;
-	String key = null;
+	@Expose String library = null;
+	@Expose String topic = null;
+	@Expose String key = null;
 	LTKIdManager ltkIdManager = null;
 	Object value = null;
 	String delimiter = Constants.ID_DELIMITER;
@@ -59,14 +58,14 @@ public class LTK extends AbstractModel {
 		this.topic = topic;
 		this.key = key;
 		this.ltkIdManager = new LTKIdManager(library, topic, key);
-		set_id();
+		joinPartsIntoId();
 	}
 
 	public String get_id() {
 		return _id;
 	}
 	
-	public void set_id() throws BadIdException {
+	public void joinPartsIntoId() throws BadIdException {
 		this._id = this.library + delimiter + this.topic + delimiter + this.key;
 	}
 	
@@ -102,7 +101,7 @@ public class LTK extends AbstractModel {
 
 	public void setLibrary(String library)  throws BadIdException  {
 		this.library = library;
-		set_id();
+		joinPartsIntoId();
 	}
 
 
@@ -112,7 +111,7 @@ public class LTK extends AbstractModel {
 
 	public void setTopic(String topic) throws BadIdException {
 		this.topic = topic;
-		set_id();
+		joinPartsIntoId();
 	}
 
 	public String getKey()  {
@@ -121,7 +120,7 @@ public class LTK extends AbstractModel {
 
 	public void setKey(String key) throws BadIdException {
 		this.key = key;
-		set_id();
+		joinPartsIntoId();
 	}
 
 	/**
@@ -176,6 +175,9 @@ public class LTK extends AbstractModel {
 	}
 	public void setLtkIdManager(LTKIdManager ltkIdManager) {
 		this.ltkIdManager = ltkIdManager;
+	}
+	public void set_id(String _id) {
+		this._id = _id;
 	}
 
 

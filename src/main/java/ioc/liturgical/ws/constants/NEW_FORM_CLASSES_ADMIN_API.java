@@ -1,6 +1,6 @@
 package ioc.liturgical.ws.constants;
 
-import ioc.liturgical.ws.models.db.forms.ReferenceCreateForm;
+import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
 import ioc.liturgical.ws.models.ws.forms.AuthorizationCreateForm;
 import ioc.liturgical.ws.models.ws.forms.DomainCreateForm;
 import ioc.liturgical.ws.models.ws.forms.LabelCreateForm;

@@ -4,18 +4,24 @@ import java.text.Normalizer;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import ioc.liturgical.ws.managers.interfaces.HighLevelDataStoreInterface;
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
+import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
 import ioc.liturgical.ws.constants.VERBS;
 import ioc.liturgical.ws.managers.databases.external.neo4j.constants.MATCHERS;
 import ioc.liturgical.ws.managers.databases.external.neo4j.utils.DomainTopicMapBuilder;
@@ -24,8 +30,12 @@ import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.managers.exceptions.DbException;
 import ioc.liturgical.ws.models.RequestStatus;
 import ioc.liturgical.ws.models.ResultJsonObjectArray;
-import ioc.liturgical.ws.models.db.docs.Reference;
-import ioc.liturgical.ws.models.db.forms.ReferenceCreateForm;
+import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
+import ioc.liturgical.ws.models.db.links.LinkRefersToBiblicalText;
+import ioc.liturgical.ws.models.db.returns.LinkRefersToTextToTextTableRow;
+import ioc.liturgical.ws.models.db.supers.LTKDb;
+import ioc.liturgical.ws.models.options.DropdownOptionEntry;
+import ioc.liturgical.ws.models.options.DropdownOptions;
 import net.ages.alwb.utils.core.datastores.json.exceptions.BadIdException;
 import net.ages.alwb.utils.core.datastores.json.exceptions.MissingSchemaIdException;
 import net.ages.alwb.utils.core.datastores.json.models.LTKVJsonObject;
@@ -47,6 +57,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	private boolean logAllQueries = false;
 	private boolean logQueriesWithNoMatches = false;
 	private boolean   prettyPrint = true;
+	private boolean readOnly = false;
 	private Gson gson = new Gson();
 
 	  JsonParser parser = new JsonParser();
@@ -60,13 +71,16 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			  String neo4jDomain
 			  , boolean logQueries
 			  , boolean logQueriesWithNoMatches
+			  , boolean readOnly
 			  , InternalDbManager internalManager
 			  ) {
 		  this.internalManager = internalManager; 
+		  this.readOnly = readOnly;
 		  neo4jManager = new Neo4jConnectionManager(
 				  neo4jDomain
 				  , ServiceProvider.ws_usr
 				  , ServiceProvider.ws_pwd
+				  , readOnly
 				  );
 		  this.logAllQueries = logQueries;
 		  this.logQueriesWithNoMatches = logQueriesWithNoMatches;
@@ -80,13 +94,16 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			  , String adminUserId
 			  , String adminUserPassword
 			  , boolean buildDomainMap
+			  , boolean readOnly
 			  , InternalDbManager internalManager
 			  ) {
+		  this.readOnly = readOnly;
 		  this.internalManager = internalManager; 
 		  neo4jManager = new Neo4jConnectionManager(
 				  neo4jDomain
 				  , adminUserId
 				  , adminUserPassword
+				  , readOnly
 				  );
 		  this.logAllQueries = logQueries;
 		  this.logQueriesWithNoMatches = logQueriesWithNoMatches;
@@ -101,36 +118,23 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  
 		public RequestStatus addReference(
 				String requestor
-				, String fromLibrary
-				, String fromTopic
-			    , String fromKey
-				, String toLibrary
-				, String toTopic
-				, String toKey
 				, String relationshipJson
 				) {
 			RequestStatus result = new RequestStatus();
-			ReferenceCreateForm form = new ReferenceCreateForm();
-			form = (ReferenceCreateForm) form.fromJsonString(relationshipJson);
-			if (internalManager.authorized(requestor, VERBS.POST, form.getDomain())) {
+			LinkRefersToBiblicalTextCreateForm form = new LinkRefersToBiblicalTextCreateForm("","","");
+			form = (LinkRefersToBiblicalTextCreateForm) form.fromJsonString(relationshipJson);
+			if (internalManager.authorized(requestor, VERBS.POST, form.getLibrary())) {
 				String validation = form.validate(relationshipJson);
 				if (validation.length() == 0) {
 					try {
-						IdManager fromIdManager = new IdManager(fromLibrary, fromTopic, fromKey);
-						IdManager toIdManager = new IdManager(toLibrary, toTopic, toKey);
-						Reference ref = new Reference(form); // set ref values from the form values
+						LinkRefersToBiblicalText ref = new LinkRefersToBiblicalText(form); // set ref values from the form values
 						ref.setCreatedBy(requestor);
 						ref.setModifiedBy(requestor);
 						ref.setCreatedWhen(getTimestamp());
 						ref.setModifiedWhen(ref.getCreatedWhen());
-						result = addLTKVJsonObjectAsRelationship(
-								fromIdManager.getId()
-								, toIdManager.getId()
-								, form.getDomain()
-								, form.getIdReferredByText()
-								, form.getIdReferredToText()
-								, ref.schemaIdAsString()
-								, ref.toJsonObject()
+						result = this.addLTKVDbObjectAsRelationship(
+								ref
+								, RELATIONSHIP_TYPES.REFERS_TO_BIBLICAL_TEXT
 								);
 					} catch (Exception e) {
 						result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
@@ -161,7 +165,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  }
 
 	  public JsonObject getForQuery(String query) {
-			ResultJsonObjectArray result = neo4jManager.getResultObjectForQuery(query, true);
+			ResultJsonObjectArray result = neo4jManager.getResultObjectForQuery(query);
 			if (logAllQueries
 					|| 
 					(logQueriesWithNoMatches && result.getResultCount() == 0) 
@@ -199,6 +203,77 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
+		/**
+		 * if the operator is an 'or':
+		 * 
+		 * any (x in ["a", "b"] where x in link.labels)
+		 *
+		 * if the operator is an 'and':
+		 * 
+		 * all (x in ["a", "b"] where x in link.labels)
+		 * 
+		 * @param property
+		 * @param labels
+		 * @param operator
+		 * @return
+		 */
+		private String labelMatcher(String property, String labels, String operator) {
+			StringBuffer result = new StringBuffer();
+			String theOperator = " all "; // initialize but change to any if need be
+			if (operator.trim().equals("or")) {
+				theOperator = " any ";
+			}
+			if (labels != null && labels.length() > 0) {
+				try {
+					String [] parts = labels.split(",");
+					if (parts.length > 0) {
+						result.append(" and ");
+						result.append(theOperator);
+						result.append(" (x in [");
+					    result.append("\"");
+					    result.append(parts[0].trim());
+					    result.append("\" ");
+					}
+					if (parts.length > 1) {
+						for (int i=1; i < parts.length; i++) {
+						    result.append(", \"");
+						    result.append(parts[i].trim());
+						    result.append("\"");
+						}
+					}
+					result.append("] where x in ");
+					result.append(property);
+					result.append(") ");
+				} catch (Exception e) {
+					ErrorUtils.report(logger, e);
+				}
+			}
+			return result.toString();
+		}
+		
+		public ResultJsonObjectArray searchRelationships(
+				String type // to match
+				, String library // library to match
+				, String labels // labels to match
+				, String operator // for labels, e.g. AND, OR
+				) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
+				// TODO: create a query builder for relationship searches
+				String q = "match (from)-[link:" + type + "]->(to)  " 
+					  + "where link.library = \"" + library + "\" " 
+					  + labelMatcher("link.labels", labels, operator)
+			          + LinkRefersToTextToTextTableRow.getReturnClause();
+				result  = neo4jManager.getForQuery(q);
+				result.setQuery(q.toString());
+				result.setValueSchemas(internalManager.getSchemas(result.getResult(), null));
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+
 		private String removePunctuation(String s) {
 			try {
 				return punctPattern.matcher(s).replaceAll("");
@@ -222,6 +297,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, String property
 				, String matcher
 				) {
+			boolean prefixProps = false;
 			String theQuery = query;
 			if (matcher.startsWith("rx")) {
 				// ignore
@@ -234,7 +310,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					}
 				}
 			}
-			CypherQueryBuilder builder = new CypherQueryBuilder()
+			CypherQueryBuilder builder = new CypherQueryBuilder(prefixProps)
 					.MATCH()
 					.LABEL(type)
 					.LABEL(domain)
@@ -263,7 +339,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				break;
 			}
 			}
-			builder.RETURN("id, value");
+			builder.RETURN("id, library, topic, key, value");
 			builder.ORDER_BY("doc.seq"); // TODO: in future this could be a parameter in REST API
 
 			CypherQuery q = builder.build();
@@ -311,48 +387,43 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
-		public RequestStatus addLTKVJsonObjectAsRelationship(
-				String fromId
-				, String toId
-				, String library
-				, String topic
-				, String key
-				, String schemaId
-				, JsonObject json
+		/**
+		 * 
+		 * The topic of the json ID must be set to the 'from' aka 'start' node ID
+		 * of the relationship, and the key must be set to the 'to' aka 'end' node ID.
+		 * @param json
+		 * @return RequestStatus
+		 * @throws BadIdException
+		 * @throws DbException
+		 * @throws MissingSchemaIdException
+		 */
+		public RequestStatus addLTKVDbObjectAsRelationship(
+				LTKDb json
+				, RELATIONSHIP_TYPES type
 				) throws 
 					BadIdException
 					, DbException
 					, MissingSchemaIdException {
 			RequestStatus result = new RequestStatus();
-			if (internalManager.existsSchema(schemaId)) {
-				String id = new IdManager(library,topic,key).getId();
-				if (this.existsUniqueRelationship(id)) {
+			if (internalManager.existsSchema(json.get_valueSchemaId())) {
+				if (this.existsUniqueRelationship(json.getId())) {
 					result.setCode(HTTP_RESPONSE_CODES.CONFLICT.code);
-					result.setMessage(HTTP_RESPONSE_CODES.CONFLICT.message + ": " + id);
+					result.setMessage(HTTP_RESPONSE_CODES.CONFLICT.message + ": " + json.getId());
 				} else {
-					LTKVJsonObject record = 
-							new LTKVJsonObject(
-								library
-								, topic
-								, key
-								, schemaId
-								, json
-								);
-					    result = neo4jManager.createRelationship(fromId, record, toId);		
+					    result = neo4jManager.createRelationship(json.getTopic(), json, json.getKey(), type);		
 				}
 			} else {
-				throw new MissingSchemaIdException(schemaId);
+				throw new MissingSchemaIdException(json.get_valueSchemaId());
 			}
 			return result;
 		}
-		
-		public RequestStatus getRelationshipById(String id) {
-			String query = "match (f)-[r]->(t) where r.id = \"" + id + "\" return f.id, f.value, r.value, t.id, t.value";
-			return new RequestStatus();
-		}
 
-		public RequestStatus getRelationshipByType(String type) {
-			String query = "match (f)-[r:" + type + "]->(t) return f.id, f.value, r.value, t.id, t.value";
+		public RequestStatus getRelationshipById(String id) {
+			String query = "match (from)-[link]->(to) where link.id = \"" 
+					+ id 
+					+ "\"" 
+					+ LinkRefersToTextToTextTableRow.getReturnClause()
+					;
 			return new RequestStatus();
 		}
 
@@ -375,10 +446,6 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result.toString();
 		}
 		
-		public RequestStatus getRelationshipByLabels(String labels) {
-			String query = "match (f)-[r]->(t) where r.labels contains " + labelsAsQuery(labels, "and") + " return f.id, f.value, r.value, t.id, t.value";
-			return new RequestStatus();
-		}
 
 		public RequestStatus getRelationshipByFromId(String id) {
 			return new RequestStatus();
@@ -423,32 +490,19 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
-		public RequestStatus updateLTKVJsonObjectAsReference(
-				String library
-				, String topic
-				, String key
-				, String schemaId
-				, JsonObject json
+		public RequestStatus updateLTKVDbObjectAsReference(
+				LTKDb json
 				) throws BadIdException, DbException, MissingSchemaIdException {
 			RequestStatus result = new RequestStatus();
-			if (internalManager.existsSchema(schemaId)) {
-				String id = new IdManager(library,topic,key).getId();
-				if (existsUniqueRelationship(id)) {
-					LTKVJsonObject record;
-					record = new LTKVJsonObject(
-							library
-							, topic
-							, key
-							, schemaId
-							, json
-							);
-					neo4jManager.updateWhereReferenceEqual(record);		
+			if (internalManager.existsSchema(json.get_valueSchemaId())) {
+				if (existsUniqueRelationship(json.getId())) {
+					neo4jManager.updateWhereRelationshipEqual(json);		
 				} else {
 					result.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
-					result.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message + ": " + id);
+					result.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message + ": " + json.getId());
 				}
 			} else {
-				throw new MissingSchemaIdException(schemaId);
+				throw new MissingSchemaIdException(json.get_valueSchemaId());
 			}
 			return result;
 		}
@@ -459,14 +513,14 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, String json
 				) {
 			RequestStatus result = new RequestStatus();
-			Reference obj = new Reference();
+			LinkRefersToBiblicalText obj = new LinkRefersToBiblicalText("","","");
 			String validation = obj.validate(json);
 			if (validation.length() == 0) {
 				try {
-					obj = (Reference) obj.fromJsonString(json);
+					obj = (LinkRefersToBiblicalText) obj.fromJsonString(json);
 					obj.setModifiedBy(requestor);
 					obj.setModifiedWhen(getTimestamp());
-					result = updateReference(obj);
+					result = updateLTKVDbObjectAsReference(obj);
 				} catch (Exception e) {
 					result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 					result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
@@ -478,29 +532,6 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 		
-		private RequestStatus updateReference(Reference obj
-				) {
-			RequestStatus result = new RequestStatus();
-			try {
-		    	result = updateLTKVJsonObjectAsReference(
-		    			obj.getDomain()
-		    			, obj.getIdReferredByText()
-		    			, obj.getIdReferredToText()
-		    			, obj.schemaIdAsString()
-		    			, obj.toJsonObject()
-		    			);
-			} catch (MissingSchemaIdException e) {
-				ErrorUtils.report(logger, e);
-				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-				result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
-			} catch (Exception e) {
-				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-				result.setMessage(e.getMessage());
-			}
-			return result;
-
-		}
-
 		@Override
 		public boolean existsUnique(String id) {
 			try {
@@ -557,7 +588,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public JsonObject getForIdOfRelationship(String id) {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
-				String q = "match ()-[r]->() where r.id =\"" + id + "\" return r.value";
+				String q = "match ()-[r]->() where r.id =\"" + id + "\" return properties(r)";
 				result  = neo4jManager.getForQuery(q.toString());
 				result.setQuery(q);
 				result.setValueSchemas(internalManager.getSchemas(result.getResult(), null));
@@ -571,16 +602,16 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public ResultJsonObjectArray getReferenceObjectByRefId(String id) {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
-				String q = "match (f)-[r]->(t) where r.id = \"" + id + "\" return r.value";
+				String q = "match (f)-[r]->(t) where r.id = \"" + id + "\" return properties(r)";
 				result  = neo4jManager.getForQuery(q);
 				List<JsonObject> refs = new ArrayList<JsonObject>();
 				List<JsonObject> objects = result.getValues();
 				for (JsonObject object : objects) {
 					try {
 						
-						Reference ref = (Reference) gson.fromJson(
-								object.get("r.value").getAsString()
-								, Reference.class
+						LinkRefersToBiblicalText ref = (LinkRefersToBiblicalText) gson.fromJson(
+								object
+								, LinkRefersToBiblicalText.class
 						);
 						refs.add(ref.toJsonObject());
 					} catch (Exception e) {
@@ -606,7 +637,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public ResultJsonObjectArray getReferenceObjectAndNodesByRefId(String id) {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
-				String q = "match (f)-[r]->(t) where r.id = \"" + id + "\" return f.id, f.value, r, t.id, t.value";
+				String q = "match (from)-[link]->(to) where link.id = \"" 
+						+ id 
+						+ "\"" 
+						+ LinkRefersToTextToTextTableRow.getReturnClause();
 				result  = neo4jManager.getForQuery(q);
 				result.setQuery(q.toString());
 				result.setValueSchemas(internalManager.getSchemas(result.getResult(), null));
@@ -629,10 +663,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		 * @param type
 		 * @return
 		 */
-		public ResultJsonObjectArray getReferenceObjectsAndNodes(String type) {
+		public ResultJsonObjectArray getRelationshipForType(String type) {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
-				String q = "match (f)-[r:" + type + "]->(t)  return f.id, f.value, r.value, t.id, t.value";
+				String q = "match ()-[link:" + type + "]->() return link";
 				result  = neo4jManager.getForQuery(q);
 				result.setQuery(q.toString());
 				result.setValueSchemas(internalManager.getSchemas(result.getResult(), null));
@@ -658,18 +692,29 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		}
 
 		
-		public Reference getReference(String id) {
+		public LinkRefersToBiblicalText getReference(String id) {
 		    	ResultJsonObjectArray result = getReferenceObjectByRefId(id);
-				Reference ref = (Reference) gson.fromJson(
+				LinkRefersToBiblicalText ref = (LinkRefersToBiblicalText) gson.fromJson(
 						result.getValues().get(0)
-						, Reference.class
+						, LinkRefersToBiblicalText.class
 				);	
 				return ref;
 		}
 
 		public RequestStatus deleteForId(String requestor, String id) {
-			// TODO: add test to make sure requestor is authorized
-			return deleteForId(id);
+			RequestStatus result = new RequestStatus();
+			IdManager idManager = new IdManager(id);
+			if (internalManager.authorized(
+					requestor
+					, VERBS.DELETE
+					, idManager.getLibrary()
+					)) {
+		    	result = deleteForId(id);
+			} else {
+				result.setCode(HTTP_RESPONSE_CODES.UNAUTHORIZED.code);
+				result.setMessage(HTTP_RESPONSE_CODES.UNAUTHORIZED.message);
+			}
+			return result;
 		}
 		
 		@Override
@@ -708,10 +753,20 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		 * @param id of the relationship
 		 * @return
 		 */
-		public RequestStatus deleteForRelationshipId(String id) {
+		public RequestStatus deleteForRelationshipId(String requestor, String id) {
 			RequestStatus result = new RequestStatus();
 			try {
-		    	result = neo4jManager.deleteRelationshipWhereEqual(id);
+				IdManager idManager = new IdManager(id, 1, 4);
+				if (internalManager.authorized(
+						requestor
+						, VERBS.DELETE
+						, idManager.getLibrary()
+						)) {
+			    	result = neo4jManager.deleteRelationshipWhereEqual(id);
+				} else {
+					result.setCode(HTTP_RESPONSE_CODES.UNAUTHORIZED.code);
+					result.setMessage(HTTP_RESPONSE_CODES.UNAUTHORIZED.message);
+				}
 			} catch (DbException e) {
 				ErrorUtils.report(logger, e);
 				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
@@ -730,4 +785,139 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public void setPrettyPrint(boolean prettyPrint) {
 			this.prettyPrint = prettyPrint;
 		}	
+		
+		/**
+		 * For each relationship type, returns the properties from the LTKDb
+		 * subclass associated with the type.  The result can be used on the client 
+		 * side to render a dropdown based on the user's selection.
+		 * @return
+		 */
+		public ResultJsonObjectArray getRelationshipTypePropertyMaps() {
+			ResultJsonObjectArray result = new ResultJsonObjectArray(false);
+			try {
+				Map<String,List<String>> map = RELATIONSHIP_TYPES.propertyMap();
+				List<JsonObject> list = new ArrayList<JsonObject>();
+				JsonObject json = new JsonObject();
+				for ( Entry<String, List<String>> entry : map.entrySet()) {
+					JsonArray array = new JsonArray();
+					for (String prop : entry.getValue()) {
+						array.add(prop);
+					}
+					json.add(entry.getKey(), array);
+				}
+				list.add(json);
+				result.setResult(list);
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+
+		/**
+		 * Get the unique set of labels currently in use for the specified relationship type
+		 * @param type name of the relationship
+		 * @return
+		 */
+		public JsonArray getRelationshipLabels(String type) {
+			JsonArray result  = new JsonArray();
+			try {
+				String q = "match ()-[link:" + type + "]->() return distinct link.labels as " + type;
+				JsonArray queryResult  = neo4jManager.getForQuery(q).getResult().get(0).get(type).getAsJsonArray();
+				List<String> labels  = new ArrayList<String>();
+				// combine the labels into a unique list
+				for (JsonElement obj : queryResult) {
+					if (! labels.contains(obj.getAsString())) {
+						labels.add(obj.getAsString());
+					}
+				}
+				// sort the labels
+				java.util.Collections.sort(labels);
+				// add the labels to a JsonArray of Option Entries.
+				for (String label : labels) {
+					DropdownOptionEntry entry = new DropdownOptionEntry(label);
+					result.add(entry.toJsonObject());
+				}
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+			return result;
+		}
+
+		/**
+		 * Get the unique set of labels currently in use for the specified relationship type
+		 * @param type name of the relationship
+		 * @return
+		 */
+		public JsonObject getRelationshipLabelsForAllTypes() {
+			JsonObject result  = new JsonObject();
+			try {
+				for (RELATIONSHIP_TYPES t : RELATIONSHIP_TYPES.values()) {
+					JsonArray value = getRelationshipLabels(t.typename);
+					result.add(t.typename, value);
+				}
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+			return result;
+		}
+
+		/**
+		 * Returns a JsonObject with the following structure:
+		 * dropdown: {
+		 * 		typelist: [{Option}] // for a dropdown list of the available relationship types, as options, e.g. value : label
+		 *     , typeprops: {
+		 *     		someTypeName: [{Option}]
+		 *         , someOtherTypeName: [{Option}]
+		 *     }
+		 *     , typelabels: {
+		 *     		someTypeName: [string, string, string]
+		 *         , someOtherTypeName: [string, string, string]
+		 *     }
+		 *     
+		 *     How to use:
+		 *     1. Load typelist into a dropdown list.
+		 *     2. When user selects a type:
+		 *          2.1 Use the typename to lookup the typeprops and set the properties dropdown to them
+		 *          2.2 Use the typename to lookup the typelabels and set the labels using them.
+		 * }
+		 * @return
+		 */
+		public ResultJsonObjectArray getRelationshipSearchDropdown() {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
+				JsonObject values = new JsonObject();
+				values.add("typelist", getRelationshipTypesArray());
+				values.add("typeprops", RELATIONSHIP_TYPES.propertyJson());
+				values.add("typelabels", getRelationshipLabelsForAllTypes());
+
+				JsonObject jsonDropdown = new JsonObject();
+				jsonDropdown.add("dropdown", values);
+
+				List<JsonObject> list = new ArrayList<JsonObject>();
+				list.add(jsonDropdown);
+
+				result.setResult(list);
+				result.setQuery("get dropdowns for relationship search");
+
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+		
+		public JsonArray getRelationshipTypesArray() {
+			JsonArray result = new JsonArray();
+			try {
+				DropdownOptions types = new DropdownOptions();
+				for (RELATIONSHIP_TYPES t : RELATIONSHIP_TYPES.values()) {
+					types.addSingleton(t.typename);
+				}
+				result = types.toJsonArray();
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+			return result;
+		}
 }

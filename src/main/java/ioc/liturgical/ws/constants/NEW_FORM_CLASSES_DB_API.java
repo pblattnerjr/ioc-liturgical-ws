@@ -1,11 +1,6 @@
 package ioc.liturgical.ws.constants;
 
-import ioc.liturgical.ws.models.db.forms.ReferenceCreateForm;
-import ioc.liturgical.ws.models.ws.forms.AuthorizationCreateForm;
-import ioc.liturgical.ws.models.ws.forms.DomainCreateForm;
-import ioc.liturgical.ws.models.ws.forms.LabelCreateForm;
-import ioc.liturgical.ws.models.ws.forms.UserCreateForm;
-import ioc.liturgical.ws.models.ws.forms.UserPasswordChangeForm;
+import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
 import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
 
 /**
@@ -28,10 +23,10 @@ import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
  *
  */
 public enum NEW_FORM_CLASSES_DB_API {
-	NEW_REFERENCE(
+	NEW_LINK_REFERS_TO_BIBLICAL_TEXT(
 			"reference"
-			, new ReferenceCreateForm()
-			, ENDPOINTS_DB_API.REFERENCES_NEW
+			, new LinkRefersToBiblicalTextCreateForm("","","")
+			, ENDPOINTS_DB_API.LINK_REFERS_TO_BIBLICAL_TEXT
 			, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
 			)
 	;

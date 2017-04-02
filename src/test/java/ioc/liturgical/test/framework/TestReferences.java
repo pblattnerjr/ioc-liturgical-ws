@@ -3,7 +3,8 @@ package ioc.liturgical.test.framework;
 import java.util.ArrayList;
 import java.util.List;
 
-import ioc.liturgical.ws.models.db.forms.ReferenceCreateForm;
+import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
+import ioc.liturgical.ws.models.ws.db.Domain;
 
 /**
  * Provides instances of Reference and ReferenceCreateForm
@@ -26,7 +27,7 @@ public class TestReferences {
 	List<String> liturgicalIds = new ArrayList<String>();
 	List<String> biblicalIds = new ArrayList<String>();
 	
-	List<ReferenceCreateForm> referenceCreateForms = new ArrayList<ReferenceCreateForm>();
+	List<LinkRefersToBiblicalTextCreateForm> referenceCreateForms = new ArrayList<LinkRefersToBiblicalTextCreateForm>();
 
 	public TestReferences() {
 		initializeLiturgicalIds();
@@ -43,7 +44,6 @@ public class TestReferences {
 							+ (i+1) 
 							;
 			biblicalIds.add(id);
-			System.out.println(id);
 		}
 	}
 	
@@ -57,17 +57,19 @@ public class TestReferences {
 							+ baseLitKeyPart2
 			;
 			liturgicalIds.add(id);
-			System.out.println(id);
 		}
 	}
 
 	private void initializeReferences() {
-    	ReferenceCreateForm refCf = null;
+    	LinkRefersToBiblicalTextCreateForm refCf = null;
 		for (int i=0; i < instanceSize+1 ; i++) {
-	    	refCf = new ReferenceCreateForm();
-	    	refCf.setDomain("en_us_pentiuc");
-	    	refCf.setIdReferredByText(liturgicalIds.get(i));
-	    	refCf.setIdReferredToText(biblicalIds.get(i));
+	    	refCf = new LinkRefersToBiblicalTextCreateForm(
+	    			"en_us_pentiuc"
+	    			, liturgicalIds.get(i)
+	    			, biblicalIds.get(i)
+	    			);
+	    	refCf.setReferredByPhrase("the referred by phrase");
+	    	refCf.setReferredToPhrase("the referred to phrase");
 	    	refCf.setAnc("anc");
 	    	refCf.setBib("bib");
 	    	refCf.setChr("chr");
@@ -82,7 +84,11 @@ public class TestReferences {
 	    	refCf.setMus("mus");
 	    	refCf.setPtes("ptes");
 	    	refCf.setSyn("syn");
-	    	refCf.setLabels("DELETE:a:b:c:d");
+	    	refCf.addLabel("DELETE");
+	    	refCf.addLabel("a");
+	    	refCf.addLabel("b");
+	    	refCf.addLabel("c");
+	    	refCf.addLabel("d");
 	    	refCf.setTdf("tdf");
 	    	refCf.setText("text");
 	    	refCf.setTheo("theo");
@@ -92,7 +98,8 @@ public class TestReferences {
 		}
 	}
 	
-	public ReferenceCreateForm getCreateForm(int i) {
+	public LinkRefersToBiblicalTextCreateForm getCreateForm(int i) {
 		return referenceCreateForms.get(i);
 	}
+	
 }

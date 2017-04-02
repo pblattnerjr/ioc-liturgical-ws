@@ -14,127 +14,75 @@ import ioc.liturgical.ws.constants.Constants;
  *
  */
 public enum ENDPOINTS_DB_API {
-	DOMAINS(
+	DOCS(
 			""
-			, "domains"
-			,"Docs for domains."
-			, DB_TOPICS.DOMAINS.lib
-			, DB_TOPICS.DOMAINS.topic
-			, INCLUDE_IN_RESOURCE_LIST.YES.value
-			)
-	, DELETE(
-			"doc"
-			, "delete"
-			,"Delete a doc."
+			, ENDPOINT_TYPES.NODE
 			, ""
-			, ""
-			, INCLUDE_IN_RESOURCE_LIST.NO.value
+			,"Endpoint for generic docs"
 			)
-	, DOMAINS_NEW(
+	, DOMAINS(
 			"domains"
-			, "new"
-			,"Create a new domain."
-			, DB_TOPICS.DOMAINS.lib
-			, ""
-			, INCLUDE_IN_RESOURCE_LIST.NO.value
+			, ENDPOINT_TYPES.NODE
+			, "domain"
+			,"Endpoint for domains."
 			)
 	, LABELS(
-			""
-			, "labels"
-			,"Docs for labels."
-			, DB_TOPICS.LABELS.lib
-			, DB_TOPICS.LABELS.topic
-			, INCLUDE_IN_RESOURCE_LIST.YES.value
-			)
-	, LABELS_NEW(
 			"labels"
-			, "new"
-			,"Create a new label."
-			, DB_TOPICS.LABELS.lib
-			, ""
-			, INCLUDE_IN_RESOURCE_LIST.NO.value
+			, ENDPOINT_TYPES.NODE
+			, "label"
+			,"Endpoint for labels."
 			)
-	, NEW(
-			"new"
-			, "forms"
-			,"Forms for creating new docs."
+	, LINKS(
+			""
+			, ENDPOINT_TYPES.RELATIONSHIP
 			, ""
-			, ""
-			, INCLUDE_IN_RESOURCE_LIST.YES.value
+			,"Endpoint for generic Relationships"
 			)
-	, REFERENCES(
-			"references"
-			, "references"
-			,"Docs for references."
-			, DB_TOPICS.REFERENCES.lib
-			, DB_TOPICS.REFERENCES.topic
-			, INCLUDE_IN_RESOURCE_LIST.YES.value
+	, LINK_REFERS_TO_BIBLICAL_TEXT(
+			"refers_to_biblical_text"
+			, ENDPOINT_TYPES.RELATIONSHIP
+			, RELATIONSHIP_TYPES.REFERS_TO_BIBLICAL_TEXT.typename
+			,"Endpoint for text A refers to text B"
 			)
-	, REFERENCES_NEW(
-			"references"
-			, "new"
-			,"Create a new reference."
-			, DB_TOPICS.REFERENCES.lib
-			, ""
-			, INCLUDE_IN_RESOURCE_LIST.NO.value
-			)
-	, WILDCARD_LIBRARY(
-			"*"
-			, "/*/*"
-			,"Wildcard Library."
-			, "*"
-			, "/*/*"
-			, INCLUDE_IN_RESOURCE_LIST.NO.value
+	, TEXTS(
+			"texts"
+			, ENDPOINT_TYPES.NODE
+			, "Text"
+			,"Endpoint for text docs"
 			)
 	;
 
-	public String pathPrefix = Constants.INTERNAL_DATASTORE_API_PATH;
-	public String pathname = "";
+	public String pathPrefix = Constants.EXTERNAL_DATASTORE_API_PATH;
+	public String name = "";
 	public String label = "";
-	public String library = "";
-	public String topic = "";
-	public String mapsToLibrary = "";
-	public String mapsToTopic = "";
+	public String pathname = "";
+	public ENDPOINT_TYPES type = null;
 	public String description = "";
-	public boolean includeInResourcesList = true;
 	
 	/**
 	 * 
-	 * @param library - as it will display in the client
-	 * @param topic - as it will display in the client
-	 * @param description - of the endpoint
-	 * @param mapsToLibrary - which DB library to map to
-	 * @param mapsToTopic - which DB topic to map to
-	 * @param includeInResourcesList - include as an endpoint when user asks for Resources?
+	 * @param name - endpoint name as appears in the REST API
+	 * @param type - node or relationship
+	 * @param label - name used in database, e.g. node label or relationship type name
+	 * @param description
 	 */
 	private ENDPOINTS_DB_API(
-			String library
-			, String topic
+			String name
+			, ENDPOINT_TYPES type
+			, String label
 			, String description
-			, String mapsToLibrary
-			, String mapsToTopic
-			, boolean includeInResourcesList
 			) {
-		this.library = library;
-		this.topic = topic;
-		this.pathname = (library.length() > 0 ? library : SYSTEM_LIBS.MISC.libname) + (topic.length() > 0 ? "/" + topic: "" ) ;
-
+		this.name = name;
+		this.type = type;
+		this.label = label;
 		this.description = description;
-		this.mapsToLibrary = mapsToLibrary;
-		this.mapsToTopic = mapsToTopic;
-		this.includeInResourcesList = includeInResourcesList;
-
-		/**
-		 * Set up how the endpoint will display in a droplist to a user
-		 */
-		this.label = library;
-		if (label.length() > 0) {
-			if (topic.length() > 0) {
-				this.label = this.label + " / ";
-			}
+		pathname = pathPrefix;
+		if (type.equals(ENDPOINT_TYPES.NODE)) {
+			pathname = pathname + Constants.EXTERNAL_DATASTORE_NODE_PATH;
+		} else {
+			pathname = pathname + Constants.EXTERNAL_DATASTORE_RELATIONSHIP_PATH;
 		}
-		this.label = this.label + topic;
-
+		pathname = pathname + this.name;
 	}
 
 	/**
@@ -142,7 +90,7 @@ public enum ENDPOINTS_DB_API {
 	 * @return
 	 */
 	public String toLibraryTopicKeyPath() {
-		return this.pathPrefix + "/" + this.pathname + "/*/*";
+		return this.pathname + Constants.PATH_LIBRARY_TOPIC_KEY_WILDCARD;
 	}
 	
 	/**
@@ -150,60 +98,14 @@ public enum ENDPOINTS_DB_API {
 	 * @return
 	 */
 	public String toLibraryTopicPath() {
-		return this.pathPrefix + "/" + this.pathname + "/*";
+		return this.pathname + Constants.PATH_LIBRARY_TOPIC_WILDCARD;
 	}
 	/**
 	 * 
 	 * @return
 	 */
 	public String toLibraryPath() {
-		return this.pathPrefix + "/" + this.pathname;
-	}
-
-	/**
-	 * Can be used to insert a specific library into the wildcard library,
-	 * leaving the topic and key as wildcards.
-	 * @param library
-	 * @return
-	 */
-	public String toParameterizedWildcardLibrary(String library) {
-		return this.pathPrefix 
-				+ "/" 
-				+ library 
-				+ ENDPOINTS_DB_API.WILDCARD_LIBRARY.topic;
-	}
-
-	public String toDbLibrary() {
-		return this.mapsToLibrary;
+		return this.pathname + Constants.PATH_LIBRARY_WILDCARD;
 	}
 	
-	public String toDbLibraryTopic() {
-		return this.toDbLibrary() +  Constants.ID_DELIMITER + this.mapsToTopic;
-	}
-	
-	public String toDbLibraryTopicKey(String key) {
-		return this.toDbLibraryTopic() +  Constants.ID_DELIMITER + key;
-	}
-	
-	/**
-	 * Converts the REST path into a Database id
-	 * @param path
-	 * @return
-	 */
-	public static String pathToDbId(String path) {
-		String result = path;
-			for (ENDPOINTS_DB_API e : ENDPOINTS_DB_API.values()) {
-				if (e.toLibraryTopicKeyPath().equals(path)) {
-					result = e.mapsToLibrary +  Constants.ID_DELIMITER + e.mapsToTopic + Constants.ID_DELIMITER + "";
-				} else if (e.toLibraryTopicPath().equals(path)) {
-					result = e.mapsToLibrary +  Constants.ID_DELIMITER + e.mapsToTopic;
-				} else if (e.toLibraryPath().equals(path)) {
-					result = e.mapsToLibrary;
-				} else if (path.length() == 0) {
-					result = e.mapsToLibrary +  Constants.ID_DELIMITER + e.mapsToTopic;
-				}
-			}
-			return result;
-	}
-
 }

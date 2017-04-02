@@ -4,31 +4,31 @@ import com.google.gson.annotations.Expose;
 
 import ioc.liturgical.ws.annotations.UiWidget;
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.constants.DB_TOPICS;
+import ioc.liturgical.ws.models.db.links.LinkRefersToBiblicalText;
+import ioc.liturgical.ws.models.db.supers.LTK;
 import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
 
 import com.github.reinert.jjschema.Attributes;
 
 /**
- * This class provides a POJO for use in web forms to create or update a domain
+ * This class provides a POJO for use in web forms to create or update a reference
  * @author mac002
  *
  */
 @Attributes(title = "Reference", description = "A reference is a doc that records information about a reference made in a text to something else.  For example, a liturgical text might be a hymn that refers to a person, place, or event, e.g. in the Bible.")
-public class ReferenceCreateForm extends AbstractModel {
+public class LinkRefersToBiblicalTextCreateForm extends LTK {
 	
-	@Attributes(required = true, description = "The Domain for this Reference.")
-	@Expose String domain = "";
+	private static double serialVersion = 1.1;
+	private static String schema = LinkRefersToBiblicalTextCreateForm.class.getSimpleName();
 
-	@Attributes(required = true, description = "The database ID of the doc containing the text that makes a reference to another text.")
-	@Expose String idReferredByText = "";
+	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
+	@Attributes(required = false, description = "Word or phrase that makes the reference")
+	@Expose String referredByPhrase = "";
 
-	@Attributes(required = true, description = "The database ID of the doc containing the text that is referred to by another text.")
-	@Expose String idReferredToText = "";
+	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
+	@Attributes(required = false, description = "Word or phrase that is referred to")
+	@Expose String referredToPhrase = "";
 
-	@Attributes(required = true, readonly=true, description = "Search Labels")
-	@Expose String labels = "";
-	
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Notes on the Text")
 	@Expose String text = "";
@@ -105,41 +105,20 @@ public class ReferenceCreateForm extends AbstractModel {
 	@Attributes(required = false, description = "Theater, Dance, and Film")
 	@Expose String tdf = "";
 
-	public ReferenceCreateForm() {
-		super();
-		this.serialVersionUID = 1.1;
+	public LinkRefersToBiblicalTextCreateForm(
+			String library
+			, String topic
+			, String key
+			) {
+		super(library, topic, key, schema,  serialVersion);
 	}
 	
 	public static void main(String[] args) {
-		ReferenceCreateForm form = new ReferenceCreateForm();
+		LinkRefersToBiblicalTextCreateForm form = new LinkRefersToBiblicalTextCreateForm("","","");
 		form.setPrettyPrint(true);
 		System.out.println(form.toJsonUiSchemaObject().toString());
 		System.out.println(form.toJsonSchemaObject().toString());
 		System.out.println(form.toJsonObject().toString());
-	}
-
-	public String getIdReferredByText() {
-		return idReferredByText;
-	}
-
-	public void setIdReferredByText(String idReferredByText) {
-		this.idReferredByText = idReferredByText;
-	}
-
-	public String getIdReferredToText() {
-		return idReferredToText;
-	}
-
-	public void setIdReferredToText(String idReferredToText) {
-		this.idReferredToText = idReferredToText;
-	}
-
-	public String getLabels() {
-		return labels;
-	}
-
-	public void setLabels(String labels) {
-		this.labels = labels;
 	}
 
 	public String getText() {
@@ -294,31 +273,20 @@ public class ReferenceCreateForm extends AbstractModel {
 		this.tdf = tdf;
 	}
 
-	public String getDomain() {
-		return domain;
+	public String getReferredByPhrase() {
+		return referredByPhrase;
 	}
 
-	public void setDomain(String domain) {
-		this.domain = domain;
-	}
-	
-	public String getId() {
-		return this.domain + Constants.ID_DELIMITER 
-				+ this.getIdReferredByText() + Constants.ID_DELIMITER 
-			    + this.getIdReferredToText();
+	public void setReferredByPhrase(String referredByPhrase) {
+		this.referredByPhrase = referredByPhrase;
 	}
 
-	/**
-	 * Returns the parts of the ID delimited by a forward slash.
-	 * The path returned will also start with a forward slash.
-	 * @return
-	 */
-	public String getIdAsPath() {
-		return "/" + this.domain + "/" + this.getIdReferredByText() + "/" +  this.getIdReferredToText();
+	public String getReferredToPhrase() {
+		return referredToPhrase;
 	}
 
-	public String getKey() {
-		return this.getIdReferredToText();
+	public void setReferredToPhrase(String referredToPhrase) {
+		this.referredToPhrase = referredToPhrase;
 	}
 
 }

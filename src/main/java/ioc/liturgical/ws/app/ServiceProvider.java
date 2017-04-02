@@ -286,6 +286,7 @@ public class ServiceProvider {
 						externalDbDomain
 						, logAllQueries
 						, logQueriesWithNoMatches
+						, externalDbIsReadOnly
 						, storeManager
 						);
 			} else {
@@ -693,7 +694,12 @@ public class ServiceProvider {
 				apiIndex = Constants.EXTERNAL_DATASTORE_API_PATH.split("/").length;
 			}
 			String[] parts = path.split("/");
-			result = parts[apiIndex];
+			try {
+				result = parts[apiIndex];
+			} catch (Exception ouch) {
+				String caughtYou = "";
+				caughtYou = "";
+			}
 		} catch (Exception e) {
 			ErrorUtils.report(logger, e);
 		}

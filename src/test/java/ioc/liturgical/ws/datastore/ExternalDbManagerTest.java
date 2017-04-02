@@ -7,15 +7,17 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 
 import ioc.liturgical.test.framework.TestReferences;
 import ioc.liturgical.test.framework.TestUsers;
+import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.models.RequestStatus;
 import ioc.liturgical.ws.models.ResultJsonObjectArray;
-import ioc.liturgical.ws.models.db.docs.Reference;
-import ioc.liturgical.ws.models.db.forms.ReferenceCreateForm;
+import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
+import ioc.liturgical.ws.models.db.links.LinkRefersToBiblicalText;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 
 public class ExternalDbManagerTest {
@@ -48,6 +50,7 @@ public class ExternalDbManagerTest {
 				, TestUsers.WS_ADMIN.id
 				, pwd
 				, false // do not build domainMap
+				, false // not read only
 				, internalManager
 				);
 		
@@ -73,17 +76,9 @@ public class ExternalDbManagerTest {
 	   public void testReferenceCrud() {
 		
 		// create
-		   ReferenceCreateForm form = testReferences.getCreateForm(0);
-			IdManager fromIdManager = new IdManager(form.getIdReferredByText());
-			IdManager toIdManager = new IdManager(form.getIdReferredToText());
+		   LinkRefersToBiblicalTextCreateForm form = testReferences.getCreateForm(0);
 		   RequestStatus status = externalManager.addReference(
 	    			TestUsers.WS_ADMIN.id
-	    			, fromIdManager.get(0)
-	    			, fromIdManager.get(1)
-	    			, fromIdManager.get(2)
-	    			, toIdManager.get(0)
-	    			, toIdManager.get(1)
-	    			, toIdManager.get(2)
 	    			, form.toJsonString()
 	    			);
 	    	assertTrue(status.getCode() == 201); // created
@@ -92,9 +87,9 @@ public class ExternalDbManagerTest {
 	    	ResultJsonObjectArray result = externalManager.getReferenceObjectByRefId(
 	    			testReferences.getCreateForm(0).getId()
 	    			);
-			Reference ref = (Reference) gson.fromJson(
+			LinkRefersToBiblicalText ref = (LinkRefersToBiblicalText) gson.fromJson(
 					result.getValues().get(0)
-					, Reference.class
+					, LinkRefersToBiblicalText.class
 			);	
     	assertTrue(ref.getId().equals(testReferences.getCreateForm(0).getId()));
 	    	
@@ -113,4 +108,48 @@ public class ExternalDbManagerTest {
 	    	status = externalManager.deleteRelationshipForId(ref.getId());
 	    	assertTrue(status.getCode() == 200);
 	    }
+	
+	@Test
+	   public void testReferenceGetForType() {
+	    	ResultJsonObjectArray result = 
+	    			externalManager.getRelationshipForType(
+	    					RELATIONSHIP_TYPES.REFERS_TO_BIBLICAL_TEXT.typename
+	    					);
+			assertTrue(result.getResultCount() > 0 && result.getStatus().getCode() == 200);
+	    }
+
+	@Test
+	   public void testReferenceSearch() {
+	    	ResultJsonObjectArray result = 
+	    			externalManager.searchRelationships(
+	    					RELATIONSHIP_TYPES.REFERS_TO_BIBLICAL_TEXT.typename
+	    					, "en_us_pentiuc"
+	    					, "a,b" // labels
+	    					, "or" // operator
+	    					);
+			assertTrue(result.getResultCount() > 0 && result.getStatus().getCode() == 200);
+	    }
+
+	@Test
+	   public void testRelationshipPropertiesMap() {
+	    	ResultJsonObjectArray result = 
+	    			externalManager.getRelationshipTypePropertyMaps();
+			assertTrue(result.getStatus().getCode() == 200 && result.getResultCount() > 0);
+	    }
+	
+	
+	@Test
+	   public void testRelationshipLabelsList() {
+	    	JsonArray result = 
+	    			externalManager.getRelationshipLabels(RELATIONSHIP_TYPES.REFERS_TO_BIBLICAL_TEXT.typename);
+			assertTrue(result.size() > 0);
+	    }
+
+	@Test
+	   public void testRelationshipDropdown() {
+	    	ResultJsonObjectArray result = 
+	    			externalManager.getRelationshipSearchDropdown();
+			assertTrue(result.getStatus().getCode() == 200 && result.getResultCount() > 0);
+	    }
+
 }
