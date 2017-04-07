@@ -4,6 +4,7 @@ import com.google.gson.annotations.Expose;
 
 import ioc.liturgical.ws.annotations.UiWidget;
 import ioc.liturgical.ws.constants.Constants;
+import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
 import ioc.liturgical.ws.models.db.supers.LTKDb;
 
 
@@ -49,7 +50,14 @@ public class TextBiblical extends LTKDb {
 			, String topic
 			, String key
 			) {
-		super(library, topic, key, schema, serialVersion);
+		super(
+				library
+				, topic
+				, key
+				, schema
+				, serialVersion
+				, ONTOLOGY_TOPICS.TEXT_BIBLICAL
+				);
 	}
 
 	public String getValue() {

@@ -43,6 +43,7 @@ import ioc.liturgical.ws.models.ws.forms.UserPasswordChangeForm;
 import ioc.liturgical.ws.models.ws.forms.UserPasswordForm;
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.ENDPOINTS_ADMIN_API;
+import ioc.liturgical.ws.constants.EXTERNAL_DB_SCHEMA_CLASSES;
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.constants.SYSTEM_MISC_LIBRARY_TOPICS;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
@@ -599,9 +600,6 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
            	} else {
     			addSchemas(); // this adds the schemas used by the system
            	}
-
-
-
 		} catch (Exception e) {
 			ErrorUtils.report(logger, e);
 		}
@@ -1398,23 +1396,59 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	}
 
 	/**
-	 * Initializes system schemas
+	 * Initializes schemas for both the internal and external databases
 	 */
 	private void addSchemas() {
-		for (SCHEMA_CLASSES s :SCHEMA_CLASSES.values()) {
-			ValueSchema schema = new ValueSchema(s.obj);
-			String id = new IdManager(
-					SYSTEM_MISC_LIBRARY_TOPICS.SCHEMAS.lib
-					, SYSTEM_MISC_LIBRARY_TOPICS.SCHEMAS.topic
-					, s.obj.schemaIdAsString()
-					).getId();
-			if (existsUnique(id)) {
-				updateSchema(s.obj.schemaIdAsString(), schema.toJsonObject());
-			} else {
-				addSchema(s.obj.schemaIdAsString(), schema.toJsonObject());
+		try {
+			for (SCHEMA_CLASSES s :SCHEMA_CLASSES.values()) {
+				try {
+					ValueSchema schema = new ValueSchema(s.obj);
+					String id = new IdManager(
+							SYSTEM_MISC_LIBRARY_TOPICS.SCHEMAS.lib
+							, SYSTEM_MISC_LIBRARY_TOPICS.SCHEMAS.topic
+							, s.obj.schemaIdAsString()
+							).getId();
+					if (existsUnique(id)) {
+						updateSchema(s.obj.schemaIdAsString(), schema.toJsonObject());
+					} else {
+						addSchema(s.obj.schemaIdAsString(), schema.toJsonObject());
+					}
+				} catch (Exception e) {
+					ErrorUtils.report(logger, e);
+				}
 			}
+			for (EXTERNAL_DB_SCHEMA_CLASSES s : EXTERNAL_DB_SCHEMA_CLASSES.values()) {
+				try {
+					ValueSchema schema = new ValueSchema(s.ltk);
+					String id = new IdManager(
+							SYSTEM_MISC_LIBRARY_TOPICS.SCHEMAS.lib
+							, SYSTEM_MISC_LIBRARY_TOPICS.SCHEMAS.topic
+							, s.ltk.schemaIdAsString()
+							).getId();
+					if (existsUnique(id)) {
+						updateSchema(s.ltk.schemaIdAsString(), schema.toJsonObject());
+					} else {
+						addSchema(s.ltk.schemaIdAsString(), schema.toJsonObject());
+					}
+					schema = new ValueSchema(s.ltkDb);
+					id = new IdManager(
+							SYSTEM_MISC_LIBRARY_TOPICS.SCHEMAS.lib
+							, SYSTEM_MISC_LIBRARY_TOPICS.SCHEMAS.topic
+							, s.ltkDb.schemaIdAsString()
+							).getId();
+					if (existsUnique(id)) {
+						updateSchema(s.ltkDb.schemaIdAsString(), schema.toJsonObject());
+					} else {
+						addSchema(s.ltkDb.schemaIdAsString(), schema.toJsonObject());
+					}
+				} catch (Exception e) {
+					ErrorUtils.report(logger, e);
+				}
+			}
+			logger.info("Schemas added");
+		} catch (Exception e) {
+			ErrorUtils.report(logger, e);
 		}
-		logger.info("Schemas added");
 	}
 	
 	private void addRoles() throws BadIdException, SQLException {

@@ -6,62 +6,66 @@ import java.util.TreeMap;
 
 import com.google.gson.JsonObject;
 
-import ioc.liturgical.ws.models.db.links.LinkRefersToBiblicalText;
-import ioc.liturgical.ws.models.db.supers.LTKDb;
-import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
-import net.ages.alwb.utils.core.datastores.json.models.ModelHelpers;
-
 /**
  * Types of Relationships in the Neo4j Database
  * @author mac002
  *
  */
 public enum RELATIONSHIP_TYPES {
-	REFERS_TO_BIBLICAL_TEXT(
+	REFERS_TO_ANIMAL(
+			"REFERS_TO_ANIMAL"
+			, "Doc makes reference to an animal."
+		)
+	, REFERS_TO_BEING(
+			"REFERS_TO_BEING"
+			, "Doc makes reference to a being."
+			)
+	, REFERS_TO_BIBLICAL_TEXT(
 			"REFERS_TO_BIBLICAL_TEXT"
 			, "Doc makes reference to Biblical text."
-			, new LinkRefersToBiblicalText("","",""))
+			)
+	, REFERS_TO_CONCEPT(
+			"REFERS_TO_CONCEPT"
+			, "Doc makes reference to an abstract concept."
+			)
+	, REFERS_TO_EVENT(
+			"REFERS_TO_EVENT"
+			, "Doc makes reference to an event."
+			)
+	, REFERS_TO_GROUP(
+			"REFERS_TO_GROUP"
+			, "Doc makes reference to a group of people."
+			)
+	, REFERS_TO_OBJECT(
+			"REFERS_TO_OBJECT"
+			, "Doc makes reference to an object."
+			)
+	, REFERS_TO_HUMAN(
+			"REFERS_TO_HUMAN"
+			, "Doc makes reference to a human being."
+			)
+	, REFERS_TO_PLACE(
+			"REFERS_TO_PLACE"
+			, "Doc makes reference to a place."
+			)
+	, REFERS_TO_PLANT(
+			"REFERS_TO_PLANT"
+			, "Doc makes reference to a plant."
+			)
+	, REFERS_TO_ROLE(
+			"REFERS_TO_ROLE"
+			, "Doc makes reference to a role."
+	 )
 	;
 	public String typename;
 	public String description;
-	public LTKDb schema;
 	
 	private RELATIONSHIP_TYPES(
 			String typename
 			, String description
-			, LTKDb schema
 			) {
 		this.typename = typename;
 		this.description = description;
-		this.schema = schema;
-	}
-
-	/**
-	 * Get a map where:
-	 *    relationship typename is the key
-	 *    value is a list of properties used for that relationship type
-	 * @return
-	 */
-	public static Map<String,List<String>> propertyMap() {
-		Map<String, List<String>> result = new TreeMap<String,List<String>>();
-		for (RELATIONSHIP_TYPES t : RELATIONSHIP_TYPES.values()) {
-			result.put(t.typename, ModelHelpers.getPropertiesList(t.schema));
-		}
-		return result;
-	}
-
-	/**
-	 * Creates a Json Object with keys that are the typename and
-	 * values that are a JsonArray of the property names for the
-	 * schema assocated with that typename.
-	 * @return
-	 */
-	public static JsonObject propertyJson() {
-		JsonObject result = new JsonObject();
-		for (RELATIONSHIP_TYPES t : RELATIONSHIP_TYPES.values()) {
-			result.add(t.typename, ModelHelpers.getPropertiesJsonArray(t.schema));
-		}
-		return result;
 	}
 
 }

@@ -39,6 +39,6 @@ public interface LowLevelDataStoreInterface {
 
 	public RequestStatus insert(LTKVJsonObject doc) throws DbException;
     
-    public RequestStatus deleteWhereEqual(String id) throws DbException;
+    public RequestStatus deleteNodeWhereEqual(String id) throws DbException;
 	
 }

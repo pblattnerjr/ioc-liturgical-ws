@@ -4,14 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
-import ioc.liturgical.ws.models.ws.db.Domain;
 
 /**
  * Provides instances of Reference and ReferenceCreateForm
  * @author mac002
  *
  */
-public class TestReferences {
+public class LinkRefersToBiblicalTextTextFactory {
 	
 	int instanceSize = 5;
 	
@@ -29,7 +28,7 @@ public class TestReferences {
 	
 	List<LinkRefersToBiblicalTextCreateForm> referenceCreateForms = new ArrayList<LinkRefersToBiblicalTextCreateForm>();
 
-	public TestReferences() {
+	public LinkRefersToBiblicalTextTextFactory() {
 		initializeLiturgicalIds();
 		initializeBiblicalIds();
 		initializeReferences();
@@ -84,11 +83,11 @@ public class TestReferences {
 	    	refCf.setMus("mus");
 	    	refCf.setPtes("ptes");
 	    	refCf.setSyn("syn");
-	    	refCf.addLabel("DELETE");
-	    	refCf.addLabel("a");
-	    	refCf.addLabel("b");
-	    	refCf.addLabel("c");
-	    	refCf.addLabel("d");
+	    	refCf.addTag("DELETE");
+	    	refCf.addTag("a");
+	    	refCf.addTag("b");
+	    	refCf.addTag("c");
+	    	refCf.addTag("d");
 	    	refCf.setTdf("tdf");
 	    	refCf.setText("text");
 	    	refCf.setTheo("theo");

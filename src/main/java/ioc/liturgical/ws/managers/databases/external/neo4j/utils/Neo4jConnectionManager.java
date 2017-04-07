@@ -17,16 +17,14 @@ import com.google.gson.JsonParser;
 
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
-import ioc.liturgical.ws.constants.SCHEMA_CLASSES;
 import ioc.liturgical.ws.managers.exceptions.DbException;
 import ioc.liturgical.ws.managers.interfaces.LowLevelDataStoreInterface;
 import net.ages.alwb.utils.core.datastores.json.models.ModelHelpers;
 import ioc.liturgical.ws.models.RequestStatus;
 import ioc.liturgical.ws.models.ResultJsonObjectArray;
-import ioc.liturgical.ws.models.db.returns.LTKVString;
 import ioc.liturgical.ws.models.db.stats.QueryStatistics;
 import ioc.liturgical.ws.models.db.supers.LTKDb;
-import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
+import ioc.liturgical.ws.models.db.supers.LTKDbOntologyEntry;
 import net.ages.alwb.utils.core.datastores.json.models.LTKVJsonObject;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 import net.ages.alwb.utils.core.misc.Constants;
@@ -118,8 +116,10 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 				while (neoResult.hasNext()) {
 					org.neo4j.driver.v1.Record record = neoResult.next();
 						JsonObject o = parser.parse(gson.toJson(record.asMap())).getAsJsonObject();
-						if (o.has("properties(r)")) {
-							o = parser.parse(gson.toJson(record.get("properties(r)").asMap())).getAsJsonObject();
+						if (o.has("properties(link)")) {
+							o = parser.parse(gson.toJson(record.get("properties(link)").asMap())).getAsJsonObject();
+						} else if (o.has("properties(doc)")) {
+							o = parser.parse(gson.toJson(record.get("properties(doc)").asMap())).getAsJsonObject();
 						}
 						result.addValue(o);
 				}
@@ -213,6 +213,31 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + "  " + doc.get_id());
+			}
+		} catch (Exception e){
+			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+			result.setDeveloperMessage(e.getMessage());
+		}
+    	recordQuery(query, result.getCode(), count);
+		return result;
+	}
+
+	public RequestStatus insert(LTKDb doc) throws DbException {
+		RequestStatus result = new RequestStatus();
+		int count = 0;
+		setIdConstraint(doc.getSchemaAsLabel());
+		String query = "create (n:" + doc.getDelimitedOntologyLabels() + ") set n = {props} return n";
+		try (org.neo4j.driver.v1.Session session = driver.session()) {
+			Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
+			StatementResult neoResult = session.run(query, props);
+			count = neoResult.consume().counters().nodesCreated();
+			if (count > 0) {
+		    	result.setCode(HTTP_RESPONSE_CODES.CREATED.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.CREATED.message + ": created " + doc.getId());
+			} else {
+		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + "  " + doc.getId());
 			}
 		} catch (Exception e){
 			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
@@ -319,6 +344,34 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		return result;
 	}
 
+	public RequestStatus updateWhereEqual(LTKDb doc) throws DbException {
+		RequestStatus result = new RequestStatus();
+		int count = 0;
+		setIdConstraint(doc.getSchemaAsLabel());
+		String query = 
+				"match (n) where n.id = \"" 
+				+ doc.getId() 
+		        + "\" set n = {props} return count(n)";
+		try (org.neo4j.driver.v1.Session session = driver.session()) {
+			Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
+			StatementResult neoResult = session.run(query, props);
+			count = neoResult.consume().counters().propertiesSet();
+			if (count > 0) {
+		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": updated " + doc.getId());
+			} else {
+		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + " " + doc.getId());
+			}
+		} catch (Exception e){
+			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+			result.setDeveloperMessage(e.getMessage());
+		}
+    	recordQuery(query, result.getCode(), count);
+		return result;
+	}
+
 	public RequestStatus updateWhereRelationshipEqual(LTKDb doc) throws DbException {
 		RequestStatus result = new RequestStatus();
 		int count = 0;
@@ -353,7 +406,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 	}
 
 	@Override
-	public RequestStatus deleteWhereEqual(String id) throws DbException {
+	public RequestStatus deleteNodeWhereEqual(String id) throws DbException {
 		RequestStatus result = new RequestStatus();
 		int count = 0;
 		String query = 
@@ -404,4 +457,28 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		recordQuery(query, result.getCode(), count);
 		return result;
 	}
+	
+	public RequestStatus processConstraintQuery(String query) {
+		RequestStatus result = new RequestStatus();
+		try (org.neo4j.driver.v1.Session session = driver.session()) {
+			StatementResult neoResult = session.run(query);
+			int count = 0;
+			if (query.toLowerCase().contains("create constraint")) {
+				count = neoResult.consume().counters().constraintsAdded();
+			} else {
+				count = neoResult.consume().counters().constraintsRemoved();
+			}
+			if (count < 1) {
+		    	result.setCode(HTTP_RESPONSE_CODES.CONFLICT.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.CONFLICT.message);
+			}
+		} catch (Exception e){
+			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+			result.setDeveloperMessage(e.getMessage());
+		}
+		logger.info(query + ": " + result.getCode());
+		return result;
+	}
+
 }

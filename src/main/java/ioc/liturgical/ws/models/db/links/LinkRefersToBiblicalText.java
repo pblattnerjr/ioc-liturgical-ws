@@ -4,22 +4,24 @@ import com.google.gson.annotations.Expose;
 
 import ioc.liturgical.ws.annotations.UiWidget;
 import ioc.liturgical.ws.constants.Constants;
+import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
+import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
-import ioc.liturgical.ws.models.db.supers.LTKDb;
-
+import ioc.liturgical.ws.models.db.supers.LTKLink;
 
 import com.github.reinert.jjschema.Attributes;
 
 /**
- * This class provides a POJO for use in web forms to create or update a domain
  * @author mac002
  *
  */
-@Attributes(title = "Reference", description = "A reference is a doc that records information about a reference made in a text to something else.  For example, a liturgical text might be a hymn that refers to a person, place, or event, e.g. in the Bible.")
-public class LinkRefersToBiblicalText extends LTKDb {
+@Attributes(title = "Reference to Biblical Text", description = "A reference is a doc that records information about a reference made in a text to a Biblical text.  For example, a liturgical text might be a hymn that refers to a person, place, or event in the Bible.")
+public class LinkRefersToBiblicalText extends LTKLink {
 
 	private static double serialVersion = 1.1;
 	private static String schema = LinkRefersToBiblicalText.class.getSimpleName();
+	private static RELATIONSHIP_TYPES type = RELATIONSHIP_TYPES.REFERS_TO_BIBLICAL_TEXT;
+	private static ONTOLOGY_TOPICS ontoTopic = ONTOLOGY_TOPICS.TEXT_BIBLICAL;
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Word or phrase that makes the reference")
@@ -112,11 +114,27 @@ public class LinkRefersToBiblicalText extends LTKDb {
 			, String topic
 			, String key
 			) {
-		super(library, topic, key, schema, serialVersion);
+		super(
+				library
+				, topic
+				, key
+				, LinkRefersToBiblicalText.schema
+				, LinkRefersToBiblicalText.serialVersion
+				, LinkRefersToBiblicalText.type
+				, LinkRefersToBiblicalText.ontoTopic
+				);
 	}
 
 	public LinkRefersToBiblicalText(LinkRefersToBiblicalTextCreateForm form) {
-		super(form.getLibrary(), form.getTopic(), form.getKey(), schema, serialVersion);
+		super(
+				form.getLibrary()
+				, form.getTopic()
+				, form.getKey()
+				, LinkRefersToBiblicalText.schema
+				, LinkRefersToBiblicalText.serialVersion
+				, LinkRefersToBiblicalText.type
+				, LinkRefersToBiblicalText.ontoTopic
+				);
 		this.setReferredByPhrase(form.getReferredByPhrase());
 		this.setReferredToPhrase(form.getReferredToPhrase());
 		this.setAnc(form.getAnc());
@@ -128,7 +146,7 @@ public class LinkRefersToBiblicalText extends LTKDb {
 		this.setHge(form.getHge());
 		this.setIsl(form.getIsl());
 		this.setJew(form.getJew());
-		this.setLabels(form.getLabels());
+		this.setTags(form.getTags());
 		this.setLit(form.getLit());
 		this.setLitt(form.getLitt());
 		this.setMus(form.getMus());

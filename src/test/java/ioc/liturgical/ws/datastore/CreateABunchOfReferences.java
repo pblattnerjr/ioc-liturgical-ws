@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import com.google.gson.Gson;
 
-import ioc.liturgical.test.framework.TestReferences;
+import ioc.liturgical.test.framework.LinkRefersToBiblicalTextTextFactory;
 import ioc.liturgical.test.framework.TestUsers;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
@@ -20,7 +20,7 @@ public class CreateABunchOfReferences {
 	private static InternalDbManager internalManager;
 	private static ExternalDbManager externalManager;
 
-	private static TestReferences testReferences;
+	private static LinkRefersToBiblicalTextTextFactory testReferences;
 	private static String pwd = "";
 	private static Gson gson = new Gson();
 	
@@ -49,7 +49,7 @@ public class CreateABunchOfReferences {
 				, internalManager
 				);
 		
-		testReferences = new TestReferences();
+		testReferences = new LinkRefersToBiblicalTextTextFactory();
 		
 	}
 

@@ -2,6 +2,7 @@ package ioc.liturgical.ws.controllers.db.neo4j;
 
 import static spark.Spark.get;
 import static spark.Spark.post;
+import static spark.Spark.put;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,14 +29,14 @@ public class Neo4jController {
 	 * returns a login form
 	 * @param storeManager
 	 */
-	public Neo4jController(ExternalDbManager docService) {
+	public Neo4jController(ExternalDbManager externalManager) {
 		
 		// GET docs for specified parameters
 		String path = ENDPOINTS_DB_API.DOCS.pathname;
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
-        	return gson.toJson(docService.search(
+        	return gson.toJson(externalManager.search(
         			request.queryParams("t")  // doc type (e.g. Liturgical, Biblical)
         			, request.queryParams("d")  // domain
         			, request.queryParams("b") // book
@@ -51,15 +52,23 @@ public class Neo4jController {
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
-        	return docService.getDropdownItems().toString();
+        	return externalManager.getDropdownItemsForSearchingText().toString();
 		});
 
-		// GET dropdowns
-		path = Constants.EXTERNAL_DATASTORE_API_PATH  + "/dropdowns";
+		// GET dropdowns for searching docs of type text
+		path = ENDPOINTS_DB_API.DROPDOWNS_TEXTS.pathname;
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
-        	return docService.getDropdownItems().toString();
+        	return externalManager.getDropdownItemsForSearchingText().toString();
+		});
+
+		// GET dropdowns for searching relationship properties
+		path = ENDPOINTS_DB_API.DROPDOWNS_RELATIONSHIPS.pathname;
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+        	return externalManager.getRelationshipSearchDropdown().toJsonString();
 		});
 
 		// GET rels (relationships) for specified parameters
@@ -67,8 +76,8 @@ public class Neo4jController {
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
-        	return gson.toJson(docService.searchRelationships(
-        			request.queryParams("t")  // link type (e.g. REFERS_TO)
+        	return gson.toJson(externalManager.searchRelationships(
+        			request.queryParams("t")  // link type (e.g. REFERS_TO_BIBLICAL_TEXT)
         			, request.queryParams("d")  // domain
         			, request.queryParams("l") // labels
         			, request.queryParams("o") // operator
@@ -82,7 +91,7 @@ public class Neo4jController {
 			response.type(Constants.UTF_JSON);
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
 			String id = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
-			RequestStatus requestStatus = docService.deleteForRelationshipId(requestor, id);
+			RequestStatus requestStatus = externalManager.deleteForRelationshipId(requestor, id);
 			response.status(requestStatus.getCode());
 			return requestStatus.toJsonString();
 		});
@@ -96,10 +105,42 @@ public class Neo4jController {
 			response.type(Constants.UTF_JSON);
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
 			String id = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
-			RequestStatus requestStatus = docService.deleteForId(requestor, id);
+			RequestStatus requestStatus = externalManager.deleteForId(requestor, id);
 			response.status(requestStatus.getCode());
 			return requestStatus.toJsonString();
 		});
+		
+		/**
+		 * POST controllers
+		 */
+		
+		path = ENDPOINTS_DB_API.LINKS.pathname;
+		ControllerUtils.reportPath(logger, "POST", path);
+		post(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			RequestStatus requestStatus = externalManager.addReference(
+					requestor
+					, request.body()
+					);
+			response.status(requestStatus.getCode());
+			return requestStatus.toJsonString();
+		});
+
+		/**
+		 * PUT controllers
+		 */
+		path = ENDPOINTS_DB_API.LINKS.pathname;
+		ControllerUtils.reportPath(logger, "PUT", path);
+		put(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			String id = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
+			RequestStatus requestStatus = externalManager.updateReference(requestor, id, request.body());
+			response.status(requestStatus.getCode());
+			return requestStatus.toJsonString();
+		});
+
 
 }
 

@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import io.restassured.http.ContentType;
 import ioc.liturgical.test.framework.TestConstants;
-import ioc.liturgical.test.framework.TestReferences;
+import ioc.liturgical.test.framework.LinkRefersToBiblicalTextTextFactory;
 import ioc.liturgical.test.framework.TestUsers;
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.Constants;
@@ -69,7 +69,7 @@ public class ServiceProviderTest {
 
 	@Test 
 	public void testCreateAndDeleteReference() {
-		TestReferences testReferences = new TestReferences();
+		LinkRefersToBiblicalTextTextFactory testReferences = new LinkRefersToBiblicalTextTextFactory();
 		LinkRefersToBiblicalTextCreateForm obj = testReferences.getCreateForm(0);
 	    io.restassured.RestAssured
     	.given()
@@ -80,7 +80,7 @@ public class ServiceProviderTest {
 				, pwd)
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.CREATED.code)
-    	.when().post(NEW_FORM_CLASSES_DB_API.NEW_LINK_REFERS_TO_BIBLICAL_TEXT.toPostPath());
+    	.when().post(ENDPOINTS_DB_API.LINKS.pathname);
 
 	    io.restassured.RestAssured
     	.given()
@@ -91,10 +91,11 @@ public class ServiceProviderTest {
 		.param("id", obj.getId())
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.OK.code)
-    	.when().delete(ENDPOINTS_DB_API.LINKS.pathname + obj.getIdAsPath());
+    	.when().delete(ENDPOINTS_DB_API.LINKS.pathname + "/" + obj.getIdAsPath());
 	}
+	
 	@Test 
-	public void testGetReferences() {
+	public void testGetLinksRefersToBiblicalText() {
 	    io.restassured.RestAssured
     	.given()
 		.baseUri(TestConstants.BASE_URL)
@@ -108,4 +109,18 @@ public class ServiceProviderTest {
 	       .expect().statusCode(HTTP_RESPONSE_CODES.OK.code)
     	.when().get(ENDPOINTS_DB_API.LINKS.pathname);
 	}
+
+	@Test 
+	public void testGetDropdownsSearchRelationships() {
+	    io.restassured.RestAssured
+    	.given()
+		.baseUri(TestConstants.BASE_URL)
+		.auth(). preemptive().basic(
+				TestUsers.WS_ADMIN.id
+				, pwd)
+	       .accept(ContentType.JSON)
+	       .expect().statusCode(HTTP_RESPONSE_CODES.OK.code)
+    	.when().get(ENDPOINTS_DB_API.DROPDOWNS_RELATIONSHIPS.pathname);
+	}
+
 }

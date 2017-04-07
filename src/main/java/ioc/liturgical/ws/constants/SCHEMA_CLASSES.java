@@ -1,7 +1,7 @@
 package ioc.liturgical.ws.constants;
 
-import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
-import ioc.liturgical.ws.models.db.links.LinkRefersToBiblicalText;
+import com.google.gson.Gson;
+
 import ioc.liturgical.ws.models.db.returns.LTKVString;
 import ioc.liturgical.ws.models.ws.db.Domain;
 import ioc.liturgical.ws.models.ws.db.Label;
@@ -33,8 +33,6 @@ public enum SCHEMA_CLASSES {
 	, LITURGICAL_DAY_PROPERTIES_FORM(new LiturgicalDayPropertiesForm())
 	, LOGIN(new Login())
 	, LTKVSTRING(new LTKVString())
-	, REFERENCE(new LinkRefersToBiblicalText("","",""))
-	, REFERENCE_NEW(new LinkRefersToBiblicalTextCreateForm("","",""))
 	, USER(new User())
 	, USER_AUTH(new UserAuth())
 	, USER_CONTACT(new UserContact())
@@ -60,4 +58,14 @@ public enum SCHEMA_CLASSES {
 		}
 		return null;
 	}
+	
+	public static SCHEMA_CLASSES classForSchemaName(String name) {
+		for (SCHEMA_CLASSES s : SCHEMA_CLASSES.values()) {
+			if (s.obj.schemaIdAsString().equals(name)) {
+				return s;
+			}
+		}
+		return null;
+	}
+
 }

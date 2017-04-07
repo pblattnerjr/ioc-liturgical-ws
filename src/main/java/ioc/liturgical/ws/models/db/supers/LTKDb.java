@@ -4,9 +4,8 @@ import com.google.gson.annotations.Expose;
 
 import ioc.liturgical.ws.annotations.UiWidget;
 import ioc.liturgical.ws.constants.Constants;
-import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
+import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.github.reinert.jjschema.Attributes;
@@ -43,8 +42,9 @@ public class LTKDb extends LTK {
 			, String key
 			, String schema
 			, double serialVersion
+			, ONTOLOGY_TOPICS ontologyTopic
 			) {
-		super(library, topic, key, schema, serialVersion);
+		super(library, topic, key, schema, serialVersion, ontologyTopic);
 	}
 
 	public boolean isActive() {
@@ -87,12 +87,12 @@ public class LTKDb extends LTK {
 		this.modifiedWhen = modifiedWhen;
 	}
 
-	public List<String> getLabels() {
-		return labels;
+	public List<String> getTags() {
+		return tags;
 	}
 
-	public void setLabels(List<String> labels) {
-		this.labels = labels;
+	public void setTags(List<String> labels) {
+		this.tags = labels;
 	}
 
 	public String get_valueSchemaId() {

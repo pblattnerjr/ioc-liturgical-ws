@@ -63,7 +63,7 @@ public class CypherQuery {
 		if (RETURN.contains("split")) {
 			sb.append(" RETURN " + RETURN);
 		} else if (RETURN.equals("*") || RETURN.length() == 0){
-			sb.append(" RETURN doc");
+			sb.append(" RETURN properties(doc)");
 		} else {
 			if (prefixProperties) {
 				sb.append(" RETURN doc." + RETURN.replaceAll(" ", "").replaceAll(",", ", doc."));

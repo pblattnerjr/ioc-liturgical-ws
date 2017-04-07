@@ -4,6 +4,7 @@ import com.google.gson.annotations.Expose;
 
 import ioc.liturgical.ws.annotations.UiWidget;
 import ioc.liturgical.ws.constants.Constants;
+import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
 import ioc.liturgical.ws.models.db.supers.LTKDb;
 
@@ -41,7 +42,14 @@ public class TextLiturgical extends LTKDb {
 			, String topic
 			, String key
 			) {
-		super(library, topic, key, schema, serialVersion);
+		super(
+				library
+				, topic
+				, key
+				, schema
+				, serialVersion
+				, ONTOLOGY_TOPICS.TEXT_LITURGICAL
+				);
 	}
 
 	public String getValue() {
