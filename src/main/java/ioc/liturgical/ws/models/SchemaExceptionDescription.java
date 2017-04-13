@@ -5,10 +5,10 @@ import com.google.gson.annotations.Expose;
 import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
 
 public class SchemaExceptionDescription extends AbstractModel {
-	@Expose String keyword;
-	@Expose String field;
-	@Expose String expected;
-	@Expose String got;
+	@Expose public String keyword;
+	@Expose public String field;
+	@Expose public String expected;
+	@Expose public String got;
 	
 	public SchemaExceptionDescription(
 			String keyword

@@ -12,13 +12,13 @@ public class UserAuth extends AbstractModel {
 	
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(description="The description of this authorization.")
-	@Expose String description = "";
+	@Expose public String description = "";
 
 	@Attributes(description="The user ID of the person who granted this authorization.")
-	@Expose String grantedBy = "";
+	@Expose public String grantedBy = "";
 
 	@Attributes(description="The date/time when this authorization was granted.")
-	@Expose String grantedWhen = "";
+	@Expose public String grantedWhen = "";
 	
 	
 	public UserAuth() {

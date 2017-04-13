@@ -20,6 +20,11 @@ import com.github.reinert.jjschema.Attributes;
  * Superclass for all docs in the external database.
  * Also used for the CreateForm subclasses.
  * 
+ * The uiSchema order list will be generated from the get and set methods. 
+ * So, if there are any methods that are not explicit property getters and setters
+ * do not name them using get or set.  For example, getIdAsPath() had to be
+ * renamed to toIdAsPath() so the uiSchema did not consider it to be a property.
+ * 
  * Note the distinction between labels and tags.
  * Labels become actual Neo4j node labels, whereas
  * tags are stored as an array of strings.  Labels are
@@ -41,26 +46,27 @@ public class LTK extends AbstractModel {
 	
 	private static final Logger logger = LoggerFactory.getLogger(LTK.class);
 	
-	@Expose private ONTOLOGY_TOPICS ontologyTopic = ONTOLOGY_TOPICS.ROOT;
+	@Attributes(id = "bottom", required = true, readonly = true, minLength = 1, description = "The unique identifier, that is, the ID.")
+	@Expose public String id = "";
+
+	@Attributes(id = "top", required = true, readonly = false, minLength = 1,  description = "The library part of the ID, that is, typically the domain.")
+	@Expose public String library = "";
+
+	@Attributes(id = "top", required = true, readonly = false, minLength = 1, description = "The topic part of the ID.")
+	@Expose public String topic = "";
+
+	@Attributes(id = "top", required = true, readonly = false, minLength = 1, description = "The key part of the ID")
+	@Expose public String key = "";
+
+	@Attributes(id = "top", description="Tags to use when searching for this Doc.")
+	@Expose public List<String> tags = new ArrayList<String>();
 	
-	@Attributes(required = true, readonly = true, minLength = 1, description = "The unique identifier for the schema.")
-	@Expose String _valueSchemaId = "";
-
-	@Attributes(required = true, readonly = true, minLength = 1, description = "The unique identifier, that is, the ID.")
-	@Expose String id = "";
-
-	@Attributes(required = true, readonly = false, minLength = 1,  description = "The library part of the ID, that is, typically the domain.")
-	@Expose String library = "";
-
-	@Attributes(required = true, readonly = false, minLength = 1, description = "The topic part of the ID.")
-	@Expose String topic = "";
-
-	@Attributes(required = true, readonly = false, minLength = 1, description = "The key part of the ID")
-	@Expose String key = "";
-
-	@Attributes(readonly=true, description="Tags to use when searching for this Doc.")
-	@Expose List<String> tags = new ArrayList<String>();
+	@Attributes(id = "bottom", required = true, readonly = true, minLength = 1, description = "The ontology topic for the schema.")
+	@Expose public ONTOLOGY_TOPICS ontologyTopic = ONTOLOGY_TOPICS.ROOT;
 	
+	@Attributes(id = "bottom", required = true, readonly = true, minLength = 1, description = "The unique identifier for the schema.")
+	@Expose public String _valueSchemaId = "";
+
 	public LTK(
 			String library
 			, String topic
@@ -146,11 +152,11 @@ public class LTK extends AbstractModel {
 		}
 	}
 	
-	public String getIdAsPath() {
+	public String toIdAsPath() {
 		return this.library + "/" + this.topic + "/" + this.key;
 	}
 
-	public String getSchemaAsLabel() {
+	public String toSchemaAsLabel() {
 		String result = this._valueSchemaId;
 		try {
 			String [] parts = this._valueSchemaId.split(":");
@@ -179,7 +185,7 @@ public class LTK extends AbstractModel {
 		this.ontologyTopic = ontologyTopic;
 	}
 
-	public List<String> getOntologyLabels() {
+	public List<String> fetchOntologyLabelsList() {
 		return ontologyTopic.toLabelsList();
 	}
 	
@@ -190,7 +196,7 @@ public class LTK extends AbstractModel {
 	 * It is out of our control how they are stored (I, MAC, think).
 	 * @return
 	 */
-	public String getDelimitedOntologyLabels() {
+	public String fetchOntologyLabels() {
 		return StringUtils.join(ontologyTopic.toLabelsList(),":");
 	}
 

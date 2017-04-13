@@ -23,7 +23,6 @@ public class EXTERNAL_DB_SCHEMA_CLASSESTest {
 		}
 		LinkRefersToAnimalCreateForm l = new LinkRefersToAnimalCreateForm(" "," "," ");
 		AnimalCreateForm f = new AnimalCreateForm("Duck");
-		f.setSound("quack");
 		String json = f.toJsonString();
 		String validate = EXTERNAL_DB_SCHEMA_CLASSES.validate(json);
 		assertTrue(validate.length() < 1);

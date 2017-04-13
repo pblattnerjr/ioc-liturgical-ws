@@ -133,26 +133,15 @@ public class LinkRefersToTextToTextTableRow extends AbstractModel {
 		this.toValue = toValue;
 	}
 
-	private static String getReturnClauseFor(String handle, String terminal) {
-		StringBuffer result = new StringBuffer();
-		result.append(handle);
-		result.append("._id as ");
-		result.append(handle);
-		result.append("Id, ");
-		result.append(handle);
-		result.append(".value as ");
-		result.append(handle);
-		result.append("Value");
-		result.append(terminal);
-		return result.toString();
-	}
-	
 	public static String getReturnClause() {
 		StringBuffer result = new StringBuffer();
 		result.append(" return ");
-		result.append(getReturnClauseFor(fromHandle, ", ").replace("_", ""));
-		result.append(getReturnClauseFor(linkHandle, ", "));
-		result.append(getReturnClauseFor(toHandle, "").replace("_", "")); // TODO remove replace after all docs use _id
+		result.append(linkHandle + ".id as id, ");
+		result.append(linkHandle + ".library as library, ");
+		result.append(linkHandle + ".topic as fromId, ");
+		result.append("type(" + linkHandle + ") as type, ");
+		result.append(linkHandle + ".key as toId ");
+		result.append("order by fromId + type + toId ascending");
 		return result.toString();
 	}
 

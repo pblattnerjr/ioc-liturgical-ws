@@ -20,14 +20,14 @@ import com.github.reinert.jjschema.Attributes;
 public class LabelCreateForm extends AbstractModel {
 	
 	@Attributes(required = true, description = "The label.")
-	@Expose String label = "";
+	@Expose public String label = "";
 
 	@Attributes(required = true, description = "Title (meaning of the label code)")
-	@Expose String title = "";
+	@Expose public String title = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = true, description = "Description of the label.")
-	@Expose String description = "";
+	@Expose public String description = "";
 
 	public LabelCreateForm() {
 		super();

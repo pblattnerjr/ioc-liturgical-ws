@@ -15,7 +15,7 @@ import com.github.reinert.jjschema.Attributes;
  * @author mac002
  *
  */
-@Attributes(title = "LinkRefersToBiblicalTextCreateForm", description = "A form to use to create a link from a Liturgical text to a Biblical text.")
+@Attributes(title = "Reference To BiblicalText", description = "A form to use to create a link from a Liturgical text to a Biblical text.")
 public class LinkRefersToBiblicalTextCreateForm extends LTKLinkCreateForm {
 	
 	private static double serialVersion = 1.1;
@@ -25,87 +25,87 @@ public class LinkRefersToBiblicalTextCreateForm extends LTKLinkCreateForm {
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Word or phrase that makes the reference")
-	@Expose String referredByPhrase = "";
+	@Expose public String referredByPhrase = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Word or phrase that is referred to")
-	@Expose String referredToPhrase = "";
+	@Expose public String referredToPhrase = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Notes on the Text")
-	@Expose String text = "";
+	@Expose public String text = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Vocabulary (Lexical Items)")
-	@Expose String voc = "";
+	@Expose public String voc = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Literary Devices")
-	@Expose String dev = "";
+	@Expose public String dev = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Literary Genre")
-	@Expose String gen = "";
+	@Expose public String gen = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "History and Geography")
-	@Expose String hge = "";
+	@Expose public String hge = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Ancient Texts")
-	@Expose String anc = "";
+	@Expose public String anc = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Ancient Cultures")
-	@Expose String cul = "";
+	@Expose public String cul = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Biblical Intertextuality")
-	@Expose String bib = "";
+	@Expose public String bib = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Comparison of Versions / Synoptic Reading")
-	@Expose String syn = "";
+	@Expose public String syn = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Peritestamental Literature")
-	@Expose String ptes = "";
+	@Expose public String ptes = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Jewish Tradition")
-	@Expose String jew = "";
+	@Expose public String jew = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Christian Tradition")
-	@Expose String chr = "";
+	@Expose public String chr = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Liturgy")
-	@Expose String lit = "";
+	@Expose public String lit = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Theology")
-	@Expose String theo = "";
+	@Expose public String theo = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Islam")
-	@Expose String isl = "";
+	@Expose public String isl = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Literature")
-	@Expose String litt = "";
+	@Expose public String litt = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Visual Arts")
-	@Expose String vis = "";
+	@Expose public String vis = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Music")
-	@Expose String mus = "";
+	@Expose public String mus = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Theater, Dance, and Film")
-	@Expose String tdf = "";
+	@Expose public String tdf = "";
 
 	public LinkRefersToBiblicalTextCreateForm(
 			String library

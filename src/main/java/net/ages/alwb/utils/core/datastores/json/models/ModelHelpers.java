@@ -17,7 +17,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.reflect.TypeToken;
 
-import ioc.liturgical.ws.models.options.DropdownOptionEntry;
 import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 
@@ -99,17 +98,18 @@ public class ModelHelpers {
 	}
 
 	/**
-	 * Get the properties as a list of Dropdown Option Entries in a JsonArray.
+	 * Get the properties as a list of Dropdown Items in a JsonArray.
 	 * They will be sorted.
 	 * @param model
 	 * @return
 	 */
-	public static JsonArray getPropertiesJsonArray(AbstractModel model) {
+	public static JsonArray getPropertiesAsDropdownItems(AbstractModel model) {
 		JsonArray result = new JsonArray();
+		result.add(new DropdownItem("Any","*").toJsonObject());
 		List<String> props = getPropertiesList(model);
 		java.util.Collections.sort(props);
 		for (String prop : props) {
-			result.add(new DropdownOptionEntry(prop).toJsonObject());
+			result.add(new DropdownItem(prop).toJsonObject());
 		}
 		return result;
 	}

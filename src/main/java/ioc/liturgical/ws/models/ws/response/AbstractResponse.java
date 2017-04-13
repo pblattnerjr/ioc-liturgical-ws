@@ -19,9 +19,9 @@ import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
  * @param <T>
  */
 public class AbstractResponse <T extends AbstractModel> extends AbstractModel {
-	@Expose JsonObject uiSchema;
-	@Expose JsonObject schema;
-	@Expose List<T> items = new ArrayList<T>();
+	@Expose public JsonObject uiSchema;
+	@Expose public JsonObject schema;
+	@Expose public List<T> items = new ArrayList<T>();
 	private T instanceOfT = null;
 	
 	/**

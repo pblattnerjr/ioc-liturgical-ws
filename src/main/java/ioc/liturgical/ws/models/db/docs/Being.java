@@ -1,11 +1,6 @@
 package ioc.liturgical.ws.models.db.docs;
 
-import com.google.gson.annotations.Expose;
-
-import ioc.liturgical.ws.annotations.UiWidget;
-import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
-import ioc.liturgical.ws.models.db.forms.AnimalCreateForm;
 import ioc.liturgical.ws.models.db.forms.BeingCreateForm;
 import ioc.liturgical.ws.models.db.supers.LTKDbOntologyEntry;
 

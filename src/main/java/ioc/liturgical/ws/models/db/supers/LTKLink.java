@@ -3,7 +3,6 @@ package ioc.liturgical.ws.models.db.supers;
 import com.google.gson.annotations.Expose;
 
 import ioc.liturgical.ws.constants.EXTERNAL_DB_LIBS;
-import ioc.liturgical.ws.constants.EXTERNAL_DB_SCHEMA_CLASSES;
 import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
 import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
 
@@ -16,7 +15,8 @@ import com.github.reinert.jjschema.Attributes;
 @Attributes(title = "LTK Link", description = "Abstract Link with Properties")
 public class LTKLink extends LTKDb {
 
-	@Expose RELATIONSHIP_TYPES type = null;
+	@Attributes(id="bottom",required = true, readonly = true, minLength = 1, description = "The type of link.")
+	@Expose public RELATIONSHIP_TYPES type = null;
 	
 	public LTKLink(
 			String library

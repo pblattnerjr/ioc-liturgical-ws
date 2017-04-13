@@ -8,11 +8,11 @@ import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
 
 public class UserContact extends AbstractModel {
 	@Attributes(required = true, description = "First name")
-	@Expose String firstname = "";
+	@Expose public String firstname = "";
 	@Attributes(required = true, description = "Last name, i.e. family name")
-	@Expose String lastname = "";
+	@Expose public String lastname = "";
 	@Attributes(required = true, description = "Email to contact the user", pattern=FormRegExConstants.EMAIL)
-	@Expose String email = "";
+	@Expose public String email = "";
 	
 	public UserContact() {
 		super();

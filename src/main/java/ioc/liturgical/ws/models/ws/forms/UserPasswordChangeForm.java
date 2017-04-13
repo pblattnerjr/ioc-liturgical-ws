@@ -19,18 +19,18 @@ import com.github.reinert.jjschema.Attributes;
 @Attributes(title = "User Password Change", description = "Form to Change a User's Password")
 public class UserPasswordChangeForm extends AbstractModel {
 	@Attributes(readonly=true, description="id used to login to system", minLength=FormFieldLengths.USERNAME_MIN)
-	@Expose String username = "";
+	@Expose public String username = "";
 	
 	@UiWidget(Constants.UI_WIDGET_PASSWORD)
 	@Attributes(required=true, description=FormRegExConstants.PASSWORD_DESCRIPTION, pattern=FormRegExConstants.PASSWORD_PATTERN)
-	@Expose String password = "";
+	@Expose public String password = "";
 	
 	@UiWidget(Constants.UI_WIDGET_PASSWORD)
 	@Attributes(required=true, description="reenter password", pattern=FormRegExConstants.PASSWORD_PATTERN)
-	@Expose String passwordReenter = "";
+	@Expose public String passwordReenter = "";
 	
 	@Attributes(readonly=true, description="user must change password after first login")
-	@Expose boolean requiresChangeAfterLogin = true;
+	@Expose public boolean requiresChangeAfterLogin = true;
 		
 	public UserPasswordChangeForm() {
 		super();

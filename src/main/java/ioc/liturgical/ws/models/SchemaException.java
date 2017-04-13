@@ -10,10 +10,10 @@ import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
  *
  */
 public class SchemaException extends AbstractModel {
-	@Expose String pointerToViolation = "";
-	@Expose String [] causingExceptions = new String[0];
-	@Expose String keyword = "";
-	@Expose String message = "";
+	@Expose public String pointerToViolation = "";
+	@Expose public String [] causingExceptions = new String[0];
+	@Expose public String keyword = "";
+	@Expose public String message = "";
 	
 	public SchemaException () {
 		super();

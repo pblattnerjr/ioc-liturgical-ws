@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import ioc.liturgical.ws.models.db.docs.Animal;
@@ -51,6 +52,7 @@ import ioc.liturgical.ws.models.db.links.LinkRefersToRole;
 import ioc.liturgical.ws.models.db.supers.LTK;
 import ioc.liturgical.ws.models.db.supers.LTKDb;
 import ioc.liturgical.ws.models.db.supers.LTKLink;
+import net.ages.alwb.utils.core.datastores.json.models.DropdownItem;
 import net.ages.alwb.utils.core.datastores.json.models.ModelHelpers;
 
 /**
@@ -313,12 +315,16 @@ public enum EXTERNAL_DB_SCHEMA_CLASSES {
 	 */
 	public static JsonObject relationshipPropertyJson() {
 		JsonObject result = new JsonObject();
+		JsonArray anyProps = new JsonArray();
+		anyProps.add(new DropdownItem("Any","*").toJsonObject());
+		anyProps.add(new DropdownItem("id","id").toJsonObject());
+		result.add("*", anyProps);
 		for (EXTERNAL_DB_SCHEMA_CLASSES s : EXTERNAL_DB_SCHEMA_CLASSES.values()) {
 			if (s.ltkDb instanceof ioc.liturgical.ws.models.db.supers.LTKLink) {
 				LTKLink link = (LTKLink) s.ltkDb;
 				result.add(
 						link.getType().typename
-						, ModelHelpers.getPropertiesJsonArray(link)
+						, ModelHelpers.getPropertiesAsDropdownItems(link)
 				);
 			}
 		}

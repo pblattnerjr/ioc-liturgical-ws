@@ -21,25 +21,25 @@ import com.github.reinert.jjschema.Attributes;
 public class DomainCreateForm extends AbstractModel {
 	
 	@Attributes(required = true, description = "ISO code for the language, e.g. en.  Must be 2 to 3 characters, with no spaces.", minLength=2, maxLength=3, pattern=FormRegExConstants.NOSPACES)
-	@Expose String languageCode = "";
+	@Expose public String languageCode = "";
 
 	@Attributes(required = true, description = "ISO code for the country, e.g. uk.  Must 2 to 3 characters, with no spaces.", minLength=2, maxLength=3, pattern=FormRegExConstants.NOSPACES)
-	@Expose String countryCode = "";
+	@Expose public String countryCode = "";
 
 	@Attributes(required = true, description = "Realm, e.g. kjv.  Must be 3 to 20 characters, with no spaces.", minLength=3, maxLength=20, pattern=FormRegExConstants.NOSPACES)
-	@Expose String realm = "";
+	@Expose public String realm = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = true, description = "Description of the library.")
-	@Expose String description = "";
+	@Expose public String description = "";
 
 	@UiWidget(Constants.UI_WIDGET_RADIO)
 	@Attributes(required = true, description = "Is this domain public?")
-	@Expose boolean isPublic = true;
+	@Expose public boolean isPublic = true;
 
 	@UiWidget(Constants.UI_WIDGET_CHECKBOXES)
 	@Attributes(required = true, description = "Labels to Use as Doc Types for this domain.")
-	@Expose List<String> labels = new ArrayList<String>();
+	@Expose public List<String> labels = new ArrayList<String>();
 
 	public DomainCreateForm() {
 		super();

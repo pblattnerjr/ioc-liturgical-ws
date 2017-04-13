@@ -15,7 +15,8 @@ import com.github.reinert.jjschema.Attributes;
 @Attributes(title = "LTKLinkCreateForm", description = "Abstract Class to create an LTKLink")
 public class LTKLinkCreateForm extends LTK {
 	
-	@Expose RELATIONSHIP_TYPES type = null;
+	@Attributes(id="bottom", required = true, readonly = true, description = "The type of link")
+	@Expose public RELATIONSHIP_TYPES type = null;
 	
 	public LTKLinkCreateForm(
 			String library

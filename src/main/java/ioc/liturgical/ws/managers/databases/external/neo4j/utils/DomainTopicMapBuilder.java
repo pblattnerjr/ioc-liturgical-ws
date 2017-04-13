@@ -16,6 +16,8 @@ import ioc.liturgical.ws.constants.DROPDOWN_VALUES;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.constants.LITURGICAL_BOOKS;
 import ioc.liturgical.ws.models.ResultJsonObjectArray;
+import net.ages.alwb.utils.core.datastores.json.models.DropdownArray;
+import net.ages.alwb.utils.core.datastores.json.models.DropdownItem;
 
 public class DomainTopicMapBuilder {
 

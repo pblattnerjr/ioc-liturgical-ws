@@ -226,8 +226,8 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 	public RequestStatus insert(LTKDb doc) throws DbException {
 		RequestStatus result = new RequestStatus();
 		int count = 0;
-		setIdConstraint(doc.getSchemaAsLabel());
-		String query = "create (n:" + doc.getDelimitedOntologyLabels() + ") set n = {props} return n";
+		setIdConstraint(doc.toSchemaAsLabel());
+		String query = "create (n:" + doc.fetchOntologyLabels() + ") set n = {props} return n";
 		try (org.neo4j.driver.v1.Session session = driver.session()) {
 			Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
 			StatementResult neoResult = session.run(query, props);
@@ -283,7 +283,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			, RELATIONSHIP_TYPES type
 			) throws DbException {
 		RequestStatus result = new RequestStatus();
-		setIdConstraint(doc.getSchemaAsLabel());
+		setIdConstraint(doc.toSchemaAsLabel());
 		String matchFrom = "MATCH (f) where f.id = \'" 
 				+ fromId 
 				+ "\' match (t) where t.id = \'" 
@@ -347,7 +347,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 	public RequestStatus updateWhereEqual(LTKDb doc) throws DbException {
 		RequestStatus result = new RequestStatus();
 		int count = 0;
-		setIdConstraint(doc.getSchemaAsLabel());
+		setIdConstraint(doc.toSchemaAsLabel());
 		String query = 
 				"match (n) where n.id = \"" 
 				+ doc.getId() 
@@ -375,7 +375,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 	public RequestStatus updateWhereRelationshipEqual(LTKDb doc) throws DbException {
 		RequestStatus result = new RequestStatus();
 		int count = 0;
-		setIdConstraint(doc.getSchemaAsLabel());
+		setIdConstraint(doc.toSchemaAsLabel());
 		String query = 
 				"match ()-[r]->() where r.id = \"" 
 				+ doc.getId() 

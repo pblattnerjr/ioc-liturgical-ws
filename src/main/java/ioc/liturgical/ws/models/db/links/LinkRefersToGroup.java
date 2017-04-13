@@ -15,7 +15,7 @@ import com.github.reinert.jjschema.Attributes;
  * @author mac002
  *
  */
-@Attributes(title = "Reference to Group", description = "This is a doc that records information about a reference made in a text to a group of people.  For example, a liturgical text might be a hymn that refers to a country, or a kingdom, or a monastery.")
+@Attributes(title = "Reference to a Group", description = "This is a doc that records information about a reference made in a text to a group of people.  For example, a liturgical text might be a hymn that refers to a country, or a kingdom, or a monastery.")
 public class LinkRefersToGroup extends LTKLink {
 
 	private static double serialVersion = 1.1;
@@ -25,11 +25,11 @@ public class LinkRefersToGroup extends LTKLink {
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Word or phrase that makes the reference")
-	@Expose String referredByPhrase = "";
+	@Expose public String referredByPhrase = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Comments about the reference")
-	@Expose String comments = "";
+	@Expose public String comments = "";
 
 	public LinkRefersToGroup(
 			String library

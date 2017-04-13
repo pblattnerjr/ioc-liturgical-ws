@@ -14,7 +14,7 @@ import com.github.reinert.jjschema.Attributes;
  * @author mac002
  *
  */
-@Attributes(title = "Reference to Place", description = "This is a doc that records information about a reference made in a text to some place.  For example, a liturgical text might be a hymn that refers to the Jordan River.")
+@Attributes(title = "Reference to a Place", description = "This is a doc that records information about a reference made in a text to some place.  For example, a liturgical text might be a hymn that refers to the Jordan River.")
 public class LinkRefersToPlaceCreateForm extends LTKLinkCreateForm {
 	
 	private static double serialVersion = 1.1;
@@ -24,11 +24,11 @@ public class LinkRefersToPlaceCreateForm extends LTKLinkCreateForm {
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Word or phrase that makes the reference")
-	@Expose String referredByPhrase = "";
+	@Expose public String referredByPhrase = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Comments on the reference")
-	@Expose String comments = "";
+	@Expose public String comments = "";
 
 	public LinkRefersToPlaceCreateForm(
 			String library

@@ -63,6 +63,13 @@ public class CreateABunchOfReferences {
 		// create
 		for (int i=1; i < 5; i++) {
 		   LinkRefersToBiblicalTextCreateForm form = testReferences.getCreateForm(i);
+		   form.setPrettyPrint(true);
+		   System.out.println("Data:");
+		   System.out.println(form.toJsonString());
+		   System.out.println("Schema:");
+		   System.out.println(form.toJsonSchema());
+		   System.out.println("UiSchema:");
+		   System.out.println(form.toUiSchema());
 		   RequestStatus status = externalManager.addReference(
 	    			TestUsers.WS_ADMIN.id
 	    			, form.toJsonString()

@@ -186,7 +186,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	 * Examines the list of JsonObjects.
 	 * If the object contains a valueSchemaId,
 	 * attempts to find the schema for it in the database.
-	 * If found, it adds it to the map to be returned.
+	 * If found, it adds it to the map that the method will return.
 	 * @param list
 	 * @param username - if not null, used to filter list of domains to ones authorized
 	 * @return

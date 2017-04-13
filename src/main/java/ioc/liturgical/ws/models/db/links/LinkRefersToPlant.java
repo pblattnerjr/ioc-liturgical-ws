@@ -16,7 +16,7 @@ import com.github.reinert.jjschema.Attributes;
  * @author mac002
  *
  */
-@Attributes(title = "Reference to a plant", description = "This is a doc that records information about a reference made in a text to a plant.  For example, a liturgical text might be a hymn that refers to oak trees.")
+@Attributes(title = "Reference to a Plant", description = "This is a doc that records information about a reference made in a text to a plant.  For example, a liturgical text might be a hymn that refers to oak trees.")
 public class LinkRefersToPlant extends LTKLink {
 
 	private static double serialVersion = 1.1;
@@ -26,11 +26,11 @@ public class LinkRefersToPlant extends LTKLink {
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Word or phrase that makes the reference")
-	@Expose String referredByPhrase = "";
+	@Expose public String referredByPhrase = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Comments about the reference")
-	@Expose String comments = "";
+	@Expose public String comments = "";
 
 	public LinkRefersToPlant(
 			String library

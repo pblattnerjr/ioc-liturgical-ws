@@ -71,7 +71,24 @@ public class Neo4jController {
         	return externalManager.getRelationshipSearchDropdown().toJsonString();
 		});
 
-		// GET rels (relationships) for specified parameters
+		// GET link (relationships) for specified /library/topic/key
+		path = ENDPOINTS_DB_API.LINKS.toLibraryTopicKeyPath();
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			String library = request.splat()[0];
+			String id = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
+			response.type(Constants.UTF_JSON);
+        	return gson.toJson(
+        			externalManager.getRelationshipById(
+        			requestor
+        			, library
+        			, id
+        			)
+        	);
+		});
+
+		// GET links (relationships) for specified parameters
 		path = ENDPOINTS_DB_API.LINKS.pathname;
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
@@ -79,7 +96,10 @@ public class Neo4jController {
         	return gson.toJson(externalManager.searchRelationships(
         			request.queryParams("t")  // link type (e.g. REFERS_TO_BIBLICAL_TEXT)
         			, request.queryParams("d")  // domain
-        			, request.queryParams("l") // labels
+        			, request.queryParams("q")   // query
+        			, request.queryParams("p") // property of the doc (e.g. the ID, the value)
+        			, request.queryParams("m") // matcher (e.g. contains, starts with, regex)
+        			, request.queryParams("l") // tags (~labels)
         			, request.queryParams("o") // operator
         			));
 		});
@@ -130,7 +150,7 @@ public class Neo4jController {
 		/**
 		 * PUT controllers
 		 */
-		path = ENDPOINTS_DB_API.LINKS.pathname;
+		path = ENDPOINTS_DB_API.LINKS.toLibraryTopicKeyPath();
 		ControllerUtils.reportPath(logger, "PUT", path);
 		put(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);

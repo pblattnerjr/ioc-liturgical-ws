@@ -12,11 +12,13 @@ import ioc.liturgical.ws.models.db.docs.Human;
 import ioc.liturgical.ws.models.db.docs.Object;
 import ioc.liturgical.ws.models.db.docs.Place;
 import ioc.liturgical.ws.models.db.docs.Plant;
+import ioc.liturgical.ws.models.db.links.LinkRefersToAnimal;
 import ioc.liturgical.ws.models.db.links.LinkRefersToBeing;
 import ioc.liturgical.ws.models.db.links.LinkRefersToBiblicalText;
 import ioc.liturgical.ws.models.db.links.LinkRefersToEvent;
 import ioc.liturgical.ws.models.db.links.LinkRefersToGroup;
 import ioc.liturgical.ws.models.db.links.LinkRefersToHuman;
+import ioc.liturgical.ws.models.db.links.LinkRefersToPlace;
 import ioc.liturgical.ws.models.db.supers.LTK;
 import ioc.liturgical.ws.models.db.supers.LTKDbOntologyEntry;
 import ioc.liturgical.ws.models.db.supers.LTKLink;
@@ -39,27 +41,29 @@ public class OntologyGenerator {
 	/**
 	 * The following hymn is used to seed the ontology:
 	 * 
-	 * Holding in contempt the monument to dread Herod's wickedness, 
-	 * come, let us believers go towards Jordan, 
-	 * that we may see Christ the Redeemer 
-	 * being baptised in the flesh 
-	 * by the Forerunner in its streams. 
-	 * All creation blesses him as it gives him glory to the ages.
+	 * Today the Master stands in the Jordan. * 
+	 * He is baptized in the waters by the holy Forerunner. 
+	 * The Father testifies from on high: 
+	 * This is my Son, my Beloved! 
+	 * The Spirit is revealed in a strange visit, 
+	 * descending as a dove upon Him.
 	 * 
-	 * The greek (source) text id = "gr_gr_cog~he.h.m6~StilinKakiasAntitheou.text"
+	 * The greek (source) text id = "gr_gr_cog~~me.m01.d10~meMA.Kathisma11.text"
 	 * 
 	 * It makes the following references:
 	 * 
+	 * Animals:
+	 *     Dove
 	 * Beings:
-	 * 		GodTheSon
+	 * 		GodTheFather, GodTheSon, and GodTheHolySpirit
 	 * Biblical Text: Matthew, Mark, Luke, and John, which all refer to the baptism of Christ.
 	 * Events:
 	 * 		BaptismOfChrist
-	 * Groups:
-	 * 		TheChurch
 	 * Humans:
 	 * 		JesusChrist
 	 * 		JohnTheForerunner
+	 * Location:
+	 *    RiverJordan
 	 * 
 	 * We will create relationships to represent this information.
 	 */
@@ -68,11 +72,15 @@ public class OntologyGenerator {
 		//   library = a domain
 		String library = "en_us_ocmc"; 
 		//   topic = the starting ID (node from which the relationship starts)
-		String startId = "gr_gr_cog~he.h.m6~StilinKakiasAntitheou.text"; 
+		String startId = "gr_gr_cog~me.m01.d10~meMA.Kathisma11.text"; 
 		//   key = string literals below
 		
+		// Animals
+		links.add(new LinkRefersToAnimal(library, startId, "ontology~Animal~Dove"));
 		// Beings
+		links.add(new LinkRefersToBeing(library, startId, "ontology~Being~GodTheFather"));
 		links.add(new LinkRefersToBeing(library, startId, "ontology~Being~GodTheSon"));
+		links.add(new LinkRefersToBeing(library, startId, "ontology~Being~GodTheHolySpirit"));
 		// Biblical Texts
 		links.add(new LinkRefersToBiblicalText(library, startId, "gr_gr_ntpt~MAT~C03:13"));
 		links.add(new LinkRefersToBiblicalText(library, startId, "gr_gr_ntpt~LUK~C03:21"));
@@ -80,11 +88,11 @@ public class OntologyGenerator {
 		links.add(new LinkRefersToBiblicalText(library, startId, "gr_gr_ntpt~JOH~C01:32"));
 		// Events
 		links.add(new LinkRefersToEvent(library, startId, "ontology~Event~BaptismOfChrist"));
-		// Groups
-		links.add(new LinkRefersToGroup(library, startId, "ontology~Group~TheChurch"));
 		// Humans
 		links.add(new LinkRefersToHuman(library, startId, "ontology~Human~JesusChrist"));
 		links.add(new LinkRefersToHuman(library, startId, "ontology~Human~JohnTheForerunner"));
+		// Locations
+		links.add(new LinkRefersToPlace(library, startId, "ontology~Place~RiverJordan"));
 	}
 	
 	private void generateEntries() {

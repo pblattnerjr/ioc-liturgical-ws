@@ -1,6 +1,6 @@
-package ioc.liturgical.ws.managers.databases.external.neo4j;
+package ioc.liturgical.ws.managers.databases.external.neo4j.cypher;
 
-public class CypherQueryBuilder {
+public class CypherQueryBuilderForDocs {
 	private String MATCH = "";
 	private String LABEL = "";
 	private String WHERE = "";
@@ -13,17 +13,17 @@ public class CypherQueryBuilder {
 	private String ORDER_BY = "";
     private boolean prefixProperties = true;
     
-	public CypherQueryBuilder(){};
+	public CypherQueryBuilderForDocs(){};
 	
-	public CypherQueryBuilder(boolean prefixProperties) { 
+	public CypherQueryBuilderForDocs(boolean prefixProperties) { 
 		this.prefixProperties = prefixProperties;
 	}
 
-	public CypherQueryBuilder MATCH() {
+	public CypherQueryBuilderForDocs MATCH() {
 		return this;
 	}
 	
-    public CypherQueryBuilder LABEL(String LABEL) {
+    public CypherQueryBuilderForDocs LABEL(String LABEL) {
     	if (LABEL.startsWith("*") || LABEL.toLowerCase().startsWith("all") || LABEL.length() == 0) {
     		// ignore
     	} else {
@@ -39,49 +39,49 @@ public class CypherQueryBuilder {
         return this;
     }
     
-    public CypherQueryBuilder WHERE(String WHERE) {
+    public CypherQueryBuilderForDocs WHERE(String WHERE) {
         this.WHERE = WHERE;
         return this;
     }
 
-    public CypherQueryBuilder CONTAINS(String CONTAINS) {
+    public CypherQueryBuilderForDocs CONTAINS(String CONTAINS) {
         this.CONTAINS = CONTAINS;
         return this;
     }
 
-    public CypherQueryBuilder STARTS_WITH(String STARTS_WITH) {
+    public CypherQueryBuilderForDocs STARTS_WITH(String STARTS_WITH) {
         this.STARTS_WITH = STARTS_WITH;
         return this;
     }
 
-    public CypherQueryBuilder EQUALS(String EQUALS) {
+    public CypherQueryBuilderForDocs EQUALS(String EQUALS) {
         this.EQUALS = EQUALS;
         return this;
     }
 
-    public CypherQueryBuilder ENDS_WITH(String ENDS_WITH) {
+    public CypherQueryBuilderForDocs ENDS_WITH(String ENDS_WITH) {
         this.ENDS_WITH = ENDS_WITH;
         return this;
     }
 
-    public CypherQueryBuilder MATCHES_PATTERN(String MATCHES_PATTERN) {
+    public CypherQueryBuilderForDocs MATCHES_PATTERN(String MATCHES_PATTERN) {
         this.MATCHES_PATTERN = MATCHES_PATTERN;
         return this;
     }
 
 
-    public CypherQueryBuilder RETURN(String RETURN) {
+    public CypherQueryBuilderForDocs RETURN(String RETURN) {
         this.RETURN = RETURN;
         return this;
     }
     
-    public CypherQueryBuilder ORDER_BY(String ORDER_BY) {
+    public CypherQueryBuilderForDocs ORDER_BY(String ORDER_BY) {
         this.ORDER_BY = ORDER_BY;
         return this;
     }
     
-    public CypherQuery build() {
-        return new CypherQuery(
+    public CypherQueryForDocs build() {
+        return new CypherQueryForDocs(
         		MATCH
         		, LABEL
         		, WHERE

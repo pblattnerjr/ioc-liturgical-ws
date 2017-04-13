@@ -19,27 +19,27 @@ import com.github.reinert.jjschema.Attributes;
 @Attributes(title = "User", description = "Schema for a User")
 public class UserCreateForm extends AbstractModel {
 	@Attributes(required = true, description = "id used to login to system", minLength=FormFieldLengths.USERNAME_MIN)
-	@Expose String username = "";
+	@Expose public String username = "";
 
 	@Attributes(required = true, description = "first name of the user", minLength=FormFieldLengths.NAME_FIRST_MIN)
-	@Expose String firstname = "";
+	@Expose public String firstname = "";
 	
 	@Attributes(required = true, description = "last name (i.e., family name, or surname)  of the user", minLength=FormFieldLengths.NAME_LAST_MIN)
-	@Expose String lastname = "";
+	@Expose public String lastname = "";
 	
 	@Attributes(required = true, description = "email to contact the user", pattern=FormRegExConstants.EMAIL)
-	@Expose String email = "";
+	@Expose public String email = "";
 	
 	@Attributes(required = true, description = "reenter email to contact the user", pattern=FormRegExConstants.EMAIL)
-	@Expose String emailReenter = "";
+	@Expose public String emailReenter = "";
 	
 	@UiWidget(Constants.UI_WIDGET_PASSWORD)
 	@Attributes(required = true, description = FormRegExConstants.PASSWORD_DESCRIPTION, pattern=FormRegExConstants.PASSWORD_PATTERN)
-	@Expose String password = "";
+	@Expose public String password = "";
 	
 	@UiWidget(Constants.UI_WIDGET_PASSWORD)
 	@Attributes(required = true, description = "reenter password", pattern=FormRegExConstants.PASSWORD_PATTERN)
-	@Expose String passwordReenter = "";
+	@Expose public String passwordReenter = "";
 		
 	public UserCreateForm() {
 		super();

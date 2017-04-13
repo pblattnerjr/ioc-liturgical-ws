@@ -135,14 +135,17 @@ public class ExternalDbManagerTest {
 	@Test
 	   public void testReferenceSearch() {
 		// if this fails, make sure you have run the CreateABunchOfReferences unit test first
-	    	ResultJsonObjectArray result = 
+	    	JsonObject result = 
 	    			externalManager.searchRelationships(
 	    					RELATIONSHIP_TYPES.REFERS_TO_BIBLICAL_TEXT.typename
 	    					, "en_us_pentiuc"
-	    					, "a,b" // labels
+	    					, "syn"  // query
+	    					, "syn" // property
+	    					, "c" // matcher
+	    					, "a,b" // tags
 	    					, "or" // operator
 	    					);
-			assertTrue(result.getResultCount() > 0 && result.getStatus().getCode() == 200);
+			assertTrue(result.get("status").getAsJsonObject().get("code").getAsInt() == 200);
 	    }
 
 	@Test

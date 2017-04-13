@@ -16,9 +16,9 @@ import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
  *
  */
 public class RequestStatus extends AbstractModel {
-	@Expose int code = HTTP_RESPONSE_CODES.OK.code;
-	@Expose String developerMessage = HTTP_RESPONSE_CODES.OK.message;
-	@Expose String userMessage = HTTP_RESPONSE_CODES.OK.message;
+	@Expose public int code = HTTP_RESPONSE_CODES.OK.code;
+	@Expose public String developerMessage = HTTP_RESPONSE_CODES.OK.message;
+	@Expose public String userMessage = HTTP_RESPONSE_CODES.OK.message;
 	
 	/**
 	 * Defaults to code = 200 (OK)

@@ -17,11 +17,11 @@ import com.github.reinert.jjschema.Attributes;
 public class LTKDbOntologyEntry extends LTKDb {
 
 	@Attributes(required = true, description = "Name")
-	@Expose String name = "";
+	@Expose public String name = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Description")
-	@Expose String description = "";
+	@Expose public String description = "";
 
 	public LTKDbOntologyEntry(
 			ONTOLOGY_TOPICS topic

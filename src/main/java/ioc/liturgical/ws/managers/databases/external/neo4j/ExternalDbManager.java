@@ -28,6 +28,10 @@ import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
 import ioc.liturgical.ws.constants.SCHEMA_CLASSES;
 import ioc.liturgical.ws.constants.VERBS;
 import ioc.liturgical.ws.managers.databases.external.neo4j.constants.MATCHERS;
+import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryBuilderForDocs;
+import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryBuilderForLinks;
+import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryForDocs;
+import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryForLinks;
 import ioc.liturgical.ws.managers.databases.external.neo4j.utils.DomainTopicMapBuilder;
 import ioc.liturgical.ws.managers.databases.external.neo4j.utils.Neo4jConnectionManager;
 import ioc.liturgical.ws.managers.databases.external.neo4j.utils.OntologyGenerator;
@@ -81,10 +85,10 @@ import ioc.liturgical.ws.models.db.supers.LTKDb;
 import ioc.liturgical.ws.models.db.supers.LTKDbOntologyEntry;
 import ioc.liturgical.ws.models.db.supers.LTKLink;
 import ioc.liturgical.ws.models.db.supers.LTKOntologyCreateFormEntry;
-import ioc.liturgical.ws.models.options.DropdownOptionEntry;
-import ioc.liturgical.ws.models.options.DropdownOptions;
 import net.ages.alwb.utils.core.datastores.json.exceptions.BadIdException;
 import net.ages.alwb.utils.core.datastores.json.exceptions.MissingSchemaIdException;
+import net.ages.alwb.utils.core.datastores.json.models.DropdownArray;
+import net.ages.alwb.utils.core.datastores.json.models.DropdownItem;
 import net.ages.alwb.utils.core.datastores.json.models.LTKVJsonObject;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 import net.ages.alwb.utils.core.id.managers.IdManager;;
@@ -122,6 +126,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  JsonObject dropdownItemsForSearchingText = new JsonObject();
 	  JsonArray relationshipTypesArray = new JsonArray();
 	  JsonObject relationshipTypesProperties = new JsonObject();
+	  JsonArray tagOperatorsDropdown = new JsonArray();
 	  public static Neo4jConnectionManager neo4jManager = null;
 	  InternalDbManager internalManager = null;
 	  
@@ -195,7 +200,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					  if (status.getCode() != HTTP_RESPONSE_CODES.CREATED.code) {
 						  throw new Exception("Error creating ontology");
 					  } else {
-						  logger.info("Added to the ontology relationship " + entry.getOntologyLabels().toString() + ": " + entry.getName());
+						  logger.info("Added to the ontology relationship " + entry.fetchOntologyLabelsList().toString() + ": " + entry.getName());
 					  }
 				  }
 				  for (LTKLink link : generator.getLinks()) {
@@ -224,8 +229,22 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  public void buildRelationshipDropdownMaps() {
 		  relationshipTypesArray = this.getRelationshipTypesArray();
 		  relationshipTypesProperties = EXTERNAL_DB_SCHEMA_CLASSES.relationshipPropertyJson();
+		  tagOperatorsDropdown = getTagOperatorsArray();
 	  }
 
+	  public JsonArray getTagOperatorsArray() {
+			JsonArray result = new JsonArray();
+			try {
+				DropdownArray types = new DropdownArray();
+				types.add(new DropdownItem("All","all"));
+				types.add(new DropdownItem("Any","any"));
+				result = types.toJsonArray();
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+			return result;
+	  }
+	  
 	  public void buildDomainTopicMap() {
 		 dropdownItemsForSearchingText = domainTopicMapbuilder.getDropdownItems();
 	  }
@@ -330,78 +349,33 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			if (chapter.startsWith("his")) {
 				chapter = chapter.replaceFirst("hi", "");
 			}
-			result = getForQuery(getCypherQuery(type, domain, book, chapter, query, property, matcher));
+			result = getForQuery(getCypherQueryForDocSearch(type, domain, book, chapter, query, property, matcher));
 			return result;
 		}
 
-		/**
-		 * if the operator is an 'or':
-		 * 
-		 * any (x in ["a", "b"] where x in link.tags)
-		 *
-		 * if the operator is an 'and':
-		 * 
-		 * all (x in ["a", "b"] where x in link.tags)
-		 * 
-		 * @param property
-		 * @param labels
-		 * @param operator
-		 * @return
-		 */
-		private String labelMatcher(String property, String labels, String operator) {
-			StringBuffer result = new StringBuffer();
-			String theOperator = " all "; // initialize but change to any if need be
-			if (operator.trim().equals("or")) {
-				theOperator = " any ";
-			}
-			if (labels != null && labels.length() > 0) {
-				try {
-					String [] parts = labels.split(",");
-					if (parts.length > 0) {
-						result.append(" and ");
-						result.append(theOperator);
-						result.append(" (x in [");
-					    result.append("\"");
-					    result.append(parts[0].trim());
-					    result.append("\" ");
-					}
-					if (parts.length > 1) {
-						for (int i=1; i < parts.length; i++) {
-						    result.append(", \"");
-						    result.append(parts[i].trim());
-						    result.append("\"");
-						}
-					}
-					result.append("] where x in ");
-					result.append(property);
-					result.append(") ");
-				} catch (Exception e) {
-					ErrorUtils.report(logger, e);
-				}
-			}
-			return result.toString();
-		}
 		
-		public ResultJsonObjectArray searchRelationships(
+		public JsonObject searchRelationships(
 				String type // to match
 				, String library // library to match
+				, String query
+				, String property
+				, String matcher
 				, String tags // tags to match
 				, String operator // for tags, e.g. AND, OR
 				) {
-			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
-			try {
-				// TODO: create a query builder for relationship searches
-				String q = "match (from)-[link:" + type + "]->(to)  " 
-					  + "where link.library = \"" + library + "\" " 
-					  + labelMatcher("link.tags", tags, operator)
-			          + LinkRefersToTextToTextTableRow.getReturnClause();
-				result  = neo4jManager.getForQuery(q);
-				result.setQuery(q.toString());
-				result.setValueSchemas(internalManager.getSchemas(result.getResult(), null));
-			} catch (Exception e) {
-				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-				result.setStatusMessage(e.getMessage());
-			}
+			JsonObject result = null;
+
+			result = getForQuery(
+					getCypherQueryForLinkSearch(
+							type
+							, library
+							, query
+							, property
+							, matcher
+							, tags 
+							, operator
+							)
+					);
 			return result;
 		}
 
@@ -419,7 +393,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					.replaceAll("\\p{InCombiningDiacriticalMarks}+", "").toLowerCase();
 	   }
 	   
-		private String getCypherQuery(
+		private String getCypherQueryForDocSearch(
 				String type
 				, String domain
 				, String book
@@ -441,7 +415,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					}
 				}
 			}
-			CypherQueryBuilder builder = new CypherQueryBuilder(prefixProps)
+			CypherQueryBuilderForDocs builder = new CypherQueryBuilderForDocs(prefixProps)
 					.MATCH()
 					.LABEL(type)
 					.LABEL(domain)
@@ -473,11 +447,60 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			builder.RETURN("id, library, topic, key, value");
 			builder.ORDER_BY("doc.seq"); // TODO: in future this could be a parameter in REST API
 
-			CypherQuery q = builder.build();
+			CypherQueryForDocs q = builder.build();
 			
 			return q.toString();
 		}
 		
+		private String getCypherQueryForLinkSearch(
+				String type
+				, String library
+				, String query
+				, String property
+				, String matcher
+				, String tags // tags to match
+				, String operator // for tags, e.g. AND, OR
+				) {
+			
+			boolean prefixProps = false;
+			String theQuery = query;
+			CypherQueryBuilderForLinks builder = new CypherQueryBuilderForLinks(prefixProps)
+					.MATCH()
+					.TYPE(type)
+					.LIBRARY(library)
+					.WHERE(property)
+					;
+			
+			MATCHERS matcherEnum = MATCHERS.forLabel(matcher);
+			
+			switch (matcherEnum) {
+			case STARTS_WITH: {
+				builder.STARTS_WITH(theQuery);
+				break;
+			}
+			case ENDS_WITH: {
+				builder.ENDS_WITH(theQuery);
+				break;
+			}
+			case REG_EX: {
+				builder.MATCHES_PATTERN(theQuery);
+				break;
+			} 
+			default: {
+				builder.CONTAINS(theQuery);
+				break;
+			}
+			}
+			builder.TAGS(tags);
+			builder.TAG_OPERATOR(operator);
+			builder.RETURN("link.library as library, link.topic as fromId, type(link) as type, link.key as toId, link.tags as tags");
+			builder.ORDER_BY("fromId + type + toId ascending"); // TODO: in future this could be a parameter in REST API
+
+			CypherQueryForLinks q = builder.build();
+			
+			return q.toString();
+		}
+
 		public JsonObject getDropdownItemsForSearchingText() {
 			return dropdownItemsForSearchingText;
 		}
@@ -607,13 +630,22 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
-		public RequestStatus getRelationshipById(String id) {
-			String query = "match (from)-[link]->(to) where link.id = \"" 
-					+ id 
-					+ "\"" 
-					+ LinkRefersToTextToTextTableRow.getReturnClause()
-					;
-			return new RequestStatus();
+		public ResultJsonObjectArray getRelationshipById(
+				String requestor
+				, String library
+				,  String id) {
+			ResultJsonObjectArray result = new ResultJsonObjectArray(true);
+			if (internalManager.authorized(
+					requestor
+					, VERBS.DELETE
+					, library
+					)) {
+		    	result = getForIdOfRelationship(id);
+			} else {
+				result.setStatusCode(HTTP_RESPONSE_CODES.UNAUTHORIZED.code);
+				result.setStatusMessage(HTTP_RESPONSE_CODES.UNAUTHORIZED.message);
+			}
+			return result;
 		}
 
 		/**
@@ -791,8 +823,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		
 		public boolean existsUniqueRelationship(String id) {
 			try {
-				JsonObject json = this.getForIdOfRelationship(id);
-				return json.get("valueCount").getAsInt() == 1;
+				ResultJsonObjectArray json = this.getForIdOfRelationship(id);
+				return json.getResultCount() == 1;
 			} catch (Exception e) {
 				return false;
 			}
@@ -815,13 +847,13 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public JsonObject getForId(String id) {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
-				CypherQueryBuilder builder = new CypherQueryBuilder(false)
+				CypherQueryBuilderForDocs builder = new CypherQueryBuilderForDocs(false)
 						.MATCH()
 						.WHERE("id")
 						.EQUALS(id)
 						.RETURN("*")
 						;
-				CypherQuery q = builder.build();
+				CypherQueryForDocs q = builder.build();
 				result  = neo4jManager.getForQuery(q.toString());
 				result.setQuery(q.toString());
 				result.setValueSchemas(internalManager.getSchemas(result.getResult(), null));
@@ -832,7 +864,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result.toJsonObject();
 		}
 
-		public JsonObject getForIdOfRelationship(String id) {
+		public ResultJsonObjectArray getForIdOfRelationship(String id) {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
 				String q = "match ()-[link]->() where link.id =\"" + id + "\" return properties(link)";
@@ -843,7 +875,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 				result.setStatusMessage(e.getMessage());
 			}
-			return result.toJsonObject();
+			return result;
 		}
 
 		public ResultJsonObjectArray getReferenceObjectByRefId(String id) {
@@ -867,7 +899,12 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				}
 				result.setResult(refs);
 				result.setQuery(q.toString());
-				result.setValueSchemas(internalManager.getSchemas(result.getResult(), null));
+				result.setValueSchemas(
+						internalManager.getSchemas(
+								result.getResult()
+								, null
+						)
+				);
 			} catch (Exception e) {
 				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 				result.setStatusMessage(e.getMessage());
@@ -926,14 +963,14 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 
 		@Override
 		public JsonObject getForIdStartsWith(String id) {
-			CypherQueryBuilder builder = new CypherQueryBuilder()
+			CypherQueryBuilderForDocs builder = new CypherQueryBuilderForDocs()
 					.MATCH()
 					.WHERE("id")
 					.STARTS_WITH(id)
 					;
 			builder.RETURN("id, value");
 			builder.ORDER_BY("doc.seq");
-			CypherQuery q = builder.build();
+			CypherQueryForDocs q = builder.build();
 			JsonObject result = getForQuery(q.toString());
 			return result;
 		}
@@ -1086,7 +1123,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					java.util.Collections.sort(labels);
 					// add the labels to a JsonArray of Option Entries.
 					for (String label : labels) {
-						DropdownOptionEntry entry = new DropdownOptionEntry(label);
+						DropdownItem entry = new DropdownItem(label);
 						result.add(entry.toJsonObject());
 					}
 				}
@@ -1101,7 +1138,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		 * @param type name of the relationship
 		 * @return
 		 */
-		public JsonObject getRelationshipLabelsForAllTypes() {
+		public JsonObject getRelationshipTagsForAllTypes() {
 			JsonObject result  = new JsonObject();
 			try {
 				for (RELATIONSHIP_TYPES t : RELATIONSHIP_TYPES.values()) {
@@ -1115,14 +1152,15 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			
 		}
 
-		public JsonArray getRelationshipLibrarys(String type) {
+		public JsonArray getRelationshipLibrarysAsDropdownItems(String type) {
 			JsonArray result  = new JsonArray();
+			result.add(new DropdownItem("Any","*").toJsonObject());
 			try {
 				String q = "match ()-[link:" + type + "]->() return distinct link.library  order by link.library ascending";
 				ResultJsonObjectArray query = neo4jManager.getForQuery(q);
 				if (query.getResultCount() > 0) {
 					for (JsonObject item : query.getResult()) {
-						result.add(new DropdownOptionEntry(item.get("link.library").getAsString()).toJsonObject());
+						result.add(new DropdownItem(item.get("link.library").getAsString()).toJsonObject());
 					}
 				}
 			} catch (Exception e) {
@@ -1134,8 +1172,11 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public JsonObject getRelationshipLibrarysForAllTypes() {
 			JsonObject result  = new JsonObject();
 			try {
+				JsonArray any  = new JsonArray();
+				any.add(new DropdownItem("Any","*").toJsonObject());
+				result.add("*", any);
 				for (RELATIONSHIP_TYPES t : RELATIONSHIP_TYPES.values()) {
-					JsonArray value = getRelationshipLibrarys(t.typename);
+					JsonArray value = getRelationshipLibrarysAsDropdownItems(t.typename);
 					result.add(t.typename, value);
 				}
 			} catch (Exception e) {
@@ -1157,7 +1198,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		 *     		someTypeName: [{Option}]
 		 *         , someOtherTypeName: [{Option}]
 		 *     }
-		 *     , typeLabels: {
+		 *     , typeTags: {
 		 *     		someTypeName: [string, string, string]
 		 *         , someOtherTypeName: [string, string, string]
 		 *     }
@@ -1167,7 +1208,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		 *     2. When user selects a type:
 		 *          2.1 Use the typename to lookup the typeLibraries and set the libraries dropdown to them
 		 *          2.2 Use the typename to lookup the typeProps and set the properties dropdown to them
-		 *          2.3 Use the typename to lookup the typeLabels and set the labels using them.
+		 *          2.3 Use the typename to lookup the typeTags and set the tags using them.
 		 * }
 		 * @return
 		 */
@@ -1178,8 +1219,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				values.add("typeList", this.relationshipTypesArray);
 				values.add("typeLibraries", this.getRelationshipLibrarysForAllTypes());
 				values.add("typeProps", this.relationshipTypesProperties);
-				values.add("typeLabels", getRelationshipLabelsForAllTypes());
-
+				values.add("typeTags", getRelationshipTagsForAllTypes());
+				values.add("tagOperators", tagOperatorsDropdown);
 				JsonObject jsonDropdown = new JsonObject();
 				jsonDropdown.add("dropdown", values);
 
@@ -1199,7 +1240,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public JsonArray getRelationshipTypesArray() {
 			JsonArray result = new JsonArray();
 			try {
-				DropdownOptions types = new DropdownOptions();
+				DropdownArray types = new DropdownArray();
+				types.add(new DropdownItem("Any","*"));
 				for (RELATIONSHIP_TYPES t : RELATIONSHIP_TYPES.values()) {
 					types.addSingleton(t.typename);
 				}

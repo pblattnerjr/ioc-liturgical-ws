@@ -25,11 +25,11 @@ public class LinkRefersToPlantCreateForm extends LTKLinkCreateForm {
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Word or phrase that makes the reference")
-	@Expose String referredByPhrase = "";
+	@Expose public String referredByPhrase = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Comments on the reference")
-	@Expose String comments = "";
+	@Expose public String comments = "";
 
 	public LinkRefersToPlantCreateForm(
 			String library

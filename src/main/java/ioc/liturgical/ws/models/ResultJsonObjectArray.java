@@ -11,11 +11,11 @@ import com.google.gson.annotations.Expose;
 import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
 
 public class ResultJsonObjectArray extends AbstractModel {
-	@Expose String query;
-	@Expose RequestStatus status;
-	@Expose Long valueCount = Long.parseLong("0");
-	@Expose Map<String,JsonObject> valueSchemas = new TreeMap<String,JsonObject>();
-	@Expose List<JsonObject> values;
+	@Expose public String query;
+	@Expose public RequestStatus status;
+	@Expose public Long valueCount = Long.parseLong("0");
+	@Expose public Map<String,JsonObject> valueSchemas = new TreeMap<String,JsonObject>();
+	@Expose public List<JsonObject> values;
 	
 	public ResultJsonObjectArray(boolean prettyPrint) {
 		super();

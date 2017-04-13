@@ -21,20 +21,20 @@ import com.github.reinert.jjschema.Attributes;
 public class LTKDb extends LTK {
 	
 	@UiWidget(Constants.UI_WIDGET_RADIO)
-	@Attributes(required = true, description = "Is this domain active?")
-	@Expose boolean active = true;
+	@Attributes(id="bottom", required = true, description = "Is this domain active?")
+	@Expose public boolean active = true;
 
-	@Attributes(readonly=true, description="The user ID of the person who created it.")
-	@Expose String createdBy = "";
+	@Attributes(id="bottom",readonly=true, description="The user ID of the person who created it.")
+	@Expose public String createdBy = "";
 
-	@Attributes(readonly=true, description="The date/time when it was created.")
-	@Expose String createdWhen = "";
+	@Attributes(id="bottom",readonly=true, description="The date/time when it was created.")
+	@Expose public String createdWhen = "";
 	
-	@Attributes(readonly=true, description="The user ID of the person who last modified it.")
-	@Expose String modifiedBy = "";
+	@Attributes(id="bottom",readonly=true, description="The user ID of the person who last modified it.")
+	@Expose public String modifiedBy = "";
 
-	@Attributes(readonly=true, description="The date/time when it was last modified.")
-	@Expose String modifiedWhen = "";
+	@Attributes(id="bottom",readonly=true, description="The date/time when it was last modified.")
+	@Expose public String modifiedWhen = "";
 
 	public LTKDb(
 			String library

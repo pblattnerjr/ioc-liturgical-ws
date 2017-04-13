@@ -14,7 +14,7 @@ import com.github.reinert.jjschema.Attributes;
  * @author mac002
  *
  */
-@Attributes(title = "Reference to Concept", description = "This is a doc that records information about a reference made in a text to some concept.  For example, a liturgical text might be a hymn that refers to the doctrine of the Trinity.")
+@Attributes(title = "Reference to a Concept", description = "This is a doc that records information about a reference made in a text to some concept.  For example, a liturgical text might be a hymn that refers to the doctrine of the Trinity.")
 public class LinkRefersToConceptCreateForm extends LTKLinkCreateForm {
 	
 	private static double serialVersion = 1.1;
@@ -24,11 +24,11 @@ public class LinkRefersToConceptCreateForm extends LTKLinkCreateForm {
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Word or phrase that makes the reference")
-	@Expose String referredByPhrase = "";
+	@Expose public String referredByPhrase = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Comments on the reference")
-	@Expose String comments = "";
+	@Expose public String comments = "";
 
 	public LinkRefersToConceptCreateForm(
 			String library

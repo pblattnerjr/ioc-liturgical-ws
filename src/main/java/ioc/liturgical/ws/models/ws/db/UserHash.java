@@ -16,8 +16,8 @@ import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 public class UserHash extends AbstractModel {
 	private static final Logger logger = LoggerFactory.getLogger(UserHash.class);
 	
-	@Expose String hashedPassword = "";
-	@Expose boolean resetPwdNextLogin = true;
+	@Expose public String hashedPassword = "";
+	@Expose public boolean resetPwdNextLogin = true;
 	
 	public UserHash() {
 		super();

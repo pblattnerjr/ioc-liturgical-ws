@@ -11,9 +11,9 @@ import ioc.liturgical.ws.models.ws.forms.UserAccessForm;
 import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
 
 public class ResultUserArray extends AbstractModel {
-	@Expose JsonObject uiSchema;
-	@Expose JsonObject schema;
-	@Expose List<UserAccessForm> items = new ArrayList<UserAccessForm>();
+	@Expose public JsonObject uiSchema;
+	@Expose public JsonObject schema;
+	@Expose public List<UserAccessForm> items = new ArrayList<UserAccessForm>();
 	
 	public ResultUserArray() {
 		super();

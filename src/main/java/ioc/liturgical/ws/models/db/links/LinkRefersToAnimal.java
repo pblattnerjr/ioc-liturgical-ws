@@ -26,11 +26,11 @@ public class LinkRefersToAnimal extends LTKLink {
 	
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Word or phrase that makes the reference")
-	@Expose String referredByPhrase = "";
+	@Expose public String referredByPhrase = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Comments about the reference")
-	@Expose String comments = "";
+	@Expose public String comments = "";
 
 	public LinkRefersToAnimal(
 			String library

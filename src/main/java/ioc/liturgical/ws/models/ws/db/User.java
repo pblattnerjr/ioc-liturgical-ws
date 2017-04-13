@@ -17,16 +17,16 @@ import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 public class User extends AbstractModel {
 	private static final Logger logger = LoggerFactory.getLogger(User.class);
 	
-	@Expose String username = "";
-	@Expose String firstname = "";
-	@Expose String surname = "";
-	@Expose String email = "";
-	@Expose String hashedPassword = "";
-	@Expose boolean resetPwdNextLogin = true;
-	@Expose boolean accountActive = true;
-	@Expose int failedLoginCount = 0;
-	@Expose long lastAccess = 0;
-	@Expose int accessCount = 0;
+	@Expose public String username = "";
+	@Expose public String firstname = "";
+	@Expose public String surname = "";
+	@Expose public String email = "";
+	@Expose public String hashedPassword = "";
+	@Expose public boolean resetPwdNextLogin = true;
+	@Expose public boolean accountActive = true;
+	@Expose public int failedLoginCount = 0;
+	@Expose public long lastAccess = 0;
+	@Expose public int accessCount = 0;
 	@Attributes(
 			required = true
 			, description = "verb for HTTP request"

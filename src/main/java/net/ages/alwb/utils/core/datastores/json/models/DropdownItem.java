@@ -1,8 +1,6 @@
-package ioc.liturgical.ws.managers.databases.external.neo4j.utils;
+package net.ages.alwb.utils.core.datastores.json.models;
 
 import com.google.gson.annotations.Expose;
-
-import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
 
 /**
  * Used to build a JsonObject to represent an item in a dropdown list.

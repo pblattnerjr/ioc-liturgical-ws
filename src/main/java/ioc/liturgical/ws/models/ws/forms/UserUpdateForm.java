@@ -16,19 +16,19 @@ import com.github.reinert.jjschema.Attributes;
 @Attributes(title = "User", description = "Schema for a User")
 public class UserUpdateForm extends AbstractModel {
 	@Attributes(readonly=true, required = true, description = "id used to login to system", minLength=FormFieldLengths.USERNAME_MIN)
-	@Expose String username = "";
+	@Expose public String username = "";
 	@Attributes(required = true, description = "first name of the user", minLength=FormFieldLengths.NAME_FIRST_MIN)
-	@Expose String firstname = "";
+	@Expose public String firstname = "";
 	@Attributes(required = true, description = "surname  of the user", minLength=FormFieldLengths.NAME_LAST_MIN)
-	@Expose String surname = "";
+	@Expose public String surname = "";
 	@Attributes(required = true, description = "email to contact the user", pattern=FormRegExConstants.EMAIL)
-	@Expose String email = "";
+	@Expose public String email = "";
 	@Attributes(required = true, description = "reenter email to contact the user", pattern=FormRegExConstants.EMAIL)
-	@Expose String emailReenter = "";
+	@Expose public String emailReenter = "";
 	@Attributes(required = false, description = FormRegExConstants.PASSWORD_DESCRIPTION, pattern=FormRegExConstants.PASSWORD_PATTERN)
-	@Expose String password = "";
+	@Expose public String password = "";
 	@Attributes(required = false, description = "reenter password", pattern=FormRegExConstants.PASSWORD_PATTERN)
-	@Expose String passwordReenter = "";
+	@Expose public String passwordReenter = "";
 		
 	public String getUsername() {
 		return username;

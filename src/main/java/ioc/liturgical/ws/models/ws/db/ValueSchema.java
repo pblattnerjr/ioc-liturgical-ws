@@ -12,8 +12,8 @@ import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 public class ValueSchema extends AbstractModel {
 	private static final Logger logger = LoggerFactory.getLogger(ValueSchema.class);
 
-	@Expose JsonObject schema;
-	@Expose JsonObject uiSchema;
+	@Expose public JsonObject schema;
+	@Expose public JsonObject uiSchema;
 	
 	public ValueSchema(AbstractModel obj) {
 		super();

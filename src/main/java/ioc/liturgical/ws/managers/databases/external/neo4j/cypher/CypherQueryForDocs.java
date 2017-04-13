@@ -1,6 +1,6 @@
-package ioc.liturgical.ws.managers.databases.external.neo4j;
+package ioc.liturgical.ws.managers.databases.external.neo4j.cypher;
 
-public class CypherQuery {
+public class CypherQueryForDocs {
 	private String MATCH = "";
 	private String LABEL = "";
 	private String WHERE = "";
@@ -13,7 +13,7 @@ public class CypherQuery {
 	private String ORDER_BY = "";
 	private boolean prefixProperties = true;
 	
-	public CypherQuery(
+	public CypherQueryForDocs(
 			String MATCH
 			, String LABEL
 			, String WHERE

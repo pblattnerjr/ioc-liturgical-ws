@@ -7,19 +7,19 @@ import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
 @Attributes(readonly=true)
 public class UserStatistics extends AbstractModel {
 	@Attributes(description = "The number of times someone attempted to login with this username.")
-	@Expose int failedLoginCount = 0;
+	@Expose public int failedLoginCount = 0;
 	
 	@Attributes(description="The last date and time when someone failed to login with this username.  The time is recorded in Zulu (Greenwhich mean time).")
-	@Expose String lastFailedAccessDateTime = "";
+	@Expose public String lastFailedAccessDateTime = "";
 	
 	@Attributes(description="The nano time when the system was last accessed using this username.")
-	@Expose long lastAccessNanos = 0;
+	@Expose public long lastAccessNanos = 0;
 
 	@Attributes(description="The last date and time when the system was last successfully accessed using this username. The time is recorded in Zulu (Greenwhich mean time).")
-	@Expose String lastSuccessfulAccessDateTime = "";
+	@Expose public String lastSuccessfulAccessDateTime = "";
 	
 	@Attributes(description="The number of times the system has been successfully accessed using this username.  Each web service call counts as an access.")
-	@Expose int accessCount = 0;
+	@Expose public int accessCount = 0;
 	
 	public UserStatistics() {
 		super();

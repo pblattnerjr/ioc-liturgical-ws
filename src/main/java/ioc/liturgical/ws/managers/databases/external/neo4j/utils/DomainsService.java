@@ -11,6 +11,8 @@ import ioc.liturgical.ws.constants.DOMAINS_BIBLICAL;
 import ioc.liturgical.ws.constants.DOMAINS_LITURGICAL;
 import ioc.liturgical.ws.constants.DOMAIN_QUERIES;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
+import net.ages.alwb.utils.core.datastores.json.models.DropdownArray;
+import net.ages.alwb.utils.core.datastores.json.models.DropdownItem;
 
 public class DomainsService {
 	String splitter = "split(n.id,'~')[0]";
@@ -45,7 +47,7 @@ public class DomainsService {
 	
 	DropdownArray getDomainsFor(DOMAIN_QUERIES subject) {
 		List<DropdownItem> theDomains = new ArrayList<DropdownItem>();
-		theDomains.add(new DropdownItem("All","*"));
+		theDomains.add(new DropdownItem("Any","*"));
 		JsonObject json = ExternalDbManager
 				.neo4jManager
 				.getForQuery(subject.query)

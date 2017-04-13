@@ -13,9 +13,6 @@ import com.google.gson.annotations.Expose;
 @Attributes(title = "Animal", description = "This is a doc that records information about an animal.")
 public class AnimalCreateForm extends LTKOntologyCreateFormEntry {
 
-	@Attributes(required = true, description = "Sound")
-	@Expose String sound = "";
-
 	public AnimalCreateForm(
 			String key
 			) {
@@ -25,14 +22,6 @@ public class AnimalCreateForm extends LTKOntologyCreateFormEntry {
 				, AnimalCreateForm.class.getSimpleName()
 				,  1.1
 				);
-	}
-
-	public String getSound() {
-		return sound;
-	}
-
-	public void setSound(String sound) {
-		this.sound = sound;
 	}
 
 }

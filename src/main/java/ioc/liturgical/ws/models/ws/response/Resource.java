@@ -11,6 +11,6 @@ import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
  *
  */
 public class Resource extends AbstractModel {
-	@Expose String name;
-	@Expose String description;
+	@Expose public String name;
+	@Expose public String description;
 }

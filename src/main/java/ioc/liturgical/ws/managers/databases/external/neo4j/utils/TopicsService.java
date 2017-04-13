@@ -7,9 +7,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import ioc.liturgical.ws.managers.databases.external.neo4j.CypherQuery;
-import ioc.liturgical.ws.managers.databases.external.neo4j.CypherQueryBuilder;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
+import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryBuilderForDocs;
+import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryForDocs;
 
 /**
  * Returns the topics available in the database
@@ -25,7 +25,7 @@ public class TopicsService {
 		if (book.length() > 0) {
 			startsWith = startsWith + "~" + book;
 		}
-		CypherQuery q = new CypherQueryBuilder()
+		CypherQueryForDocs q = new CypherQueryBuilderForDocs()
 				.MATCH()
 				.LABEL("Liturgical")
 				.LABEL(domain)
@@ -55,7 +55,7 @@ public class TopicsService {
 		if (book.length() > 0) {
 			startsWith = startsWith + "~" + book;
 		}
-		CypherQuery q = new CypherQueryBuilder()
+		CypherQueryForDocs q = new CypherQueryBuilderForDocs()
 				.MATCH()
 				.LABEL("Biblical")
 				.LABEL(domain)

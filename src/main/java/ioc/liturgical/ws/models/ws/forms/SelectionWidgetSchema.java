@@ -14,10 +14,10 @@ import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
  */
 public class SelectionWidgetSchema extends AbstractModel {
 	
-		@Expose String title;
-		@Expose String type = "string";
-		@Expose String [] enumValues;
-		@Expose String [] enumNames;
+		@Expose public String title;
+		@Expose public String type = "string";
+		@Expose public String [] enumValues;
+		@Expose public String [] enumNames;
 		
 	public SelectionWidgetSchema() {
 		

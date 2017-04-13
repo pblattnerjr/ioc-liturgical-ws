@@ -1,7 +1,10 @@
 package net.ages.alwb.utils.core.datastores.json.models;
 
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.everit.json.schema.Schema;
 import org.everit.json.schema.ValidationException;
@@ -152,21 +155,44 @@ public class AbstractModel {
 	 * @return
 	 */
 	public String toUiSchema() {
-		return toJsonSchemaObject().toString();
+		return toJsonUiSchemaObject().toString();
 	}
 	
+	/**
+	 * To be included in the UiSchema, the following conditions must be met
+	 * for a subclass:
+	 * - it must use the @Attributes annotation
+	 * - it must use the @Expose attribute
+	 * - it must be a public property
+	 * 
+	 * Example:
+	 * @Attributes(required = true, description = "The color of the item.")
+	 * @Expose public String color = "";
+	 * 
+	 * The order in which attributes appear on the form is determined as follows:
+	 * 
+	 * this.class.getFields() presents the properties back using the following principles:
+	 * 		Fields are presented in the order in which they are declared
+	 * 		Fields are presented from the class, then each successive supertype up the hierarchy
+	 * 		Fields that have @Attributes(id="top".... will appear first.
+	 *     Fields that have @Attributes(id="bottom".... will appear last
+	 *     Fields that lack an id attribute will appear in the middle.
+	 *     
+	 * @return
+	 */
 	public JsonObject toJsonUiSchemaObject() {
 		JsonObject json = new JsonObject();
-		JsonArray fieldNames = new JsonArray();
+		List<String> topFieldNames = new ArrayList<String>();
+		List<String> middleFieldNames = new ArrayList<String>();
+		List<String> bottomFieldNames = new ArrayList<String>();
 		if (this.getClass().isAnnotationPresent(com.github.reinert.jjschema.Attributes.class)) {
 			Attributes attributes = this.getClass().getAnnotation(com.github.reinert.jjschema.Attributes.class);
 			if (attributes.readonly()) {
 				json.addProperty("ui:readonly", true);
 			}
 		}
-		for (Field field : this.getClass().getDeclaredFields()) {
+		for (Field field : this.getClass().getFields()) {
 				if (field.isAnnotationPresent(com.google.gson.annotations.Expose.class)) {
-					fieldNames.add(field.getName());
 					if (field.isAnnotationPresent(com.github.reinert.jjschema.Attributes.class)) {
 						Attributes attributes = field.getAnnotation(Attributes.class);
 						if (attributes.readonly()) {
@@ -174,6 +200,18 @@ public class AbstractModel {
 							widget.addProperty("ui:readonly", true);
 							json.add(field.getName(), widget);
 						}
+						if (attributes.id() == null) {
+							middleFieldNames.add(field.getName());
+						} else {
+							if (attributes.id().equals("top")) {
+								topFieldNames.add(field.getName());
+							} else {
+								bottomFieldNames.add(field.getName());
+							}
+
+						}
+					} else {
+						middleFieldNames.add(field.getName());
 					}
 					if (field.isAnnotationPresent(UiWidget.class)) {
 						UiWidget uiWidget = field.getAnnotation(UiWidget.class);
@@ -185,6 +223,16 @@ public class AbstractModel {
 						}
 					}
 				}
+		}
+		JsonArray fieldNames = new JsonArray();
+		for (String name : topFieldNames) {
+			fieldNames.add(name);
+		}
+		for (String name : middleFieldNames) {
+			fieldNames.add(name);
+		}
+		for (String name : bottomFieldNames) {
+			fieldNames.add(name);
 		}
 		json.add("ui:order", fieldNames);
 		return json;

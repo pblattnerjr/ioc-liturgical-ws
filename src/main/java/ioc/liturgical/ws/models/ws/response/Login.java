@@ -7,10 +7,10 @@ import ioc.liturgical.ws.constants.Constants;
 import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
 
 public class Login extends AbstractModel {
-	@Expose String username = "";
+	@Expose public String username = "";
 	
 	@UiWidget(Constants.UI_WIDGET_PASSWORD)
-	@Expose String password = "";
+	@Expose public String password = "";
 
 	public String getUsername() {
 		return username;

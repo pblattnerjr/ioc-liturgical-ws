@@ -16,13 +16,13 @@ import com.github.reinert.jjschema.Attributes;
 public class AuthorizationCreateForm extends AbstractModel {
 	
 	@Attributes(required = true, description = "The role you are granting this person.", enums={"admin", "author", "reader"})
-	@Expose String role;
+	@Expose public String role;
 
 	@Attributes(required = true, description = "The library for which you are granting this role.")
-	@Expose String library;
+	@Expose public String library;
 
 	@Attributes(required = true, description = "The user to whom you are granting this role.")
-	@Expose String username;
+	@Expose public String username;
 	
 	public AuthorizationCreateForm() {
 		super();

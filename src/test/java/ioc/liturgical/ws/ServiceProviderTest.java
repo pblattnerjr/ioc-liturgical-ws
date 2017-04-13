@@ -91,7 +91,7 @@ public class ServiceProviderTest {
 		.param("id", obj.getId())
 	       .accept(ContentType.JSON)
 	       .expect().statusCode(HTTP_RESPONSE_CODES.OK.code)
-    	.when().delete(ENDPOINTS_DB_API.LINKS.pathname + "/" + obj.getIdAsPath());
+    	.when().delete(ENDPOINTS_DB_API.LINKS.pathname + "/" + obj.toIdAsPath());
 	}
 	
 	@Test 

@@ -9,25 +9,25 @@ import com.github.reinert.jjschema.Attributes;
 @Attributes(title = "User Access", description = "Schema for a User Access doc")
 public class UserAccessForm extends AbstractModel {
 	@Attributes(required = true, description = "name of this form", readonly=true)
-	@Expose String formName = "UserAccessForm";
+	@Expose public String formName = "UserAccessForm";
 	@Attributes(required = true, description = "version number of this form", readonly=true)
-	@Expose String version = "v1";
+	@Expose public String version = "v1";
 	@Attributes(required = true, description = "id used to login to system", minLength=5)
-	@Expose String username = "";
+	@Expose public String username = "";
 	@Attributes(required = true, description = "first name of the user")
-	@Expose String firstname = "";
+	@Expose public String firstname = "";
 	@Attributes(required = true, description = "surname  of the user")
-	@Expose String surname = "";
+	@Expose public String surname = "";
 	@Attributes(required = true, description = "email to contact the user", pattern=FormRegExConstants.EMAIL)
-	@Expose String email = "";
+	@Expose public String email = "";
 	@Attributes(required = true, description = FormRegExConstants.PASSWORD_DESCRIPTION, pattern=FormRegExConstants.PASSWORD_PATTERN)
-	@Expose String password = "";
+	@Expose public String password = "";
 	@Attributes(required = true, description = "reenter user's password",pattern=FormRegExConstants.PASSWORD_PATTERN)
-	@Expose String passwordReenter = "";
+	@Expose public String passwordReenter = "";
 	@Attributes(required = true, description = "does the user need to change his/her password after first logon?")
-	@Expose boolean passwordChangeRequired = true;
+	@Expose public boolean passwordChangeRequired = true;
 	@Attributes(required = true, description = "is the user's account active?")
-	@Expose boolean accountActive = true;
+	@Expose public boolean accountActive = true;
 	public String getFormName() {
 		return formName;
 	}
