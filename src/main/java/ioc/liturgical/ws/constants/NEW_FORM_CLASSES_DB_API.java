@@ -1,7 +1,18 @@
 package ioc.liturgical.ws.constants;
 
-import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
 import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
+
+import ioc.liturgical.ws.models.db.forms.LinkRefersToAnimalCreateForm;
+import ioc.liturgical.ws.models.db.forms.LinkRefersToBeingCreateForm;
+import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
+import ioc.liturgical.ws.models.db.forms.LinkRefersToConceptCreateForm;
+import ioc.liturgical.ws.models.db.forms.LinkRefersToEventCreateForm;
+import ioc.liturgical.ws.models.db.forms.LinkRefersToGroupCreateForm;
+import ioc.liturgical.ws.models.db.forms.LinkRefersToHumanCreateForm;
+import ioc.liturgical.ws.models.db.forms.LinkRefersToObjectCreateForm;
+import ioc.liturgical.ws.models.db.forms.LinkRefersToPlaceCreateForm;
+import ioc.liturgical.ws.models.db.forms.LinkRefersToPlantCreateForm;
+import ioc.liturgical.ws.models.db.forms.LinkRefersToRoleCreateForm;
 
 /**
  * Enumerates classes that are a form for creating a new doc.
@@ -23,12 +34,72 @@ import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
  *
  */
 public enum NEW_FORM_CLASSES_DB_API {
-	NEW_LINK_REFERS_TO_BIBLICAL_TEXT(
+	NEW_LINK_REFERS_TO_ANIMAL(
+			"animal"
+			, new LinkRefersToAnimalCreateForm("","","")
+			, ENDPOINTS_DB_API.LINK_REFERS_TO_ANIMAL
+			, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+			)
+,	NEW_LINK_REFERS_TO_BEING(
+			"being"
+			, new LinkRefersToBeingCreateForm("","","")
+			, ENDPOINTS_DB_API.LINK_REFERS_TO_BEING
+			, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+			)
+,	NEW_LINK_REFERS_TO_BIBLICAL_TEXT(
 			"reference"
 			, new LinkRefersToBiblicalTextCreateForm("","","")
 			, ENDPOINTS_DB_API.LINK_REFERS_TO_BIBLICAL_TEXT
 			, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
 			)
+, NEW_LINK_REFERS_TO_CONCEPT(
+		"concept"
+		, new LinkRefersToConceptCreateForm("","","")
+		, ENDPOINTS_DB_API.LINK_REFERS_TO_CONCEPT
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
+, NEW_LINK_REFERS_TO_EVENT(
+		"event"
+		, new LinkRefersToEventCreateForm("","","")
+		, ENDPOINTS_DB_API.LINK_REFERS_TO_EVENT
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
+, NEW_LINK_REFERS_TO_GROUP(
+		"group"
+		, new LinkRefersToGroupCreateForm("","","")
+		, ENDPOINTS_DB_API.LINK_REFERS_TO_GROUP
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
+, NEW_LINK_REFERS_TO_HUMAN(
+		"human"
+		, new LinkRefersToHumanCreateForm("","","")
+		, ENDPOINTS_DB_API.LINK_REFERS_TO_HUMAN
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
+, NEW_LINK_REFERS_TO_OBJECT(
+		"object"
+		, new LinkRefersToObjectCreateForm("","","")
+		, ENDPOINTS_DB_API.LINK_REFERS_TO_OBJECT
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
+, NEW_LINK_REFERS_TO_PLACE(
+		"place"
+		, new LinkRefersToPlaceCreateForm("","","")
+		, ENDPOINTS_DB_API.LINK_REFERS_TO_PLACE
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
+, NEW_LINK_REFERS_TO_PLANT(
+		"plant"
+		, new LinkRefersToPlantCreateForm("","","")
+		, ENDPOINTS_DB_API.LINK_REFERS_TO_PLANT
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
+, NEW_LINK_REFERS_TO_ROLE(
+		"role"
+		, new LinkRefersToRoleCreateForm("","","")
+		, ENDPOINTS_DB_API.LINK_REFERS_TO_PLACE
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
 	;
 
 	public AbstractModel obj;

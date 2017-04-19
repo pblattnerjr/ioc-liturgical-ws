@@ -11,10 +11,13 @@ import static spark.Spark.delete;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.Constants;
+import ioc.liturgical.ws.constants.ENDPOINTS_ADMIN_API;
 import ioc.liturgical.ws.constants.ENDPOINTS_DB_API;
+import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.controllers.admin.ControllerUtils;
 import ioc.liturgical.ws.managers.auth.AuthDecoder;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
@@ -102,6 +105,22 @@ public class Neo4jController {
         			, request.queryParams("l") // tags (~labels)
         			, request.queryParams("o") // operator
         			));
+		});
+
+		// Get forms for creating new instances of nodes and relationships
+		path = ENDPOINTS_DB_API.NEW.toLibraryPath();
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			JsonObject json = externalManager.getNewDocForms(requestor, query);
+			if (json.get("valueCount").getAsInt() > 0) {
+				response.status(HTTP_RESPONSE_CODES.OK.code);
+			} else {
+				response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
+			}
+			return json.toString();
 		});
 
 		// DELETE relationship for parameter id, where id is the id of the properties in the relationship itself.

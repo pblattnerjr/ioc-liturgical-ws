@@ -23,6 +23,8 @@ import ioc.liturgical.ws.managers.interfaces.HighLevelDataStoreInterface;
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.EXTERNAL_DB_SCHEMA_CLASSES;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
+import ioc.liturgical.ws.constants.NEW_FORM_CLASSES_ADMIN_API;
+import ioc.liturgical.ws.constants.NEW_FORM_CLASSES_DB_API;
 import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
 import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
 import ioc.liturgical.ws.constants.SCHEMA_CLASSES;
@@ -1423,5 +1425,31 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		}
 		
 
-		
+		public JsonObject getNewDocForms(String requestor, String query) {
+			ResultJsonObjectArray result = new ResultJsonObjectArray(prettyPrint);
+			result.setQuery(query);
+			List<JsonObject> dbResults = new ArrayList<JsonObject>();
+			try {
+				for (NEW_FORM_CLASSES_DB_API e : NEW_FORM_CLASSES_DB_API.values()) {
+					if (internalManager.userAuthorizedForThisForm(requestor, e.restriction)) {
+						LTKVJsonObject record = 
+								new LTKVJsonObject(
+									e.endpoint.name
+									, "new"
+									, e.name
+									, e.obj.schemaIdAsString()
+									, e.obj.toJsonObject()
+									);
+					dbResults.add(record.toJsonObject());
+					}
+				}
+				result.setValueSchemas(internalManager.getSchemas(dbResults, requestor));
+				result.setResult(dbResults);
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.SERVER_ERROR.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result.toJsonObject();
+		}
+
 }

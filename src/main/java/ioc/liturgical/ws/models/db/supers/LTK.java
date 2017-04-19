@@ -52,10 +52,10 @@ public class LTK extends AbstractModel {
 	@Attributes(id = "top", required = true, readonly = false, minLength = 1,  description = "The library part of the ID, that is, typically the domain.")
 	@Expose public String library = "";
 
-	@Attributes(id = "top", required = true, readonly = false, minLength = 1, description = "The topic part of the ID.")
+	@Attributes(id = "top", required = true, readonly = true, minLength = 1, description = "The topic part of the ID.")
 	@Expose public String topic = "";
 
-	@Attributes(id = "top", required = true, readonly = false, minLength = 1, description = "The key part of the ID")
+	@Attributes(id = "top", required = true, readonly = true, minLength = 1, description = "The key part of the ID")
 	@Expose public String key = "";
 
 	@Attributes(id = "top", description="Tags to use when searching for this Doc.")

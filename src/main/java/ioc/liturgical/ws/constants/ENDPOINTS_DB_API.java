@@ -146,6 +146,18 @@ public enum ENDPOINTS_DB_API {
 			, RELATIONSHIP_TYPES.REFERS_TO_PLANT.typename
 			,"Endpoint for text refers to a plant"
 			)
+	, LINK_REFERS_TO_ROLE(
+			RELATIONSHIP_TYPES.REFERS_TO_ROLE.typename.toLowerCase()
+			, ENDPOINT_TYPES.RELATIONSHIP
+			, RELATIONSHIP_TYPES.REFERS_TO_ROLE.typename
+			,"Endpoint for text refers to a plant"
+			)
+	, NEW(
+			"new"
+			, ENDPOINT_TYPES.NODE
+			,"Forms for creating new docs."
+			, ""
+			)
 	, OBJECTS(
 			"objects"
 			, ENDPOINT_TYPES.ONTOLOGY

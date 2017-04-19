@@ -533,7 +533,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	 * @param restriction
 	 * @return
 	 */
-	private boolean userAuthorizedForThisForm(
+	public boolean userAuthorizedForThisForm(
 			String requestor
 			, RESTRICTION_FILTERS restriction
 			) {
@@ -557,6 +557,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			}
 		return result;
 	}
+	
 	public JsonObject getNewDocForms(String requestor, String query) {
 		ResultJsonObjectArray result = new ResultJsonObjectArray(prettyPrint);
 		result.setQuery(query);
