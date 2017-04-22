@@ -216,6 +216,9 @@ public enum ENDPOINTS_DB_API {
 		this.description = description;
 		pathname = pathPrefix;
 		switch (type) {
+		case FORMS:
+			pathname = pathname + Constants.EXTERNAL_DATASTORE_DROPDOWNS_PATH;
+			break;
 		case DROPDOWNS:
 			pathname = pathname + Constants.EXTERNAL_DATASTORE_DROPDOWNS_PATH;
 			break;

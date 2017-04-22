@@ -1,4 +1,4 @@
-package ioc.liturgical.ws.datastore;
+package ioc.liturgical.ws.managers;
 
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.constants.ROLES;

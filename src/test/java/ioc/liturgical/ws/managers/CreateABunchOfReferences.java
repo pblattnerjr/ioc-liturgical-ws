@@ -1,4 +1,4 @@
-package ioc.liturgical.ws.datastore;
+package ioc.liturgical.ws.managers;
 
 import static org.junit.Assert.*;
 

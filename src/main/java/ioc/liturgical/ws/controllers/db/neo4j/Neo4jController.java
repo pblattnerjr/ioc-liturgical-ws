@@ -11,6 +11,7 @@ import static spark.Spark.delete;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import ioc.liturgical.ws.app.ServiceProvider;
@@ -21,6 +22,7 @@ import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.controllers.admin.ControllerUtils;
 import ioc.liturgical.ws.managers.auth.AuthDecoder;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
+import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.models.RequestStatus;
 
 public class Neo4jController {
@@ -48,6 +50,25 @@ public class Neo4jController {
         			, request.queryParams("p") // property of the doc (e.g. the ID, the value)
         			, request.queryParams("m") // matcher (e.g. contains, starts with, regex)
         			));
+		});
+
+		/**
+		 * provides a list of available REST endpoints (i.e. resources)
+		 * @param storeManager
+		 */
+		path = ENDPOINTS_DB_API.NEW.toLibraryPath();
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			JsonObject json = externalManager.getNewDocForms(requestor, query);
+			if (json.get("valueCount").getAsInt() > 0) {
+				response.status(HTTP_RESPONSE_CODES.OK.code);
+			} else {
+				response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
+			}
+			return json.toString();
 		});
 
 		// GET domains as a dropdown list

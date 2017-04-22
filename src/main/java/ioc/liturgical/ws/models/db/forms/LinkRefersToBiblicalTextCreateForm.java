@@ -15,7 +15,7 @@ import com.github.reinert.jjschema.Attributes;
  * @author mac002
  *
  */
-@Attributes(title = "Reference To BiblicalText", description = "A form to use to create a link from a Liturgical text to a Biblical text.")
+@Attributes(title = "Reference To a Biblical Text", description = "A form to use to create a link from a Liturgical text to a Biblical text.")
 public class LinkRefersToBiblicalTextCreateForm extends LTKLinkCreateForm {
 	
 	private static double serialVersion = 1.1;

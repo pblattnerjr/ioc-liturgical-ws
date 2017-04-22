@@ -1,8 +1,9 @@
 package ioc.liturgical.ws.constants;
 
 public enum ENDPOINT_TYPES {
-	NODE
-	, DROPDOWNS
+	DROPDOWNS
+	, FORMS
+	, NODE
 	, ONTOLOGY
 	, RELATIONSHIP
 }

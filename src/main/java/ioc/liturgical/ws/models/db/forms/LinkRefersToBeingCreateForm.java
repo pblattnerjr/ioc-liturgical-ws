@@ -15,7 +15,7 @@ import com.github.reinert.jjschema.Attributes;
  * @author mac002
  *
  */
-@Attributes(title = "Reference to Being", description = "This is a doc that records information about a reference made in a text to some non-human being.")
+@Attributes(title = "Reference to a Being", description = "This is a doc that records information about a reference made in a text to some non-human being.")
 public class LinkRefersToBeingCreateForm extends LTKLinkCreateForm {
 	
 	private static double serialVersion = 1.1;
