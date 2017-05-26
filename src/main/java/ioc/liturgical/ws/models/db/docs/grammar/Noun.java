@@ -1,0 +1,30 @@
+package ioc.liturgical.ws.models.db.docs.grammar;
+
+import ioc.liturgical.ws.constants.ID_PART_TYPES;
+import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
+import ioc.liturgical.ws.constants.PARTS_OF_SPEECH;
+import ioc.liturgical.ws.models.db.forms.AnimalCreateForm;
+import ioc.liturgical.ws.models.db.supers.LTKDbGrammarAnalysisGenderNumberCase;
+import ioc.liturgical.ws.models.db.supers.LTKDbOntologyEntry;
+
+import com.github.reinert.jjschema.Attributes;
+
+/**
+ * @author mac002
+ *
+ */
+@Attributes(title = "Noun", description = "This is a doc that records information about a grammatical analysis of a noun.")
+public class Noun extends LTKDbGrammarAnalysisGenderNumberCase {
+	
+	private static String schema = Noun.class.getSimpleName();
+	private static double version = 1.1;
+	
+	public Noun(
+			String form
+			, String key
+			) {
+		super(form, key, schema, version);
+		super.setPos(PARTS_OF_SPEECH.NOUN);
+	}
+
+}

@@ -8,6 +8,7 @@ public enum USER_TOPICS {
 	, NEW("new","place holder for a new user")
 	, STATISTICS("statistics", "docs for the topic Stats, i.e. statistics about the user's access to the system.")
 	, STATUS("status", "docs for the topic Status, i.e. whether the user's accout is active/inactive.")
+	, UTILITIES("utilities", "docs for the topic Utilities.  Basically a dummy placeholder.")
 	;
 	public String lib = SYSTEM_LIBS.USERS.libname;
 	public String topic;

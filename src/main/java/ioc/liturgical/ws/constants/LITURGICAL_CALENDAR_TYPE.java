@@ -1,7 +1,5 @@
 package ioc.liturgical.ws.constants;
 
-import com.google.common.base.Joiner;
-
 public enum LITURGICAL_CALENDAR_TYPE {
 	JULIAN("j", "Julian")
 	, GREGORIAN("g", "Gregorian")

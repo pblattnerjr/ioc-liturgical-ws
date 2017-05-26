@@ -80,9 +80,8 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 	  }
 	  
 
-	  private void testConnection() {
-		  ResultJsonObjectArray result = getResultObjectForQuery("match (n) return count(n)");
-
+	  private ResultJsonObjectArray testConnection() {
+		  ResultJsonObjectArray result = getResultObjectForQuery("match (n) return count(n) limit 10");
 		  if (result.getValueCount() > 0) {
 			  logger.info("Connection to Neo4j database is OK.");
 			  this.connectionOK = true;
@@ -91,7 +90,9 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			  logger.error("Can't connect to the Neo4j database.");
 			  logger.error(result.getStatus().getUserMessage());
 		  }
+		  return result;
 	  }
+	  
 
 	public ResultJsonObjectArray getForQuery(String query) {
 			return getResultObjectForQuery(query);
@@ -240,9 +241,14 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + "  " + doc.getId());
 			}
 		} catch (Exception e){
-			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
-			result.setDeveloperMessage(e.getMessage());
+			if (e.getMessage().contains("already exists")) {
+				result.setCode(HTTP_RESPONSE_CODES.CONFLICT.code);
+				result.setDeveloperMessage(HTTP_RESPONSE_CODES.CONFLICT.message);
+			} else {
+				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setDeveloperMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+			}
+			result.setUserMessage(e.getMessage());
 		}
     	recordQuery(query, result.getCode(), count);
 		return result;
@@ -270,7 +276,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 						, ModelHelpers.getAsPropertiesMap(doc)
 						);
 			} catch (Exception e){
-				ErrorUtils.report(logger, e);
+				// ignore
 			}
 		}
 	}

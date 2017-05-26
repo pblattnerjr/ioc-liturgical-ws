@@ -26,7 +26,10 @@ public class UserCreateForm extends AbstractModel {
 	
 	@Attributes(required = true, description = "last name (i.e., family name, or surname)  of the user", minLength=FormFieldLengths.NAME_LAST_MIN)
 	@Expose public String lastname = "";
-	
+
+	@Attributes(required = true, description = "Title, e.g. 'Fr.', 'Dr.', or nothing")
+	@Expose public String title = "";
+
 	@Attributes(required = true, description = "email to contact the user", pattern=FormRegExConstants.EMAIL)
 	@Expose public String email = "";
 	
@@ -41,6 +44,22 @@ public class UserCreateForm extends AbstractModel {
 	@Attributes(required = true, description = "reenter password", pattern=FormRegExConstants.PASSWORD_PATTERN)
 	@Expose public String passwordReenter = "";
 		
+	@Attributes(
+			required = true
+			, description = "code for the language the user will primarily use when creating docs"
+			, minLength=FormFieldLengths.LANGUAGE_CODE_MIN
+			, maxLength=FormFieldLengths.LANGUAGE_CODE_MAX
+			)
+	@Expose public String languageCode = "en";
+	
+	@Attributes(
+			required = true
+			, description = "code for country in which this dialect of the language is spoken"
+			, minLength=FormFieldLengths.COUNTRY_CODE_MIN
+			, maxLength=FormFieldLengths.COUNTRY_CODE_MAX
+			)
+	@Expose public String countryCode = "us";
+	
 	public UserCreateForm() {
 		super();
 		this.serialVersionUID = 1.1;
@@ -118,5 +137,23 @@ public class UserCreateForm extends AbstractModel {
 	
 	private boolean emailsMatch() {
 		return (this.email.length() == this.emailReenter.length() && this.email.startsWith(this.emailReenter));
+	}
+	public String getLanguageCode() {
+		return languageCode;
+	}
+	public void setLanguageCode(String languageCode) {
+		this.languageCode = languageCode;
+	}
+	public String getCountryCode() {
+		return countryCode;
+	}
+	public void setCountryCode(String countryCode) {
+		this.countryCode = countryCode;
+	}
+	public String getTitle() {
+		return title;
+	}
+	public void setTitle(String title) {
+		this.title = title;
 	}
 }

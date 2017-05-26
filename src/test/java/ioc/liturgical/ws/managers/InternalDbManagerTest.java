@@ -46,6 +46,7 @@ public class InternalDbManagerTest extends TestCase {
 		accessManager.grantRole(wsAdmin,ROLES.ADMIN, "gr_gr_cog","testUser02");
 		accessManager.grantRole(wsAdmin,ROLES.AUTHOR, "gr_gr_cog","testUser03");
 		accessManager.grantRole(wsAdmin,ROLES.READER, "gr_gr_cog","testUser04");
+		accessManager.grantRole(wsAdmin,ROLES.REVIEWER, "gr_gr_cog","testUser04");
 
 	}
 
@@ -72,6 +73,8 @@ public class InternalDbManagerTest extends TestCase {
         assertAuths("testUser02","gr_gr_cog");
 
         assertReadOnlyAuths("testUser04", "gr_gr_cog");
+        assertAdminDomainIds();
+        assertUsersWithRoleForDomain();
     }
     
     private void assertAuths(String user, String library) {
@@ -122,5 +125,19 @@ public class InternalDbManagerTest extends TestCase {
                 assertFalse(accessManager.authorized(user, VERBS.POST, Constants.DOMAINS_LIB));
                 assertFalse(accessManager.authorized(user, VERBS.DELETE, Constants.DOMAINS_LIB));
             }
+    }
+    
+    private void assertAdminDomainIds() {
+    	assertTrue(accessManager.getDomainsTheUserAdministers("wsadmin").size() > 0);
+    	assertTrue(accessManager.getDomainsTheUserAdministers("testUser02").size() > 0);
+    	assertNotNull(accessManager.getDomainIdsSelectionWidgetSchema("testUser02"));
+    	assertNotNull(accessManager.getDomainDropdownsForUser("testUser02"));
+    	
+    }
+    private void assertUsersWithRoleForDomain() {
+    	assertTrue(accessManager.getDomainAdmins("gr_gr_cog").size() > 0);
+    	assertTrue(accessManager.getDomainAuthors("gr_gr_cog").size() > 0);
+    	assertTrue(accessManager.getDomainReaders("gr_gr_cog").size() > 0);
+    	assertTrue(accessManager.getDomainReviewers("gr_gr_cog").size() > 0);
     }
 }

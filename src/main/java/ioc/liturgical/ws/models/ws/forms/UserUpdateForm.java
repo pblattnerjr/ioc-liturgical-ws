@@ -17,19 +17,35 @@ import com.github.reinert.jjschema.Attributes;
 public class UserUpdateForm extends AbstractModel {
 	@Attributes(readonly=true, required = true, description = "id used to login to system", minLength=FormFieldLengths.USERNAME_MIN)
 	@Expose public String username = "";
+
 	@Attributes(required = true, description = "first name of the user", minLength=FormFieldLengths.NAME_FIRST_MIN)
 	@Expose public String firstname = "";
+
 	@Attributes(required = true, description = "surname  of the user", minLength=FormFieldLengths.NAME_LAST_MIN)
 	@Expose public String surname = "";
+
+	@Attributes(required = true, description = "Title, e.g. 'Fr.', 'Dr.', or nothing")
+	@Expose public String title = "";
+
 	@Attributes(required = true, description = "email to contact the user", pattern=FormRegExConstants.EMAIL)
 	@Expose public String email = "";
+
 	@Attributes(required = true, description = "reenter email to contact the user", pattern=FormRegExConstants.EMAIL)
 	@Expose public String emailReenter = "";
+
 	@Attributes(required = false, description = FormRegExConstants.PASSWORD_DESCRIPTION, pattern=FormRegExConstants.PASSWORD_PATTERN)
 	@Expose public String password = "";
+
 	@Attributes(required = false, description = "reenter password", pattern=FormRegExConstants.PASSWORD_PATTERN)
 	@Expose public String passwordReenter = "";
-		
+
+	@Attributes(
+			required = true
+			, readonly=true
+			, description = "personal domain for the user"
+			)
+	@Expose public String domain = "";
+	
 	public String getUsername() {
 		return username;
 	}
@@ -79,6 +95,22 @@ public class UserUpdateForm extends AbstractModel {
 
 	public void setPasswordReenter(String passwordReenter) {
 		this.passwordReenter = passwordReenter;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public String getDomain() {
+		return domain;
+	}
+
+	public void setDomain(String domain) {
+		this.domain = domain;
 	}
 
 }

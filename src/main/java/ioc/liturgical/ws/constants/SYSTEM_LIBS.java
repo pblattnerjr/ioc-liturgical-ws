@@ -18,6 +18,7 @@ public enum SYSTEM_LIBS {
 	, ADMINS("admins", "Library used to record users allowed to administer a given library.")
 	, AUTHORS("authors", "Library used to record users allowed to author docs in a given library")
 	, READERS("readers", "Library used to record users allowed to read docs in a given library")
+	, REVIEWERS("reviewers", "Library used to record users allowed to review docs in a given library")
 	, USERS("users", "Library for topics and docs pertaining to the users of the web service")
 	;
 

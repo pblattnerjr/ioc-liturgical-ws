@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -33,6 +35,7 @@ import ioc.liturgical.ws.models.ws.db.UserAuth;
 import ioc.liturgical.ws.models.ws.db.UserContact;
 import ioc.liturgical.ws.models.ws.db.UserHash;
 import ioc.liturgical.ws.models.ws.db.UserStatistics;
+import ioc.liturgical.ws.models.ws.db.Utility;
 import ioc.liturgical.ws.models.ws.db.ValueSchema;
 import ioc.liturgical.ws.models.ws.forms.AuthorizationCreateForm;
 import ioc.liturgical.ws.models.ws.forms.DomainCreateForm;
@@ -41,17 +44,21 @@ import ioc.liturgical.ws.models.ws.forms.SelectionWidgetSchema;
 import ioc.liturgical.ws.models.ws.forms.UserCreateForm;
 import ioc.liturgical.ws.models.ws.forms.UserPasswordChangeForm;
 import ioc.liturgical.ws.models.ws.forms.UserPasswordForm;
+import ioc.liturgical.ws.models.ws.response.DomainWorkflowInfo;
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.ENDPOINTS_ADMIN_API;
 import ioc.liturgical.ws.constants.EXTERNAL_DB_SCHEMA_CLASSES;
 import ioc.liturgical.ws.constants.Constants;
+import ioc.liturgical.ws.constants.DOMAIN_TYPES;
 import ioc.liturgical.ws.constants.SYSTEM_MISC_LIBRARY_TOPICS;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.constants.NEW_FORM_CLASSES_ADMIN_API;
 import ioc.liturgical.ws.constants.RESTRICTION_FILTERS;
 import ioc.liturgical.ws.constants.ROLES;
-import ioc.liturgical.ws.constants.SCHEMA_CLASSES;
+import ioc.liturgical.ws.constants.INTERNAL_DB_SCHEMA_CLASSES;
+import ioc.liturgical.ws.constants.STATUS;
 import ioc.liturgical.ws.constants.USER_TOPICS;
+import ioc.liturgical.ws.constants.UTILITIES;
 import ioc.liturgical.ws.constants.VERBS;
 import ioc.liturgical.ws.managers.auth.UserStatus;
 import ioc.liturgical.ws.managers.exceptions.DbException;
@@ -60,6 +67,7 @@ import net.ages.alwb.utils.core.datastores.db.factory.DbConnectionFactory;
 import net.ages.alwb.utils.core.datastores.db.h2.manager.H2ConnectionManager;
 import net.ages.alwb.utils.core.datastores.json.exceptions.BadIdException;
 import net.ages.alwb.utils.core.datastores.json.exceptions.MissingSchemaIdException;
+import net.ages.alwb.utils.core.datastores.json.models.DropdownItem;
 import net.ages.alwb.utils.core.datastores.json.models.LTKVJsonObject;
 import net.ages.alwb.utils.core.datastores.json.models.LTKVString;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
@@ -242,7 +250,11 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		return result.toJsonObject();
 	}
 	
-	
+	/**
+	 * Filter out user hashes from the list
+	 * @param list
+	 * @return
+	 */
 	private List<JsonObject> filter(List<JsonObject> list) {
 		try {
 			return list.stream() 
@@ -396,6 +408,167 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	}
 
 	/**
+	 * Get a domain based on its key
+	 * @param key
+	 * @return
+	 */
+	public Domain getDomain(String key) {
+		try {			
+			JsonObject obj = getForId(SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.toId(key));
+			int count = obj.getAsJsonPrimitive("valueCount").getAsInt();
+			if (count != 1) {
+				return null;
+			} else {
+				Domain domain = (Domain) gson.fromJson(
+						obj.get("values")
+						.getAsJsonArray()
+						.get(0)
+						.getAsJsonObject()
+						.get("value")
+						.getAsJsonObject()
+						, Domain.class
+				);
+				return domain;
+			}
+		} catch (Exception e) {
+			ErrorUtils.report(logger, e);
+			return null;
+		}
+	}
+
+	public TreeSet<String> getDomainAdmins(String domain) {
+		return getUsersWithRoleForDomain(ROLES.ADMIN, domain);
+	}
+
+	public TreeSet<String> getDomainAuthors(String domain) {
+		return getUsersWithRoleForDomain(ROLES.AUTHOR, domain);
+	}
+
+	public TreeSet<String> getDomainReaders(String domain) {
+		return getUsersWithRoleForDomain(ROLES.READER, domain);
+	}
+
+	public TreeSet<String> getDomainReviewers(String domain) {
+		return getUsersWithRoleForDomain(ROLES.REVIEWER, domain);
+	}
+	
+	/**
+	 * For the specified domain, get a JsonObject that has
+	 * admins: a JsonArray of dropdown items that are users who have an admin role for the domain
+	 * authors: a JsonArray of dropdown items that are users who have an author role for the domain
+	 * readers: a JsonArray of dropdown items that are users who have an reader role for the domain
+	 * reviewers: a JsonArray of dropdown items that areusers who have an reviewer role for the domain
+	 * @param domain
+	 * @return
+	 */
+	public JsonObject getDropdownsForUsersWithRoleForDomain(String domain) {
+		ResultJsonObjectArray result = new ResultJsonObjectArray(prettyPrint);
+		result.setQuery("workflow config, statuses, and users for " + domain);
+		try {
+			
+			// get the workflow flags for this domain
+			Domain theDomainObject = getDomain(domain);
+			DomainWorkflowInfo workflowInfo = new DomainWorkflowInfo();
+			workflowInfo.setDefaultStatusAfterEdit(theDomainObject.getDefaultStatusAfterEdit());
+			workflowInfo.setDefaultStatusAfterFinalization(theDomainObject.getDefaultStatusAfterFinalization());
+			workflowInfo.setStateEnabled(theDomainObject.isStateEnabled());
+			workflowInfo.setWorkflowEnabled(theDomainObject.isWorkflowEnabled());
+			workflowInfo.setType(theDomainObject.getType());
+			JsonObject info = new JsonObject();
+			info.add("config", workflowInfo.toJsonObject());
+			
+			// set the users and roles for this domain
+			JsonObject dropdowns = new JsonObject();
+			dropdowns.add("admins", userIdsToDropdown(getDomainAdmins(domain)));
+			dropdowns.add("authors", userIdsToDropdown(getDomainAuthors(domain)));
+			dropdowns.add("readers", userIdsToDropdown(getDomainReaders(domain)));
+			dropdowns.add("reviewers", userIdsToDropdown(getDomainAdmins(domain)));
+			JsonObject statuses = new JsonObject();
+			
+			// get the statuses to use with the domain
+			statuses.add("statuses", STATUS.toDropdownJsonArray());
+			
+			// build the JsonObject  list
+			List<JsonObject> list = new ArrayList<JsonObject>();
+			list.add(dropdowns);
+			list.add(statuses);
+			list.add(info);
+			// add the list to the final result
+			result.setResult(list);
+		} catch (Exception e) {
+			result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setStatusMessage(e.getMessage());
+		}
+		return result.toJsonObject();
+	}
+	
+	public JsonObject getLibraryWorkflowInfo(String library) {
+		JsonObject result = new JsonObject();
+		
+		return result;
+	}
+
+	/**
+	 * For each user ID, gets that user from the database
+	 * and creates a DropdownItem for the user, that includes
+	 * their title, first name, and last name.
+	 * @param userIds
+	 * @return
+	 */
+	private JsonArray userIdsToDropdown(TreeSet<String> userIds) {
+		JsonArray result = new JsonArray();
+		for (String id : userIds) {
+			try {
+				UserContact user = getUserContact(id);
+				StringBuilder sb = new StringBuilder();
+				sb.append(id);
+				sb.append(" (");
+				if (user.title.length() > 0) {
+					sb.append(user.title);
+					sb.append(" ");
+				}
+				sb.append(user.getFirstname());
+				sb.append(" ");
+				sb.append(user.getLastname());
+				sb.append(")");
+				result.add(new DropdownItem(sb.toString(),id).toJsonObject());
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Returns an alphabetized list of users who have the specified role
+	 * for this domain.  Note that it will also include admins, since an
+	 * admin for a domain also automatically has all other roles.
+	 * @param role
+	 * @param domain
+	 * @return
+	 */
+	private TreeSet<String> getUsersWithRoleForDomain(ROLES role, String domain) {
+		TreeSet<String> result = new TreeSet<String>();
+		// if we are not checking for admin users, include them since they automatically
+		// have all other roles.
+		if (! role.equals(ROLES.ADMIN)) {
+			for (JsonElement e : getWhereLike(ROLES.ADMIN.keyname + "%" + domain).get("values").getAsJsonArray()) {
+				String user = e.getAsJsonObject().get("key").getAsString();
+				if (! result.contains(user)) {
+					result.add(e.getAsJsonObject().get("key").getAsString());
+				}
+			}
+		}
+		for (JsonElement e : getWhereLike(role.keyname + "%" + domain).get("values").getAsJsonArray()) {
+			String user = e.getAsJsonObject().get("key").getAsString();
+			if (! result.contains(user)) {
+				result.add(e.getAsJsonObject().get("key").getAsString());
+			}
+		}
+		return result;
+	}
+
+	/**
 	 * Get a list of the users with a path for changing their password
 	 * These can be listed in the user interface for selection by
 	 * an administrator.
@@ -416,6 +589,23 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	}
 
 
+	/**
+	 * Get the domains know to the system
+	 * @return
+	 */
+	private List<String> getDomains() {
+		List<String> result = new ArrayList<String>();
+		for (String id : getDomainIds()) {
+			IdManager idManager = new IdManager(id);
+			result.add(idManager.getKey());
+		}
+		return result;
+	}
+	
+	/**
+	 * Get the IDs of domains, this is misc~domains~{the domain}, e.g. misc~domains~gr_gr_cog
+	 * @return
+	 */
 	private List<String> getDomainIds() {
 		return getIds(SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.toId(""));
 	}
@@ -438,7 +628,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	 * @param username
 	 * @return
 	 */
-	private JsonObject getDomainIdsSelectionWidgetSchema(String username) {
+	public JsonObject getDomainIdsSelectionWidgetSchema(String username) {
 		JsonObject result = new JsonObject();
 
 		List<String> idsList = new ArrayList<String>();
@@ -519,7 +709,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		return json;
 	}
 	
-	private List<String> getIds(String like) {
+	public List<String> getIds(String like) {
 		List<String> list = new ArrayList<String>();
 		for (JsonElement user : getWhereLike(like).get("values").getAsJsonArray()) {
 			list.add(user.getAsJsonObject().get("_id").getAsString());
@@ -601,6 +791,10 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
            	} else {
     			addSchemas(); // this adds the schemas used by the system
            	}
+           	
+           	// add descriptions of utilities.
+           	this.createUtilityDescriptions();
+           	
 		} catch (Exception e) {
 			ErrorUtils.report(logger, e);
 		}
@@ -646,7 +840,9 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			user.setEmailReenter(user.getEmail());
 			user.setPasswordReenter(user.getPassword());
 			user.setUsername(wsAdmin);
-			addUser(user.toJsonString());
+			user.setLanguageCode("en");
+			user.setCountryCode("sys");
+			addUser("wsadmin", user.toJsonString());
 
 			logger.info("ws admin user added");
 			bootstrapSystemAdminRole(wsAdmin,ROLES.ADMIN, Constants.SYSTEM_LIB, wsAdmin);
@@ -656,6 +852,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 
 			// TODO delete the following
 
+			// add domain for Commonly Used Greek text
 			DomainCreateForm domain = new DomainCreateForm();
 			domain.setLanguageCode("gr");
 			domain.setCountryCode("gr");
@@ -666,14 +863,94 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			domain.setLabels(labels);
 			addDomain(wsAdmin, domain.toJsonString());
 
+			// add domain for ocmc
 			domain = new DomainCreateForm();
 			domain.setLanguageCode("en");
 			domain.setCountryCode("us");
-			domain.setRealm("dedes");
-			domain.setDescription("Translations by Fr. Seraphim Dedes");
+			domain.setRealm("ocmc");
+			domain.setDescription("Notes and Translations by OCMC staff");
 			domain.setLabels(labels);
+			domain.setType(DOMAIN_TYPES.COLLECTIVE);
 			addDomain(wsAdmin, domain.toJsonString());
+
+			// add domain for system ontology
+			domain = new DomainCreateForm();
+			domain.setLanguageCode("en");
+			domain.setCountryCode("sys");
+			domain.setRealm("ontology");
+			domain.setDescription("System ontology entries");
+			domain.setLabels(labels);
+			domain.setType(DOMAIN_TYPES.COLLECTIVE);
+			addDomain(wsAdmin, domain.toJsonString());
+
 			logger.info("domains added");
+
+			// TODO: delete the code for the following users once the database is in use
+			
+			String ontologyDomain = "en_sys_ontology";
+			String ocmcDomain = "en_us_ocmc";
+			
+			// add Fr. Pentiuc if he is not in the database
+			String username = "frepentiuc";
+			if (! this.existsUser(username)) {
+				user = new UserCreateForm();
+				user.setFirstname("Eugen");
+				user.setLastname("Pentiuc");
+				user.setTitle("Rev. Dr.");
+				user.setEmail("epentiuc@hchc.edu");
+				user.setPassword(ServiceProvider.ws_pwd);
+				user.setEmailReenter(user.getEmail());
+				user.setPasswordReenter(user.getPassword());
+				user.setUsername(username);
+				user.setLanguageCode("en");
+				user.setCountryCode("us");
+				addUser("wsadmin", user.toJsonString());
+				this.grantRole("wsadmin", ROLES.ADMIN, ontologyDomain, username);
+				logger.info("user Fr. Pentiuc added");
+				stats = new UserStatistics();
+				addUserStats(user.getUsername(),stats);
+			}
+			
+			username = "frsdedes";
+			if (! this.existsUser(username)) {
+				user = new UserCreateForm();
+				user.setFirstname("Seraphim");
+				user.setLastname("Dedes");
+				user.setTitle("Fr.");
+				user.setEmail("seraphimdedes@gmail.com");
+				user.setPassword(ServiceProvider.ws_pwd);
+				user.setEmailReenter(user.getEmail());
+				user.setPasswordReenter(user.getPassword());
+				user.setUsername(username);
+				user.setLanguageCode("en");
+				user.setCountryCode("us");
+				addUser("wsadmin", user.toJsonString());
+				this.grantRole("wsadmin", ROLES.ADMIN, ontologyDomain, username);
+				logger.info("user Fr. Dedes added");
+				stats = new UserStatistics();
+				addUserStats(user.getUsername(),stats);
+			}
+			
+			username = "mcolburn";
+			if (! this.existsUser(username)) {
+				user = new UserCreateForm();
+				user.setFirstname("Michael");
+				user.setLastname("Colburn");
+				user.setTitle("Dr.");
+				user.setEmail("m.colburn@ocmc.org");
+				user.setPassword(ServiceProvider.ws_pwd);
+				user.setEmailReenter(user.getEmail());
+				user.setPasswordReenter(user.getPassword());
+				user.setUsername(username);
+				user.setLanguageCode("en");
+				user.setCountryCode("us");
+				addUser("wsadmin", user.toJsonString());
+				this.grantRole("wsadmin", ROLES.ADMIN, ontologyDomain, username);
+				this.grantRole("wsadmin", ROLES.ADMIN, ocmcDomain, username);
+				logger.info("user Colburn added");
+				stats = new UserStatistics();
+				addUserStats(user.getUsername(),stats);
+			}
 			
 			if (createTestUsers) {
 				// add a test user who can administer all domains
@@ -685,7 +962,6 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 						, Constants.DOMAINS_LIB
 						);
 	
-				// add a test user who can administer one domain
 				initializeUser(
 						"adminForEnUsDedes"
 						, "one"
@@ -694,6 +970,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 						, "en_us_dedes"
 						);
 	
+
 				initializeUser(
 						"notAnAdmin"
 						, "can't"
@@ -918,18 +1195,42 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	 * @param json from a UserCreateForm
 	 * @return
 	 */
-	public RequestStatus addUser(String json) {
+	public RequestStatus addUser(
+			String requestor
+			, String json
+			) {
 	RequestStatus result = new RequestStatus();
 	UserCreateForm userForm = new UserCreateForm();
 	userForm = (UserCreateForm) userForm.fromJsonString(json);
 	String validation = userForm.validate(json);
 	if (validation.length() == 0) {
+		String realm = "";
+		if (userForm.getUsername().equals("wsadmin")) {
+			realm = "wsadmin";
+		} else if (userForm.getUsername().equals("frsdedes")) {
+			realm = "dedes";
+		} else {
+			realm = userForm.getFirstname().toLowerCase().charAt(0)
+			+ userForm.getLastname().toLowerCase();
+		}
 		try {
 			// first create a UserContact
 			UserContact user = new UserContact();
 			user.setFirstname(userForm.getFirstname());
 			user.setLastname(userForm.getLastname());
 			user.setEmail(userForm.getEmail());
+			user.setTitle(userForm.getTitle());
+			user.setDomain(
+					userForm.getLanguageCode()
+					+ Constants.DOMAIN_DELIMITER
+					+ userForm.getCountryCode()
+					+ Constants.DOMAIN_DELIMITER
+					+ realm
+					);
+			user.setCreatedBy(requestor);
+			user.setModifiedBy(requestor);
+			user.setCreatedWhen(getTimestamp());
+			user.setModifiedWhen(user.getCreatedWhen());
 			result = addUserContact(userForm.getUsername(), user);
 			
 			if (result.getCode() == HTTP_RESPONSE_CODES.CREATED.code) {
@@ -938,6 +1239,26 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 				hash.setPassword(userForm.getPassword());
 				// we will overwrite the original response code
 				result = addUserHash(userForm.getUsername(), hash);
+				
+				// and create the user's personal domain if it does not already exist
+				if (! existsLibrary(user.getDomain())) {
+					Domain domain = new Domain();
+					domain.setLanguageCode(userForm.getLanguageCode());
+					domain.setCountryCode(userForm.getCountryCode());
+					domain.setRealm(realm);
+					domain.setType(DOMAIN_TYPES.USER);
+					domain.setDescription(
+							"Notes and/or translations by " 
+							        + (userForm.getTitle().length() > 0 ? userForm.getTitle() + " " : "")
+									+ userForm.getFirstname() 
+									+ " "
+									+ userForm.getLastname()
+					);
+					addDomain(requestor, domain.toJsonString());
+					
+					// make the user an admin for his/her personal domain
+					grantRole(requestor, ROLES.ADMIN, domain.getDomain(), userForm.getUsername());
+				}
 			}
 		} catch (Exception e) {
 			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
@@ -1009,9 +1330,16 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		if (validation.length() == 0) {
 			try {
 				Domain domain = new Domain();
+				domain.setLanguageCode(form.getLanguageCode());
+				domain.setCountryCode(form.getCountryCode());
+				domain.setRealm(form.getRealm());
 				domain.setDescription(form.getDescription());
 				domain.setLabels(form.getLabels());
-				domain.setPublic(form.isPublic());
+				domain.setType(form.getType());
+				domain.setDefaultStatusAfterEdit(form.getDefaultStatusAfterEdit());
+				domain.setDefaultStatusAfterFinalization(form.getDefaultStatusAfterFinalization());
+				domain.setStateEnabled(form.isStateEnabled());
+				domain.setWorkflowEnabled(form.isWorkflowEnabled());
 				domain.setCreatedBy(requestor);
 				domain.setModifiedBy(requestor);
 				domain.setCreatedWhen(getTimestamp());
@@ -1023,6 +1351,50 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 						, key
 						, domain.schemaIdAsString()
 						, domain.toJsonObject()
+						);
+			} catch (Exception e) {
+				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+			}
+		} else {
+			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			JsonObject message = stringToJson(validation);
+			if (message == null) {
+				result.setMessage(validation);
+			} else {
+				result.setMessage(message.get("message").getAsString());
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * This creates a description of a utility.
+	 * It will not be exposed in the web service.
+	 * However, a post handler is exposed to
+	 * allow execution of a specific utility
+	 * @param requestor
+	 * @param json
+	 * @return
+	 */
+	private RequestStatus addUtility(String requestor, String json) {
+		RequestStatus result = new RequestStatus();
+		Utility jsonObj =  new Utility();
+		jsonObj = (Utility) jsonObj.fromJsonString(json);
+		String validation = jsonObj.validate(json);
+		if (validation.length() == 0) {
+			try {
+				jsonObj.setCreatedBy(requestor);
+				jsonObj.setModifiedBy(requestor);
+				jsonObj.setCreatedWhen(getTimestamp());
+				jsonObj.setModifiedWhen(jsonObj.getCreatedWhen());
+				String key = jsonObj.name;
+				result = addLTKVJsonObject(
+						SYSTEM_MISC_LIBRARY_TOPICS.UTILITIES.lib
+						, SYSTEM_MISC_LIBRARY_TOPICS.UTILITIES.topic
+						, key
+						, jsonObj.schemaIdAsString()
+						, jsonObj.toJsonObject()
 						);
 			} catch (Exception e) {
 				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
@@ -1333,13 +1705,19 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	}
 
 
-	public RequestStatus updateUserContact(String key, String json) {
+	public RequestStatus updateUserContact(
+			String requestor
+			, String key
+			, String json
+			) {
 		RequestStatus result = new RequestStatus();
 		UserContact user = new UserContact();
 		String validation = user.validate(json);
 		if (validation.length() == 0) {
 			try {
 				user = (UserContact) user.fromJsonString(json);
+				user.setModifiedBy(requestor);
+				user.setModifiedWhen(getTimestamp());
 				result = updateUserContact(key, user);
 			} catch (Exception e) {
 				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
@@ -1355,6 +1733,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	private RequestStatus updateUserContact(String key, UserContact user) {
 		RequestStatus result = new RequestStatus();
 		try {
+
 	    	result = updateLTKVJsonObject(
 	    			USER_TOPICS.CONTACT.lib
 	    			, USER_TOPICS.CONTACT.topic
@@ -1401,7 +1780,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	 */
 	private void addSchemas() {
 		try {
-			for (SCHEMA_CLASSES s :SCHEMA_CLASSES.values()) {
+			for (INTERNAL_DB_SCHEMA_CLASSES s :INTERNAL_DB_SCHEMA_CLASSES.values()) {
 				try {
 					ValueSchema schema = new ValueSchema(s.obj);
 					String id = new IdManager(
@@ -1944,17 +2323,192 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 				;
 	}
 	
-	public List<String> getIdsOfDomainsUserAdministers(String username) {
+	public List<String> getDomainsTheUserAdministers(String username) {
 		List<String> result = new ArrayList<String>();
 		if (isDbAdmin(username)) {
-			return getDomainIds();
+			return getDomains();
 		} else {
 			JsonObject json = getWhereLike(ROLES.ADMIN.keyname + "%" + username);
 			if (json.get("valueCount").getAsInt() > 0) {
-				
+				for (JsonElement value : json.get("values").getAsJsonArray()) {
+					result.add(value.getAsJsonObject().get("topic").getAsString());
+				}
 			}
 			return result;
 		}
+	}
+
+	public JsonArray getDomainsUserCanRead(String username) {
+		JsonArray result = new JsonArray();
+		JsonObject json = getWhereLike(ROLES.READER.keyname + "%" + username);
+		if (json.get("valueCount").getAsInt() > 0) {
+			result = json.get("values").getAsJsonArray();
+		}
+		return result;
+	}
+	
+	public JsonArray getDomainsUserCanAuthor(String username) {
+		JsonArray result = new JsonArray();
+		JsonObject json = getWhereLike(ROLES.AUTHOR.keyname + "%" + username);
+		if (json.get("valueCount").getAsInt() > 0) {
+			result = json.get("values").getAsJsonArray();
+		}
+		return result;
+	}
+
+	public JsonArray getDomainsUserCanAdminister(String username) {
+		JsonArray result = new JsonArray();
+		JsonObject json = getWhereLike(ROLES.ADMIN.keyname + "%" + username);
+		if (json.get("valueCount").getAsInt() > 0) {
+			result = json.get("values").getAsJsonArray();
+		}
+		return result;
+	}
+
+	public JsonArray getDomainsUserCanReview(String username) {
+		JsonArray result = new JsonArray();
+		JsonObject json = getWhereLike(ROLES.REVIEWER.keyname + "%" + username);
+		if (json.get("valueCount").getAsInt() > 0) {
+			result = json.get("values").getAsJsonArray();
+		}
+		return result;
+	}
+
+	/**
+	 * Get a JsonArray of the domains the user can read
+	 * The values of the JsonArrays are domains.
+	 * Each domain is stored as a JsonObject with a key and label.
+	 * @param username
+	 * @return
+	 */
+	public JsonArray getDropdownOfDomainsForWhichTheUserIsAReader(String username) {
+		JsonArray result = new JsonArray();
+		List<String> domains = new ArrayList<String>();
+		if (isDbAdmin(username)) {
+			domains = getDomains();
+		} else {
+			for (JsonElement value : this.getDomainsUserCanAdminister(username)) {
+				String domain = value.getAsJsonObject().get("topic").getAsString();
+				domains.add(domain);
+			}
+			for (JsonElement value : this.getDomainsUserCanAuthor(username)) {
+				String domain = value.getAsJsonObject().get("topic").getAsString();
+				if (! domains.contains(domain)) {
+					domains.add(domain);
+				}
+			}
+			for (JsonElement value : this.getDomainsUserCanRead(username)) {
+				String domain = value.getAsJsonObject().get("topic").getAsString();
+				if (! domains.contains(domain)) {
+					domains.add(domain);
+				}
+			}
+		}
+		Collections.sort(domains);
+		for (String domain : domains) {
+			JsonArray domainRecords = getWhereLike(SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.toId(domain)).get("values").getAsJsonArray();
+			if (domainRecords.size() > 0) {
+				JsonObject domainObject = domainRecords.get(0).getAsJsonObject();
+				String key = domainObject.get("key").getAsString();
+				String description = domainObject.get("value").getAsJsonObject().get("description").getAsString();
+				result.add(new DropdownItem(key + ": " + description, key).toJsonObject());
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Get a JsonArray of the domains the user can author
+	 * The values of the JsonArrays are domains.
+	 * Each domain is stored as a JsonObject with a key and label.
+	 * @param username
+	 * @return
+	 */
+	public JsonArray getDropdownOfDomainsForWhichTheUserIsAnAuthor(String username) {
+		JsonArray result = new JsonArray();
+		List<String> domains = new ArrayList<String>();
+		if (isDbAdmin(username)) {
+			domains = getDomains();
+		} else {
+			for (JsonElement value : this.getDomainsUserCanAdminister(username)) {
+				String domain = value.getAsJsonObject().get("topic").getAsString();
+				if (! domains.contains(domain)) {
+					domains.add(domain);
+				}
+			}
+			for (JsonElement value : this.getDomainsUserCanAuthor(username)) {
+				String domain = value.getAsJsonObject().get("topic").getAsString();
+				if (! domains.contains(domain)) {
+					domains.add(domain);
+				}
+			}
+		}
+		for (String domain : domains) {
+			JsonArray domainRecords = getWhereLike(SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.toId(domain)).get("values").getAsJsonArray();
+			if (domainRecords.size() > 0) {
+				JsonObject domainObject = domainRecords.get(0).getAsJsonObject();
+				String key = domainObject.get("key").getAsString();
+				String description = domainObject.get("value").getAsJsonObject().get("description").getAsString();
+				result.add(new DropdownItem(key + ": " + description, key).toJsonObject());
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Get a JsonArray of the domains the user can administer
+	 * The values of the JsonArrays are domains.
+	 * Each domain is stored as a JsonObject with a key and label.
+	 * @param username
+	 * @return
+	 */
+	public JsonArray getDropdownOfDomainsForWhichTheUserIsAnAdmin(String username) {
+		JsonArray result = new JsonArray();
+		List<String> domains = new ArrayList<String>();
+		if (isDbAdmin(username)) {
+			domains = getDomains();
+		} else {
+			JsonObject json = getWhereLike(ROLES.ADMIN.keyname + "%" + username);
+			if (json.get("valueCount").getAsInt() > 0) {
+				for (JsonElement value : json.get("values").getAsJsonArray()) {
+					String domain = value.getAsJsonObject().get("topic").getAsString();
+					domains.add(domain);
+				}
+			}
+		}
+		Collections.sort(domains);
+		for (String domain : domains) {
+			JsonArray domainRecords = getWhereLike(SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.toId(domain)).get("values").getAsJsonArray();
+			if (domainRecords.size() > 0) {
+				JsonObject domainObject = domainRecords.get(0).getAsJsonObject();
+				String key = domainObject.get("key").getAsString();
+				String description = domainObject.get("value").getAsJsonObject().get("description").getAsString();
+				result.add(new DropdownItem(key + ": " + description, key).toJsonObject());
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * For this user, get three types of domain dropdowns:
+	 * 
+	 * 1. Domains the user can administer
+	 * 2. Domains the user can author
+	 * 3. Domains the user can read
+	 * 
+	 * The returned Json object has three keys: admin, author, reader.
+	 * The value of each key is a JsonArray.
+	 * The values of the JsonArrays are domains.
+	 * Each domain is stored as a JsonObject with a key and label.
+	 * @param username
+	 * @return
+	 */
+	public JsonObject getDomainDropdownsForUser(String username) {
+		JsonObject result = new JsonObject();
+		result.add("admin", this.getDropdownOfDomainsForWhichTheUserIsAnAdmin(username));
+		result.add("author", this.getDropdownOfDomainsForWhichTheUserIsAnAuthor(username));
+		result.add("reader", this.getDropdownOfDomainsForWhichTheUserIsAReader(username));
+		return result;
 	}
 
 	/**
@@ -2067,4 +2621,24 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		return null;
 	}
 
+	/**
+	 * This method creates descriptions of utilities.
+	 * The descriptions show up in the admin web app
+	 * and are used to execute the utilities.
+	 */
+	private void createUtilityDescriptions() {
+		for (Utility u : UTILITIES.toUtilityList()) {
+			String id = SYSTEM_MISC_LIBRARY_TOPICS.UTILITIES.toId(u.getName());
+			if (! this.existsUnique(id)) {
+				try {
+					RequestStatus status = this.addUtility("wsadmin", u.toJsonString());
+					if (status.getCode() != 201) {
+						throw new Exception("Error creating record describing utility " + u.getName());
+					}
+				} catch (Exception e) {
+					ErrorUtils.report(logger, e);
+				}
+			}
+		}
+	}
 }

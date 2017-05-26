@@ -30,7 +30,7 @@ public class LTKDbOntologyEntry extends LTKDb {
 			, String key
 			) {
 		super(
-				EXTERNAL_DB_LIBS.ONTOLOGY.libname
+				EXTERNAL_DB_LIBS.ONTOLOGY.toSystemDomain()
 				, topic.keyname
 				, key
 				, schema
@@ -47,7 +47,7 @@ public class LTKDbOntologyEntry extends LTKDb {
 			, LTKOntologyCreateFormEntry form
 			) {
 		super(
-				EXTERNAL_DB_LIBS.ONTOLOGY.libname
+				EXTERNAL_DB_LIBS.ONTOLOGY.toSystemDomain()
 				, topic.keyname
 				, form.getKey()
 				, schema

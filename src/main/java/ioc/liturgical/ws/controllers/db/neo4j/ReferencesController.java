@@ -32,7 +32,7 @@ public class ReferencesController {
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
-			JsonObject json = storeManager.getForQuery(query);
+			JsonObject json = storeManager.getForQuery(query, true);
 			if (json.get("valueCount").getAsInt() > 0) {
 				response.status(HTTP_RESPONSE_CODES.OK.code);
 			} else {

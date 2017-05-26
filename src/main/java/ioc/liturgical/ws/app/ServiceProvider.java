@@ -30,6 +30,7 @@ import ioc.liturgical.ws.controllers.admin.NewFormsController;
 import ioc.liturgical.ws.controllers.admin.ResourcesController;
 import ioc.liturgical.ws.controllers.admin.UsersContactController;
 import ioc.liturgical.ws.controllers.admin.UsersPasswordController;
+import ioc.liturgical.ws.controllers.admin.UtilitiesController;
 import ioc.liturgical.ws.controllers.db.neo4j.Neo4jController;
 import ioc.liturgical.ws.controllers.db.neo4j.ReferencesController;
 import ioc.liturgical.ws.controllers.ldp.LdpController;
@@ -312,6 +313,9 @@ public class ServiceProvider {
 								request.pathInfo().toLowerCase().startsWith("/ldp/api")
 							)
 						|| (
+								request.pathInfo().toLowerCase().contains("dropdowns")
+							)
+						|| (
 								request.requestMethod().toLowerCase().startsWith("options")
 							)
 					) {
@@ -381,6 +385,7 @@ public class ServiceProvider {
 			new UsersContactController(storeManager);
 			new UsersPasswordController(storeManager);
 			new LdpController(ldpManager);
+			new UtilitiesController(docService);
 
 			get("api/sugar", (request, response) -> {
 				response.type(Constants.UTF_JSON);

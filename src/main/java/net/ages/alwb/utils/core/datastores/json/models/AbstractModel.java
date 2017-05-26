@@ -46,7 +46,9 @@ public class AbstractModel {
     private static final Logger logger = LoggerFactory.getLogger(AbstractModel.class);
 	protected double serialVersionUID = 1.1;
 
-	protected static Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+	protected static Gson gson = new GsonBuilder()
+			.excludeFieldsWithoutExposeAnnotation()
+			.create();
 	
 	public AbstractModel() {
 	}
@@ -192,6 +194,8 @@ public class AbstractModel {
 			}
 		}
 		for (Field field : this.getClass().getFields()) {
+			// if you expect a field to show up, and it is not here, it could be because:
+			// you did not make it public.  Or, you did not annotate it with the @Attribute annotation
 				if (field.isAnnotationPresent(com.google.gson.annotations.Expose.class)) {
 					if (field.isAnnotationPresent(com.github.reinert.jjschema.Attributes.class)) {
 						Attributes attributes = field.getAnnotation(Attributes.class);

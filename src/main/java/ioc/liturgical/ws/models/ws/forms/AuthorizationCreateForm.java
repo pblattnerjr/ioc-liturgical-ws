@@ -15,7 +15,7 @@ import com.github.reinert.jjschema.Attributes;
 @Attributes(title = "Authorization", description = "Use this form to grant a user an authorization for a specific library.  You will only see domains (libraries) for which you have administrative authority.  If you have authority for all domains, you will see * all_domains listed as a domain.  Granting a role to a user for this will give them that role for all domains.  If you are a web service admin, you will see * ws_service as an option and you can assign roles to users for the entire web service.")
 public class AuthorizationCreateForm extends AbstractModel {
 	
-	@Attributes(required = true, description = "The role you are granting this person.", enums={"admin", "author", "reader"})
+	@Attributes(required = true, description = "The role you are granting this person.", enums={"admin", "author", "reader", "reviewer"})
 	@Expose public String role;
 
 	@Attributes(required = true, description = "The library for which you are granting this role.")

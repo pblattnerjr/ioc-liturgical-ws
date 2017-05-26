@@ -17,13 +17,13 @@ import net.ages.alwb.utils.core.datastores.json.models.LTK;
  */
 public class QueryStatistics extends LTK {
 
-	@Expose String query = "";
-	@Expose long resultCount = 0;
-	@Expose int statusCode = 200;
-	@Expose int year;
-	@Expose int month;
-	@Expose int dayOfMonth;
-	@Expose int dayOfYear;
+	@Expose  public String query = "";
+	@Expose  public long resultCount = 0;
+	@Expose  public int statusCode = 200;
+	@Expose  public int year;
+	@Expose  public int month;
+	@Expose  public int dayOfMonth;
+	@Expose  public int dayOfYear;
 	Instant now = Instant.now();
 	
 	public QueryStatistics(

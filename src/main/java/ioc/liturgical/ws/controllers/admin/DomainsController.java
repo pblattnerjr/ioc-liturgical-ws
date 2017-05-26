@@ -68,6 +68,23 @@ public class DomainsController {
 			return json.toString();
 		});
 		
+		path = ENDPOINTS_ADMIN_API.DOMAINS_USER_ROLE_DROPDOWNS.toLibraryTopicPath();
+		ControllerUtils.reportPath(logger, "GET", path + " gets user role dropdowns for specified path");
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String domain = ServiceProvider.createStringFromSplat(
+					request.splat()
+					, Constants.ID_DELIMITER
+					);
+			JsonObject json = storeManager.getDropdownsForUsersWithRoleForDomain(domain);
+			if (json.get("valueCount").getAsInt() > 0) {
+				response.status(HTTP_RESPONSE_CODES.OK.code);
+			} else {
+				response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
+			}
+			return json.toString();
+		});
+
 		/**
 		 * POST controllers
 		 */

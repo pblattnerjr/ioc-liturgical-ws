@@ -15,7 +15,7 @@ import com.github.reinert.jjschema.Attributes;
  * @author mac002
  *
  */
-@Attributes(title = "Reference to an Object", description = "This is a doc that records information about a reference made in a text to some object.  For example, a liturgical text might be a hymn that refers to the Cross upon which Our Lord was crucified.")
+@Attributes(title = "Reference to Object", description = "This is a doc that records information about a reference made in a text to some object.  For example, a liturgical text might be a hymn that refers to the Cross upon which Our Lord was crucified.")
 public class LinkRefersToObject extends LTKLink {
 
 	private static double serialVersion = 1.1;

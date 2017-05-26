@@ -1,10 +1,10 @@
 package ioc.liturgical.ws.models.db.forms;
 
+import ioc.liturgical.ws.constants.ID_PART_TYPES;
 import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
 import ioc.liturgical.ws.models.db.supers.LTKOntologyCreateFormEntry;
 
 import com.github.reinert.jjschema.Attributes;
-import com.google.gson.annotations.Expose;
 
 /**
  * @author mac002
@@ -22,6 +22,8 @@ public class AnimalCreateForm extends LTKOntologyCreateFormEntry {
 				, AnimalCreateForm.class.getSimpleName()
 				,  1.1
 				);
+		this.partTypeOfTopic = ID_PART_TYPES.ONTOLOGY_TOPIC;
+		this.partTypeOfKey = ID_PART_TYPES.USER_TEXT;
 	}
 
 }

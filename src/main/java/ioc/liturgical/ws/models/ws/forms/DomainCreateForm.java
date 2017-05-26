@@ -5,6 +5,8 @@ import com.google.gson.annotations.Expose;
 import ioc.liturgical.ws.forms.manager.FormRegExConstants;
 import ioc.liturgical.ws.annotations.UiWidget;
 import ioc.liturgical.ws.constants.Constants;
+import ioc.liturgical.ws.constants.DOMAIN_TYPES;
+import ioc.liturgical.ws.constants.STATUS;
 import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
 
 import java.util.ArrayList;
@@ -34,8 +36,22 @@ public class DomainCreateForm extends AbstractModel {
 	@Expose public String description = "";
 
 	@UiWidget(Constants.UI_WIDGET_RADIO)
-	@Attributes(required = true, description = "Is this domain public?")
-	@Expose public boolean isPublic = true;
+	@Attributes(required = true, description = "The type of domain this is")
+	@Expose public DOMAIN_TYPES type = DOMAIN_TYPES.USER;
+
+	@UiWidget(Constants.UI_WIDGET_RADIO)
+	@Attributes(required = true, description = "Is state enabled for this domain? If it is, then admins and authors may set the status of each record for this domain.")
+	@Expose public boolean stateEnabled = false;
+
+	@Attributes(required = true, description = "What is the default status of a record after an edit?")
+	@Expose public STATUS defaultStatusAfterEdit = STATUS.FINALIZED;
+
+	@Attributes(required = true, description = "What is the default status of a record after it is finalized?")
+	@Expose public STATUS defaultStatusAfterFinalization = STATUS.FINALIZED;
+
+	@UiWidget(Constants.UI_WIDGET_RADIO)
+	@Attributes(required = true, description = "Is workflow enabled for this domain? If it is, a user can be assigned to do the work for the next step in the workflow.")
+	@Expose public boolean workflowEnabled = false;
 
 	@UiWidget(Constants.UI_WIDGET_CHECKBOXES)
 	@Attributes(required = true, description = "Labels to Use as Doc Types for this domain.")
@@ -86,12 +102,44 @@ public class DomainCreateForm extends AbstractModel {
 		this.labels = labels;
 	}
 
-	public boolean isPublic() {
-		return isPublic;
+	public boolean isStateEnabled() {
+		return stateEnabled;
 	}
 
-	public void setPublic(boolean isPublic) {
-		this.isPublic = isPublic;
+	public void setStateEnabled(boolean stateEnabled) {
+		this.stateEnabled = stateEnabled;
+	}
+
+	public STATUS getDefaultStatusAfterEdit() {
+		return defaultStatusAfterEdit;
+	}
+
+	public void setDefaultStatusAfterEdit(STATUS defaultStatusAfterEdit) {
+		this.defaultStatusAfterEdit = defaultStatusAfterEdit;
+	}
+
+	public STATUS getDefaultStatusAfterFinalization() {
+		return defaultStatusAfterFinalization;
+	}
+
+	public void setDefaultStatusAfterFinalization(STATUS defaultStatusAfterFinalization) {
+		this.defaultStatusAfterFinalization = defaultStatusAfterFinalization;
+	}
+
+	public boolean isWorkflowEnabled() {
+		return workflowEnabled;
+	}
+
+	public void setWorkflowEnabled(boolean workflowEnabled) {
+		this.workflowEnabled = workflowEnabled;
+	}
+
+	public DOMAIN_TYPES getType() {
+		return type;
+	}
+
+	public void setType(DOMAIN_TYPES type) {
+		this.type = type;
 	}
 
 }

@@ -23,7 +23,7 @@ public class LTKOntologyCreateFormEntry extends LTK {
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Description")
 	@Expose public String description = "";
-
+	
 	public LTKOntologyCreateFormEntry(
 			ONTOLOGY_TOPICS topic
 			, String key
@@ -31,7 +31,7 @@ public class LTKOntologyCreateFormEntry extends LTK {
 			, double serialVersion
 			) {
 		super(
-				EXTERNAL_DB_LIBS.ONTOLOGY.libname
+				EXTERNAL_DB_LIBS.ONTOLOGY.toSystemDomain()
 				, topic.keyname
 				, key
 				, schema
@@ -45,7 +45,7 @@ public class LTKOntologyCreateFormEntry extends LTK {
 			LTKOntologyCreateFormEntry form
 			) {
 		super(
-				EXTERNAL_DB_LIBS.ONTOLOGY.libname
+				EXTERNAL_DB_LIBS.ONTOLOGY.toSystemDomain()
 				, form.getTopic()
 				, form.getKey()
 				, EXTERNAL_DB_SCHEMA_CLASSES.classForSchemaName(form._valueSchemaId).ltkDb.schemaIdAsString()

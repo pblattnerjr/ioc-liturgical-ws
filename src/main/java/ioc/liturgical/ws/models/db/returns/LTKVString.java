@@ -14,23 +14,23 @@ public class LTKVString extends AbstractModel {
 	private IdManager idManager = null;
 	
 	@Attributes(required = true, readonly = true, description = "The unique identifier of schema for this doc.")
-	@Expose String _valueSchemaId = "LTKVString";
+	@Expose  public String _valueSchemaId = "LTKVString";
 	
 	@Attributes(required = true, readonly = true, description = "The unique identifier of this doc.")
-	@Expose String _id = "";
+	@Expose  public String _id = "";
 
 	@Attributes(required = true, description = "The library (domain) part of the ID.")
-	@Expose String library = "";
+	@Expose  public String library = "";
 
 	@Attributes(required = true, description = "The topic part of the ID.")
-	@Expose String topic = "";
+	@Expose  public String topic = "";
 
 	@Attributes(required = true, description = "The key part of the ID.")
-	@Expose String key = "";
+	@Expose  public String key = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = true, description = "Description of the library.")
-	@Expose String value = "";
+	@Expose  public String value = "";
 	
 	public LTKVString() {
 		super();

@@ -45,6 +45,7 @@ public class LTKDb extends LTK {
 			, ONTOLOGY_TOPICS ontologyTopic
 			) {
 		super(library, topic, key, schema, serialVersion, ontologyTopic);
+		this.active = true; 
 	}
 
 	public boolean isActive() {
@@ -101,6 +102,14 @@ public class LTKDb extends LTK {
 
 	public void set_valueSchemaId(String _valueSchemaId) {
 		this._valueSchemaId = _valueSchemaId;
+	}
+	
+	/**
+	 * subclasses should override this
+	 * @param ltk
+	 */
+	public void setSubClassProperties(String json) {
+		
 	}
 
 }

@@ -50,6 +50,12 @@ public enum ENDPOINTS_DB_API {
 			, "domain"
 			,"Endpoint for dropdown values for domains."
 			)
+	, DROPDOWNS_ONTOLOGY(
+			"ontology"
+			, ENDPOINT_TYPES.DROPDOWNS
+			, "ontology"
+			,"Endpoint for dropdown values to search properties of ontology entries."
+			)
 	, DROPDOWNS_RELATIONSHIPS(
 			"relationships"
 			, ENDPOINT_TYPES.DROPDOWNS
@@ -128,6 +134,12 @@ public enum ENDPOINTS_DB_API {
 			, RELATIONSHIP_TYPES.REFERS_TO_HUMAN.typename
 			,"Endpoint for text refers to a human being"
 			)
+	, LINK_REFERS_TO_MYSTERY(
+			RELATIONSHIP_TYPES.REFERS_TO_MYSTERY.typename.toLowerCase()
+			, ENDPOINT_TYPES.RELATIONSHIP
+			, RELATIONSHIP_TYPES.REFERS_TO_MYSTERY.typename
+			,"Endpoint for text refers to a mystery"
+			)
 	, LINK_REFERS_TO_OBJECT(
 			RELATIONSHIP_TYPES.REFERS_TO_OBJECT.typename.toLowerCase()
 			, ENDPOINT_TYPES.RELATIONSHIP
@@ -164,6 +176,12 @@ public enum ENDPOINTS_DB_API {
 			, "objects"
 			,"Endpoint for object docs"
 			)
+	, ONTOLOGY(
+			"ontology"
+			, ENDPOINT_TYPES.ONTOLOGY
+			, "ontology"
+			,"Endpoint for ontology entries"
+			)
 	, PLACES(
 			"places"
 			, ENDPOINT_TYPES.ONTOLOGY
@@ -187,6 +205,12 @@ public enum ENDPOINTS_DB_API {
 			, ENDPOINT_TYPES.NODE
 			, "Text"
 			,"Endpoint for text docs"
+			)
+	, WORD_ANALYSIS(
+			"word analysis"
+			, ENDPOINT_TYPES.NODE
+			, "Word Analysis"
+			,"Endpoint for a grammatical analysis of a word"
 			)
 	;
 

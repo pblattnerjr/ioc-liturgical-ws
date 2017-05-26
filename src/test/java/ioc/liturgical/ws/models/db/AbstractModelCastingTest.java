@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import com.google.gson.Gson;
 
-import ioc.liturgical.ws.models.db.docs.Animal;
+import ioc.liturgical.ws.models.db.docs.ontology.Animal;
 import ioc.liturgical.ws.models.db.forms.AnimalCreateForm;
 
 public class AbstractModelCastingTest {

@@ -4,6 +4,7 @@ import com.google.gson.annotations.Expose;
 
 import ioc.liturgical.ws.annotations.UiWidget;
 import ioc.liturgical.ws.constants.Constants;
+import ioc.liturgical.ws.constants.ID_PART_TYPES;
 import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
 import ioc.liturgical.ws.models.db.supers.LTK;
 import ioc.liturgical.ws.models.db.supers.LTKOntologyCreateFormEntry;
@@ -26,5 +27,7 @@ public class GroupCreateForm extends LTKOntologyCreateFormEntry {
 				, GroupCreateForm.class.getSimpleName()
 				,  1.1
 				);
+		this.partTypeOfTopic = ID_PART_TYPES.ONTOLOGY_TOPIC;
+		this.partTypeOfKey = ID_PART_TYPES.USER_TEXT;
 	}
 }

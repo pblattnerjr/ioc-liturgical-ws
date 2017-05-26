@@ -24,28 +24,28 @@ public class LinkRefersToTextToTextTableRow extends AbstractModel {
 	private static String toHandle = "to";
 	
 	@Attributes(required = true, readonly = true, description = "The unique identifier of schema for this doc.")
-	@Expose String _valueSchemaId = "LinkRefersToTextToTextTableRow";
+	@Expose  public String _valueSchemaId = "LinkRefersToTextToTextTableRow";
 	
 	@Attributes(required = true, readonly = true, description = "The unique identifier of the 'from' doc.")
-	@Expose String fromId = "";
+	@Expose  public String fromId = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = true, description = "The value of the 'from' doc.")
-	@Expose String fromValue = "";
+	@Expose  public String fromValue = "";
 	
 	@Attributes(required = true, readonly = true, description = "The unique identifier of the 'link' doc.")
-	@Expose String linkId = "";
+	@Expose  public String linkId = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = true, description = "The value of the 'link' doc.")
-	@Expose String linkValue = "";
+	@Expose  public String linkValue = "";
 	
 	@Attributes(required = true, readonly = true, description = "The unique identifier of the 'to' doc.")
-	@Expose String toId = "";
+	@Expose  public String toId = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = true, description = "The value of the 'to' doc.")
-	@Expose String toValue = "";
+	@Expose  public String toValue = "";
 	
 	public LinkRefersToTextToTextTableRow() {
 		super();

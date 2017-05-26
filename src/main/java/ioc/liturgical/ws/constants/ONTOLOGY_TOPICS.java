@@ -2,8 +2,12 @@ package ioc.liturgical.ws.constants;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeSet;
 
 import com.google.common.base.Joiner;
+import com.google.gson.JsonArray;
+
+import net.ages.alwb.utils.core.datastores.json.models.DropdownItem;
 
 
 public enum ONTOLOGY_TOPICS {
@@ -28,6 +32,11 @@ public enum ONTOLOGY_TOPICS {
 			, "Something that happens or occurs."
 			, ONTOLOGY_TOPICS.ROOT
 			)
+	, GRAMMAR(
+			"Grammar"
+			, "Linguistic information about a word or its relationship to other words"
+			, ONTOLOGY_TOPICS.ROOT
+			)
 	, GROUP(
 			"Group"
 			, "A collection of people."
@@ -37,6 +46,21 @@ public enum ONTOLOGY_TOPICS {
 			"Human"
 			, "A human being."
 			, ONTOLOGY_TOPICS.BEING
+			)
+	, LINGUISTICS(
+			"Linguistics"
+			, "Information about a language: its lexicon, semantics, phonology, morphology, grammar."
+			, ONTOLOGY_TOPICS.ROOT
+			)
+	, LEXICAL_ITEM(
+			"LexicalItem"
+			, "The lemmas and forms of a language"
+			, ONTOLOGY_TOPICS.LINGUISTICS
+			)
+	, MYSTERY(
+			"Mystery"
+			, "Baptism, Chrismation, Confession, Marriage, Holy Communion, Holy Orders, or Unction."
+			, ONTOLOGY_TOPICS.CONCEPT
 			)
 	, OBJECT(
 			"Object"
@@ -77,6 +101,21 @@ public enum ONTOLOGY_TOPICS {
 			"Speech"
 			, "Text that records a speech made by someone."
 			, ONTOLOGY_TOPICS.TEXT
+			)
+	, WORD_FORM(
+			"WordForm"
+			, "The form a word takes, e.g. the lemma λόγος can have the form λόγον "
+			, ONTOLOGY_TOPICS.LEXICAL_ITEM
+			)
+	, WORD_GRAMMAR(
+			"WordGrammar"
+			, "Grammatical Information about a word"
+			, ONTOLOGY_TOPICS.GRAMMAR
+			)
+	, WORD_LEMMA(
+			"WordLemma"
+			, "The word used to look up a form, e.g. the form λόγον is found in a lexicon as the lemma λόγος."
+			, ONTOLOGY_TOPICS.LEXICAL_ITEM
 			)
 	;
 
@@ -154,6 +193,38 @@ public enum ONTOLOGY_TOPICS {
 			result.append(topic.keyname);
 		}
 		return result.toString();
+	}
+	
+	/**
+	 * Get the keynames as a sorted list of DropDownItem
+	 * @return
+	 */
+	public static List<DropdownItem> keyNamesToDropdown() {
+		List<DropdownItem> result = new ArrayList<DropdownItem>();
+		TreeSet<String> values = new TreeSet<String>();
+		for (ONTOLOGY_TOPICS t : ONTOLOGY_TOPICS.values()) {
+			values.add(t.keyname);
+		}
+		for (String value : values) {
+			result.add(new DropdownItem(value, value));
+		}
+		return result;
+	}
+
+	/**
+	 * Get the keynames as a JsonArray of DropDownItem
+	 * @return
+	 */
+	public static JsonArray keyNamesToJsonArrayDropdown() {
+		JsonArray result = new JsonArray();
+		TreeSet<String> values = new TreeSet<String>();
+		for (ONTOLOGY_TOPICS t : ONTOLOGY_TOPICS.values()) {
+			values.add(t.keyname);
+		}
+		for (String value : values) {
+			result.add(new DropdownItem(value, value).toJsonObject());
+		}
+		return result;
 	}
 
 }

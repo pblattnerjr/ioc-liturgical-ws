@@ -55,7 +55,8 @@ public class H2ConnectionManager {
      */
     public H2ConnectionManager(
     		String dbName
-    		, boolean deleteFirst) {
+    		, boolean deleteFirst
+    		) {
     	try {
     		setDbName(dbName);
     		if (deleteFirst) {

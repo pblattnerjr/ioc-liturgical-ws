@@ -4,6 +4,7 @@ import com.google.gson.annotations.Expose;
 
 import ioc.liturgical.ws.annotations.UiWidget;
 import ioc.liturgical.ws.constants.Constants;
+import ioc.liturgical.ws.constants.ID_PART_TYPES;
 import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
 import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
 import ioc.liturgical.ws.models.db.supers.LTKLinkCreateForm;
@@ -15,7 +16,7 @@ import com.github.reinert.jjschema.Attributes;
  * @author mac002
  *
  */
-@Attributes(title = "Reference to a Human", description = "This is a doc that records information about a reference made in a text to some human.  For example, a liturgical text might be a hymn that refers to the Theotokos.")
+@Attributes(title = "Reference to Human", description = "This is a doc that records information about a reference made in a text to some human.  For example, a liturgical text might be a hymn that refers to the Theotokos.")
 public class LinkRefersToHumanCreateForm extends LTKLinkCreateForm {
 	
 	private static double serialVersion = 1.1;
@@ -45,6 +46,8 @@ public class LinkRefersToHumanCreateForm extends LTKLinkCreateForm {
 				, LinkRefersToHumanCreateForm.type
 				, LinkRefersToHumanCreateForm.ontoTopic
 				);
+		this.partTypeOfTopic = ID_PART_TYPES.ID_OF_SELECTED_LITURGICAL_TEXT;
+		this.partTypeOfKey = ID_PART_TYPES.ID_OF_SELECTED_ONTOLOGY_INSTANCE;
 	}
 	
 	public String getReferredByPhrase() {

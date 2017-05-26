@@ -44,6 +44,10 @@ public enum RELATIONSHIP_TYPES {
 			"REFERS_TO_HUMAN"
 			, "Doc makes reference to a human being."
 			)
+	, REFERS_TO_MYSTERY(
+			"REFERS_TO_MYSTERY"
+			, "Doc makes reference to a Mystery."
+			)
 	, REFERS_TO_PLACE(
 			"REFERS_TO_PLACE"
 			, "Doc makes reference to a place."
@@ -55,6 +59,10 @@ public enum RELATIONSHIP_TYPES {
 	, REFERS_TO_ROLE(
 			"REFERS_TO_ROLE"
 			, "Doc makes reference to a role."
+	 )
+	, REFERS_TO_WORD_ANALYSIS(
+			"WORD_ANALYSIS"
+			, "reference to a grammatical analysis of a word."
 	 )
 	;
 	public String typename;

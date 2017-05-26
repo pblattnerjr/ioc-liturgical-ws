@@ -11,18 +11,16 @@ import static spark.Spark.delete;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.constants.ENDPOINTS_ADMIN_API;
 import ioc.liturgical.ws.constants.ENDPOINTS_DB_API;
+import ioc.liturgical.ws.constants.ENDPOINT_TYPES;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.controllers.admin.ControllerUtils;
 import ioc.liturgical.ws.managers.auth.AuthDecoder;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
-import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.models.RequestStatus;
 
 public class Neo4jController {
@@ -30,14 +28,30 @@ public class Neo4jController {
 	
     private Gson gson = new GsonBuilder().disableHtmlEscaping().create();
     
+    
+    
 	/**
 	 * returns a login form
 	 * @param storeManager
 	 */
 	public Neo4jController(ExternalDbManager externalManager) {
-		
+	
+		String path = ENDPOINTS_DB_API.DOCS.toLibraryTopicKeyPath();
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String id = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
+			JsonObject json = externalManager.getForId(id);
+			if (json.get("valueCount").getAsInt() > 0) {
+				response.status(HTTP_RESPONSE_CODES.OK.code);
+			} else {
+				response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
+			}
+			return json.toString();
+		});
+
 		// GET docs for specified parameters
-		String path = ENDPOINTS_DB_API.DOCS.pathname;
+		path = ENDPOINTS_DB_API.DOCS.pathname;
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
@@ -49,6 +63,22 @@ public class Neo4jController {
         			, request.queryParams("q")   // query
         			, request.queryParams("p") // property of the doc (e.g. the ID, the value)
         			, request.queryParams("m") // matcher (e.g. contains, starts with, regex)
+        			));
+		});
+
+		// GET ontology entries for specified parameters
+		path = ENDPOINTS_DB_API.ONTOLOGY.pathname;
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+        	return gson.toJson(externalManager.searchOntology(
+        			request.queryParams("t")  // ontology type (e.g. Animal)
+        			, request.queryParams("g")  // generic type
+        			, request.queryParams("q")   // query
+        			, request.queryParams("p") // property of the doc (e.g. the ID, the value)
+        			, request.queryParams("m") // matcher (e.g. contains, starts with, regex)
+        			, request.queryParams("l") // tags (~labels)
+        			, request.queryParams("o") // operator
         			));
 		});
 
@@ -71,6 +101,15 @@ public class Neo4jController {
 			return json.toString();
 		});
 
+		// GET domain dropdown lists for specified user
+		path = Constants.EXTERNAL_DATASTORE_API_PATH  + "/dropdowns/domains/*";
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String user = request.splat()[0];
+        	return externalManager.getDomainDropdownsForUser(user).toString();
+		});
+
 		// GET domains as a dropdown list
 		path = Constants.EXTERNAL_DATASTORE_API_PATH  + "/dropdowns/domains";
 		ControllerUtils.reportPath(logger, "GET", path);
@@ -85,6 +124,14 @@ public class Neo4jController {
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
         	return externalManager.getDropdownItemsForSearchingText().toString();
+		});
+
+		// GET dropdowns for searching ontology properties
+		path = ENDPOINTS_DB_API.DROPDOWNS_ONTOLOGY.pathname;
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+        	return externalManager.getOntologySearchDropdown().toJsonString();
 		});
 
 		// GET dropdowns for searching relationship properties
@@ -174,6 +221,21 @@ public class Neo4jController {
 		 * POST controllers
 		 */
 		
+		// post a doc
+		path = ENDPOINTS_DB_API.DOCS.pathname;
+		ControllerUtils.reportPath(logger, "POST", path);
+		post(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			RequestStatus requestStatus = externalManager.addLTKDbObject(
+					requestor
+					, request.body()
+					);
+			response.status(requestStatus.getCode());
+			return requestStatus.toJsonString();
+		});
+
+		// post a reference
 		path = ENDPOINTS_DB_API.LINKS.pathname;
 		ControllerUtils.reportPath(logger, "POST", path);
 		post(path, (request, response) -> {
@@ -188,15 +250,35 @@ public class Neo4jController {
 		});
 
 		/**
-		 * PUT controllers
+		 * PUT controllers - updates
 		 */
+		
+		// put (update) a doc 
+		path = ENDPOINTS_DB_API.DOCS.toLibraryTopicKeyPath();
+		ControllerUtils.reportPath(logger, "PUT", path);
+		put(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			RequestStatus requestStatus = externalManager.updateLTKDbObject(
+					requestor
+					, request.body()
+					);
+			response.status(requestStatus.getCode());
+			return requestStatus.toJsonString();
+		});
+
+		// put (update) a reference
 		path = ENDPOINTS_DB_API.LINKS.toLibraryTopicKeyPath();
 		ControllerUtils.reportPath(logger, "PUT", path);
 		put(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
 			String id = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
-			RequestStatus requestStatus = externalManager.updateReference(requestor, id, request.body());
+			RequestStatus requestStatus = externalManager.updateReference(
+					requestor
+					, id
+					, request.body()
+					);
 			response.status(requestStatus.getCode());
 			return requestStatus.toJsonString();
 		});

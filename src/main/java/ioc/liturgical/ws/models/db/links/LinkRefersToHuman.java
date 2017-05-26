@@ -16,7 +16,7 @@ import com.github.reinert.jjschema.Attributes;
  * @author mac002
  *
  */
-@Attributes(title = "Reference to a Human", description = "A reference to a human is a doc that records information about a reference made in a text to a person.  For example, a liturgical text might be a hymn that refers to the Theotokos.")
+@Attributes(title = "Reference to Human", description = "A reference to a human is a doc that records information about a reference made in a text to a person.  For example, a liturgical text might be a hymn that refers to the Theotokos.")
 public class LinkRefersToHuman extends LTKLink {
 
 	private static double serialVersion = 1.1;

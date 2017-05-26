@@ -104,7 +104,6 @@ public class CypherQueryBuilderForLinks {
         return this;
     }
 
-
     public CypherQueryBuilderForLinks RETURN(String RETURN) {
         this.RETURN = RETURN;
         return this;

@@ -23,6 +23,7 @@ import org.apache.tools.ant.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -93,6 +94,10 @@ public class AlwbGeneralUtils {
 			sb.append(value);
 		}
 		return sb.toString();
+	}
+	
+	public static String padNumber(String firstChar, int width, int value) {
+		return firstChar + String.format("%0" + width + "d", value);
 	}
 	
 	/**
@@ -388,4 +393,60 @@ public class AlwbGeneralUtils {
 		}
 		return prop;
 	}
+	
+	/**
+	 * Converts a List<JsonObject> to a JsonArray containing the JsonObject occurrences.
+	 * @param list
+	 * @return
+	 */
+	public static JsonArray listToJsonArray(List<JsonObject> list) {
+		JsonArray result = new JsonArray();
+		for (JsonObject json : list) {
+			result.add(json);
+		}
+		return result;
+	}
+	
+	/**
+	 * Remove leading and trailing quote from a quoted string
+	 * @param s
+	 * @return
+	 */
+	public static String trimQuotes(String s) {
+		String result = s;
+		if (s.length() > 2) {
+			if (s.startsWith(QUOTE) || s.startsWith("“")) {
+				result = s.substring(1, s.length());
+			}
+			if (s.endsWith(QUOTE) || s.endsWith("”")) {
+				result = result.substring(0, s.length()-2);
+			}
+		} else if (s.compareTo(QUOTE+QUOTE) == 0) {
+			result = "";
+		}
+		return result;
+	}
+	
+	/**
+	 * Wrap the string in quotes
+	 * @param s
+	 * @return
+	 */
+	public static String wrapQuotes(String s) {
+		if (s.length() > 0) {
+			return QUOTE + escapeQuotes(s) + QUOTE;
+		} else {
+			return QUOTE+QUOTE;
+		}
+	}
+	
+	
+	public static String escapeQuotes(String text) {
+		return text.replaceAll(QUOTE, "\\\\"+QUOTE);
+	}
+	
+	public static String unescapeQuotes(String text) {
+			return text.replaceAll("\\\\"+QUOTE,QUOTE);
+	}
+
 }

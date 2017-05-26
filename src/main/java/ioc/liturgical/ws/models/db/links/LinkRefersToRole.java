@@ -16,7 +16,7 @@ import com.github.reinert.jjschema.Attributes;
  * @author mac002
  *
  */
-@Attributes(title = "Reference to a Role", description = "This is a doc that records information about a reference made in a text to the role played by something or someone.")
+@Attributes(title = "Reference to Role", description = "This is a doc that records information about a reference made in a text to the role played by something or someone.")
 public class LinkRefersToRole extends LTKLink {
 
 	private static double serialVersion = 1.1;

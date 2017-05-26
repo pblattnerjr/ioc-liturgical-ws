@@ -15,7 +15,7 @@ import com.github.reinert.jjschema.Attributes;
  * @author mac002
  *
  */
-@Attributes(title = "Reference to an Event", description = "This is a doc that records information about a reference made in a text to some event.  For example, a liturgical text might be a hymn that refers to the birth of Christ.")
+@Attributes(title = "Reference to Event", description = "This is a doc that records information about a reference made in a text to some event.  For example, a liturgical text might be a hymn that refers to the birth of Christ.")
 public class LinkRefersToEvent extends LTKLink {
 
 	private static double serialVersion = 1.1;

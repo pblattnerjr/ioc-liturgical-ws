@@ -27,6 +27,8 @@ public class User extends AbstractModel {
 	@Expose public int failedLoginCount = 0;
 	@Expose public long lastAccess = 0;
 	@Expose public int accessCount = 0;
+	@Expose public String domain = "";
+
 	@Attributes(
 			required = true
 			, description = "verb for HTTP request"
@@ -147,6 +149,14 @@ public class User extends AbstractModel {
 
 	public void setVerb(String verb) {
 		this.verb = verb;
+	}
+
+	public String getDomain() {
+		return domain;
+	}
+
+	public void setDomain(String domain) {
+		this.domain = domain;
 	}
 
 		

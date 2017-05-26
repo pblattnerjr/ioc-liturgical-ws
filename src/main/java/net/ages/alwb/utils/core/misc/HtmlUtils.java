@@ -1,9 +1,13 @@
 package net.ages.alwb.utils.core.misc;
 
 import java.io.File;
+import java.util.List;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+
+import opennlp.tools.tokenize.SimpleTokenizer;
+import opennlp.tools.tokenize.Tokenizer;
 
 /**
  * HTML constants and helper methods to create HTML blocks
@@ -176,6 +180,122 @@ public class HtmlUtils {
 				+ text 
 				+ "</a>"
 				+ "</p>";
+	}
+
+	public static String createHtmlFileContents(
+			List<String> lines
+			) {
+		StringBuffer sb = new StringBuffer();
+		sb.append("<html>");
+		sb.append("<head>");
+		sb.append("<title>Greek Word Study Tool</title>");
+		sb.append("<meta charset=\"utf-8\">");
+		sb.append("<script src=\"https://code.jquery.com/jquery-3.2.1.min.js\" integrity=\"sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=\" crossorigin=\"anonymous\"></script>");
+		sb.append("<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css\" integrity=\"sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u\" crossorigin=\"anonymous\">");
+		sb.append("<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css\" integrity=\"sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp\" crossorigin=\"anonymous\">");
+		sb.append("<script src=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js\" integrity=\"sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa\" crossorigin=\"anonymous\"></script>");
+		sb.append("</head>");
+		sb.append("<body>");
+		for (String line : lines) {
+			sb.append(getHtmlPanel("", line, false));
+		}
+		sb.append(getPanelAsIframe("Perseus", false));
+		sb.append(getPanelAsIframe("Lexigram", false));
+		sb.append("</body>");
+		sb.append("\n<script>");
+		sb.append("\n\tvar loadPerseus = (token) => {");
+		sb.append("\n\t\tvar frame = document.getElementById(\"Perseus\");");
+		sb.append("\n\t\tframe.src = \"http://www.perseus.tufts.edu/hopper/morph?l=\" + token + \"&la=greek\";");
+		sb.append("\n}");
+		sb.append("\n\tvar loadLexigram = (token) => {");
+		sb.append("\n\t\tvar frame = document.getElementById(\"Lexigram\");");
+		sb.append("\n\t\tframe.src = \"http://www.lexigram.gr/lex/arch/\" + token;");
+		sb.append("\n}");
+		sb.append("\n\tvar loadFrames = (token) => {");
+		sb.append("\n\t\tloadPerseus(token);");
+		sb.append("\n\t\tloadLexigram(token);");
+		sb.append("\n}");
+		sb.append("\n</script>");
+		sb.append("</html>");
+		return sb.toString();
+	}
+	
+	public static String getHtmlPanel(
+			String id
+			, String text
+			, boolean startOpen
+			) {
+		StringBuffer sb = new StringBuffer();
+		Tokenizer tokenizer = SimpleTokenizer.INSTANCE;
+        String [] theTokens = tokenizer.tokenize(text);
+		sb.append("<div id=\"text\" class=\"text\">");
+        for (String token : theTokens) {
+        	sb.append("<span onClick=\"loadFrames('");
+        	sb.append(token.trim());
+        	sb.append("');\" >");
+        	sb.append(token.trim());
+        	sb.append("&nbsp;");
+        	sb.append("</span>");
+        }
+		sb.append("</div>");
+		sb.append(getPanel(id, sb.toString(), startOpen));
+		return sb.toString();
+	}
+
+	public static String getPanelAsIframe(
+			String id
+			, boolean startOpen
+			) {
+		return getPanel(id, getIframe(id), startOpen);
+	}
+	/**
+	 * 
+	 * @param id - used for the panel name visible to the user as well as for the id and class of the panel
+	 * @param content - the contents of the panel.  Should either be text, or valid HTML
+	 * @startOpen - if true, the panel will show its contents as soon as it loads.
+	 * @return
+	 */
+	public static String getPanel(
+			String id
+			, String content
+			, boolean startOpen
+			) {
+		StringBuffer sb = new StringBuffer();
+		sb.append("<div class=\"panel-group\">");
+		sb.append("  <div class=\"panel panel-default\">");
+		sb.append("    <div class=\"panel-heading\">");
+		sb.append("      <h4 class=\"panel-title\">");
+		sb.append("        <a data-toggle=\"collapse\" href=\"#collapse");
+		sb.append(id);
+		sb.append("\">");
+		sb.append(id);
+		sb.append("</a>");
+		sb.append("      </h4>");
+		sb.append("    </div>");
+		sb.append("    <div id=\"collapse");
+		sb.append(id);
+		sb.append("\" class=\"panel-collapse collapse");
+		if (startOpen) {
+			sb.append(" in");
+		}
+		sb.append(")\">");
+		sb.append("      <div class=\"panel-body\"></div>");
+		sb.append(content);
+		sb.append("      </div>");
+		sb.append("    </div>");
+		sb.append("  </div>");
+		sb.append("</div>");
+		return sb.toString();
+	}
+	
+	public static String getIframe(String id) {
+		StringBuffer sb = new StringBuffer();
+		sb.append("<iframe width=\"100%\" height=\"100%\" id=\"");
+		sb.append(id);
+		sb.append("\" name=\"");
+		sb.append(id);
+		sb.append("\"></iframe>");
+		return sb.toString();		
 	}
 
 }

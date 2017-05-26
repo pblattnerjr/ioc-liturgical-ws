@@ -16,7 +16,7 @@ import com.github.reinert.jjschema.Attributes;
  * @author mac002
  *
  */
-@Attributes(title = "Reference to an Animal", description = "This is a doc that records information about a reference made in a text to an animal.  For example, a liturgical text might be a hymn that refers to deer.")
+@Attributes(title = "Reference to Animal", description = "This is a doc that records information about a reference made in a text to an animal.  For example, a liturgical text might be a hymn that refers to deer.")
 public class LinkRefersToAnimal extends LTKLink {
 
 	private static double serialVersion = 1.1;

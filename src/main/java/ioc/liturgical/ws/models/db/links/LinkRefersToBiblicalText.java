@@ -15,7 +15,7 @@ import com.github.reinert.jjschema.Attributes;
  * @author mac002
  *
  */
-@Attributes(title = "Reference to a Biblical Text", description = "A reference is a doc that records information about a reference made in a text to a Biblical text.  For example, a liturgical text might be a hymn that refers to a person, place, or event in the Bible.")
+@Attributes(title = "Reference to Biblical Text", description = "A reference is a doc that records information about a reference made in a text to a Biblical text.  For example, a liturgical text might be a hymn that refers to a person, place, or event in the Bible.")
 public class LinkRefersToBiblicalText extends LTKLink {
 
 	private static double serialVersion = 1.1;

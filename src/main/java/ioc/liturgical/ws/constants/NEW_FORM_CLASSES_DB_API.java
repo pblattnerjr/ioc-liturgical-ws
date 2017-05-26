@@ -1,7 +1,13 @@
 package ioc.liturgical.ws.constants;
 
 import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
-
+import ioc.liturgical.ws.models.db.docs.grammar.PerseusAnalysis;
+import ioc.liturgical.ws.models.db.forms.AnimalCreateForm;
+import ioc.liturgical.ws.models.db.forms.BeingCreateForm;
+import ioc.liturgical.ws.models.db.forms.ConceptCreateForm;
+import ioc.liturgical.ws.models.db.forms.EventCreateForm;
+import ioc.liturgical.ws.models.db.forms.GroupCreateForm;
+import ioc.liturgical.ws.models.db.forms.HumanCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToAnimalCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToBeingCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
@@ -9,10 +15,20 @@ import ioc.liturgical.ws.models.db.forms.LinkRefersToConceptCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToEventCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToGroupCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToHumanCreateForm;
+import ioc.liturgical.ws.models.db.forms.LinkRefersToMysteryCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToObjectCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToPlaceCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToPlantCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToRoleCreateForm;
+import ioc.liturgical.ws.models.db.forms.MysteryCreateForm;
+import ioc.liturgical.ws.models.db.forms.ObjectCreateForm;
+import ioc.liturgical.ws.models.db.forms.PlaceCreateForm;
+import ioc.liturgical.ws.models.db.forms.PlantCreateForm;
+import ioc.liturgical.ws.models.db.forms.RoleCreateForm;
+import ioc.liturgical.ws.models.db.forms.TextBiblicalSourceCreateForm;
+import ioc.liturgical.ws.models.db.forms.TextBiblicalTranslationCreateForm;
+import ioc.liturgical.ws.models.db.forms.TextLiturgicalSourceCreateForm;
+import ioc.liturgical.ws.models.db.forms.TextLiturgicalTranslationCreateForm;
 
 /**
  * Enumerates classes that are a form for creating a new doc.
@@ -34,12 +50,24 @@ import ioc.liturgical.ws.models.db.forms.LinkRefersToRoleCreateForm;
  *
  */
 public enum NEW_FORM_CLASSES_DB_API {
-	NEW_LINK_REFERS_TO_ANIMAL(
+	NEW_ANIMAL(
+			"Animal"
+			, new AnimalCreateForm("")
+			, ENDPOINTS_DB_API.LINK_REFERS_TO_ANIMAL
+			, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+			)
+,	NEW_LINK_REFERS_TO_ANIMAL(
 			"doc refers animal"
 			, new LinkRefersToAnimalCreateForm("","","")
 			, ENDPOINTS_DB_API.LINK_REFERS_TO_ANIMAL
 			, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
 			)
+,	NEW_BEING(
+		"Being"
+		, new BeingCreateForm("")
+		, ENDPOINTS_DB_API.LINK_REFERS_TO_BEING
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
 ,	NEW_LINK_REFERS_TO_BEING(
 			"doc refers to being"
 			, new LinkRefersToBeingCreateForm("","","")
@@ -52,10 +80,22 @@ public enum NEW_FORM_CLASSES_DB_API {
 			, ENDPOINTS_DB_API.LINK_REFERS_TO_BIBLICAL_TEXT
 			, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
 			)
+, NEW_CONCEPT(
+		"Concept"
+		, new ConceptCreateForm("")
+		, ENDPOINTS_DB_API.LINK_REFERS_TO_CONCEPT
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
 , NEW_LINK_REFERS_TO_CONCEPT(
 		"doc refers to concept"
 		, new LinkRefersToConceptCreateForm("","","")
 		, ENDPOINTS_DB_API.LINK_REFERS_TO_CONCEPT
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
+, NEW_EVENT(
+		"Event"
+		, new EventCreateForm("")
+		, ENDPOINTS_DB_API.LINK_REFERS_TO_EVENT
 		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
 		)
 , NEW_LINK_REFERS_TO_EVENT(
@@ -64,10 +104,22 @@ public enum NEW_FORM_CLASSES_DB_API {
 		, ENDPOINTS_DB_API.LINK_REFERS_TO_EVENT
 		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
 		)
+, NEW_GROUP(
+		"Group"
+		, new GroupCreateForm("")
+		, ENDPOINTS_DB_API.LINK_REFERS_TO_GROUP
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
 , NEW_LINK_REFERS_TO_GROUP(
 		"doc refers to group"
 		, new LinkRefersToGroupCreateForm("","","")
 		, ENDPOINTS_DB_API.LINK_REFERS_TO_GROUP
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
+, NEW_HUMAN(
+		"Human"
+		, new HumanCreateForm("")
+		, ENDPOINTS_DB_API.LINK_REFERS_TO_HUMAN
 		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
 		)
 , NEW_LINK_REFERS_TO_HUMAN(
@@ -76,10 +128,40 @@ public enum NEW_FORM_CLASSES_DB_API {
 		, ENDPOINTS_DB_API.LINK_REFERS_TO_HUMAN
 		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
 		)
+, NEW_MYSTERY(
+		"Mystery"
+		, new MysteryCreateForm("")
+		, ENDPOINTS_DB_API.LINK_REFERS_TO_MYSTERY
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
+, NEW_LINK_REFERS_TO_MYSTERY(
+		"doc refers to mystery"
+		, new LinkRefersToMysteryCreateForm("","","")
+		, ENDPOINTS_DB_API.LINK_REFERS_TO_MYSTERY
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
+, NEW_OBJECT(
+		"Object"
+		, new ObjectCreateForm("")
+		, ENDPOINTS_DB_API.LINK_REFERS_TO_OBJECT
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
 , NEW_LINK_REFERS_TO_OBJECT(
 		"doc refers to object"
 		, new LinkRefersToObjectCreateForm("","","")
 		, ENDPOINTS_DB_API.LINK_REFERS_TO_OBJECT
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
+, NEW_PERSEUS_ANALYSIS(
+		"Perseus Analysis"
+		, new PerseusAnalysis()
+		, ENDPOINTS_DB_API.WORD_ANALYSIS
+		, RESTRICTION_FILTERS.WS_ADMIN
+		)
+, NEW_PLACE(
+		"Place"
+		, new PlaceCreateForm("")
+		, ENDPOINTS_DB_API.LINK_REFERS_TO_PLACE
 		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
 		)
 , NEW_LINK_REFERS_TO_PLACE(
@@ -88,16 +170,52 @@ public enum NEW_FORM_CLASSES_DB_API {
 		, ENDPOINTS_DB_API.LINK_REFERS_TO_PLACE
 		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
 		)
+, NEW_PLANT(
+		"Plant"
+		, new PlantCreateForm("")
+		, ENDPOINTS_DB_API.LINK_REFERS_TO_PLANT
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
 , NEW_LINK_REFERS_TO_PLANT(
 		"doc refers to plant"
 		, new LinkRefersToPlantCreateForm("","","")
 		, ENDPOINTS_DB_API.LINK_REFERS_TO_PLANT
 		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
 		)
+, NEW_ROLE(
+		"Role"
+		, new RoleCreateForm("")
+		, ENDPOINTS_DB_API.LINK_REFERS_TO_PLACE
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
 , NEW_LINK_REFERS_TO_ROLE(
 		"doc refers to role"
 		, new LinkRefersToRoleCreateForm("","","")
 		, ENDPOINTS_DB_API.LINK_REFERS_TO_PLACE
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
+, NEW_TEXT_BIBLICAL_SOURCE(
+		"Biblical Text (Source)"
+		, new TextBiblicalSourceCreateForm("","","")
+		, ENDPOINTS_DB_API.LINK_REFERS_TO_BIBLICAL_TEXT
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
+, NEW_TEXT_BIBLICAL_TRANSLATION(
+		"Biblical Text (Translation)"
+		, new TextBiblicalTranslationCreateForm("","","")
+		, ENDPOINTS_DB_API.LINK_REFERS_TO_BIBLICAL_TEXT
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
+, NEW_TEXT_LITURGICAL_TRANSLATION(
+		"Liturgical Text (Translation)"
+		, new TextLiturgicalTranslationCreateForm("","","")
+		, null
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
+, NEW_TEXT_LITURGICAL_SOURCE(
+		"Liturgical Text (Source)"
+		, new TextLiturgicalSourceCreateForm("","","")
+		, null
 		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
 		)
 	;

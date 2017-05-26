@@ -6,6 +6,8 @@ public class Constants {
 		public static final String ID_SPLITTER = "~";
 		public static final String PIPE_SPLITTER = "\\|";
 		public static final String ALT_ID_DELIMITER = "~"; // TODO reconcile pipe vs tilde
+		public static final String DOMAIN_DELIMITER = "_";
+		public static final String DOMAIN_SPLITTER = "_";
 		public static final String APP_DATA_PATH = "app_data_do_not_delete/";
 		public static final String DB_NAME = "app_data";
 		public static final String TABLE_SYNCH_HISTORY = "SYNCH_HISTORY";
@@ -27,7 +29,7 @@ public class Constants {
 		public static final String EXTERNAL_DATASTORE_FORMS_PATH = "/forms";
 		public static final String EXTERNAL_DATASTORE_NODE_PATH = "/docs";
 		public static final String EXTERNAL_DATASTORE_RELATIONSHIP_PATH = "/links";
-		public static final String EXTERNAL_DATASTORE_ONTOLOGY_PATH = "/" + EXTERNAL_DB_LIBS.ONTOLOGY.libname;
+		public static final String EXTERNAL_DATASTORE_ONTOLOGY_PATH = "/ontology";
 		public static final String PATH_LIBRARY_WILDCARD = "/*";
 		public static final String PATH_LIBRARY_TOPIC_WILDCARD = "/*/*";
 		public static final String PATH_LIBRARY_TOPIC_KEY_WILDCARD = "/*/*/*";

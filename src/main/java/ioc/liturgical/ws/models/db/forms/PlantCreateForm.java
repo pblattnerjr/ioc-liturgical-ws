@@ -1,5 +1,6 @@
 package ioc.liturgical.ws.models.db.forms;
 
+import ioc.liturgical.ws.constants.ID_PART_TYPES;
 import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
 import ioc.liturgical.ws.models.db.supers.LTKOntologyCreateFormEntry;
 
@@ -21,5 +22,7 @@ public class PlantCreateForm extends LTKOntologyCreateFormEntry {
 				, PlantCreateForm.class.getSimpleName()
 				,  1.1
 				);
+		this.partTypeOfTopic = ID_PART_TYPES.ONTOLOGY_TOPIC;
+		this.partTypeOfKey = ID_PART_TYPES.USER_TEXT;
 	}
 }

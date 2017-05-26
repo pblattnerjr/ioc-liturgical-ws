@@ -12,7 +12,8 @@ public enum SYSTEM_MISC_LIBRARY_TOPICS {
 	DOMAINS("domains", "Contains docs for the domains topic in the DB library.")
 	, LABELS("labels", "Contains docs for the labels topic in the DB library.")
 	, SCHEMAS("schemas", "Library topics and docs relating to schemas")
-	,USERS("users", "Constains docs for the users topic in the DB library.");
+	,USERS("users", "Contains docs for the users topic in the DB library.")
+	, UTILITIES("utilities", "Contains docs describing utilities");
 	;
 	public String lib = SYSTEM_LIBS.MISC.libname;
 	public String topic;

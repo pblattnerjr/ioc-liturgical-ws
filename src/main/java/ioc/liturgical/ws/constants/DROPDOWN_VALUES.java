@@ -20,7 +20,7 @@ public class DROPDOWN_VALUES {
     	map.putAll(HOROLOGION_SECTIONS.getMap());
     	map.putAll(HEIRMOI_TYPES.getMap());
     	map.putAll(EOTHINON_WEEKS.getMap());
-    	map.putAll(MONTHS_OF_YEAR.getMap());
+    	map.putAll(MONTHS_OF_YEAR_MAP.getMap());
     	
         map = Collections.unmodifiableMap(map);
 	}

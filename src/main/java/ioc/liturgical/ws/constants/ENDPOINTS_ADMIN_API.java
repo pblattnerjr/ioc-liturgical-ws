@@ -54,6 +54,14 @@ public enum ENDPOINTS_ADMIN_API {
 			, ""
 			, INCLUDE_IN_RESOURCE_LIST.NO.value
 			)
+	, DOMAINS_USER_ROLE_DROPDOWNS(
+			"domains"
+			, "userdropdown"
+			,"Dropdowns for each role for a specified domain."
+			, SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.lib
+			, ""
+			, INCLUDE_IN_RESOURCE_LIST.NO.value
+			)
 	, LABELS(
 			""
 			, "labels"
@@ -124,6 +132,14 @@ public enum ENDPOINTS_ADMIN_API {
 			,"System access statistics for people who have access to the system."
 			, SYSTEM_LIBS.USERS.libname
 			, USER_TOPICS.STATISTICS.lib
+			, INCLUDE_IN_RESOURCE_LIST.YES.value
+			)
+	, UTILITIES(
+			"misc"
+			, "utilities"
+			,"System utilities."
+			, SYSTEM_LIBS.MISC.libname
+			, USER_TOPICS.UTILITIES.lib
 			, INCLUDE_IN_RESOURCE_LIST.YES.value
 			)
 	;

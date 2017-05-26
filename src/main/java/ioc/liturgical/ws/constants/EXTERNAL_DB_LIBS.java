@@ -12,7 +12,8 @@ package ioc.liturgical.ws.constants;
  *
  */
 public enum EXTERNAL_DB_LIBS {
-	ONTOLOGY("ontology", "Library for entries in the database ontology.")
+	LINGUISTICS("linguistics", "Library for linguistic information about the texts in the database.")
+	, ONTOLOGY("ontology", "Library for entries in the database ontology.")
 	;
 
 	public String libname = "";
@@ -43,7 +44,15 @@ public enum EXTERNAL_DB_LIBS {
 	public static boolean isSystemLib(String name) {
 		return (enumForName(name) != null);
 	}
-	
+
+	/**
+	 * Returns a domain based on the enum value
+	 * @return e.g. en_sys_ontology
+	 */
+	public String toSystemDomain() {
+		return "en" + Constants.DOMAIN_DELIMITER + "sys" + Constants.DOMAIN_DELIMITER + this.libname;
+	}
+
 	public String toId(String key) {
 		if (key == null || key.length() == 0) {
 			return this.libname;

@@ -10,6 +10,8 @@ import com.google.common.base.Joiner;
 
 import ioc.liturgical.ws.constants.Constants;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import net.ages.alwb.utils.core.file.AlwbFileUtils;
+import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
 
 /**
  * Manages multipart IDs, where parts are delimited by the pipe character |
@@ -29,9 +31,13 @@ public class IdManager {
 	private static final Logger logger = LoggerFactory.getLogger(IdManager.class);
 
 	private List<String> idParts = new ArrayList<String>();
-	private List<String> libaryParts = new ArrayList<String>();
+	private List<String> libraryParts = new ArrayList<String>();
 	private List<String> topicParts = new ArrayList<String>();
 	private List<String> keyParts = new ArrayList<String>();
+	private String libraryLanguage = null;
+	private String libraryCountry = null;
+	private String libraryRealm = null;
+	private boolean libraryIsDomain = false;
 	private String delimiter = Constants.ID_DELIMITER;
 	private String splitter = Constants.ID_SPLITTER;
 	private int topicIndex = 1;
@@ -51,9 +57,11 @@ public class IdManager {
 					idParts.add(part);
 			}
 			if (parts.length == 3) {
-				this.libaryParts.add(parts[0]);
+				this.libraryParts.add(parts[0]);
 				this.topicParts.add(parts[1]);
 				this.keyParts.add(parts[2]);
+				this.libraryIsDomain = true;
+				this.setDomainParts();
 			}
 		} catch (Exception e) {
 			ErrorUtils.report(logger, e);
@@ -80,7 +88,7 @@ public class IdManager {
 					idParts.add(part);
 			}
 			for (int i = 0; i < topicIndex; i++) {
-				this.libaryParts.add(idParts.get(i));
+				this.libraryParts.add(idParts.get(i));
 			}
 			for (int i = topicIndex; i < keyIndex; i++) {
 				this.topicParts.add(idParts.get(i));
@@ -155,6 +163,21 @@ public class IdManager {
 		idParts.add(part2);
 	}
 	
+	private void setDomainParts() {
+		if (this.libraryParts.size() == 1) {
+			try {
+				String [] parts = this.libraryParts.get(0).split(Constants.DOMAIN_DELIMITER);
+				if (parts.length == 3) {
+					this.libraryLanguage = parts[0];
+					this.libraryCountry = parts[1];
+					this.libraryRealm = parts[2];
+				}
+			} catch (Exception e) {
+				
+			}
+		}
+	}
+	
 	/**
 	 * Returns the number of parts for this key
 	 * @return
@@ -177,10 +200,10 @@ public class IdManager {
 	} 
 	
 	public String getLibrary() {
-		if (this.libaryParts.size() > 1) {
-			return Joiner.on(Constants.ID_DELIMITER).join(this.libaryParts);
+		if (this.libraryParts.size() > 1) {
+			return Joiner.on(Constants.ID_DELIMITER).join(this.libraryParts);
 		} else {
-			return this.libaryParts.get(0);
+			return this.libraryParts.get(0);
 		}
 	}
 
@@ -221,13 +244,178 @@ public class IdManager {
 		}
 		return null;
 	}
-	
+
 	public static void main (String[] args) {
 		IdManager myManager = new IdManager("gr_GR_cog", "actors", "priest");
 		System.out.println(myManager.getId());
-		myManager = new IdManager("en_US_dedes|actors|deacon");
+		myManager = new IdManager("en_US_dedes~actors~deacon");
 		System.out.println("domain: " + myManager.get(0));
 		System.out.println("topic: " + myManager.get(1));
 		System.out.println("key: " + myManager.get(2));
 	}
+
+	public String getLibraryLanguage() {
+		return libraryLanguage;
+	}
+
+	public void setLibraryLanguage(String libraryLanguage) {
+		this.libraryLanguage = libraryLanguage;
+	}
+
+	public String getLibraryCountry() {
+		return libraryCountry;
+	}
+
+	public void setLibraryCountry(String libraryCountry) {
+		this.libraryCountry = libraryCountry;
+	}
+
+	public String getLibraryRealm() {
+		return libraryRealm;
+	}
+
+	public void setLibraryRealm(String libraryRealm) {
+		this.libraryRealm = libraryRealm;
+	}
+
+	public boolean isLibraryDomain() {
+		return libraryIsDomain;
+	}
+
+	public void setLibraryIsDomain(boolean libraryIsDomain) {
+		this.libraryIsDomain = libraryIsDomain;
+	}
+	
+	/**
+	 * Create an OSLW entry for this ID and the supplied value
+	 * e.g.
+	 * 		meMA.Ode6C225 = "Δήμοις τε φαίνει, προσδραμεῖν τῷ Δεσπότῃ."
+	 * 
+	 * Note: the value will be empty unless:
+	 * 1. The size of the library, topic, and key == 1 in all three cases
+	 * 2. The library value can be split usng Constants.DOMAIN_DELIMITER and the resulting size is exactly three
+	 * @param value
+	 * @return
+	 */
+	public String getAlwbResourceForValue(String value) {
+		StringBuffer sb = new StringBuffer();
+		if (libraryIsDomain 
+				&& this.libraryParts.size() == 1 
+				&& this.topicParts.size() == 1 
+				&& this.keyParts.size() == 1
+				) {
+			sb.append(this.keyParts.get(0));
+			sb.append(" = ");
+			sb.append(AlwbGeneralUtils.wrapQuotes(value.trim()));
+			sb.append("\n");
+		}
+		return sb.toString();
+	}
+
+public String getOslwResourceForValue(String value) {
+	StringBuffer sb = new StringBuffer();
+	if (libraryIsDomain 
+			&& this.libraryParts.size() == 1 
+			&& this.topicParts.size() == 1 
+			&& this.keyParts.size() == 1
+			) {
+		sb.append("\\itId{");
+		sb.append(this.libraryLanguage);
+		sb.append("}{");
+		sb.append(this.libraryCountry);
+		sb.append("}{");
+		sb.append(this.libraryRealm);
+		sb.append("}{");
+		sb.append(this.topicParts.get(0));
+		sb.append("}{");
+		sb.append(this.keyParts.get(0));
+		sb.append("}{\n");
+		sb.append(value.trim());
+		sb.append("\n}%\n");
+	}
+	return sb.toString();
+}
+
+	/**
+	 * If the ID is actually a sequence number, e.g.
+	 * 
+	 * gr_gr_cog~me.m01.d06~L0031
+	 * 
+	 * this method will return the int number,
+	 * 
+	 * i.e. 31
+	 * 
+	 * If unsuccessful, returns -1
+	 * @param id
+	 * @return
+	 */
+	public static int getSeqNbr(String id) {
+		int result = -1;
+		IdManager idManager = new IdManager(id);
+		try {
+			if (idManager.getKey().startsWith("L")) {
+			result = Integer.parseInt(idManager.getKey().substring(1));
+			}
+		} catch (Exception e) {
+			result = -1;
+		}
+		return result;
+	}
+	
+	/**
+	 * Gets the index to use as the starting sequence number for
+	 * a window of values before the specified ID.
+	 * 
+	 * If the ID occurs at a position < size, the index will be adjusted
+	 * accordingly.
+	 * 
+	 * @param id
+	 * @param size
+	 * @return
+	 */
+	public static int getWindowPrefixIndex(String id, int size) {
+		int result = -1;
+		int seq = getSeqNbr(id);
+		if (seq > -1) {
+			result = seq - size;
+			if (result < 1) {
+				result = 1;
+			}
+		}
+		return result;
+	}
+	
+	/**
+	 * Gets the index to use as the starting sequence number for
+	 * a window of values before the specified ID.
+	 * 
+	 * If the ID occurs at a position < size, the index will be adjusted
+	 * accordingly.
+	 * 
+	 * @param id
+	 * @param size
+	 * @return
+	 */
+	public static int getWindowSuffixIndex(String id, int size) {
+		int result = -1;
+		int seq = getSeqNbr(id);
+		if (seq > -1) {
+			result = seq + size;
+		}
+		return result;
+	}
+
+	/**
+	 * Pad the value as a valid sequence number as used in the database
+	 * L + 5 digits, left padded with zeros
+	 * 
+	 * and return library~topic~line number
+	 * 
+	 * @param value
+	 * @return
+	 */
+	public static String createSeqNbr(String library, String topic, int value) {
+		return library + "~" + topic + "~" + AlwbGeneralUtils.padNumber("L", 5, value);
+	}
+	
 }

@@ -3,6 +3,8 @@ package ioc.liturgical.ws.managers;
 import static org.junit.Assert.*;
 
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -15,23 +17,26 @@ import com.google.gson.JsonObject;
 import ioc.liturgical.test.framework.LinkRefersToBiblicalTextTextFactory;
 import ioc.liturgical.test.framework.TestUsers;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
-import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
 import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.models.RequestStatus;
 import ioc.liturgical.ws.models.ResultJsonObjectArray;
-import ioc.liturgical.ws.models.db.docs.Animal;
-import ioc.liturgical.ws.models.db.docs.Being;
-import ioc.liturgical.ws.models.db.docs.Concept;
-import ioc.liturgical.ws.models.db.docs.Event;
+import ioc.liturgical.ws.models.db.docs.grammar.PerseusAnalyses;
+import ioc.liturgical.ws.models.db.docs.grammar.PerseusAnalysis;
+import ioc.liturgical.ws.models.db.docs.ontology.Animal;
+import ioc.liturgical.ws.models.db.docs.ontology.Being;
+import ioc.liturgical.ws.models.db.docs.ontology.Concept;
+import ioc.liturgical.ws.models.db.docs.ontology.Event;
 import ioc.liturgical.ws.models.db.forms.AnimalCreateForm;
 import ioc.liturgical.ws.models.db.forms.BeingCreateForm;
 import ioc.liturgical.ws.models.db.forms.ConceptCreateForm;
 import ioc.liturgical.ws.models.db.forms.EventCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
 import ioc.liturgical.ws.models.db.links.LinkRefersToBiblicalText;
+import net.ages.alwb.utils.core.file.AlwbFileUtils;
 import net.ages.alwb.utils.core.id.managers.IdManager;
+import net.ages.alwb.utils.nlp.fetchers.PerseusMorph;
 
 public class ExternalDbManagerTest {
 
@@ -149,6 +154,22 @@ public class ExternalDbManagerTest {
 	    }
 
 	@Test
+	   public void testOntologySearch() {
+		// if this fails, make sure there are Ontology entries in the database
+	    	JsonObject result = 
+	    			externalManager.searchOntology(
+	    					""
+	    					, "Being"
+	    					, ""  // query
+	    					, "" // property
+	    					, "c" // matcher
+	    					, "" // tags
+	    					, "" // operator
+	    					);
+			assertTrue(result.get("status").getAsJsonObject().get("code").getAsInt() == 200);
+	    }
+
+	@Test
 	   public void testRelationshipPropertiesMap() {
 	    	ResultJsonObjectArray result = 
 	    			externalManager.getRelationshipTypePropertyMaps();
@@ -219,6 +240,100 @@ public class ExternalDbManagerTest {
 	    }
 	
 	@Test
+	   public void testGetOntologyEntry() {
+			assertNotNull(externalManager.getDropdownInstancesForOntologyType("Human"));
+	    }
+
+	@Test
+	   public void testGetTopicAsOslwFileContents() {
+		    JsonObject o = externalManager.getTopicAsOslwFileContents(
+		    		"gr_gr_cog"
+		    		, "me.m01.d06"
+		    		, 201
+		    		, 651
+		    		);
+		    JsonArray a = o.get("values").getAsJsonArray();
+		    String contents = a.get(0).getAsJsonObject().get("keys").getAsString();
+		    AlwbFileUtils.writeFile("/Users/mac002/temp/res.me.m01.d06.tex", contents);
+		    assertTrue(contents.length() > 0);
+	    }
+	
+	@Test
+	   public void testGetTopicAsJson() {
+		    JsonObject o = externalManager.getTopicAsJson(
+		    		"gr_gr_cog"
+		    		, "me.m01.d06"
+		    		, 201
+		    		, 651
+		    		);
+		    JsonArray a = o.get("values").getAsJsonArray();
+		    assertTrue(a.size() > 0);
+	    }
+
+	@Test
+	   public void testGetTopicUniqueTokenSet() {
+			Set<String> result = new TreeSet<String>();
+		    Set<String> tokens = externalManager.getTopicUniqueTokens(
+		    		"gr_gr_cog"
+		    		, "me.m01.d06"
+		    		, 201
+		    		, 651
+		    		);
+		    for (String token : tokens) {
+		    		PerseusMorph pm = new PerseusMorph(token);
+		    		PerseusAnalyses analyses = pm.getAnalyses();
+		    		for (PerseusAnalysis analysis : analyses.analyses ) {
+		    			System.out.println(analysis.toJsonString());
+		    			String s= analysis.toExPexInterlinear(true);
+		    			if (!result.contains(s)) {
+			    			result.add(s);
+		    			}
+		    		}
+		    	}
+    		for (String a : result) {
+    			System.out.println(a);
+    		}
+		    assertTrue(tokens.size() > 0);
+	    }
+
+	@Test
+	   public void testGetForSeqRange() {
+		    JsonObject o = externalManager.getForSeqRange(
+		    		"gr_gr_cog"
+		    		, "me.m01.d06"
+		    		, 201
+		    		, 651
+		    		);
+		    JsonArray a = o.get("values").getAsJsonArray();
+		    assertTrue(a.size() > 0);
+	    }
+
+	@Test
+	public void testGetWordList() {
+		JsonObject o = externalManager.getWordListWithFrequencyCounts(
+				"Biblical"
+				, "en_uk_webbe~ACT~C01:01"
+		);
+	    JsonArray a = o.get("values").getAsJsonArray();
+		assertTrue(a.size() > 0);
+	}
+
+	@Test 
+	public void getContext() {
+		JsonObject o = externalManager.getContext(
+				"gr_gr_cog~me.m01.d06~meMA.C1Poet"
+				, 10
+				);
+	    JsonArray a = o.get("values").getAsJsonArray();
+	    assertTrue(a.size() > 0);
+	}
+	
+	@Test
+	   public void testGetDropdownsForOntologyInstances() {
+			assertNotNull(externalManager.getDropdownsForOntologyInstances());
+	    }
+
+	@Test
 	   public void testConstraintOnNodeCreateAndDrop() {
 		String label = "banana";
 		// create
@@ -246,7 +361,6 @@ public class ExternalDbManagerTest {
 			RequestStatus result = 
 					externalManager.addLTKDbObject(
 							"wsadmin"
-							, ONTOLOGY_TOPICS.ANIMAL
 							, form.toJsonString()
 							);
 			assertTrue(result.getCode() == HTTP_RESPONSE_CODES.CREATED.code);
@@ -306,7 +420,6 @@ public class ExternalDbManagerTest {
 			RequestStatus result = 
 					externalManager.addLTKDbObject(
 							"wsadmin"
-							, ONTOLOGY_TOPICS.BEING
 							, form.toJsonString()
 							);
 			assertTrue(result.getCode() == HTTP_RESPONSE_CODES.CREATED.code);
@@ -366,7 +479,6 @@ public class ExternalDbManagerTest {
 			RequestStatus result = 
 					externalManager.addLTKDbObject(
 							"wsadmin"
-							, ONTOLOGY_TOPICS.CONCEPT
 							, form.toJsonString()
 							);
 			assertTrue(result.getCode() == HTTP_RESPONSE_CODES.CREATED.code);
@@ -426,7 +538,6 @@ public class ExternalDbManagerTest {
 			RequestStatus result = 
 					externalManager.addLTKDbObject(
 							"wsadmin"
-							, ONTOLOGY_TOPICS.EVENT
 							, form.toJsonString()
 							);
 			assertTrue(result.getCode() == HTTP_RESPONSE_CODES.CREATED.code);

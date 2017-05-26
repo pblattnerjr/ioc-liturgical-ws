@@ -8,38 +8,51 @@ import com.google.gson.annotations.Expose;
 
 import ioc.liturgical.ws.annotations.UiWidget;
 import ioc.liturgical.ws.constants.Constants;
-import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
+import ioc.liturgical.ws.constants.DOMAIN_TYPES;
+import ioc.liturgical.ws.constants.STATUS;
+import ioc.liturgical.ws.forms.manager.FormRegExConstants;
+import ioc.liturgical.ws.models.ws.supers.WsDbAbstractModel;
 
 @Attributes(title = "Domain", description = "A domain identifies the text of a doc as being in a specific language as spoken in a specific country for a specific realm.  A realm can be a version of a translation, e.g. the King James Version (KJV), or a particular translator, e.g. by Fr. Seraphim Dedes (dedes), or for a particular metropolis, e.g. the Orthodox Church of Kenya (oak)")
-public class Domain extends AbstractModel {
+public class Domain extends WsDbAbstractModel {
 	
+	@Attributes(required = true, readonly=true, description = "The combination of language and country code and realm, separated by the underscore character, e.g. en_us_dedes", minLength=7)
+	@Expose public String domain = "";
+
+	@Attributes(required = true, readonly=true, description = "ISO code for the language, e.g. en.  Must be 2 to 3 characters, with no spaces.", minLength=2, maxLength=3, pattern=FormRegExConstants.NOSPACES)
+	@Expose public String languageCode = "";
+
+	@Attributes(required = true, readonly=true, description = "ISO code for the country, e.g. uk.  Must 2 to 3 characters, with no spaces.", minLength=2, maxLength=3, pattern=FormRegExConstants.NOSPACES)
+	@Expose public String countryCode = "";
+
+	@Attributes(required = true, readonly=true, description = "Realm, e.g. kjv.  Must be 3 to 20 characters, with no spaces.", minLength=3, maxLength=20, pattern=FormRegExConstants.NOSPACES)
+	@Expose public String realm = "";
+
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = true, description = "Description of the library.")
 	@Expose public String description = "";
 	
 	@UiWidget(Constants.UI_WIDGET_RADIO)
-	@Attributes(required = true, description = "Is this domain active?")
-	@Expose public boolean active = true;
+	@Attributes(required = true, description = "The type of domain this is")
+	@Expose public DOMAIN_TYPES type = DOMAIN_TYPES.USER;
 
 	@UiWidget(Constants.UI_WIDGET_RADIO)
-	@Attributes(required = true, description = "Is this domain public?")
-	@Expose public boolean isPublic = true;
+	@Attributes(required = true, description = "Is state enabled for this domain? If it is, then admins and authors may set the status of each record for this domain.")
+	@Expose public boolean stateEnabled = false;
+
+	@Attributes(required = true, description = "What is the default status of a record after an edit?")
+	@Expose public STATUS defaultStatusAfterEdit = STATUS.FINALIZED;
+
+	@Attributes(required = true, description = "What is the default status of a record after it is finalized?")
+	@Expose public STATUS defaultStatusAfterFinalization = STATUS.FINALIZED;
+
+	@UiWidget(Constants.UI_WIDGET_RADIO)
+	@Attributes(required = true, description = "Is workflow enabled for this domain? If it is, a user can be assigned to do the work for the next step in the workflow.")
+	@Expose public boolean workflowEnabled = false;
 
 	@UiWidget(Constants.UI_WIDGET_CHECKBOXES)
 	@Attributes(required = true, description = "Doc Types for this domain.")
 	@Expose public List<String> labels = new ArrayList<String>();
-
-	@Attributes(readonly=true, description="The user ID of the person who created it.")
-	@Expose public String createdBy = "";
-
-	@Attributes(readonly=true, description="The date/time when it was created.")
-	@Expose public String createdWhen = "";
-	
-	@Attributes(readonly=true, description="The user ID of the person who last modified it.")
-	@Expose public String modifiedBy = "";
-
-	@Attributes(readonly=true, description="The date/time when it was last modified.")
-	@Expose public String modifiedWhen = "";
 
 
 	public Domain() {
@@ -55,60 +68,97 @@ public class Domain extends AbstractModel {
 		this.description = description;
 	}
 
-	public String getCreatedBy() {
-		return createdBy;
-	}
-
-	public void setCreatedBy(String createdBy) {
-		this.createdBy = createdBy;
-	}
-
-	public String getCreatedWhen() {
-		return createdWhen;
-	}
-
-	public void setCreatedWhen(String createdWhen) {
-		this.createdWhen = createdWhen;
-	}
-
-	public String getModifiedBy() {
-		return modifiedBy;
-	}
-
-	public void setModifiedBy(String modifiedBy) {
-		this.modifiedBy = modifiedBy;
-	}
-
-	public String getModifiedWhen() {
-		return modifiedWhen;
-	}
-
-	public void setModifiedWhen(String modifiedWhen) {
-		this.modifiedWhen = modifiedWhen;
-	}
-
-	public boolean isActive() {
-		return active;
-	}
-
-	public void setActive(boolean active) {
-		this.active = active;
-	}
-
-	public boolean isPublic() {
-		return isPublic;
-	}
-
-	public void setPublic(boolean isPublic) {
-		this.isPublic = isPublic;
-	}
-
 	public List<String> getLabels() {
 		return labels;
 	}
 
 	public void setLabels(List<String> labels) {
 		this.labels = labels;
+	}
+
+	public String getDomain() {
+		return domain;
+	}
+
+	public void setDomain(String domain) {
+		this.domain = domain;
+	}
+
+	public String getLanguageCode() {
+		return languageCode;
+	}
+
+	private void setDomain() {
+		this.setDomain(
+				languageCode 
+				+ Constants.DOMAIN_DELIMITER 
+				+ this.countryCode 
+				+ Constants.DOMAIN_DELIMITER 
+				+ this.realm
+				);
+	}
+
+	public void setLanguageCode(String languageCode) {
+		this.languageCode = languageCode;
+		setDomain();
+	}
+
+	public String getCountryCode() {
+		return countryCode;
+	}
+
+	public void setCountryCode(String countryCode) {
+		this.countryCode = countryCode;
+		setDomain();
+	}
+
+	public String getRealm() {
+		return realm;
+	}
+
+	public void setRealm(String realm) {
+		this.realm = realm;
+		setDomain();
+	}
+
+	public boolean isStateEnabled() {
+		return stateEnabled;
+	}
+
+	public void setStateEnabled(boolean stateEnabled) {
+		this.stateEnabled = stateEnabled;
+	}
+
+	public STATUS getDefaultStatusAfterEdit() {
+		return defaultStatusAfterEdit;
+	}
+
+	public void setDefaultStatusAfterEdit(STATUS defaultStatusAfterEdit) {
+		this.defaultStatusAfterEdit = defaultStatusAfterEdit;
+	}
+
+	public STATUS getDefaultStatusAfterFinalization() {
+		return defaultStatusAfterFinalization;
+	}
+
+	public void setDefaultStatusAfterFinalization(STATUS defaultStatusAfterFinalization) {
+		this.defaultStatusAfterFinalization = defaultStatusAfterFinalization;
+	}
+
+	public boolean isWorkflowEnabled() {
+		return workflowEnabled;
+	}
+
+	public void setWorkflowEnabled(boolean workflowEnabled) {
+		this.workflowEnabled = workflowEnabled;
+	}
+
+	public DOMAIN_TYPES getType() {
+		return type;
+	}
+
+	public void setType(DOMAIN_TYPES type) {
+		this.type = type;
 	}
 
 }
