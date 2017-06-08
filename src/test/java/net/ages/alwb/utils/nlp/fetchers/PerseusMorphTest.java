@@ -4,8 +4,8 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import ioc.liturgical.ws.models.db.docs.grammar.PerseusAnalyses;
-import ioc.liturgical.ws.models.db.docs.grammar.PerseusAnalysis;
+import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalyses;
+import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalysis;
 import opennlp.tools.tokenize.SimpleTokenizer;
 import opennlp.tools.tokenize.Tokenizer;
 

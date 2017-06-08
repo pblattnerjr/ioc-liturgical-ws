@@ -39,6 +39,7 @@ import ioc.liturgical.ws.managers.auth.UserStatus;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.managers.ldp.LdpManager;
+import ioc.liturgical.ws.models.ResultJsonObjectArray;
 import net.ages.alwb.utils.core.datastores.json.manager.JsonObjectStoreManager;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 
@@ -338,7 +339,7 @@ public class ServiceProvider {
 							response.status(HTTP_RESPONSE_CODES.UNAUTHORIZED.code);
 						} else {
 							if (status.isAuthorized()) {
-								// let the request pass through to the handler
+									// let the request pass through to the handler
 							} else {
 								response.type(Constants.UTF_JSON);
 								halt(HTTP_RESPONSE_CODES.UNAUTHORIZED.code, HTTP_RESPONSE_CODES.UNAUTHORIZED.message);
@@ -347,7 +348,7 @@ public class ServiceProvider {
 					} else {
 						// we do not require authorization to attempt to login, or to get the Liturgical Day Properties
 						if (
-								request.pathInfo().startsWith(Constants.INTERNAL_DATASTORE_API_PATH +"/login")
+								request.pathInfo().startsWith(Constants.INTERNAL_DATASTORE_API_PATH +"/login/form")
 								|| request.pathInfo().startsWith(Constants.INTERNAL_DATASTORE_API_PATH +"/info")
 								|| request.pathInfo().startsWith(Constants.INTERNAL_LITURGICAL_DAY_PROPERTIES_API_PATH)
 								) {
@@ -480,8 +481,8 @@ public class ServiceProvider {
 			get(Constants.INTERNAL_DATASTORE_API_PATH + "/*/*/*", (request, response) -> {
 				response.type(Constants.UTF_JSON);
 				String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
-				JsonObject json = storeManager.getForId(query);
-				if (json.get("valueCount").getAsInt() > 0) {
+				ResultJsonObjectArray json = storeManager.getForId(query);
+				if (json.getValueCount() > 0) {
 					response.status(HTTP_RESPONSE_CODES.OK.code);
 				} else {
 					response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
@@ -495,8 +496,8 @@ public class ServiceProvider {
 			get(Constants.INTERNAL_DATASTORE_API_PATH + "/*/*", (request, response) -> {
 				response.type(Constants.UTF_JSON);
 				String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
-				JsonObject json = storeManager.getForIdStartsWith(query);
-				if (json.get("valueCount").getAsInt() > 0) {
+				ResultJsonObjectArray json = storeManager.getForIdStartsWith(query);
+				if (json.getValueCount() > 0) {
 					response.status(HTTP_RESPONSE_CODES.OK.code);
 				} else {
 					response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
@@ -510,8 +511,8 @@ public class ServiceProvider {
 			get(Constants.INTERNAL_DATASTORE_API_PATH + "/*", (request, response) -> {
 				response.type(Constants.UTF_JSON);
 				String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
-				JsonObject json = storeManager.getForIdStartsWith(query);
-				if (json.get("valueCount").getAsInt() > 0) {
+				ResultJsonObjectArray json = storeManager.getForIdStartsWith(query);
+				if (json.getValueCount() > 0) {
 					response.status(HTTP_RESPONSE_CODES.OK.code);
 				} else {
 					response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
@@ -543,8 +544,8 @@ public class ServiceProvider {
 			post("/api/v1/*/*/*", (request, response) -> {
 				response.type(Constants.UTF_JSON);
 				String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
-				JsonObject json = storeManager.getForId(query);
-				if (json.get("valueCount").getAsInt() > 0) {
+				ResultJsonObjectArray json = storeManager.getForId(query);
+				if (json.getValueCount() > 0) {
 					response.status(HTTP_RESPONSE_CODES.OK.code);
 				} else {
 					response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
@@ -558,8 +559,8 @@ public class ServiceProvider {
 			post("/api/v1/*/*", (request, response) -> {
 				response.type(Constants.UTF_JSON);
 				String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
-				JsonObject json = storeManager.getForIdStartsWith(query);
-				if (json.get("valueCount").getAsInt() > 0) {
+				ResultJsonObjectArray json = storeManager.getForIdStartsWith(query);
+				if (json.getValueCount() > 0) {
 					response.status(HTTP_RESPONSE_CODES.OK.code);
 				} else {
 					response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
@@ -573,8 +574,8 @@ public class ServiceProvider {
 			post("/api/v1/*", (request, response) -> {
 				response.type(Constants.UTF_JSON);
 				String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
-				JsonObject json = storeManager.getForIdStartsWith(query);
-				if (json.get("valueCount").getAsInt() > 0) {
+				ResultJsonObjectArray json = storeManager.getForIdStartsWith(query);
+				if (json.getValueCount() > 0) {
 					response.status(HTTP_RESPONSE_CODES.CREATED.code);
 				} else {
 					response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);

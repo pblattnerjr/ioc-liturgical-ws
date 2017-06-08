@@ -3,6 +3,8 @@ package ioc.liturgical.ws.managers.databases.external.neo4j;
 import java.text.Normalizer;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -12,6 +14,7 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.h2.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,8 +48,11 @@ import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.managers.exceptions.DbException;
 import ioc.liturgical.ws.models.RequestStatus;
 import ioc.liturgical.ws.models.ResultJsonObjectArray;
-import ioc.liturgical.ws.models.db.docs.grammar.PerseusAnalyses;
-import ioc.liturgical.ws.models.db.docs.grammar.PerseusAnalysis;
+import ioc.liturgical.ws.models.db.docs.nlp.ConcordanceLine;
+import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalyses;
+import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalysis;
+import ioc.liturgical.ws.models.db.docs.nlp.WordInflected;
+import ioc.liturgical.ws.models.db.docs.ontology.TextLiturgical;
 import ioc.liturgical.ws.models.db.links.LinkRefersToBiblicalText;
 import ioc.liturgical.ws.models.db.returns.LinkRefersToTextToTextTableRow;
 import ioc.liturgical.ws.models.db.returns.ResultNewForms;
@@ -61,9 +67,11 @@ import net.ages.alwb.utils.core.datastores.json.models.DropdownArray;
 import net.ages.alwb.utils.core.datastores.json.models.DropdownItem;
 import net.ages.alwb.utils.core.datastores.json.models.LTKVJsonObject;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import net.ages.alwb.utils.core.generics.MultiMapWithList;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 import net.ages.alwb.utils.nlp.fetchers.Lexigram;
 import net.ages.alwb.utils.nlp.fetchers.PerseusMorph;
+import net.ages.alwb.utils.nlp.utils.NlpUtils;
 import opennlp.tools.tokenize.SimpleTokenizer;
 import opennlp.tools.tokenize.Tokenizer;
 
@@ -91,6 +99,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	private boolean logQueriesWithNoMatches = false;
 	private boolean   prettyPrint = true;
 	private boolean readOnly = false;
+	private boolean runningUtility = false;
+	private String runningUtilityName = "";
 	private Gson gson = new Gson();
 	private String adminUserId = "";
 
@@ -134,12 +144,47 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  if (neo4jManager.isConnectionOK()) {
 			  buildOntologyDropdownMaps();
 			  initializeOntology();
-			  if (! this.existsUnique("en_sys_grammar~ἀβλαβεῖς~ἀβλαβής/ADJ.PL.F.VOC")) {
+			  if (! this.existsWordAnalyses("ἀβλαβεῖς")) {
 				  this.loadTheophanyGrammar();
 			  }
 		  }
 	  }
 	  
+	  /**
+	   * Checks to see if the database contains analyses for the given word
+	   * @param word
+	   * @return
+	   */
+	  public boolean existsWordAnalyses(String word) {
+		  return getWordAnalyses(word).getResultCount() > 0;
+	  }
+	  
+	  /**
+	   * Query the database for word grammar analyses for the specified word
+	   * @param word - case sensitive
+	   * @return
+	   */
+	  public ResultJsonObjectArray getWordAnalyses(String word) {
+		  String query = "match (n:WordGrammar) where n.topic = \""
+				 + word.toLowerCase() + "\" return properties(n)"
+				 ;
+		  ResultJsonObjectArray queryResult = this.getForQuery(
+				  query
+				  , false
+				  , false
+				  );
+		  List<JsonObject> list = new ArrayList<JsonObject>();
+		  JsonArray array = new JsonArray();
+		  for (JsonObject obj : queryResult.getValues()) {
+			  array.add(obj.get("properties(n)").getAsJsonObject());
+		  }
+		  JsonObject analyses = new JsonObject();
+		  analyses.add(word, array);
+		  list.add(analyses);
+		  queryResult.setValues(list);
+		  return queryResult;
+	  }
+
 	  public ExternalDbManager(
 			  String neo4jDomain
 			  , boolean logQueries
@@ -363,29 +408,40 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  return result;
 	  }
 
-	  public JsonObject getForQuery(String query, boolean setValueSchemas) {
+	  /**
+	   * @param query
+	   * @param setValueSchemas
+	   * @param logQuery - if set to true, pays attention to the global logAllQueries and logQueriesWithNoMatches flags
+	   * @return
+	   */
+	  public ResultJsonObjectArray getForQuery(
+			  String query
+			  , boolean setValueSchemas
+			  , boolean logQuery
+			  ) {
 			ResultJsonObjectArray result = neo4jManager.getResultObjectForQuery(query);
 			result.setQuery(query);
-			if (logAllQueries
-					|| 
-					(logQueriesWithNoMatches && result.getResultCount() == 0) 
-					) {
-				logger.info(query);
-				logger.info("Result count: " + result.getResultCount());
+			if (logQuery) {
+				if (logAllQueries
+						|| 
+						(logQueriesWithNoMatches && result.getResultCount() == 0) 
+						) {
+					logger.info(query);
+					logger.info("Result count: " + result.getResultCount());
+				}
 			}
 			if (setValueSchemas) {
 				result = setValueSchemas(result);
 			}
-			return result.toJsonObject();
+			return result;
 	}
-	  
 	  /**
 	   * 
 	   * @param label - the node label to use
 	   * @param idRegEx  - a regular expression for the ID, e.g. "gr_gr_cog~me.*text"
 	   * @return
 	   */
-	  public JsonObject getWordListWithFrequencyCounts(
+	  public ResultJsonObjectArray getWordListWithFrequencyCounts(
 			  String label
 			  , String idRegEx
 			  ) {
@@ -399,10 +455,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				  + " UNWIND range(0,size(words)-2) as idx"
 				  + " WITH distinct words[idx] as word, count(words[idx]) as count"
 				  + " RETURN word, count order by count descending";
-		  return this.getForQuery(query, false).getAsJsonObject();
+		  return this.getForQuery(query, false, false);
 	  }
 	  
-		public JsonObject search(
+		public ResultJsonObjectArray search(
 				String type
 				, String domain
 				, String book
@@ -411,7 +467,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, String property
 				, String matcher
 				) {
-			JsonObject result = null;
+			ResultJsonObjectArray result = null;
 			if (type == null) {
 				type = "id";
 			}
@@ -424,12 +480,24 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			if (chapter.startsWith("his")) {
 				chapter = chapter.replaceFirst("hi", "");
 			}
-			result = getForQuery(getCypherQueryForDocSearch(type, domain, book, chapter, query, property, matcher), true);
+			result = getForQuery(
+					getCypherQueryForDocSearch(
+							type
+							, domain
+							, book
+							, chapter
+							, query
+							, property
+							, matcher
+							)
+					, true
+					, true
+					);
 			return result;
 		}
 
 		
-		public JsonObject searchOntology(
+		public ResultJsonObjectArray searchOntology(
 				String type // to match
 				, String genericType // generic type to match
 				, String query
@@ -438,7 +506,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, String tags // tags to match
 				, String operator // for tags, e.g. AND, OR
 				) {
-			JsonObject result = null;
+			ResultJsonObjectArray result = null;
 
 			result = getForQuery(
 					getCypherQueryForOntologySearch(
@@ -451,11 +519,12 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 							, operator
 							)
 					, true
+					, true
 					);
 			return result;
 		}
 
-		public JsonObject searchRelationships(
+		public ResultJsonObjectArray searchRelationships(
 				String type // to match
 				, String library // library to match
 				, String query
@@ -464,7 +533,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, String tags // tags to match
 				, String operator // for tags, e.g. AND, OR
 				) {
-			JsonObject result = null;
+			ResultJsonObjectArray result = null;
 
 			result = getForQuery(
 					getCypherQueryForLinkSearch(
@@ -476,6 +545,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 							, tags 
 							, operator
 							)
+					, true
 					, true
 					);
 			return result;
@@ -546,7 +616,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				break;
 			}
 			}
-			builder.RETURN("id, library, topic, key, value, seq");
+			builder.RETURN("id, library, topic, key, value, seq, _valueSchemaId, ");
 			builder.ORDER_BY("doc.seq"); // TODO: in future this could be a parameter in REST API
 
 			CypherQueryForDocs q = builder.build();
@@ -972,8 +1042,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		@Override
 		public boolean existsUnique(String id) {
 			try {
-				JsonObject json = this.getForId(id);
-				return json.get("valueCount").getAsInt() == 1;
+				ResultJsonObjectArray json = this.getForId(id);
+				return json.valueCount == 1;
 			} catch (Exception e) {
 				return false;
 			}
@@ -1002,7 +1072,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		}
 
 		@Override
-		public JsonObject getForId(String id) {
+		public ResultJsonObjectArray getForId(String id) {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
 				CypherQueryBuilderForDocs builder = new CypherQueryBuilderForDocs(false)
@@ -1019,7 +1089,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 				result.setStatusMessage(e.getMessage());
 			}
-			return result.toJsonObject();
+			return result;
 		}
 
 		public ResultJsonObjectArray getForIdOfRelationship(String id) {
@@ -1120,7 +1190,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		}
 
 		@Override
-		public JsonObject getForIdStartsWith(String id) {
+		public ResultJsonObjectArray getForIdStartsWith(String id) {
 			CypherQueryBuilderForDocs builder = new CypherQueryBuilderForDocs()
 					.MATCH()
 					.WHERE("id")
@@ -1129,7 +1199,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			builder.RETURN("id, value, seq");
 			builder.ORDER_BY("doc.seq");
 			CypherQueryForDocs q = builder.build();
-			JsonObject result = getForQuery(q.toString(), true);
+			ResultJsonObjectArray result = getForQuery(q.toString(), true, true);
 			return result;
 		}
 
@@ -1142,11 +1212,11 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		 * @param n
 		 * @return
 		 */
-		public JsonObject getContext(
+		public ResultJsonObjectArray getContext(
 				String id
 				, int n
 				) {
-			JsonObject result = new JsonObject();
+			ResultJsonObjectArray result = new ResultJsonObjectArray(true);
 			String seq = this.getSequenceForId(id);
 			if (seq != null) {
 				IdManager idManager = new IdManager(seq);
@@ -1171,9 +1241,9 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		 */
 		public String getSequenceForId(String id) {
 			String result = null;
-			JsonObject record = this.getForId(id);
+			ResultJsonObjectArray record = this.getForId(id);
 			try {
-				result = record.get("values").getAsJsonArray().get(0).getAsJsonObject().get("seq").getAsString();
+				result = record.getFirstObject().get("seq").getAsString();
 			} catch (Exception e) {
 				result = null;
 			}
@@ -1191,7 +1261,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		 * @param endingSeq
 		 * @return
 		 */
-		public JsonObject getForSeqRange(
+		public ResultJsonObjectArray getForSeqRange(
 				String library
 				, String topic
 				, int startingSeq
@@ -1206,7 +1276,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			builder.RETURN("id, value, seq");
 			builder.ORDER_BY("doc.seq");
 			CypherQueryForDocs q = builder.build();
-			JsonObject result = getForQuery(q.toString(), true);
+			ResultJsonObjectArray result = getForQuery(q.toString(), true, true);
 			return result;
 		}
 
@@ -1216,7 +1286,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		 * @param topic
 		 * @return
 		 */
-		public JsonObject getTopic(String library, String topic) {
+		public ResultJsonObjectArray getTopic(String library, String topic) {
 			return getForIdStartsWith(library + "~" + topic);
 		}
 		
@@ -1248,7 +1318,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				) {
 			ResultJsonObjectArray result = new ResultJsonObjectArray(this.prettyPrint);
 			boolean useSequenceNumbers = startingSequence != -1 && endingSequence != -1;
-			JsonObject queryResult = null;
+			ResultJsonObjectArray queryResult = null;
 			
 			if (useSequenceNumbers) {
 				queryResult = this.getForSeqRange(library, topic, startingSequence, endingSequence);
@@ -1256,7 +1326,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				queryResult = this.getForIdStartsWith(library + Constants.ID_DELIMITER + topic);
 			}
 			StringBuffer sb = new StringBuffer();
-			for (JsonElement e : queryResult.get("values").getAsJsonArray()) {
+			for (JsonElement e : queryResult.getValues()) {
 					JsonObject record = e.getAsJsonObject();
 						sb.append(this.getAsOslwResource(
 								record.get("doc.id").getAsString()
@@ -1275,13 +1345,13 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result.toJsonObject();
 		}
 		
-		public JsonObject getTopicAsJson(
+		public ResultJsonObjectArray getTopicAsJson(
 				String library
 				, String topic
 				, int startingSequence  
 				, int endingSequence  
 				) {
-			JsonObject result = new JsonObject();
+			ResultJsonObjectArray result = new ResultJsonObjectArray(true);
 			boolean useSequenceNumbers = startingSequence != -1 && endingSequence != -1;
 			if (useSequenceNumbers) {
 				result = this.getForSeqRange(library, topic, startingSequence, endingSequence);
@@ -1298,13 +1368,13 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, int endingSequence  
 				) {
 			Set<String> result = new TreeSet<String>();
-			JsonObject queryResult = getTopicAsJson(
+			ResultJsonObjectArray queryResult = getTopicAsJson(
 					library
 					, topic
 					, startingSequence  
 					, endingSequence  
 					);
-				for (JsonElement e : queryResult.get("values").getAsJsonArray()) {
+				for (JsonElement e : queryResult.getValues()) {
 					String value = e.getAsJsonObject().get("doc.value").getAsString();
 					Tokenizer tokenizer = SimpleTokenizer.INSTANCE;
 			        String [] theTokens = tokenizer.tokenize(value);
@@ -1390,6 +1460,134 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
+		/**
+		 * Get analyses for the tokens in the test that matches the supplied ID
+		 * @param requestor
+		 * @param id
+		 * @return
+		 */
+		public ResultJsonObjectArray getWordGrammarAnalyses(
+				String requestor
+				, String id
+			) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
+				ResultJsonObjectArray queryResult  = getForId(id);
+				// add the Text object so we have all its properties
+				result.addValue("text", queryResult.getFirstObject());
+				
+				// get the tokens for the text
+				JsonArray theTokens = NlpUtils.getTokensAsJsonArray(
+	 	 	  			queryResult.getFirstObjectValueAsString()
+	 	 				, false // convertToLowerCase
+	 	 				, false // ignorePunctuation
+	 	 				, false // ignoreLatin
+	 	 				, false // ignoreNumbers
+	 	 				, false // removeDiacritics
+	 	 	    	);
+		 	       
+		 	    // add the tokens to the result
+		 	    JsonObject tokens = new JsonObject();
+				tokens.add("tokens", theTokens);
+				result.addValue(tokens);
+				
+				// add the analyses to the result
+				JsonObject analyses = new JsonObject();
+				analyses.add(
+						"analyses"
+						, getWordGrammarAnalyses(
+								requestor
+								, theTokens
+							)
+						.getFirstObject()
+				);
+				result.addValue(analyses);
+				result.setQuery("get word grammar analyses for text with id =  " + id);
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+
+		public ResultJsonObjectArray getWordGrammarAnalyses(
+				String requestor
+				, JsonArray tokens
+			) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			result.setQuery("get word grammar analyses for tokens");
+			JsonObject resultAnalyses = new JsonObject();
+			try {
+				for (JsonElement e : tokens) {
+					ResultJsonObjectArray analyses = this.getWordAnalyses(e.getAsString()); //   getTokenGrammarAnalyses(requestor, e.getAsString());
+					if (! resultAnalyses.has(e.getAsString())) { // the same token value can occur more than one time in a text
+						resultAnalyses.add(e.getAsString(), analyses.getFirstObject().get(e.getAsString()).getAsJsonArray());
+					}
+				}
+				result.addValue(resultAnalyses);
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+
+		public ResultJsonObjectArray getTokenGrammarAnalyses(
+				String requestor
+				, String token
+			) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
+				ResultJsonObjectArray queryResult = getForQuery(
+						"MATCH (n:WordGrammar) where n.topic = \"" 
+								+ token.toLowerCase() 
+								+ "\" return n.concise"
+								, false
+								, false
+			  );
+				result.setQuery("get grammar analyses for token " + token);
+				JsonObject analyses = new JsonObject();
+				JsonArray array = new JsonArray();
+				for (JsonObject o : queryResult.getValues()) {
+					String concise = o.get("n.concise").getAsString();
+					array.add(concise);
+				}
+				analyses.add(token, array);
+				result.addValue(analyses);
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+
+		/**
+		 * Return the requested doc text as tokens
+		 * @param id
+		 * @return
+		 */
+		public ResultJsonObjectArray getTokensForText(String id) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
+				JsonObject values = new JsonObject();
+				ResultJsonObjectArray theText = this.getForId(id);
+				
+				values.add("tokens", getOntologyTagsForAllTypes());
+				JsonObject jsonDropdown = new JsonObject();
+				jsonDropdown.add("dropdown", values);
+
+				List<JsonObject> list = new ArrayList<JsonObject>();
+				list.add(jsonDropdown);
+
+				result.setResult(list);
+				result.setQuery("get word grammar analyses for text with id =  " + id);
+
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
 
 		public RequestStatus deleteRelationshipForId(String id) {
 			RequestStatus result = new RequestStatus();
@@ -1685,8 +1883,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public boolean dbHasOntologyEntries() {
 			boolean result = false;
 			try {
-				JsonObject entries = getForQuery("match (n:OntoRoot) return count(n)", false);
-				int count = entries.get("values").getAsJsonArray().get(0).getAsJsonObject().get("count(n)").getAsInt();
+				ResultJsonObjectArray entries = getForQuery("match (n:OntoRoot) return count(n)", false, false);
+				Long count = entries.getValueCount();
 				result = count > 0;
 			} catch (Exception e) {
 				ErrorUtils.report(logger, e);
@@ -1701,14 +1899,19 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		 */
 		public JsonArray getDropdownInstancesForOntologyType(String type) {
 			JsonArray result = new JsonArray();
-			String query  = "match (n:OntoRoot) where n.topic = \"" + type + "\" return n.id as id, n.name as name";
-			JsonArray entries = getForQuery(query, false)
-					.get("values").getAsJsonArray();
-			for (JsonElement entry : entries) {
-				String value = entry.getAsJsonObject().get("id").getAsString();
-				String label = entry.getAsJsonObject().get("name").getAsString();
-				result.add(new DropdownItem(label, value).toJsonObject());
-			}
+				String query  = "match (n:OntoRoot) where n.topic = \"" + type + "\" return n.id as id, n.name as name";
+				ResultJsonObjectArray entries = getForQuery(query, false, false);
+				for (JsonElement entry : entries.getValues()) {
+					try {
+						if (entry.getAsJsonObject().has("name")) { // exclude items with no name
+							String value = entry.getAsJsonObject().get("id").getAsString();
+							String label = entry.getAsJsonObject().get("name").getAsString();
+							result.add(new DropdownItem(label, value).toJsonObject());
+						}
+					} catch (Exception e) {
+						ErrorUtils.report(logger, e);
+					}
+				}
 			return result;
 		}
 
@@ -1719,7 +1922,14 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public Map<String, JsonArray> getDropdownsForOntologyInstances() {
 			Map<String,JsonArray> result = new TreeMap<String,JsonArray>();
 			for (ONTOLOGY_TOPICS t : ONTOLOGY_TOPICS.values()) {
-				result.put(t.keyname, this.getDropdownInstancesForOntologyType(t.keyname));
+				try {
+					JsonArray array = this.getDropdownInstancesForOntologyType(t.keyname);
+					if (array != null && array.size() > 0) {
+						result.put(t.keyname, array);
+					}
+				} catch (Exception e) {
+					ErrorUtils.report(logger, e);
+				}
 			}
 			return result;
 		}
@@ -1728,9 +1938,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		 * Get a list of users known by the database
 		 * @return
 		 */
-		public JsonObject callDbmsSecurityListUsers() {
-			JsonObject result = getForQuery(
+		public ResultJsonObjectArray callDbmsSecurityListUsers() {
+			ResultJsonObjectArray result = getForQuery(
 					"call dbms.security.listUsers"
+					, false
 					, false
 					);
 			return result;
@@ -1741,14 +1952,14 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		 * @return
 		 */
 		public JsonObject callDbConstraints() {
-			JsonObject result = getForQuery(
+			JsonObject result = new JsonObject();
+			ResultJsonObjectArray queryResult = getForQuery(
 					"call db.constraints"
 					, false
+					, false
 					);
-			if (result.get("valueCount").getAsInt() > 0) {
-				JsonArray constraints = result.get("values").getAsJsonArray();
-				result = new JsonObject();
-				result.add("constraints", constraints);
+			if (queryResult.valueCount > 0) {
+				result.add("constraints", queryResult.getValuesAsJsonArray());
 			}
 			return result;
 		}
@@ -1789,9 +2000,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			}
 			return result;
 		}
-		public JsonObject callDbmsQueryJmx() {
-			JsonObject result = getForQuery(
+		public ResultJsonObjectArray callDbmsQueryJmx() {
+			ResultJsonObjectArray result = getForQuery(
 					"call dbms.queryJmx('org.neo4j:*')"
+					, false
 					, false
 					);
 			return result;
@@ -1804,12 +2016,12 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public JsonObject getServerConfiguration() {
 			JsonObject result = new JsonObject();
 			try {
-				result = getForQuery(
+				ResultJsonObjectArray queryResult = getForQuery(
 						"call dbms.queryJmx('org.neo4j:instance=kernel#0,name=Configuration')"
 						, false
+						, false
 						);
-				result = result.get("values").getAsJsonArray()
-						.get(0).getAsJsonObject()
+				result = queryResult.getFirstObject()
 						.get("attributes").getAsJsonObject()
 						;
 			} catch (Exception e) {
@@ -2018,34 +2230,227 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			RequestStatus result = new RequestStatus();
 			Utility form = gson.fromJson(json, Utility.class);
 			if (internalManager.isWsAdmin(requestor)) {
-				switch (UTILITIES.valueOf(utilityName)) {
-				case FetchPerseusParses:
-					break;
-				case Tokenize:
-					result = runUtilityTokenize();
-					break;
-				default:
-					break;
+				if (runningUtility) {
+					result.setCode(HTTP_RESPONSE_CODES.UNAUTHORIZED.code);
+					result.setMessage("Utility " + this.runningUtilityName + " is still running.");
+				} else {
+					
+					runningUtility = true;
+					this.runningUtilityName = utilityName;
+
+					switch (UTILITIES.valueOf(utilityName)) {
+					case FetchPerseusParses:
+						boolean deleteFirst = false;
+						result = runUtilityFetchPerseus(requestor, deleteFirst);
+						break;
+					case Tokenize:
+						result = runUtilityTokenize(requestor, "gr_gr_cog", 0);
+						break;
+					default:
+						break;
+					}
 				}
 			} else {
 				result.setCode(HTTP_RESPONSE_CODES.UNAUTHORIZED.code);
 				result.setMessage(HTTP_RESPONSE_CODES.UNAUTHORIZED.message);
 			}
+			runningUtility = false;
 			return result;
 		}
 		
-		public RequestStatus runUtilityTokenize() {
+		/**
+		 * Runs the tokenizer for the specified library.
+		 * 
+		 * The results are stored in the database:
+		 * (s:WordInflected)-[r:EXAMPLE]->(e:TextConcordance)
+		 * 
+		 * If the numberOfConcordanceEntries is set to zero, 
+		 * the result is simply:
+		 * (s:WordInflected)
+		 * 
+		 * Note that WordInflected stores the context of the first example it finds,
+		 * even if numberOfConcordanceEntries is set to zero.  The difference 
+		 * being that it is a property of WordInflected, not a separate TextConcordance
+		 * node with an relationship.  This is useful for spotting typos, where the misspelled
+		 * word only occurs once.
+		 * 
+		 *
+		 * @param requestor
+		 * @param library
+		 * @param numberOfConcordanceEntries  zero means don't do it at all, > 0 is a specific number
+		 * @return
+		 */
+		public RequestStatus runUtilityTokenize(
+				String requestor
+				, String library
+				, int numberOfConcordanceEntries
+				) {
 			RequestStatus status = new RequestStatus();
+			
 			StringBuffer sb = new StringBuffer();
-			sb.append("MATCH (n:Liturgical) where n.id starts with \"gr_gr_cog\" ");
-			sb.append("WITH split(n.value,\" \") as words ");
-			sb.append("UNWIND range(0,size(words)-2) as idx ");
-			sb.append("WITH distinct toLower(words[idx]) as word, count(words[idx]) as count ");
-			sb.append("RETURN word, count order by count descending");
-			JsonObject queryResult = this.getForQuery(sb.toString(), false);
-			status.setCode(queryResult.get("status").getAsJsonObject().get("code").getAsInt());
-//			ResultJsonObjectArray a = new ResultJsonObjectArray(true);
-			status.setMessage(queryResult.get("valueCount").getAsLong() + " tokens created");
+			sb.append("MATCH (n:Liturgical) where n.id starts with \"");
+			sb.append(library);
+			sb.append("\" and not n.value contains \"gr_GR_cog\"") ;
+			sb.append("RETURN n.id, n.value");
+			try {
+				ResultJsonObjectArray queryResult = this.getForQuery(
+						"MATCH ()-[r:" 
+								+ RELATIONSHIP_TYPES.EXAMPLE.typename 
+								+ "]->() delete r return count(r)"
+								, false
+								, false
+								);
+				queryResult = this.getForQuery("MATCH (n:WordInflected) delete n return count(n)", false, false);
+				queryResult = this.getForQuery("MATCH (n:TextConcordance) delete n return count(n)", false, false);
+				queryResult = this.getForQuery(sb.toString(), false, false);
+				MultiMapWithList<WordInflected, ConcordanceLine> forms = NlpUtils.getWordListWithFrequencies(
+						queryResult.getValuesAsJsonArray()
+						, true // true = convert to lower case
+						, true // true = ignore punctuation
+						, true // true = ignore tokens with a Latin character
+						, true // true = ignore tokens with a number
+						, false // true = remove diacritics
+						, numberOfConcordanceEntries    // number of concordance entries
+						);
+				logger.info("saving tokens and frequency counts to the database");
+				int size = forms.size();
+				int count = 0;
+				int interval = 1000;
+				int intervalCounter  = 0;
+				for (WordInflected form : forms.getMapSimpleValues()) {
+					RequestStatus addStatus = this.addLTKDbObject(requestor, form.toJsonString());
+					if (addStatus.getCode() != 201) {
+						throw new Exception(addStatus.getUserMessage());
+					}
+					if (numberOfConcordanceEntries > 0) {
+						List<ConcordanceLine> lines = forms.getMapWithLists().get(form.key);
+						if (lines != null) {
+							for (ConcordanceLine line : lines) {
+								addStatus = this.addLTKDbObject(requestor, line.toJsonString());
+								if (addStatus.getCode() != 201) {
+									throw new Exception(addStatus.getUserMessage());
+								}
+								this.createRelationship(
+										requestor
+										, form.getId()
+										, RELATIONSHIP_TYPES.EXAMPLE
+										, line.getId()
+										);
+							}
+						}
+					}
+					count++;
+					intervalCounter++;
+					if (intervalCounter == interval) {
+						logger.info("saved " + count + " out of " + size);
+						intervalCounter = 0;
+					}
+				}
+				status.setCode(queryResult.getStatus().getCode());
+				status.setMessage(forms.size() + " tokens created");
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+				status.setCode(HTTP_RESPONSE_CODES.SERVER_ERROR.code);
+				status.setMessage(e.getMessage());
+			}
 			return status;
 		}
+		
+		public RequestStatus runUtilityFetchPerseus(
+				String requestor
+				, boolean deleteFirst
+				) {
+			RequestStatus status = new RequestStatus();
+			
+			try {
+				ResultJsonObjectArray queryResult = null;
+				if (deleteFirst) {
+					queryResult = this.getForQuery(
+							"MATCH (n:WordGrammar) delete n return count(n)"
+							, false
+							, false
+							);
+				}
+				queryResult = this.getForQuery(
+						"MATCH (n:WordInflected) return n.key"
+						, false
+						, false
+				);
+				Long tokenCount = queryResult.getValueCount();
+				int count = 0;
+			    for (JsonElement e : queryResult.getValuesAsJsonArray()) {
+			    	count++;
+			    	boolean process = true;
+			    	String token = e.getAsJsonObject().get("n.key").getAsString();
+			    	if (! deleteFirst) {
+			    		ResultJsonObjectArray exists = this.getForQuery(
+								"MATCH (n:WordGrammar) where n.topic = \"" 
+										+ token 
+											+ "\" return n.topic limit 1"
+								, false
+								, false
+						);
+						process = ! (exists.getValueCount() > 0);
+					}
+			    	if (process) {
+						logger.info("fetching analyses from Perseus for " + token + " (" + count + " of " + tokenCount + ")");
+			    		PerseusMorph pm = new PerseusMorph(token);
+			    		PerseusAnalyses analyses = pm.getAnalyses();
+			    		for (PerseusAnalysis analysis : analyses.analyses ) {
+			    			try {
+				    			RequestStatus addStatus = this.addLTKDbObject("wsadmin", analysis.toJsonString());
+				    			if (addStatus.getCode() != 201) {
+				    				logger.error(token + " already has analysis: " + addStatus.getUserMessage());
+				    			}
+			    			} catch (Exception eAdd) {
+			    				ErrorUtils.report(logger, eAdd);
+			    			}
+			    		}
+			    	}
+		    	}
+				status.setCode(queryResult.getStatus().getCode());
+				status.setMessage(queryResult.getStatus().getUserMessage());
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+				status.setCode(HTTP_RESPONSE_CODES.SERVER_ERROR.code);
+				status.setMessage(e.getMessage());
+			}
+			return status;
+		}
+
+		/**
+		 * Create a relationship between the two specified nodes
+		 * @param requestor
+		 * @param idOfStartNode
+		 * @param relationshipType
+		 * @param idOfEndNode
+		 * @return
+		 */
+		public RequestStatus createRelationship(
+				String requestor,
+				String idOfStartNode
+				, RELATIONSHIP_TYPES relationshipType
+				, String idOfEndNode
+				) {
+			RequestStatus status = new RequestStatus();
+			StringBuffer sb = new StringBuffer();
+			try {
+				sb.append("MATCH (s {id: \"");
+				sb.append(idOfStartNode);
+				sb.append("\"}), (e {id: \"");
+				sb.append(idOfEndNode);
+				sb.append("\"}) create (s)-[:");
+				sb.append(relationshipType.typename);
+				sb.append("]->(e)");
+				ResultJsonObjectArray queryResult = this.getForQuery(sb.toString(),false, false);
+				status.setCode(queryResult.getStatus().getCode());
+				status.setMessage(queryResult.getStatus().getUserMessage());
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+				status.setCode(HTTP_RESPONSE_CODES.SERVER_ERROR.code);
+				status.setMessage(e.getMessage());
+			}
+			return status;
+		}
+
 }

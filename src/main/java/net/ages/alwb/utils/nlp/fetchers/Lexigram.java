@@ -7,8 +7,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import ioc.liturgical.ws.models.db.docs.grammar.PerseusAnalyses;
-import ioc.liturgical.ws.models.db.docs.grammar.PerseusAnalysis;
+import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalyses;
+import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalysis;
 
 
 /**

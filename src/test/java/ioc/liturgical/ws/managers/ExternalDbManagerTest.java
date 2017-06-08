@@ -22,8 +22,8 @@ import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.models.RequestStatus;
 import ioc.liturgical.ws.models.ResultJsonObjectArray;
-import ioc.liturgical.ws.models.db.docs.grammar.PerseusAnalyses;
-import ioc.liturgical.ws.models.db.docs.grammar.PerseusAnalysis;
+import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalyses;
+import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalysis;
 import ioc.liturgical.ws.models.db.docs.ontology.Animal;
 import ioc.liturgical.ws.models.db.docs.ontology.Being;
 import ioc.liturgical.ws.models.db.docs.ontology.Concept;
@@ -72,6 +72,9 @@ public class ExternalDbManagerTest {
 				, internalManager
 				);
 		
+		// do a clean up in case we aborted during a previous run without deleting Test entries
+		externalManager.getForQuery("match (n:OntoRoot) where n.name starts with \"Test\" delete(n)", false, false);
+		
 		testReferences = new LinkRefersToBiblicalTextTextFactory();
 		
 	}
@@ -81,13 +84,22 @@ public class ExternalDbManagerTest {
 	}
 	
 	@Test
+	   public void testGetAnalysesForText() {
+			ResultJsonObjectArray result = externalManager.getWordGrammarAnalyses(
+					"wsadmin"
+					, "gr_gr_cog~me.m01.d06~meMA.Ode3C2H5.text"
+					);
+			assertTrue(result.getCount() > 0);
+	    }
+	
+	@Test
 	   public void testGetForIdStartswith() {
-			assertTrue(externalManager.getForIdStartsWith("gr_gr_cog~actors").get("valueCount").getAsInt() > 0);
+			assertTrue(externalManager.getForIdStartsWith("gr_gr_cog~actors").getValueCount() > 0);
 	    }
 	
 	@Test
 	   public void testGetForId() {
-    		assertTrue(externalManager.getForId("gr_gr_cog~actors~ClergyAndPeople").get("valueCount").getAsInt() == 1);
+    		assertTrue(externalManager.getForId("gr_gr_cog~actors~ClergyAndPeople").getValueCount() == 1);
 	    }
 	
 	@Test
@@ -140,7 +152,7 @@ public class ExternalDbManagerTest {
 	@Test
 	   public void testReferenceSearch() {
 		// if this fails, make sure you have run the CreateABunchOfReferences unit test first
-	    	JsonObject result = 
+	    	ResultJsonObjectArray result = 
 	    			externalManager.searchRelationships(
 	    					RELATIONSHIP_TYPES.REFERS_TO_BIBLICAL_TEXT.typename
 	    					, "en_us_pentiuc"
@@ -150,13 +162,13 @@ public class ExternalDbManagerTest {
 	    					, "a,b" // tags
 	    					, "or" // operator
 	    					);
-			assertTrue(result.get("status").getAsJsonObject().get("code").getAsInt() == 200);
+			assertTrue(result.getStatus().getCode() == 200);
 	    }
 
 	@Test
 	   public void testOntologySearch() {
 		// if this fails, make sure there are Ontology entries in the database
-	    	JsonObject result = 
+	    	ResultJsonObjectArray result = 
 	    			externalManager.searchOntology(
 	    					""
 	    					, "Being"
@@ -166,7 +178,7 @@ public class ExternalDbManagerTest {
 	    					, "" // tags
 	    					, "" // operator
 	    					);
-			assertTrue(result.get("status").getAsJsonObject().get("code").getAsInt() == 200);
+			assertTrue(result.getStatus().getCode() == 200);
 	    }
 
 	@Test
@@ -201,7 +213,7 @@ public class ExternalDbManagerTest {
 
 	@Test
 	   public void testGetUsers() {
-			JsonObject result = externalManager.callDbmsSecurityListUsers();
+			ResultJsonObjectArray result = externalManager.callDbmsSecurityListUsers();
 			assertNotNull(result);
 	    }
 	
@@ -249,8 +261,8 @@ public class ExternalDbManagerTest {
 		    JsonObject o = externalManager.getTopicAsOslwFileContents(
 		    		"gr_gr_cog"
 		    		, "me.m01.d06"
-		    		, 201
-		    		, 651
+		    		, 201 // start of Theophany
+		    		,  201 // 651 end of Theophany
 		    		);
 		    JsonArray a = o.get("values").getAsJsonArray();
 		    String contents = a.get(0).getAsJsonObject().get("keys").getAsString();
@@ -260,13 +272,13 @@ public class ExternalDbManagerTest {
 	
 	@Test
 	   public void testGetTopicAsJson() {
-		    JsonObject o = externalManager.getTopicAsJson(
+		    ResultJsonObjectArray o = externalManager.getTopicAsJson(
 		    		"gr_gr_cog"
 		    		, "me.m01.d06"
 		    		, 201
 		    		, 651
 		    		);
-		    JsonArray a = o.get("values").getAsJsonArray();
+		    List<JsonObject> a = o.getValues();
 		    assertTrue(a.size() > 0);
 	    }
 
@@ -276,8 +288,8 @@ public class ExternalDbManagerTest {
 		    Set<String> tokens = externalManager.getTopicUniqueTokens(
 		    		"gr_gr_cog"
 		    		, "me.m01.d06"
-		    		, 201
-		    		, 651
+		    		, 201 // start of theophany
+		    		, 201 // 651 // end of theophany
 		    		);
 		    for (String token : tokens) {
 		    		PerseusMorph pm = new PerseusMorph(token);
@@ -298,33 +310,33 @@ public class ExternalDbManagerTest {
 
 	@Test
 	   public void testGetForSeqRange() {
-		    JsonObject o = externalManager.getForSeqRange(
+		    ResultJsonObjectArray o = externalManager.getForSeqRange(
 		    		"gr_gr_cog"
 		    		, "me.m01.d06"
 		    		, 201
 		    		, 651
 		    		);
-		    JsonArray a = o.get("values").getAsJsonArray();
+		    JsonArray a = o.getValuesAsJsonArray();
 		    assertTrue(a.size() > 0);
 	    }
 
 	@Test
 	public void testGetWordList() {
-		JsonObject o = externalManager.getWordListWithFrequencyCounts(
+		ResultJsonObjectArray o = externalManager.getWordListWithFrequencyCounts(
 				"Biblical"
 				, "en_uk_webbe~ACT~C01:01"
 		);
-	    JsonArray a = o.get("values").getAsJsonArray();
+	    JsonArray a = o.getValuesAsJsonArray();
 		assertTrue(a.size() > 0);
 	}
 
 	@Test 
 	public void getContext() {
-		JsonObject o = externalManager.getContext(
+		ResultJsonObjectArray o = externalManager.getContext(
 				"gr_gr_cog~me.m01.d06~meMA.C1Poet"
 				, 10
 				);
-	    JsonArray a = o.get("values").getAsJsonArray();
+	    JsonArray a = o.getValuesAsJsonArray();
 	    assertTrue(a.size() > 0);
 	}
 	
@@ -366,12 +378,9 @@ public class ExternalDbManagerTest {
 			assertTrue(result.getCode() == HTTP_RESPONSE_CODES.CREATED.code);
 			
 			// read
-			JsonObject json = externalManager.getForId(form.getId());
+			ResultJsonObjectArray json = externalManager.getForId(form.getId());
 			Animal entry = gson.fromJson(
-					json.get("values")
-					.getAsJsonArray()
-					.get(0)
-					.getAsJsonObject()
+					json.getFirstObject()
 					, Animal.class
 					);
 			assertNotNull(entry.getId());
@@ -397,10 +406,7 @@ public class ExternalDbManagerTest {
 			// read again
 			json = externalManager.getForId(form.getId());
 			Animal revisedEntry = gson.fromJson(
-					json.get("values")
-					.getAsJsonArray()
-					.get(0)
-					.getAsJsonObject()
+					json.getFirstObject()
 					, Animal.class
 					);
 			assertTrue(entry.getDescription().equals(revisedEntry.getDescription()));
@@ -413,7 +419,7 @@ public class ExternalDbManagerTest {
 	   public void testCreateOntologyEntryCrudBeing() {
 			String name = "TestAngel";
 			String description = "A divine messenger.";
-
+			
 			// create
 			Being form = new Being(name);
 			form.setDescription(description);
@@ -425,12 +431,9 @@ public class ExternalDbManagerTest {
 			assertTrue(result.getCode() == HTTP_RESPONSE_CODES.CREATED.code);
 			
 			// read
-			JsonObject json = externalManager.getForId(form.getId());
+			ResultJsonObjectArray json = externalManager.getForId(form.getId());
 			Being entry = gson.fromJson(
-					json.get("values")
-					.getAsJsonArray()
-					.get(0)
-					.getAsJsonObject()
+					json.getFirstObject()
 					, Being.class
 					);
 			assertNotNull(entry.getId());
@@ -456,10 +459,7 @@ public class ExternalDbManagerTest {
 			// read again
 			json = externalManager.getForId(form.getId());
 			Being revisedEntry = gson.fromJson(
-					json.get("values")
-					.getAsJsonArray()
-					.get(0)
-					.getAsJsonObject()
+					json.getFirstObject()
 					, Being.class
 					);
 			assertTrue(entry.getDescription().equals(revisedEntry.getDescription()));
@@ -484,12 +484,9 @@ public class ExternalDbManagerTest {
 			assertTrue(result.getCode() == HTTP_RESPONSE_CODES.CREATED.code);
 			
 			// read
-			JsonObject json = externalManager.getForId(form.getId());
+			ResultJsonObjectArray json = externalManager.getForId(form.getId());
 			Concept entry = gson.fromJson(
-					json.get("values")
-					.getAsJsonArray()
-					.get(0)
-					.getAsJsonObject()
+					json.getFirstObject()
 					, Concept.class
 					);
 			assertNotNull(entry.getId());
@@ -515,10 +512,7 @@ public class ExternalDbManagerTest {
 			// read again
 			json = externalManager.getForId(form.getId());
 			Concept revisedEntry = gson.fromJson(
-					json.get("values")
-					.getAsJsonArray()
-					.get(0)
-					.getAsJsonObject()
+					json.getFirstObject()
 					, Concept.class
 					);
 			assertTrue(entry.getDescription().equals(revisedEntry.getDescription()));
@@ -543,12 +537,9 @@ public class ExternalDbManagerTest {
 			assertTrue(result.getCode() == HTTP_RESPONSE_CODES.CREATED.code);
 			
 			// read
-			JsonObject json = externalManager.getForId(form.getId());
+			ResultJsonObjectArray json = externalManager.getForId(form.getId());
 			Event entry = gson.fromJson(
-					json.get("values")
-					.getAsJsonArray()
-					.get(0)
-					.getAsJsonObject()
+					json.getFirstObject()
 					, Event.class
 					);
 			assertNotNull(entry.getId());
@@ -574,10 +565,7 @@ public class ExternalDbManagerTest {
 			// read again
 			json = externalManager.getForId(form.getId());
 			Event revisedEntry = gson.fromJson(
-					json.get("values")
-					.getAsJsonArray()
-					.get(0)
-					.getAsJsonObject()
+					json.getFirstObject()
 					, Event.class
 					);
 			assertTrue(entry.getDescription().equals(revisedEntry.getDescription()));

@@ -1,7 +1,8 @@
 package ioc.liturgical.ws.constants;
 
 import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
-import ioc.liturgical.ws.models.db.docs.grammar.PerseusAnalysis;
+import ioc.liturgical.ws.models.db.docs.nlp.ConcordanceLine;
+import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalysis;
 import ioc.liturgical.ws.models.db.forms.AnimalCreateForm;
 import ioc.liturgical.ws.models.db.forms.BeingCreateForm;
 import ioc.liturgical.ws.models.db.forms.ConceptCreateForm;
@@ -85,6 +86,12 @@ public enum NEW_FORM_CLASSES_DB_API {
 		, new ConceptCreateForm("")
 		, ENDPOINTS_DB_API.LINK_REFERS_TO_CONCEPT
 		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
+, NEW_CONCORDANCE_LINE(
+		"ConcordanceLine"
+		, new ConcordanceLine(" ",0,0," "," "," ")
+		, ENDPOINTS_DB_API.DOCS
+		, RESTRICTION_FILTERS.WS_ADMIN
 		)
 , NEW_LINK_REFERS_TO_CONCEPT(
 		"doc refers to concept"

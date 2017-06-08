@@ -9,7 +9,9 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-import ioc.liturgical.ws.models.db.docs.grammar.PerseusAnalysis;
+import ioc.liturgical.ws.models.db.docs.nlp.ConcordanceLine;
+import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalysis;
+import ioc.liturgical.ws.models.db.docs.nlp.WordInflected;
 import ioc.liturgical.ws.models.db.docs.ontology.Animal;
 import ioc.liturgical.ws.models.db.docs.ontology.Being;
 import ioc.liturgical.ws.models.db.docs.ontology.Concept;
@@ -83,6 +85,10 @@ public enum EXTERNAL_DB_SCHEMA_CLASSES {
 			new BeingCreateForm(" ")
 			, new Being(" ")
 			)
+	, CONCORDANCE_LINE(
+			new ConcordanceLine(" ",0,0," "," "," ")
+			, new ConcordanceLine(" ",0,0," "," "," ")
+			)
 	, CONCEPT(
 			new ConceptCreateForm(" ")
 			, new Concept(" ")
@@ -98,6 +104,10 @@ public enum EXTERNAL_DB_SCHEMA_CLASSES {
 	, HUMAN(
 			new HumanCreateForm(" ")
 			, new Human(" ")
+			)
+	, LEXICAL_FORM(
+			new WordInflected("", 0)
+			, new WordInflected("", 0)
 			)
 	, LINK_REFERS_TO_ANIMAL(
 			new LinkRefersToAnimalCreateForm(" "," ","")

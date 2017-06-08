@@ -22,6 +22,7 @@ import ioc.liturgical.ws.controllers.admin.ControllerUtils;
 import ioc.liturgical.ws.managers.auth.AuthDecoder;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 import ioc.liturgical.ws.models.RequestStatus;
+import ioc.liturgical.ws.models.ResultJsonObjectArray;
 
 public class Neo4jController {
 	private static final Logger logger = LoggerFactory.getLogger(Neo4jController.class);
@@ -41,8 +42,8 @@ public class Neo4jController {
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String id = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
-			JsonObject json = externalManager.getForId(id);
-			if (json.get("valueCount").getAsInt() > 0) {
+			ResultJsonObjectArray json = externalManager.getForId(id);
+			if (json.valueCount > 0) {
 				response.status(HTTP_RESPONSE_CODES.OK.code);
 			} else {
 				response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
@@ -80,6 +81,17 @@ public class Neo4jController {
         			, request.queryParams("l") // tags (~labels)
         			, request.queryParams("o") // operator
         			));
+		});
+
+		// GET ontology entries for specified parameters
+		path = ENDPOINTS_DB_API.TEXT_ANALYSIS.toLibraryPath();
+		System.out.println("Yoohoo!");
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			String id = request.splat()[0];
+			return externalManager.getWordGrammarAnalyses(requestor, id).toJsonString();
 		});
 
 		/**

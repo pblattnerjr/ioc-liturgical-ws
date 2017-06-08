@@ -1,4 +1,4 @@
-package ioc.liturgical.ws.models.db.docs.grammar;
+package ioc.liturgical.ws.models.db.docs.nlp;
 
 import java.time.Instant;
 
@@ -24,7 +24,7 @@ public class PerseusAnalysis extends LTKDb {
 	@Expose public String lemmaGreek = "";
 	@Attributes(required = true, description = "The BetaCode form of the lemma.")
 	@Expose public String lemmaBetaCode = "";
-	@Attributes(required = true, description = "The Greek form of the lemma.")
+	@Attributes(required = true, description = "The Greek form of the token.")
 	@Expose public String greek = "";
 	@Attributes(required = true, description = "The grammatical properties of the token.")
 	@Expose public String parse = "";
@@ -58,7 +58,8 @@ public class PerseusAnalysis extends LTKDb {
 			) {
 		super(
 				EXTERNAL_DB_LIBS.LINGUISTICS.toSystemDomain()
-				, token.length() == 1 ? token + " " : token
+				, token
+//				, token.length() == 1 ? token + " " : token
 				, lemmaGreek + "/" + GRAMMAR_ABBREVIATIONS_MAPPER.convertToLeipzig(" ", parse, ".")
 				, schema
 				,  serialVersion

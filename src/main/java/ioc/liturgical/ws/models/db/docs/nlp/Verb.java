@@ -1,4 +1,4 @@
-package ioc.liturgical.ws.models.db.docs.grammar;
+package ioc.liturgical.ws.models.db.docs.nlp;
 
 import com.google.gson.annotations.Expose;
 

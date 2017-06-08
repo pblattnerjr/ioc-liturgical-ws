@@ -1,0 +1,733 @@
+{1}{\ltSt{1.Geographical Objects and Features}}%
+{1.A}{\ltSt{A. Universe, Creation }}%
+{1.B}{\ltSt{B. Regions Above the Earth }}%
+{1.C}{\ltSt{C. Regions Below the Surface of the Earth }}%
+{1.D}{\ltSt{D. Heavenly Bodies }}%
+{1.E}{\ltSt{E. Atmospheric Objects }}%
+{1.F}{\ltSt{F. The Earth's Surface }}%
+{1.G}{\ltSt{G. Elevated Land Formations }}%
+{1.H}{\ltSt{H. Depressions and Holes }}%
+{1.I}{\ltSt{I. Land in Contrast With the Sea }}%
+{1.J}{\ltSt{J. Bodies of Water }}%
+{1.K}{\ltSt{K. Sociopolitical Areas }}%
+{1.L}{\ltSt{L. Governmental Administrative Areas }}%
+{1.M}{\ltSt{M. Areas Which Are Uninhabited or Only Sparsely Populated }}%
+{1.N}{\ltSt{N. Population Centers }}%
+{1.O}{\ltSt{O. Pastures and Cultivated Lands }}%
+{1.P}{\ltSt{P. Thoroughfares: Roads, Streets, Paths, etc. }}%
+{2}{\ltSt{2.Natural Substances}}%
+{2.A}{\ltSt{A. Elements }}%
+{2.B}{\ltSt{B. Air }}%
+{2.C}{\ltSt{C. Fire }}%
+{2.D}{\ltSt{D. Water }}%
+{2.E}{\ltSt{E. Earth, Mud, Sand, Rock }}%
+{2.F}{\ltSt{F. Precious and Semiprecious Stones and Substances }}%
+{2.G}{\ltSt{G. Metals }}%
+{3}{\ltSt{3.Plants}}%
+{3.A}{\ltSt{A. Plants [General Meaning] }}%
+{3.B}{\ltSt{B. Trees }}%
+{3.C}{\ltSt{C. Plants That Are Not Trees }}%
+{3.D}{\ltSt{D. Fruit Parts of Plants }}%
+{3.E}{\ltSt{E. Non-Fruit Parts of Plants }}%
+{3.F}{\ltSt{F. Wood and Wood Products }}%
+{4}{\ltSt{4.Animals}}%
+{4.A}{\ltSt{A. Animals }}%
+{4.B}{\ltSt{B. Birds }}%
+{4.C}{\ltSt{C. Insects }}%
+{4.D}{\ltSt{D. Reptiles and Other 'Creeping Things' }}%
+{4.E}{\ltSt{E. Fishes and Other Sea Creatures }}%
+{5}{\ltSt{5.Foods and Condiments}}%
+{5.A}{\ltSt{A. Food }}%
+{5.B}{\ltSt{B. Condiments }}%
+{6}{\ltSt{6.Artifacts}}%
+{6.A}{\ltSt{A. Artifacts [General Meaning] }}%
+{6.B}{\ltSt{B. Instruments Used in Agriculture and Husbandry }}%
+{6.C}{\ltSt{C. Instruments Used in Fishing }}%
+{6.D}{\ltSt{D. Instruments Used in Binding and Fastening }}%
+{6.E}{\ltSt{E. Traps, Snares }}%
+{6.F}{\ltSt{F. Instruments Used in Punishment and Execution }}%
+{6.G}{\ltSt{G. Weapons and Armor }}%
+{6.H}{\ltSt{H. Boats and Parts of Boats }}%
+{6.I}{\ltSt{I. Vehicles }}%
+{6.J}{\ltSt{J. Instruments Used in Marking and Writing }}%
+{6.K}{\ltSt{K. Money and Monetary Units }}%
+{6.L}{\ltSt{L. Musical Instruments }}%
+{6.M}{\ltSt{M. Images and Idols }}%
+{6.N}{\ltSt{N. Lights and Light Holders }}%
+{6.O}{\ltSt{O. Furniture }}%
+{6.P}{\ltSt{P. Containers }}%
+{6.Q}{\ltSt{Q. Cloth, Leather, and Objects Made of Such Materials }}%
+{6.R}{\ltSt{R. Adornments }}%
+{6.S}{\ltSt{S. Plant Products }}%
+{6.T}{\ltSt{T. Medicines }}%
+{6.U}{\ltSt{U. Perfumes and Incense }}%
+{6.V}{\ltSt{V. Instruments for Measuring }}%
+{6.W}{\ltSt{W. Miscellaneous }}%
+{7}{\ltSt{7.Constructions}}%
+{7.A}{\ltSt{A. Constructions [General Meaning] }}%
+{7.B}{\ltSt{B. Buildings }}%
+{7.C}{\ltSt{C. Parts and Areas of Buildings }}%
+{7.D}{\ltSt{D. Open Constructions }}%
+{7.E}{\ltSt{E. Constructions for Holding Water }}%
+{7.F}{\ltSt{F. Walls and Fences }}%
+{7.G}{\ltSt{G. Miscellaneous Constructions }}%
+{7.H}{\ltSt{H. Building Materials }}%
+{8}{\ltSt{8.Body, Body Parts, and Body Products}}%
+{8.A}{\ltSt{A. Body }}%
+{8.B}{\ltSt{B. Parts of the Body }}%
+{8.C}{\ltSt{C. Physiological Products of the Body }}%
+{9}{\ltSt{9.People}}%
+{9.A}{\ltSt{A. Human Beings }}%
+{9.B}{\ltSt{B. Males }}%
+{9.C}{\ltSt{C. Females }}%
+{9.D}{\ltSt{D. Children }}%
+{9.E}{\ltSt{E. Persons For Whom There Is Affectionate Concern }}%
+{10}{\ltSt{10.Kinship Terms}}%
+{10.A}{\ltSt{A. Groups and Members of Groups of Persons Regarded as Related by Blood but without Special Reference to Successive Generations }}%
+{10.B}{\ltSt{B. Kinship Relations Involving Successive Generations }}%
+{10.C}{\ltSt{C. Kinship Relations of the Same Generation }}%
+{10.D}{\ltSt{D. Kinship Relations Based upon Marriage }}%
+{11}{\ltSt{11.Groups and Classes of Persons and Members of Such Groups and Classes}}%
+{11.A}{\ltSt{A. General }}%
+{11.B}{\ltSt{B. Socio-Religious }}%
+{11.C}{\ltSt{C. Socio-Political }}%
+{11.D}{\ltSt{D. Ethnic-Cultural }}%
+{11.E}{\ltSt{E. Philosophical }}%
+{12}{\ltSt{12.Supernatural Beings and Powers}}%
+{12.A}{\ltSt{A. Supernatural Beings }}%
+{12.B}{\ltSt{B. Supernatural Powers }}%
+{13}{\ltSt{13.Be, Become, Exist, Happen}}%
+{13.A}{\ltSt{A. State }}%
+{13.B}{\ltSt{B. Change of State }}%
+{13.C}{\ltSt{C. Exist }}%
+{13.D}{\ltSt{D. Happen }}%
+{14}{\ltSt{14.Physical Events and States}}%
+{14.A}{\ltSt{A. Weather }}%
+{14.B}{\ltSt{B. Wind }}%
+{14.C}{\ltSt{C. Rain }}%
+{14.D}{\ltSt{D. Thunder and Lightning }}%
+{14.E}{\ltSt{E. Events Involving Liquids and Dry Masses }}%
+{14.F}{\ltSt{F. Light }}%
+{14.G}{\ltSt{G. Darkness }}%
+{14.H}{\ltSt{H. Burning }}%
+{14.I}{\ltSt{I. Sound }}%
+{14.J}{\ltSt{J. Movement of the Earth }}%
+{15}{\ltSt{15.Linear Movement}}%
+{15.A}{\ltSt{A. Move, Come/Go }}%
+{15.B}{\ltSt{B. Travel, Journey }}%
+{15.C}{\ltSt{C. Pass, Cross Over, Go Through, Go Around }}%
+{15.D}{\ltSt{D. Leave, Depart, Flee, Escape, Send }}%
+{15.E}{\ltSt{E. Come Near, Approach }}%
+{15.F}{\ltSt{F. Come, Come To, Arrive }}%
+{15.G}{\ltSt{G. Return }}%
+{15.H}{\ltSt{H. Come/Go Into }}%
+{15.I}{\ltSt{I. Come/Go Onto }}%
+{15.J}{\ltSt{J. Come/Go Up, Ascend }}%
+{15.K}{\ltSt{K. Come/Go Down, Descend }}%
+{15.L}{\ltSt{L. Fall }}%
+{15.M}{\ltSt{M. Gather, Cause To Come Together }}%
+{15.N}{\ltSt{N. Disperse, Scatter }}%
+{15.O}{\ltSt{O. Come/Go Prior To }}%
+{15.P}{\ltSt{P. Come/Go In Front Of }}%
+{15.Q}{\ltSt{Q. Come/Go Behind }}%
+{15.R}{\ltSt{R. Go Around, Surround }}%
+{15.S}{\ltSt{S. Come/Go With, Travel With }}%
+{15.T}{\ltSt{T. Follow, Accompany }}%
+{15.U}{\ltSt{U. Pursue, Follow }}%
+{15.V}{\ltSt{V. Drive Along, Carry Along }}%
+{15.W}{\ltSt{W. Lead, Bring, Take }}%
+{15.X}{\ltSt{X. Carry, Bear }}%
+{15.Y}{\ltSt{Y. Pull, Draw, Drag }}%
+{15.Z}{\ltSt{Z. Throw, Hurl }}%
+{15.ZA}{\ltSt{ZA. Movement with Speed }}%
+{15.ZB}{\ltSt{ZB. Goal-Oriented Movement }}%
+{15.ZC}{\ltSt{ZC. Walk, Step }}%
+{15.ZD}{\ltSt{ZD. Run }}%
+{15.ZE}{\ltSt{ZE. Jump, Leap }}%
+{15.ZF}{\ltSt{ZF. Dance }}%
+{15.ZG}{\ltSt{ZG. Fly }}%
+{15.ZH}{\ltSt{ZH. Swim }}%
+{15.ZI}{\ltSt{ZI. Roll }}%
+{16}{\ltSt{16.Non-Linear Movement}}%
+{17}{\ltSt{17.Stances and Events Related to Stances}}%
+{17.A}{\ltSt{A. Stand }}%
+{17.B}{\ltSt{B. Sit }}%
+{17.C}{\ltSt{C. Kneel }}%
+{17.D}{\ltSt{D. Prostrate }}%
+{17.E}{\ltSt{E. Prostrate as an Act of Reverence or Supplication }}%
+{17.F}{\ltSt{F. Recline [to eat] }}%
+{17.G}{\ltSt{G. Lie }}%
+{17.H}{\ltSt{H. Bend Over, Straighten Up }}%
+{18}{\ltSt{18.Attachment}}%
+{18.A}{\ltSt{A. Grasp, Hold }}%
+{18.B}{\ltSt{B. Fasten, Stick To }}%
+{19}{\ltSt{19.Physical Impact}}%
+{19.A}{\ltSt{A. Hit, Strike }}%
+{19.B}{\ltSt{B. Pierce, Cut }}%
+{19.C}{\ltSt{C. Split, Tear }}%
+{19.D}{\ltSt{D. Break, Break Through }}%
+{19.E}{\ltSt{E. Press }}%
+{19.F}{\ltSt{F. Dig }}%
+{20}{\ltSt{20.Violence, Harm, Destroy, Kill}}%
+{20.A}{\ltSt{A. Violence }}%
+{20.B}{\ltSt{B. Harm, Wound }}%
+{20.C}{\ltSt{C. Destroy }}%
+{20.D}{\ltSt{D. Kill }}%
+{21}{\ltSt{21.Danger, Risk, Safe, Save}}%
+{21.A}{\ltSt{A. Danger }}%
+{21.B}{\ltSt{B. Expose Oneself to Danger }}%
+{21.C}{\ltSt{C. Safe, Free from Danger }}%
+{21.D}{\ltSt{D. Become Safe, Free from Danger }}%
+{21.E}{\ltSt{E. Cause To Be Safe, Free from Danger }}%
+{21.F}{\ltSt{F. Save in a Religious Sense }}%
+{22}{\ltSt{22.Trouble, Hardship, Relief, Favorable Circumstances}}%
+{22.A}{\ltSt{A. Trouble, Hardship, Distress }}%
+{22.B}{\ltSt{B. Experience Trouble, Hardship }}%
+{22.C}{\ltSt{C. Cause Trouble, Hardship }}%
+{22.D}{\ltSt{D. Difficult, Hard }}%
+{22.E}{\ltSt{E. Relief from Trouble }}%
+{22.F}{\ltSt{F. Easy, Light }}%
+{22.G}{\ltSt{G. Favorable Circumstances or State }}%
+{23}{\ltSt{23.Physiological Processes and States}}%
+{23.A}{\ltSt{A. Eat, Drink }}%
+{23.B}{\ltSt{B. Processes Involving the Mouth, Other Than Eating and Drinking }}%
+{23.C}{\ltSt{C. Birth, Procreation }}%
+{23.D}{\ltSt{D. Sexual Relations }}%
+{23.E}{\ltSt{E. Sleep, Waking }}%
+{23.F}{\ltSt{F. Tire, Rest }}%
+{23.G}{\ltSt{G. Live, Die }}%
+{23.H}{\ltSt{H. Health, Vigor, Strength }}%
+{23.I}{\ltSt{I. Sickness, Disease, Weakness }}%
+{23.J}{\ltSt{J. Breathe, Breath }}%
+{23.K}{\ltSt{K. Grow, Growth }}%
+{23.L}{\ltSt{L. Ripen, Produce Fruit, Bear Seed }}%
+{23.M}{\ltSt{M. Rot, Decay }}%
+{24}{\ltSt{24.Sensory Events and States}}%
+{24.A}{\ltSt{A. See }}%
+{24.B}{\ltSt{B. Hear }}%
+{24.C}{\ltSt{C. Smell }}%
+{24.D}{\ltSt{D. Taste }}%
+{24.E}{\ltSt{E. Touch, Feel }}%
+{24.F}{\ltSt{F. Pain, Suffering }}%
+{24.G}{\ltSt{G. General Sensory Perception }}%
+{25}{\ltSt{25.Attitudes and Emotions}}%
+{25.A}{\ltSt{A. Desire, Want, Wish }}%
+{25.B}{\ltSt{B. Desire Strongly }}%
+{25.C}{\ltSt{C. Love, Affection, Compassion }}%
+{25.D}{\ltSt{D. Hope, Look Forward To }}%
+{25.E}{\ltSt{E. Be Willing }}%
+{25.F}{\ltSt{F. Be Eager, Be Earnest, In a Devoted Manner }}%
+{25.G}{\ltSt{G. Content, Satisfied }}%
+{25.H}{\ltSt{H. Acceptable To, To Be Pleased With }}%
+{25.I}{\ltSt{I. Thankful, Grateful }}%
+{25.J}{\ltSt{J. Enjoy, Take Pleasure In, Be Fond of Doing }}%
+{25.K}{\ltSt{K. Happy, Glad, Joyful }}%
+{25.L}{\ltSt{L. Laugh, Cry, Groan }}%
+{25.M}{\ltSt{M. Encouragement, Consolation }}%
+{25.N}{\ltSt{N. Courage, Boldness }}%
+{25.O}{\ltSt{O. Patience, Endurance, Perseverance }}%
+{25.P}{\ltSt{P. Offend, Be Offended }}%
+{25.Q}{\ltSt{Q. Abhor }}%
+{25.R}{\ltSt{R. Shame, Disgrace, Humiliation }}%
+{25.S}{\ltSt{S. Pride [legitimate] }}%
+{25.T}{\ltSt{T. Surprise, Astonish }}%
+{25.U}{\ltSt{U. Worry, Anxiety, Distress, Peace }}%
+{25.V}{\ltSt{V. Fear, Terror, Alarm }}%
+{25.W}{\ltSt{W. Sorrow, Regret }}%
+{25.X}{\ltSt{X. Discouragement }}%
+{26}{\ltSt{26.Psychological Faculties}}%
+{27}{\ltSt{27.Learn}}%
+{27.A}{\ltSt{A. Learn }}%
+{27.B}{\ltSt{B. Learn the Location of Something }}%
+{27.C}{\ltSt{C. Learn Something Against Someone }}%
+{27.D}{\ltSt{D. Try To Learn }}%
+{27.E}{\ltSt{E. Be Willing To Learn }}%
+{27.F}{\ltSt{F. Be Ready To Learn, Pay Attention }}%
+{27.G}{\ltSt{G. Recognize }}%
+{28}{\ltSt{28.Know}}%
+{28.A}{\ltSt{A. Know }}%
+{28.B}{\ltSt{B. Known [the content of knowledge] }}%
+{28.C}{\ltSt{C. Well Known, Clearly Shown, Revealed }}%
+{28.D}{\ltSt{D. Able To Be Known }}%
+{28.E}{\ltSt{E. Not Able To Be Known, Secret }}%
+{29}{\ltSt{29.Memory and Recall}}%
+{29.A}{\ltSt{A. Storing of Information }}%
+{29.B}{\ltSt{B. Recalling from Memory }}%
+{29.C}{\ltSt{C. Not Remembering, Forgetting }}%
+{29.D}{\ltSt{D. Recalling and Responding with Appropriate Action }}%
+{30}{\ltSt{30.Think}}%
+{30.A}{\ltSt{A. To Think, Thought }}%
+{30.B}{\ltSt{B. To Think About, with the Implied Purpose of Responding Appropriately }}%
+{30.C}{\ltSt{C. To Think Concerning Future Contingencies }}%
+{30.D}{\ltSt{D. To Intend, To Purpose, To Plan }}%
+{30.E}{\ltSt{E. To Decide, To Conclude }}%
+{30.F}{\ltSt{F. To Choose, To Select, To Prefer }}%
+{30.G}{\ltSt{G. To Distinguish, To Evaluate, To Judge }}%
+{31}{\ltSt{31.Hold a View, Believe, Trust}}%
+{31.A}{\ltSt{A. Have an Opinion, Hold a View }}%
+{31.B}{\ltSt{B. Hold a Wrong View, Be Mistaken }}%
+{31.C}{\ltSt{C. Agree, Consent }}%
+{31.D}{\ltSt{D. Acknowledge }}%
+{31.E}{\ltSt{E. Suppose, Think Possible }}%
+{31.F}{\ltSt{F. Believe To Be True }}%
+{31.G}{\ltSt{G. Accept As True }}%
+{31.H}{\ltSt{H. Change an Opinion Concerning Truth }}%
+{31.I}{\ltSt{I. Trust, Rely }}%
+{31.J}{\ltSt{J. Be a Believer, Christian Faith }}%
+{32}{\ltSt{32.Understand}}%
+{32.A}{\ltSt{A. Understand }}%
+{32.B}{\ltSt{B. Come To Understand }}%
+{32.C}{\ltSt{C. Ease or Difficulty in Understanding }}%
+{32.D}{\ltSt{D. Capacity for Understanding }}%
+{32.E}{\ltSt{E. Lack of Capacity for Understanding }}%
+{33}{\ltSt{33.Communication}}%
+{33.A}{\ltSt{A. Language }}%
+{33.B}{\ltSt{B. Word, Passage }}%
+{33.C}{\ltSt{C. Discourse Types }}%
+{33.D}{\ltSt{D. Language Levels }}%
+{33.E}{\ltSt{E. Written Language }}%
+{33.F}{\ltSt{F. Speak, Talk }}%
+{33.G}{\ltSt{G. Sing, Lament }}%
+{33.H}{\ltSt{H. Keep Silent }}%
+{33.I}{\ltSt{I. Name }}%
+{33.J}{\ltSt{J. Interpret, Mean, Explain }}%
+{33.K}{\ltSt{K. Converse, Discuss }}%
+{33.L}{\ltSt{L. Ask For, Request }}%
+{33.M}{\ltSt{M. Pray }}%
+{33.N}{\ltSt{N. Question, Answer }}%
+{33.O}{\ltSt{O. Inform, Announce }}%
+{33.P}{\ltSt{P. Assert, Declare }}%
+{33.Q}{\ltSt{Q. Teach }}%
+{33.R}{\ltSt{R. Speak Truth, Speak Falsehood }}%
+{33.S}{\ltSt{S. Preach, Proclaim }}%
+{33.T}{\ltSt{T. Witness, Testify }}%
+{33.U}{\ltSt{U. Profess Allegiance }}%
+{33.V}{\ltSt{V. Admit, Confess, Deny }}%
+{33.W}{\ltSt{W. Agree }}%
+{33.X}{\ltSt{X. Foretell, Tell Fortunes }}%
+{33.Y}{\ltSt{Y. Promise }}%
+{33.Z}{\ltSt{Z. Threaten }}%
+{33.ZA}{\ltSt{ZA. Advise }}%
+{33.ZB}{\ltSt{ZB. Urge, Persuade }}%
+{33.ZC}{\ltSt{ZC. Call }}%
+{33.ZD}{\ltSt{ZD. Invite }}%
+{33.ZE}{\ltSt{ZE. Insist }}%
+{33.ZF}{\ltSt{ZF. Command, Order }}%
+{33.ZG}{\ltSt{ZG. Law, Regulation, Ordinance }}%
+{33.ZH}{\ltSt{ZH. Recommend, Propose }}%
+{33.ZI}{\ltSt{ZI. Intercede }}%
+{33.ZJ}{\ltSt{ZJ. Thanks }}%
+{33.ZK}{\ltSt{ZK. Praise }}%
+{33.ZL}{\ltSt{ZL. Flatter }}%
+{33.ZM}{\ltSt{ZM. Boast }}%
+{33.ZN}{\ltSt{ZN. Foolish Talk }}%
+{33.ZO}{\ltSt{ZO. Complain }}%
+{33.ZP}{\ltSt{ZP. Insult, Slander }}%
+{33.ZQ}{\ltSt{ZQ. Gossip }}%
+{33.ZR}{\ltSt{ZR. Mock, Ridicule }}%
+{33.ZS}{\ltSt{ZS. Criticize }}%
+{33.ZT}{\ltSt{ZT. Rebuke }}%
+{33.ZU}{\ltSt{ZU. Warn }}%
+{33.ZV}{\ltSt{ZV. Accuse, Blame }}%
+{33.ZW}{\ltSt{ZW. Defend, Excuse }}%
+{33.ZX}{\ltSt{ZX. Dispute, Debate }}%
+{33.ZY}{\ltSt{ZY. Argue, Quarrel }}%
+{33.ZZ}{\ltSt{ZZ. Oppose, Contradict }}%
+{34}{\ltSt{34.Association}}%
+{34.A}{\ltSt{A. Associate }}%
+{34.B}{\ltSt{B. Join, Begin To Associate }}%
+{34.C}{\ltSt{C. Belong To, Be Included in the Membership of, Be Excluded From }}%
+{34.D}{\ltSt{D. Limit or Avoid Association }}%
+{34.E}{\ltSt{E. Establish or Confirm a Relation }}%
+{34.F}{\ltSt{F. Visit }}%
+{34.G}{\ltSt{G. Welcome, Receive }}%
+{34.H}{\ltSt{H. Show Hospitality }}%
+{34.I}{\ltSt{I. Kiss, Embrace }}%
+{34.J}{\ltSt{J. Marriage, Divorce }}%
+{35}{\ltSt{35.Help, Care For}}%
+{35.A}{\ltSt{A. Help }}%
+{35.B}{\ltSt{B. Serve }}%
+{35.C}{\ltSt{C. Provide For, Support }}%
+{35.D}{\ltSt{D. Care For, Take Care Of }}%
+{35.E}{\ltSt{E. Entrust To the Care Of }}%
+{35.F}{\ltSt{F. Rear, Bring Up }}%
+{35.G}{\ltSt{G. Adopt }}%
+{35.H}{\ltSt{H. Desert, Forsake }}%
+{36}{\ltSt{36.Guide, Discipline, Follow}}%
+{36.A}{\ltSt{A. Guide, Lead }}%
+{36.B}{\ltSt{B. Discipline, Train }}%
+{36.C}{\ltSt{C. Obey, Disobey }}%
+{36.D}{\ltSt{D. Follow, Be a Disciple }}%
+{37}{\ltSt{37.Control, Rule}}%
+{37.A}{\ltSt{A. Control, Restrain }}%
+{37.B}{\ltSt{B. Compel, Force }}%
+{37.C}{\ltSt{C. Exercise Authority }}%
+{37.D}{\ltSt{D. Rule, Govern }}%
+{37.E}{\ltSt{E. Assign to a Role or Function }}%
+{37.F}{\ltSt{F. Seize, Take into Custody }}%
+{37.G}{\ltSt{G. Hand Over, Betray }}%
+{37.H}{\ltSt{H. Imprison }}%
+{37.I}{\ltSt{I. Guard, Watch Over }}%
+{37.J}{\ltSt{J. Release, Set Free }}%
+{38}{\ltSt{38.Punish, Reward}}%
+{38.A}{\ltSt{A. Punish }}%
+{38.B}{\ltSt{B. Reward, Recompense }}%
+{39}{\ltSt{39.Hostility, Strife}}%
+{39.A}{\ltSt{A. Opposition, Hostility }}%
+{39.B}{\ltSt{B. Division }}%
+{39.C}{\ltSt{C. Resistance }}%
+{39.D}{\ltSt{D. Yielding }}%
+{39.E}{\ltSt{E. Strife, Struggle }}%
+{39.F}{\ltSt{F. Revenge }}%
+{39.G}{\ltSt{G. Rebellion }}%
+{39.H}{\ltSt{H. Riot }}%
+{39.I}{\ltSt{I. Persecution }}%
+{39.J}{\ltSt{J. Attack }}%
+{39.K}{\ltSt{K. Ambush }}%
+{39.L}{\ltSt{L. Conquer }}%
+{40}{\ltSt{40.Reconciliation, Forgiveness}}%
+{40.A}{\ltSt{A. Reconciliation }}%
+{40.B}{\ltSt{B. Forgiveness }}%
+{41}{\ltSt{41.Behavior and Related States}}%
+{41.A}{\ltSt{A. Behavior, Conduct }}%
+{41.B}{\ltSt{B. Custom, Tradition }}%
+{41.C}{\ltSt{C. Particular Patterns of Behavior }}%
+{41.D}{\ltSt{D. Imitate Behavior }}%
+{41.E}{\ltSt{E. Change Behavior }}%
+{42}{\ltSt{42.Perform, Do}}%
+{42.A}{\ltSt{A. Function }}%
+{42.B}{\ltSt{B. Do, Perform }}%
+{42.C}{\ltSt{C. Make, Create }}%
+{42.D}{\ltSt{D. Work, Toil }}%
+{42.E}{\ltSt{E. Craft, Trade }}%
+{43}{\ltSt{43.Agriculture}}%
+{44}{\ltSt{44.Animal Husbandry, Fishing}}%
+{45}{\ltSt{45.Building, Constructing}}%
+{46}{\ltSt{46.Household Activities}}%
+{47}{\ltSt{47.Activities Involving Liquids or Masses}}%
+{47.A}{\ltSt{A. Movement of Liquids or Masses }}%
+{47.B}{\ltSt{B. Use of Liquids }}%
+{47.C}{\ltSt{C. Application and Removal of Liquids or Masses }}%
+{48}{\ltSt{48.Activities Involving Cloth}}%
+{49}{\ltSt{49.Activities Involving Clothing and Adorning}}%
+{50}{\ltSt{50.Contests and Play}}%
+{51}{\ltSt{51.Festivals}}%
+{52}{\ltSt{52.Funerals and Burial}}%
+{53}{\ltSt{53.Religious Activities}}%
+{53.A}{\ltSt{A. Religious Practice }}%
+{53.B}{\ltSt{B. Offering, Sacrifice }}%
+{53.C}{\ltSt{C. Purify, Cleanse }}%
+{53.D}{\ltSt{D. Defile, Unclean, Common }}%
+{53.E}{\ltSt{E. Baptize }}%
+{53.F}{\ltSt{F. Dedicate, Consecrate }}%
+{53.G}{\ltSt{G. Worship, Reverence }}%
+{53.H}{\ltSt{H. Fasting }}%
+{53.I}{\ltSt{I. Roles and Functions }}%
+{53.J}{\ltSt{J. Magic }}%
+{53.K}{\ltSt{K. Exorcism }}%
+{53.L}{\ltSt{L. Sacrilege }}%
+{54}{\ltSt{54.Maritime Activities}}%
+{55}{\ltSt{55.Military Activities}}%
+{55.A}{\ltSt{A. To Arm }}%
+{55.B}{\ltSt{B. To Fight }}%
+{55.C}{\ltSt{C. Army }}%
+{55.D}{\ltSt{D. Soldiers, Officers }}%
+{55.E}{\ltSt{E. Prisoners of War }}%
+{56}{\ltSt{56.Courts and Legal Procedures}}%
+{56.A}{\ltSt{A. Court of Justice }}%
+{56.B}{\ltSt{B. Lawsuit, Case }}%
+{56.C}{\ltSt{C. Accusation }}%
+{56.D}{\ltSt{D. Judicial Hearing, Inquiry }}%
+{56.E}{\ltSt{E. Judge, Condemn, Acquit }}%
+{56.F}{\ltSt{F. Obtain Justice }}%
+{56.G}{\ltSt{G. Attorney, Lawyer }}%
+{56.H}{\ltSt{H. Lead Off to Punishment }}%
+{57}{\ltSt{57.Possess, Transfer, Exchange}}%
+{57.A}{\ltSt{A. Have, Possess, Property, Owner }}%
+{57.B}{\ltSt{B. Have Sufficient }}%
+{57.C}{\ltSt{C. Be Rich, Be Wealthy }}%
+{57.D}{\ltSt{D. Treasure }}%
+{57.E}{\ltSt{E. Need, Lack }}%
+{57.F}{\ltSt{F. Be Poor, Be Needy, Poverty }}%
+{57.G}{\ltSt{G. Take, Obtain, Gain, Lose }}%
+{57.H}{\ltSt{H. Give }}%
+{57.I}{\ltSt{I. Receive }}%
+{57.J}{\ltSt{J. Exchange }}%
+{57.K}{\ltSt{K. Spend, Waste }}%
+{57.L}{\ltSt{L. Pay, Price, Cost }}%
+{57.M}{\ltSt{M. Hire, Rent Out }}%
+{57.N}{\ltSt{N. Tax, Tribute }}%
+{57.O}{\ltSt{O. Sell, Buy, Price }}%
+{57.P}{\ltSt{P. Earn, Gain, Do Business }}%
+{57.Q}{\ltSt{Q. Lend, Loan, Interest, Borrow, Bank }}%
+{57.R}{\ltSt{R. Owe, Debt, Cancel }}%
+{57.S}{\ltSt{S. Be a Financial Burden }}%
+{57.T}{\ltSt{T. Keep Records }}%
+{57.U}{\ltSt{U. Steal, Rob }}%
+{58}{\ltSt{58.Nature, Class, Example}}%
+{58.A}{\ltSt{A. Nature, Character }}%
+{58.B}{\ltSt{B. Appearance as an Outward Manifestation of Form }}%
+{58.C}{\ltSt{C. Basic Principles or Features Defining the Nature of Something }}%
+{58.D}{\ltSt{D. Class, Kind }}%
+{58.E}{\ltSt{E. Same or Equivalent Kind or Class }}%
+{58.F}{\ltSt{F. Different Kind or Class }}%
+{58.G}{\ltSt{G. Distinctive, Unique }}%
+{58.H}{\ltSt{H. Unusual, Different From the Ordinary }}%
+{58.I}{\ltSt{I. Pattern, Model, Example, and Corresponding Representation }}%
+{58.J}{\ltSt{J. Archetype, Corresponding Type [Antitype] }}%
+{58.K}{\ltSt{K. New, Old [primarily non-temporal] }}%
+{59}{\ltSt{59.Quantity}}%
+{59.A}{\ltSt{A. Many, Few [Countables] }}%
+{59.B}{\ltSt{B. Much, Little [Masses, Collectives, Extensions] }}%
+{59.C}{\ltSt{C. All, Any, Each, Every [Totality] }}%
+{59.D}{\ltSt{D. Full, Empty }}%
+{59.E}{\ltSt{E. Enough, Sufficient }}%
+{59.F}{\ltSt{F. Abundance, Excess, Sparing }}%
+{59.G}{\ltSt{G. Increase, Decrease }}%
+{59.H}{\ltSt{H. Add, Subtract }}%
+{60}{\ltSt{60.Number}}%
+{60.A}{\ltSt{A. Number, Countless }}%
+{60.B}{\ltSt{B. One, Two, Three, Etc. [Cardinals] }}%
+{60.C}{\ltSt{C. First, Second, Third, Etc. [Ordinals] }}%
+{60.D}{\ltSt{D. Half, Third, Fourth [Fractional Part] }}%
+{60.E}{\ltSt{E. Once, Twice, Three Times, Etc. [Cardinals of Time] }}%
+{60.F}{\ltSt{F. Double, Four Times As Much, Etc. [Multiples] }}%
+{60.G}{\ltSt{G. Pair, Group [Numbered Collectives] }}%
+{61}{\ltSt{61.Sequence}}%
+{62}{\ltSt{62.Arrange, Organize}}%
+{62.A}{\ltSt{A. Put Together, Arrange [of physical objects] }}%
+{62.B}{\ltSt{B. Organize [of events and states] }}%
+{63}{\ltSt{63.Whole, Unite, Part, Divide}}%
+{63.A}{\ltSt{A. Whole }}%
+{63.B}{\ltSt{B. Unite }}%
+{63.C}{\ltSt{C. Mix }}%
+{63.D}{\ltSt{D. Part }}%
+{63.E}{\ltSt{E. Remnant }}%
+{63.F}{\ltSt{F. Divide }}%
+{63.G}{\ltSt{G. Separate }}%
+{64}{\ltSt{64.Comparison}}%
+{65}{\ltSt{65.Value}}%
+{65.A}{\ltSt{A. Valuable, Lacking in Value }}%
+{65.B}{\ltSt{B. Worthy, Not Worthy }}%
+{65.C}{\ltSt{C. Good, Bad }}%
+{65.D}{\ltSt{D. Useful, Useless }}%
+{65.E}{\ltSt{E. Advantageous, Not Advantageous }}%
+{65.F}{\ltSt{F. Important, Unimportant }}%
+{66}{\ltSt{66.Proper, Improper}}%
+{67}{\ltSt{67.Time}}%
+{67.A}{\ltSt{A. A Point of Time without Reference to Other Points of Time: Time, Occasion, Ever, Often }}%
+{67.B}{\ltSt{B. A Point of Time with Reference to Other Points of Time: Before, Long Ago, Now, At the Same Time, When, About, After }}%
+{67.C}{\ltSt{C. A Point of Time with Reference to Duration of Time: Beginning, End }}%
+{67.D}{\ltSt{D. A Point of Time with Reference to Units of Time: Daybreak, Midday, Midnight, Late }}%
+{67.E}{\ltSt{E. Duration of Time without Reference to Points or Units of Time: Time, Spend Time, Always, Eternal, Old, Immediately, Young }}%
+{67.F}{\ltSt{F. Duration of Time with Reference to Some Point of Time: Until, Delay, Still, From }}%
+{67.G}{\ltSt{G. Duration of Time with Reference to Some Unit of Time: During, In, While, Throughout }}%
+{67.H}{\ltSt{H. Indefinite Units of Time: Age, Lifetime, Interval, Period }}%
+{67.I}{\ltSt{I. Definite Units of Time: Year, Month, Week, Day, Hour }}%
+{67.J}{\ltSt{J. Units of Time with Reference to Other Units or Points of Time: Yesterday, Today, Next Day }}%
+{68}{\ltSt{68.Aspect}}%
+{68.A}{\ltSt{A. Begin, Start }}%
+{68.B}{\ltSt{B. Continue }}%
+{68.C}{\ltSt{C. Complete, Finish, Succeed }}%
+{68.E}{\ltSt{E. Try, Attempt }}%
+{68.F}{\ltSt{F. Do Intensely or Extensively }}%
+{68.G}{\ltSt{G. Rapidity, Suddenness }}%
+{69}{\ltSt{69.Affirmation, Negation}}%
+{69.A}{\ltSt{A. Affirmation }}%
+{69.B}{\ltSt{B. Negation }}%
+{69.C}{\ltSt{C. Negation Combined with Clitics }}%
+{69.D}{\ltSt{D. Markers for an Affirmative Response to Questions }}%
+{69.E}{\ltSt{E. Markers for a Negative Response to Questions }}%
+{70}{\ltSt{70.Real, Unreal}}%
+{71}{\ltSt{71.Mode}}%
+{71.A}{\ltSt{A. Possible, Impossible }}%
+{71.B}{\ltSt{B. Probable, Improbable }}%
+{71.C}{\ltSt{C. Certain, Uncertain }}%
+{71.D}{\ltSt{D. Should, Ought }}%
+{71.E}{\ltSt{E. Necessary, Unnecessary }}%
+{72}{\ltSt{72.True, False}}%
+{72.A}{\ltSt{A. True, False }}%
+{72.B}{\ltSt{B. Accurate, Inaccurate }}%
+{73}{\ltSt{73.Genuine, Phony}}%
+{74}{\ltSt{74.Able, Capable}}%
+{75}{\ltSt{75.Adequate, Qualified}}%
+{76}{\ltSt{76.Power, Force}}%
+{77}{\ltSt{77.Ready, Prepared}}%
+{78}{\ltSt{78.Degree}}%
+{78.A}{\ltSt{A. Much, Little [Positive-Negative Degree] }}%
+{78.B}{\ltSt{B. More Than, Less Than [Comparative Degree] }}%
+{78.C}{\ltSt{C. About, Approximately, Almost, Hardly [Approximate Degree] }}%
+{78.D}{\ltSt{D. Completely, Enough [Completive Degree] }}%
+{78.E}{\ltSt{E. Up To, As Much As, To the Degree That [Marked Extent of Degree] }}%
+{79}{\ltSt{79.Features of Objects}}%
+{79.A}{\ltSt{A. Physical [Material], Spiritual }}%
+{79.B}{\ltSt{B. Natural [Human], Spiritual }}%
+{79.C}{\ltSt{C. Solid, Liquid }}%
+{79.D}{\ltSt{D. Beautiful, Ugly }}%
+{79.E}{\ltSt{E. Glorious }}%
+{79.F}{\ltSt{F. Transparent }}%
+{79.G}{\ltSt{G. Color }}%
+{79.H}{\ltSt{H. Sweet, Bitter, Tasteless }}%
+{79.I}{\ltSt{I. Fragrance, Odor }}%
+{79.J}{\ltSt{J. Clean, Dirty }}%
+{79.K}{\ltSt{K. Spotted, Spotless }}%
+{79.L}{\ltSt{L. Blemished, Unblemished }}%
+{79.M}{\ltSt{M. Strong, Weak }}%
+{79.N}{\ltSt{N. Hot, Lukewarm, Cold }}%
+{79.O}{\ltSt{O. Wet, Dry }}%
+{79.P}{\ltSt{P. Uneven [Rough], Level [Smooth] }}%
+{79.Q}{\ltSt{Q. Straight, Crooked }}%
+{79.R}{\ltSt{R. Two-Dimensional and Three-Dimensional Shapes }}%
+{79.S}{\ltSt{S. Sharp }}%
+{79.T}{\ltSt{T. Pure, Unadulterated, Undiluted }}%
+{79.U}{\ltSt{U. Soft, Tender }}%
+{79.V}{\ltSt{V. Male, Female }}%
+{79.W}{\ltSt{W. Shapes }}%
+{79.X}{\ltSt{X. Open, Closed }}%
+{79.Y}{\ltSt{Y. Covered Over }}%
+{79.Z}{\ltSt{Z. Wrapped }}%
+{79.ZA}{\ltSt{ZA. Rolled Up }}%
+{79.ZB}{\ltSt{ZB. Large, Small }}%
+{79.ZC}{\ltSt{ZC. Perfect }}%
+{80}{\ltSt{80.Space}}%
+{80.A}{\ltSt{A. Space, Place }}%
+{80.B}{\ltSt{B. Limits, Boundaries of Space }}%
+{81}{\ltSt{81.Spacial Dimensions}}%
+{81.A}{\ltSt{A. Measure, To Measure }}%
+{81.B}{\ltSt{B. High, Low, Deep }}%
+{81.C}{\ltSt{C. Long, Short, Far }}%
+{81.D}{\ltSt{D. Narrow, Wide }}%
+{81.E}{\ltSt{E. Specific Measures of Volume }}%
+{81.F}{\ltSt{F. Specific Measures of Length }}%
+{82}{\ltSt{82.Spacial Orientations}}%
+{82.A}{\ltSt{A. North, South, East, West }}%
+{82.B}{\ltSt{B. Left, Right, Straight Ahead, Opposite }}%
+{83}{\ltSt{83.Spacial Positions}}%
+{83.A}{\ltSt{A. Here, There }}%
+{83.B}{\ltSt{B. Where, Somewhere, Everywhere }}%
+{83.C}{\ltSt{C. Among, Between, In, Inside }}%
+{83.D}{\ltSt{D. Around, About, Outside }}%
+{83.E}{\ltSt{E. At, Beside, Near, Far }}%
+{83.F}{\ltSt{F. In Front Of, Face To Face, In Back Of, Behind }}%
+{83.G}{\ltSt{G. Opposite, Over Against, Across From, Offshore From }}%
+{83.H}{\ltSt{H. On, Upon, On the Surface Of }}%
+{83.I}{\ltSt{I. Above, Below }}%
+{83.J}{\ltSt{J. Beyond, On the Other Side Of }}%
+{84}{\ltSt{84.Spacial Extensions}}%
+{84.A}{\ltSt{A. Extension From a Source }}%
+{84.B}{\ltSt{B. Extension To a Goal }}%
+{84.C}{\ltSt{C. Extension Along a Path }}%
+{85}{\ltSt{85.Existence in Space}}%
+{85.A}{\ltSt{A. Be in a Place }}%
+{85.B}{\ltSt{B. Put, Place }}%
+{85.C}{\ltSt{C. Remain, Stay }}%
+{85.D}{\ltSt{D. Leave in a Place }}%
+{85.E}{\ltSt{E. Dwell, Reside }}%
+{86}{\ltSt{86.Weight}}%
+{86.A}{\ltSt{A. Heavy, Light }}%
+{86.B}{\ltSt{B. Pound, Talent [Specific Units of Weight] }}%
+{87}{\ltSt{87.Status}}%
+{87.A}{\ltSt{A. Position, Rank }}%
+{87.B}{\ltSt{B. Honor or Respect in Relation to Status }}%
+{87.C}{\ltSt{C. High Status or Rank [including persons of high status] }}%
+{87.D}{\ltSt{D. Low Status or Rank [including persons of low status] }}%
+{87.E}{\ltSt{E. Slave, Free }}%
+{88}{\ltSt{88.Moral and Ethical Qualities and Related Behavior}}%
+{88.A}{\ltSt{A. Goodness }}%
+{88.B}{\ltSt{B. Just, Righteous }}%
+{88.C}{\ltSt{C. Holy, Pure }}%
+{88.D}{\ltSt{D. Perfect, Perfection }}%
+{88.E}{\ltSt{E. Honesty, Sincerity }}%
+{88.F}{\ltSt{F. Modesty, Propriety }}%
+{88.G}{\ltSt{G. Humility }}%
+{88.H}{\ltSt{H. Gentleness, Mildness }}%
+{88.I}{\ltSt{I. Kindness, Harshness }}%
+{88.J}{\ltSt{J. Mercy, Merciless }}%
+{88.K}{\ltSt{K. Self-Control, Lack of Self-Control }}%
+{88.L}{\ltSt{L. Sensible Behavior, Senseless Behavior }}%
+{88.M}{\ltSt{M. Mature Behavior }}%
+{88.N}{\ltSt{N. Peaceful Behavior }}%
+{88.O}{\ltSt{O. Bad, Evil, Harmful, Damaging }}%
+{88.P}{\ltSt{P. Treat Badly }}%
+{88.Q}{\ltSt{Q. Act Harshly }}%
+{88.R}{\ltSt{R. Act Lawlessly }}%
+{88.S}{\ltSt{S. Exploit }}%
+{88.T}{\ltSt{T. Act Shamefully }}%
+{88.U}{\ltSt{U. Mislead, Lead Astray, Deceive }}%
+{88.V}{\ltSt{V. Envy, Jealousy }}%
+{88.W}{\ltSt{W. Resentful, Hold a Grudge Against }}%
+{88.X}{\ltSt{X. Anger, Be Indignant With }}%
+{88.Y}{\ltSt{Y. Despise, Scorn, Contempt }}%
+{88.Z}{\ltSt{Z. Hate, Hateful }}%
+{88.ZA}{\ltSt{ZA. Arrogance, Haughtiness, Pride }}%
+{88.ZB}{\ltSt{ZB. Stubbornness }}%
+{88.ZC}{\ltSt{ZC. Hypocrisy, Pretense }}%
+{88.ZD}{\ltSt{ZD. Show Favoritism, Prejudice }}%
+{88.ZE}{\ltSt{ZE. Being a Busybody }}%
+{88.ZF}{\ltSt{ZF. Laziness, Idleness }}%
+{88.ZG}{\ltSt{ZG. Extravagant Living, Intemperate Living }}%
+{88.ZH}{\ltSt{ZH. Impurity }}%
+{88.ZI}{\ltSt{ZI. Licentiousness, Perversion }}%
+{88.ZJ}{\ltSt{ZJ. Sexual Misbehavior }}%
+{88.ZK}{\ltSt{ZK. Drunkenness }}%
+{88.ZL}{\ltSt{ZL. Sin, Wrongdoing, Guilt }}%
+{89}{\ltSt{89.Relations}}%
+{89.A}{\ltSt{A. Relation }}%
+{89.B}{\ltSt{B. Dependency }}%
+{89.C}{\ltSt{C. Derivation }}%
+{89.D}{\ltSt{D. Specification }}%
+{89.E}{\ltSt{E. Relations Involving Correspondences [Isomorphisms] }}%
+{89.F}{\ltSt{F. Basis }}%
+{89.G}{\ltSt{G. Cause and/or Reason }}%
+{89.H}{\ltSt{H. Result }}%
+{89.I}{\ltSt{I. Purpose }}%
+{89.J}{\ltSt{J. Condition }}%
+{89.K}{\ltSt{K. Concession }}%
+{89.L}{\ltSt{L. Means }}%
+{89.M}{\ltSt{M. Attendant Circumstances }}%
+{89.N}{\ltSt{N. Manner }}%
+{89.O}{\ltSt{O. Sequential Addition }}%
+{89.P}{\ltSt{P. Distribution }}%
+{89.Q}{\ltSt{Q. Addition }}%
+{89.R}{\ltSt{R. Linkage }}%
+{89.S}{\ltSt{S. Equivalence }}%
+{89.T}{\ltSt{T. Association }}%
+{89.U}{\ltSt{U. Dissociation }}%
+{89.V}{\ltSt{V. Combinative Relation }}%
+{89.W}{\ltSt{W. Contrast }}%
+{89.X}{\ltSt{X. Alternative Relation }}%
+{89.Y}{\ltSt{Y. Substance }}%
+{89.Z}{\ltSt{Z. Mediation }}%
+{90}{\ltSt{90.Case}}%
+{90.A}{\ltSt{A. Agent, Personal or Nonpersonal, Causative or Immediate, Direct or Indirect }}%
+{90.B}{\ltSt{B. Instrument }}%
+{90.C}{\ltSt{C. Source of Event or Activity }}%
+{90.D}{\ltSt{D. Responsibility }}%
+{90.E}{\ltSt{E. Viewpoint Participant }}%
+{90.F}{\ltSt{F. Content }}%
+{90.G}{\ltSt{G. Guarantor Participant with Oaths }}%
+{90.H}{\ltSt{H. Opposition }}%
+{90.I}{\ltSt{I. Benefaction }}%
+{90.J}{\ltSt{J. Reason Participant }}%
+{90.K}{\ltSt{K. Agent of a Numerable Event }}%
+{90.L}{\ltSt{L. Agent in a Causative Role Marked by Verbs }}%
+{90.M}{\ltSt{M. Experiencer }}%
+{90.N}{\ltSt{N. To Cause To Experience }}%
+{91}{\ltSt{91.Discourse Markers}}%
+{91.A}{\ltSt{A. Markers of Transition }}%
+{91.B}{\ltSt{B. Markers of Emphasis }}%
+{91.C}{\ltSt{C. Prompters of Attention }}%
+{91.D}{\ltSt{D. Marker of Direct Address }}%
+{91.E}{\ltSt{E. Markers of Identificational and Explanatory Clauses [Epexegetical] }}%
+{92}{\ltSt{92.Discourse Referentials}}%
+{92.A}{\ltSt{A. Speaker }}%
+{92.B}{\ltSt{B. Speaker and Those Associated with the Speaker [exclusive and inclusive] }}%
+{92.C}{\ltSt{C. Receptor, Receptors }}%
+{92.D}{\ltSt{D. Whom or What Spoken or Written About }}%
+{92.E}{\ltSt{E. Reciprocal Reference }}%
+{92.F}{\ltSt{F. Relative Reference }}%
+{92.G}{\ltSt{G. Demonstrative or Deictic Reference }}%
+{92.H}{\ltSt{H. Emphatic Adjunct }}%
+{93}{\ltSt{93.Names of Persons and Places}}%
+{93.A}{\ltSt{A. Persons }}%
+{93.B}{\ltSt{B. Places }}%

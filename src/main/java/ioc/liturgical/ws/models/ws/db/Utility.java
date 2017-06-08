@@ -14,7 +14,7 @@ import ioc.liturgical.ws.models.ws.supers.WsDbAbstractModel;
 @Attributes(title = "Utility", description = "Information about a Utility that can be run")
 public class Utility extends WsDbAbstractModel {
 	
-	@Attributes(required = true, readonly=true, description = "The name of this utility", minLength=7)
+	@Attributes(required = true, readonly=true, description = "The name of this utility")
 	@Expose public String name = "";
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)

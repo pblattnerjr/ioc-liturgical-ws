@@ -1,7 +1,6 @@
 package ioc.liturgical.ws.models.db.docs.ontology;
 
 import ioc.liturgical.ws.constants.CENTURIES;
-import ioc.liturgical.ws.constants.GENDERS;
 import ioc.liturgical.ws.constants.ID_PART_TYPES;
 import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
 import ioc.liturgical.ws.models.db.forms.EventCreateForm;

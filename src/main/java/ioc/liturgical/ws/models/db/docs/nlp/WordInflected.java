@@ -1,7 +1,6 @@
-package ioc.liturgical.ws.models.db.docs.grammar;
+package ioc.liturgical.ws.models.db.docs.nlp;
 
-import ioc.liturgical.ws.constants.PARTS_OF_SPEECH;
-import ioc.liturgical.ws.models.db.supers.LTKDbGrammarAnalysis;
+import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
 import ioc.liturgical.ws.models.db.supers.LTKDbLexicalItem;
 
 import com.github.reinert.jjschema.Attributes;
@@ -11,16 +10,17 @@ import com.github.reinert.jjschema.Attributes;
  *
  */
 @Attributes(title = "Lexical Form", description = "This is a doc that records information about a Greek lexical form.  The form is the word as it appears in text.  A form maps to a lemma.")
-public class LexicalForm extends LTKDbLexicalItem {
-	
-	private static String schema = LexicalForm.class.getSimpleName();
+public class WordInflected extends LTKDbLexicalItem {
+	private static ONTOLOGY_TOPICS topic = ONTOLOGY_TOPICS.WORD_INFLECTED;
+
+	private static String schema = WordInflected.class.getSimpleName();
 	private static double version = 1.1;
 	
-	public LexicalForm(
+	public WordInflected(
 			String form
 			, int frequency
 			) {
-		super(form, frequency, schema, version);
+		super(topic, form, frequency, schema, version);
 	}
 
 }

@@ -17,7 +17,11 @@ public class AuthorsController {
 		get(ENDPOINTS_ADMIN_API.AUTHORS.toLibraryTopicKeyPath(), (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
-			JsonObject json = storeManager.getForId(SYSTEM_LIBS.AUTHORS + Constants.ID_DELIMITER + query);
+			JsonObject json = storeManager.getForId(
+					SYSTEM_LIBS.AUTHORS 
+					+ Constants.ID_DELIMITER 
+					+ query
+					).toJsonObject();
 			if (json.get("valueCount").getAsInt() > 0) {
 				response.status(HTTP_RESPONSE_CODES.OK.code);
 			} else {

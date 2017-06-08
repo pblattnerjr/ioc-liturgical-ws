@@ -1,4 +1,4 @@
-package ioc.liturgical.ws.models.db.docs.grammar;
+package ioc.liturgical.ws.models.db.docs.nlp;
 
 import ioc.liturgical.ws.constants.ID_PART_TYPES;
 import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;

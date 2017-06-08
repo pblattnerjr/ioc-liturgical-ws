@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 
@@ -39,6 +40,20 @@ public class ResultJsonObjectArray extends AbstractModel {
 		valueCount++;
 	}
 		
+	/**
+	 * Add a JsonObject to the list of values, storing it with the key
+	 * This actually creates a new JsonObject with key = key
+	 * and value = value, then adds the new object to the list.
+	 * @param key
+	 * @param value
+	 */
+	public void addValue(String key, JsonObject value) {
+		JsonObject o = new JsonObject();
+		o.add(key, value);
+		this.values.add(o);
+		valueCount++;
+	}
+
 	public String getQuery() {
 		return query;
 	}
@@ -92,6 +107,14 @@ public class ResultJsonObjectArray extends AbstractModel {
 	public List<JsonObject> getValues() {
 		return values;
 	}
+	
+	public JsonArray getValuesAsJsonArray() {
+		JsonArray array = new JsonArray();
+		for (JsonObject o : this.values) {
+			array.add(o);
+		}
+		return array;
+	}
 
 	public void setValues(List<JsonObject> values) {
 		this.values = values;
@@ -124,5 +147,56 @@ public class ResultJsonObjectArray extends AbstractModel {
 
 	public void setValueSchemas(Map<String, JsonObject> valueSchemas) {
 		this.valueSchemas = valueSchemas;
+	}
+	
+	/**
+	 * Gets the value property from the first JsonObject in the list
+	 * as a String.  In other words, the value store there is expected to be a string.
+	 * If there are none, will return null
+	 * @return
+	 */
+	public String getFirstObjectValueAsString() {
+		if (this.valueCount > 0) {
+			return this.getValues()
+					.get(0)
+					.getAsJsonObject()
+					.get("value")
+					.getAsString();
+		} else {
+			return null;
+		}
+	}
+	
+	/**
+	 * Gets the value property from the first JsonObject in the list
+	 * as a JsonObject.  
+	 * In other words, the value stored there is expected to be a JsonObject.
+	 * If there are none, will return null
+	 * @return
+	 */
+	public JsonObject getFirstObjectValueAsObject() {
+		if (this.valueCount > 0) {
+			return this.getValues()
+					.get(0)
+					.getAsJsonObject()
+					.get("value")
+					.getAsJsonObject();
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * Gets the first object in the values list
+	 * @return
+	 */
+	public JsonObject getFirstObject() {
+		if (this.valueCount > 0) {
+			return this.getValues()
+					.get(0)
+					.getAsJsonObject();
+		} else {
+			return null;
+		}
 	}
 }

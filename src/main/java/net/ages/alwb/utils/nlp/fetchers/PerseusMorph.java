@@ -12,8 +12,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import ioc.liturgical.ws.models.db.docs.grammar.PerseusAnalyses;
-import ioc.liturgical.ws.models.db.docs.grammar.PerseusAnalysis;
+import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalyses;
+import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalysis;
 import net.ages.alwb.utils.nlp.constants.GRAMMAR_ABBREVIATIONS;
 
 
@@ -38,7 +38,7 @@ public class PerseusMorph {
 	private PerseusAnalyses analyses = null;
 
 	public PerseusMorph(String token) {
-		this.token = token;
+		this.token = token.trim();
 		analyses = new PerseusAnalyses(token);
 		this.fetchAnalyses();
 	}
@@ -64,7 +64,7 @@ public class PerseusMorph {
 				doc = Jsoup.connect(url)
 						.data("l", token)
 						.data("la", "greek") 
-						.timeout(3000)
+						.timeout(60000)
 						.get();
 				if (doc != null) {
 					Elements elements = doc.select("div.analysis");

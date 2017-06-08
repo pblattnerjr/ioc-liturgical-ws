@@ -10,6 +10,7 @@ import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.constants.SYSTEM_LIBS;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
+import ioc.liturgical.ws.models.ResultJsonObjectArray;
 
 public class ReadersController {
 	
@@ -17,8 +18,8 @@ public class ReadersController {
 		get(ENDPOINTS_ADMIN_API.READERS.toLibraryTopicKeyPath(), (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
-			JsonObject json = storeManager.getForId(SYSTEM_LIBS.READERS + Constants.ID_DELIMITER  + query);
-			if (json.get("valueCount").getAsInt() > 0) {
+			ResultJsonObjectArray json = storeManager.getForId(SYSTEM_LIBS.READERS + Constants.ID_DELIMITER  + query);
+			if (json.valueCount > 0) {
 				response.status(HTTP_RESPONSE_CODES.OK.code);
 			} else {
 				response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);

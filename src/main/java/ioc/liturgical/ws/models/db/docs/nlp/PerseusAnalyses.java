@@ -1,4 +1,4 @@
-package ioc.liturgical.ws.models.db.docs.grammar;
+package ioc.liturgical.ws.models.db.docs.nlp;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +16,7 @@ public class PerseusAnalyses extends AbstractModel {
 			String token
 			) {
 		super();
-		this.token = token;
+		this.token = token.trim();
 	}
 
 	public String getToken() {

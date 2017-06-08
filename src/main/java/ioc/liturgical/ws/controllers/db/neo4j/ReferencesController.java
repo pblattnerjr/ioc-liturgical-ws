@@ -18,6 +18,7 @@ import ioc.liturgical.ws.controllers.admin.ControllerUtils;
 import ioc.liturgical.ws.managers.auth.AuthDecoder;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 import ioc.liturgical.ws.models.RequestStatus;
+import ioc.liturgical.ws.models.ResultJsonObjectArray;
 
 public class ReferencesController {
 	private static final Logger logger = LoggerFactory.getLogger(ReferencesController.class);
@@ -32,8 +33,8 @@ public class ReferencesController {
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
-			JsonObject json = storeManager.getForQuery(query, true);
-			if (json.get("valueCount").getAsInt() > 0) {
+			ResultJsonObjectArray json = storeManager.getForQuery(query, true, true);
+			if (json.valueCount > 0) {
 				response.status(HTTP_RESPONSE_CODES.OK.code);
 			} else {
 				response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
@@ -46,8 +47,8 @@ public class ReferencesController {
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
-			JsonObject json = storeManager.getForIdStartsWith(query);
-			if (json.get("valueCount").getAsInt() > 0) {
+			ResultJsonObjectArray json = storeManager.getForIdStartsWith(query);
+			if (json.getValueCount() > 0) {
 				response.status(HTTP_RESPONSE_CODES.OK.code);
 			} else {
 				response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
@@ -60,8 +61,8 @@ public class ReferencesController {
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
-			JsonObject json = storeManager.getForIdStartsWith(query);
-			if (json.get("valueCount").getAsInt() > 0) {
+			ResultJsonObjectArray json = storeManager.getForIdStartsWith(query);
+			if (json.getValueCount() > 0) {
 				response.status(HTTP_RESPONSE_CODES.OK.code);
 			} else {
 				response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);

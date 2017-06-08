@@ -1,6 +1,6 @@
 package net.ages.alwb.utils.nlp.fetchers;
 
-import net.ages.alwb.utils.nlp.utils.Utils;
+import net.ages.alwb.utils.nlp.utils.NlpUtils;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -12,16 +12,16 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import ioc.liturgical.ws.models.db.docs.grammar.Adjective;
-import ioc.liturgical.ws.models.db.docs.grammar.Adverb;
-import ioc.liturgical.ws.models.db.docs.grammar.Article;
-import ioc.liturgical.ws.models.db.docs.grammar.Conjunction;
-import ioc.liturgical.ws.models.db.docs.grammar.Exclamation;
-import ioc.liturgical.ws.models.db.docs.grammar.Noun;
-import ioc.liturgical.ws.models.db.docs.grammar.Participle;
-import ioc.liturgical.ws.models.db.docs.grammar.Preposition;
-import ioc.liturgical.ws.models.db.docs.grammar.Pronoun;
-import ioc.liturgical.ws.models.db.docs.grammar.Verb;
+import ioc.liturgical.ws.models.db.docs.nlp.Adjective;
+import ioc.liturgical.ws.models.db.docs.nlp.Adverb;
+import ioc.liturgical.ws.models.db.docs.nlp.Article;
+import ioc.liturgical.ws.models.db.docs.nlp.Conjunction;
+import ioc.liturgical.ws.models.db.docs.nlp.Exclamation;
+import ioc.liturgical.ws.models.db.docs.nlp.Noun;
+import ioc.liturgical.ws.models.db.docs.nlp.Participle;
+import ioc.liturgical.ws.models.db.docs.nlp.Preposition;
+import ioc.liturgical.ws.models.db.docs.nlp.Pronoun;
+import ioc.liturgical.ws.models.db.docs.nlp.Verb;
 import ioc.liturgical.ws.models.db.supers.LTKDbGrammarAnalysis;
 import net.ages.alwb.utils.nlp.constants.BETA_CODES;
 import net.ages.alwb.utils.nlp.constants.UnicodeGreekToExtendedGreek;

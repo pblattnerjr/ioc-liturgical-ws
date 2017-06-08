@@ -17,6 +17,8 @@ public class Constants {
 		public static final String USER_LIB = "users";
 		public static final String ROLES_LIB = "roles";
 		public static final String RESOURCES_PATH = "resources";
+		public static final String GRAMMAR_PATH = "/grammar";
+		public static final String LOGIN_PATH = "/login";
 		public static final String UTF_JSON = "application/json ;charset=utf-8";
 		public static final String JAVASCRIPT = "application/javascript";
 		public static final String FONT = "font/opentype";
@@ -29,6 +31,7 @@ public class Constants {
 		public static final String EXTERNAL_DATASTORE_FORMS_PATH = "/forms";
 		public static final String EXTERNAL_DATASTORE_NODE_PATH = "/docs";
 		public static final String EXTERNAL_DATASTORE_RELATIONSHIP_PATH = "/links";
+		public static final String EXTERNAL_DATASTORE_NATURAL_LANGUAGE_PROCESSING_PATH = "/nlp";
 		public static final String EXTERNAL_DATASTORE_ONTOLOGY_PATH = "/ontology";
 		public static final String PATH_LIBRARY_WILDCARD = "/*";
 		public static final String PATH_LIBRARY_TOPIC_WILDCARD = "/*/*";

@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 
 import ioc.liturgical.ws.managers.exceptions.DbException;
 import ioc.liturgical.ws.models.RequestStatus;
+import ioc.liturgical.ws.models.ResultJsonObjectArray;
 import net.ages.alwb.utils.core.datastores.json.exceptions.BadIdException;
 import net.ages.alwb.utils.core.datastores.json.exceptions.MissingSchemaIdException;
 
@@ -43,14 +44,14 @@ public interface HighLevelDataStoreInterface {
 	 * @param pattern, e.g. _users/{id}
 	 * @return matching doc
 	 */
-	public JsonObject getForId(String id);
+	public ResultJsonObjectArray getForId(String id);
 
 	/**
 	 * Get all docs whose id starts with specified pattern
 	 * @param pattern, e.g. _users
 	 * @return all matching docs
 	 */
-	public JsonObject getForIdStartsWith(String id);
+	public ResultJsonObjectArray getForIdStartsWith(String id);
 	
 
 	/**

@@ -46,25 +46,25 @@ public enum ENDPOINTS_DB_API {
 			)
 	, DROPDOWNS_DOMAINS(
 			"domains"
-			, ENDPOINT_TYPES.DROPDOWNS
+			, ENDPOINT_TYPES.DROPDOWN
 			, "domain"
 			,"Endpoint for dropdown values for domains."
 			)
 	, DROPDOWNS_ONTOLOGY(
 			"ontology"
-			, ENDPOINT_TYPES.DROPDOWNS
+			, ENDPOINT_TYPES.DROPDOWN
 			, "ontology"
 			,"Endpoint for dropdown values to search properties of ontology entries."
 			)
 	, DROPDOWNS_RELATIONSHIPS(
 			"relationships"
-			, ENDPOINT_TYPES.DROPDOWNS
+			, ENDPOINT_TYPES.DROPDOWN
 			, "domain"
 			,"Endpoint for dropdown values to search properties of relationships."
 			)
 	, DROPDOWNS_TEXTS(
 			"texts"
-			, ENDPOINT_TYPES.DROPDOWNS
+			, ENDPOINT_TYPES.DROPDOWN
 			, "domain"
 			,"Endpoint for dropdown values to search docs of type text."
 			)
@@ -206,11 +206,23 @@ public enum ENDPOINTS_DB_API {
 			, "Text"
 			,"Endpoint for text docs"
 			)
+	, TEXT_ANALYSIS(
+			"text/analysis"
+			, ENDPOINT_TYPES.NLP
+			, "Text Analysis"
+			,"Endpoint for a grammatical analysis of words in a text"
+			)
+	, TOKENS(
+			"tokens"
+			, ENDPOINT_TYPES.NLP
+			, "Token"
+			,"Endpoint for text tokens"
+			)
 	, WORD_ANALYSIS(
-			"word analysis"
-			, ENDPOINT_TYPES.NODE
+			"word/analysis"
+			, ENDPOINT_TYPES.NLP
 			, "Word Analysis"
-			,"Endpoint for a grammatical analysis of a word"
+			,"Endpoint for a grammatical analysis of words"
 			)
 	;
 
@@ -240,11 +252,14 @@ public enum ENDPOINTS_DB_API {
 		this.description = description;
 		pathname = pathPrefix;
 		switch (type) {
-		case FORMS:
+		case FORM:
 			pathname = pathname + Constants.EXTERNAL_DATASTORE_DROPDOWNS_PATH;
 			break;
-		case DROPDOWNS:
+		case DROPDOWN:
 			pathname = pathname + Constants.EXTERNAL_DATASTORE_DROPDOWNS_PATH;
+			break;
+		case NLP:
+			pathname = pathname + Constants.EXTERNAL_DATASTORE_NATURAL_LANGUAGE_PROCESSING_PATH;
 			break;
 		case NODE:
 			pathname = pathname + Constants.EXTERNAL_DATASTORE_NODE_PATH;

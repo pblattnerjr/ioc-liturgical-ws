@@ -74,6 +74,9 @@ public class CreateABunchOfReferences {
 	    			TestUsers.WS_ADMIN.id
 	    			, form.toJsonString()
 	    			);
+		   if (status.getCode() != 201) {
+			   System.out.println(status.getUserMessage());
+		   }
 	    	assertTrue(status.getCode() == 201); // created
 		}
 	}

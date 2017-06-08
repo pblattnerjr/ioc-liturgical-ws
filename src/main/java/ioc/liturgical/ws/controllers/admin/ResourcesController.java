@@ -2,6 +2,9 @@ package ioc.liturgical.ws.controllers.admin;
 
 import static spark.Spark.get;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
@@ -11,15 +14,17 @@ import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 
 public class ResourcesController {
+	private static final Logger logger = LoggerFactory.getLogger(ResourcesController.class);
 	
 	/**
 	 * provides a list of available REST endpoints (i.e. resources)
 	 * @param storeManager
 	 */
 	public ResourcesController(InternalDbManager storeManager) {
-		
-		get(Constants.INTERNAL_DATASTORE_API_PATH + "/" + Constants.RESOURCES_PATH, (request, response) -> {
 
+		String path = Constants.INTERNAL_DATASTORE_API_PATH + "/" + Constants.RESOURCES_PATH;
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			response.status(HTTP_RESPONSE_CODES.OK.code);
 			JsonObject json = new JsonObject();

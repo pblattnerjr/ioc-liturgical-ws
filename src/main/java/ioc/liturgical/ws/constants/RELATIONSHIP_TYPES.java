@@ -1,11 +1,5 @@
 package ioc.liturgical.ws.constants;
 
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
-import com.google.gson.JsonObject;
-
 /**
  * Types of Relationships in the Neo4j Database
  * @author mac002
@@ -63,6 +57,10 @@ public enum RELATIONSHIP_TYPES {
 	, REFERS_TO_WORD_ANALYSIS(
 			"WORD_ANALYSIS"
 			, "reference to a grammatical analysis of a word."
+	 )
+	, EXAMPLE(
+			"EXAMPLE"
+			, "has / is an example"
 	 )
 	;
 	public String typename;

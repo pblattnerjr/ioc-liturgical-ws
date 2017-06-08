@@ -87,6 +87,11 @@ public enum ONTOLOGY_TOPICS {
 			, "A document containing written words."
 			, ONTOLOGY_TOPICS.ROOT
 			)
+	, TEXT_CONCORDANCE(
+			"TextConcordance"
+			, "A document containing a substring from a text, used as a line in a concordance."
+			, ONTOLOGY_TOPICS.LINGUISTICS
+			)
 	, TEXT_BIBLICAL(
 			"Biblical"
 			, "Biblical text."
@@ -102,9 +107,9 @@ public enum ONTOLOGY_TOPICS {
 			, "Text that records a speech made by someone."
 			, ONTOLOGY_TOPICS.TEXT
 			)
-	, WORD_FORM(
-			"WordForm"
-			, "The form a word takes, e.g. the lemma λόγος can have the form λόγον "
+	, WORD_INFLECTED(
+			"WordInflected"
+			, "The inflected form a lemma can take, e.g. the lemma λόγος can have the form λόγον "
 			, ONTOLOGY_TOPICS.LEXICAL_ITEM
 			)
 	, WORD_GRAMMAR(
@@ -114,7 +119,7 @@ public enum ONTOLOGY_TOPICS {
 			)
 	, WORD_LEMMA(
 			"WordLemma"
-			, "The word used to look up a form, e.g. the form λόγον is found in a lexicon as the lemma λόγος."
+			, "The form of a word that is used to look it up in a lexicon, e.g. the inflected form λόγον is found in a lexicon as the lemma λόγος."
 			, ONTOLOGY_TOPICS.LEXICAL_ITEM
 			)
 	;

@@ -219,7 +219,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 							schema.add("schema", schemaObject);
 						}
 						result.put(id, schema);
-						logger.info("id: " + id + " schema: " + schema.toString());
+	//					logger.info("id: " + id + " schema: " + schema.toString());
 					}
 				} catch (Exception e) {
 					ErrorUtils.report(logger, e);
@@ -236,7 +236,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	 * @param pattern, e.g. _users
 	 * @return all matching docs
 	 */
-	public JsonObject getForIdStartsWith(String id) {
+	public ResultJsonObjectArray getForIdStartsWith(String id) {
 		ResultJsonObjectArray result = new ResultJsonObjectArray(prettyPrint);
 		result.setQuery(id);
 		try {
@@ -247,7 +247,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 			result.setStatusMessage(e.getMessage());
 		}
-		return result.toJsonObject();
+		return result;
 	}
 	
 	/**
@@ -271,7 +271,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	 * @param pattern, e.g. _users/{id}
 	 * @return matching doc
 	 */
-	public JsonObject getForId(String id) {
+	public ResultJsonObjectArray getForId(String id) {
 		ResultJsonObjectArray result = new ResultJsonObjectArray(prettyPrint);
 		result.setQuery(id);
 		try {
@@ -282,7 +282,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 			result.setStatusMessage(e.getMessage());
 		}
-		return result.toJsonObject();
+		return result;
 	}
 	
 	public JsonObject getNewUserForm(String query) {
@@ -414,18 +414,13 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	 */
 	public Domain getDomain(String key) {
 		try {			
-			JsonObject obj = getForId(SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.toId(key));
-			int count = obj.getAsJsonPrimitive("valueCount").getAsInt();
+			ResultJsonObjectArray obj = getForId(SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.toId(key));
+			Long count = obj.getResultCount();
 			if (count != 1) {
 				return null;
 			} else {
 				Domain domain = (Domain) gson.fromJson(
-						obj.get("values")
-						.getAsJsonArray()
-						.get(0)
-						.getAsJsonObject()
-						.get("value")
-						.getAsJsonObject()
+						obj.getFirstObjectValueAsObject()
 						, Domain.class
 				);
 				return domain;
@@ -1039,8 +1034,8 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	}
 	
 	public boolean isDomainLibrary(String library) {
-		JsonObject json = getForId(SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.toId(library));
-		return json.get("valueCount").getAsInt() > 0;
+		ResultJsonObjectArray json = getForId(SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.toId(library));
+		return json.getCount() > 0;
 	}
 
 	/**
@@ -1050,8 +1045,8 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	 */
 	public boolean existsUser(String user) {	
 		try {
-			JsonObject json = getForId(USER_TOPICS.CONTACT.toId(user));
-			return json.get("valueCount").getAsInt() > 0;
+			ResultJsonObjectArray json = getForId(USER_TOPICS.CONTACT.toId(user));
+			return json.getCount() > 0;
 		} catch (Exception e) {
 			return false;
 		}
@@ -2026,18 +2021,13 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 
 	public User getUser(String username) {
 		try {			
-			JsonObject obj = getForId(SYSTEM_MISC_LIBRARY_TOPICS.USERS.toId(username));
-			int count = obj.getAsJsonPrimitive("valueCount").getAsInt();
+			ResultJsonObjectArray obj = getForId(SYSTEM_MISC_LIBRARY_TOPICS.USERS.toId(username));
+			Long count = obj.getCount();
 			if (count != 1) {
 				return null;
 			} else {
 				User user = (User) gson.fromJson(
-						obj.get("values")
-						.getAsJsonArray()
-						.get(0)
-						.getAsJsonObject()
-						.get("value")
-						.getAsJsonObject()
+						obj.getFirstObjectValueAsObject()
 						, User.class
 				);
 				return user;
@@ -2050,18 +2040,13 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 
 	public UserContact getUserContact(String username) {
 		try {			
-			JsonObject obj = getForId(USER_TOPICS.CONTACT.toId(username));
-			int count = obj.getAsJsonPrimitive("valueCount").getAsInt();
+			ResultJsonObjectArray obj = getForId(USER_TOPICS.CONTACT.toId(username));
+			Long count = obj.getCount();
 			if (count != 1) {
 				return null;
 			} else {
 				UserContact user = (UserContact) gson.fromJson(
-						obj.get("values")
-						.getAsJsonArray()
-						.get(0)
-						.getAsJsonObject()
-						.get("value")
-						.getAsJsonObject()
+						obj.getFirstObjectValueAsObject()
 						, UserContact.class
 				);
 				return user;
@@ -2074,18 +2059,13 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	
 	public UserHash getUserHash(String username) {
 		try {			
-			JsonObject obj = getForId(USER_TOPICS.HASH.toId(username));
-			int count = obj.getAsJsonPrimitive("valueCount").getAsInt();
+			ResultJsonObjectArray obj = getForId(USER_TOPICS.HASH.toId(username));
+			Long count = obj.getCount();
 			if (count != 1) {
 				return null;
 			} else {
 				UserHash user = (UserHash) gson.fromJson(
-						obj.get("values")
-						.getAsJsonArray()
-						.get(0)
-						.getAsJsonObject()
-						.get("value")
-						.getAsJsonObject()
+						obj.getFirstObjectValueAsObject()
 						, UserHash.class
 				);
 				return user;
@@ -2098,18 +2078,13 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	
 	public UserStatistics getUserStats(String username) {
 		try {			
-			JsonObject obj = getForId(USER_TOPICS.STATISTICS.toId(username));
-			int count = obj.getAsJsonPrimitive("valueCount").getAsInt();
+			ResultJsonObjectArray obj = getForId(USER_TOPICS.STATISTICS.toId(username));
+			Long count = obj.getCount();
 			if (count != 1) {
 				return new UserStatistics();
 			} else {
 				UserStatistics user = (UserStatistics) gson.fromJson(
-						obj.get("values")
-						.getAsJsonArray()
-						.get(0)
-						.getAsJsonObject()
-						.get("value")
-						.getAsJsonObject()
+						obj.getFirstObjectValueAsObject()
 						, UserStatistics.class
 				);
 				return user;
@@ -2557,8 +2532,8 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	 * @return true if there is only one doc that matches
 	 */
 	public boolean existsUnique(String _id) {
-		JsonObject json = getForId(_id);
-		return json.get("valueCount").getAsInt() == 1;
+		ResultJsonObjectArray json = getForId(_id);
+		return json.valueCount == 1;
 	}
 	
 	public RequestStatus addSchema(String schemaId, JsonObject json) {

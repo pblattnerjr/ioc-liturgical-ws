@@ -3,7 +3,6 @@ package net.ages.alwb.utils.nlp.parsers;
 import java.util.Map;
 import java.util.TreeMap;
 
-import ioc.liturgical.ws.models.db.supers.LTKDbGrammarAnalysis;
 import net.ages.alwb.utils.nlp.constants.DEPENDENCY_LABEL_MAPPER;
 import net.ages.alwb.utils.nlp.fetchers.PerseusXmlMorph;
 import opennlp.tools.tokenize.SimpleTokenizer;
