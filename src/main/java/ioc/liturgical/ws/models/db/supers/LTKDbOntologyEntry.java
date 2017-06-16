@@ -4,8 +4,8 @@ import com.google.gson.annotations.Expose;
 
 import ioc.liturgical.ws.annotations.UiWidget;
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.constants.EXTERNAL_DB_LIBS;
-import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
+import ioc.liturgical.ws.constants.db.external.LIBRARIES;
+import ioc.liturgical.ws.constants.db.external.TOPICS;
 
 import com.github.reinert.jjschema.Attributes;
 
@@ -24,14 +24,14 @@ public class LTKDbOntologyEntry extends LTKDb {
 	@Expose public String description = "";
 
 	public LTKDbOntologyEntry(
-			ONTOLOGY_TOPICS topic
+			TOPICS topic
 			, String schema
 			, double serialVersion
 			, String key
 			) {
 		super(
-				EXTERNAL_DB_LIBS.ONTOLOGY.toSystemDomain()
-				, topic.keyname
+				LIBRARIES.ONTOLOGY.toSystemDomain()
+				, topic.label
 				, key
 				, schema
 				,  serialVersion
@@ -41,14 +41,14 @@ public class LTKDbOntologyEntry extends LTKDb {
 	}
 
 	public LTKDbOntologyEntry(
-			ONTOLOGY_TOPICS topic
+			TOPICS topic
 			, String schema
 			, double serialVersion
 			, LTKOntologyCreateFormEntry form
 			) {
 		super(
-				EXTERNAL_DB_LIBS.ONTOLOGY.toSystemDomain()
-				, topic.keyname
+				LIBRARIES.ONTOLOGY.toSystemDomain()
+				, topic.label
 				, form.getKey()
 				, schema
 				,  serialVersion

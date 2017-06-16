@@ -14,6 +14,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -34,10 +35,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.json.XML;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ioc.liturgical.ws.app.ServiceProvider;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 
 public class AlwbFileUtils {
@@ -401,15 +404,31 @@ public class AlwbFileUtils {
 		return result;
 	}
 	
+	/**
+	 * Get the contents of the specified resource 
+	 * @param o
+	 * @param resource
+	 * @return
+	 */
+	public static String getResourceFileContent(Object o, String resource) {
+		try {
+			return getFileContents(getResourceAsFile(o, resource));
+		} catch (Exception e) {
+			ErrorUtils.report(logger, e);
+		}
+		return null;
+	}
+	
 	public static InputStream getResourceAsStream(Object o, String resource) {
 		String newPath = "";
+		ClassLoader cl = o.getClass().getClassLoader();
 		if (resource.startsWith("/")) {
-			newPath = "/net/ages/alwb/utils/app/resources" + resource;
+			newPath = "/liturgical-ws/resources" + resource;
 		} else {
-			newPath = "/net/ages/alwb/utils/app/resources/" + resource;
+			newPath = "/liturgical-ws/resources/" + resource;
 		}
 		try {
-			return o.getClass().getResourceAsStream(newPath);
+			return cl.getResourceAsStream(newPath);
 		} catch (Exception e) {
 			return null;
 		}
@@ -631,6 +650,7 @@ public class AlwbFileUtils {
 		}
 
 	}
+	
 	
 	/**
 	 * Creates a new file in a safe manner
@@ -856,5 +876,25 @@ public class AlwbFileUtils {
 		}
 		return files;
 	}
-	
+
+	/**
+	 * Reads HTML files in the specified directory and
+	 * returns them as Jsoup documents
+	 * @param dirPath
+	 * @return
+	 */
+	public static List<Document> getJsoupDocsFromDirectory(String dirPath) {
+		List<Document> result = new ArrayList<Document>();
+		List<File> files = AlwbFileUtils.getFilesInDirectory(dirPath, "html");
+		for (File f : files) {
+			try {
+				result.add(Jsoup.parse(f, "UTF-8"));
+			} catch (IOException e) {
+				ErrorUtils.report(logger, e);
+			}
+		}
+		return result;
+	}
+
+
 }

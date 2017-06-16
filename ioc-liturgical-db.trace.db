@@ -4021,3 +4021,219 @@ org.h2.jdbc.JdbcSQLException: The object is already closed [90007-187]
 org.h2.jdbc.JdbcSQLException: The object is already closed [90007-187]
 06-08 15:59:39 jdbc[3]: exception
 org.h2.jdbc.JdbcSQLException: The object is already closed [90007-187]
+06-09 15:53:52 database: flush
+org.h2.message.DbException: General error: "java.lang.IllegalStateException: The file is locked: nio:/Users/mac002/Git/ocmc-translation-projects/ioc-liturgical-ws/ioc-liturgical-db.mv.db [1.4.187/7]" [50000-187]
+	at org.h2.message.DbException.get(DbException.java:168)
+	at org.h2.message.DbException.convert(DbException.java:295)
+	at org.h2.mvstore.db.MVTableEngine$1.uncaughtException(MVTableEngine.java:93)
+	at org.h2.mvstore.MVStore.panic(MVStore.java:368)
+	at org.h2.mvstore.MVStore.<init>(MVStore.java:351)
+	at org.h2.mvstore.MVStore$Builder.open(MVStore.java:2782)
+	at org.h2.mvstore.db.MVTableEngine$Store.<init>(MVTableEngine.java:162)
+	at org.h2.mvstore.db.MVTableEngine.init(MVTableEngine.java:98)
+	at org.h2.engine.Database.getPageStore(Database.java:2389)
+	at org.h2.engine.Database.open(Database.java:669)
+	at org.h2.engine.Database.openDatabase(Database.java:266)
+	at org.h2.engine.Database.<init>(Database.java:260)
+	at org.h2.engine.Engine.openSession(Engine.java:60)
+	at org.h2.engine.Engine.openSession(Engine.java:167)
+	at org.h2.engine.Engine.createSessionAndValidate(Engine.java:145)
+	at org.h2.engine.Engine.createSession(Engine.java:128)
+	at org.h2.engine.Engine.createSession(Engine.java:26)
+	at org.h2.engine.SessionRemote.connectEmbeddedOrServer(SessionRemote.java:347)
+	at org.h2.jdbc.JdbcConnection.<init>(JdbcConnection.java:108)
+	at org.h2.jdbc.JdbcConnection.<init>(JdbcConnection.java:92)
+	at org.h2.Driver.connect(Driver.java:72)
+	at java.sql.DriverManager.getConnection(DriverManager.java:664)
+	at java.sql.DriverManager.getConnection(DriverManager.java:247)
+	at net.ages.alwb.utils.core.datastores.db.h2.manager.H2ConnectionManager.getDBConnection(H2ConnectionManager.java:403)
+	at net.ages.alwb.utils.core.datastores.db.h2.manager.H2ConnectionManager.<init>(H2ConnectionManager.java:65)
+	at net.ages.alwb.utils.core.datastores.db.factory.DbConnectionFactory.getH2Manager(DbConnectionFactory.java:32)
+	at ioc.liturgical.ws.managers.databases.internal.InternalDbManager.<init>(InternalDbManager.java:124)
+	at ioc.liturgical.ws.app.ServiceProvider.main(ServiceProvider.java:276)
+Caused by: org.h2.jdbc.JdbcSQLException: General error: "java.lang.IllegalStateException: The file is locked: nio:/Users/mac002/Git/ocmc-translation-projects/ioc-liturgical-ws/ioc-liturgical-db.mv.db [1.4.187/7]" [50000-187]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:345)
+	... 28 more
+Caused by: java.lang.IllegalStateException: The file is locked: nio:/Users/mac002/Git/ocmc-translation-projects/ioc-liturgical-ws/ioc-liturgical-db.mv.db [1.4.187/7]
+	at org.h2.mvstore.DataUtils.newIllegalStateException(DataUtils.java:773)
+	at org.h2.mvstore.FileStore.open(FileStore.java:172)
+	at org.h2.mvstore.MVStore.<init>(MVStore.java:337)
+	... 23 more
+06-10 08:00:06 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: The object is already closed [90007-187]
+06-10 08:08:07 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: The object is already closed [90007-187]
+06-10 08:10:53 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: The object is already closed [90007-187]
+06-10 08:12:08 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: The object is already closed [90007-187]
+06-10 08:12:08 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: The object is already closed [90007-187]
+06-10 08:13:01 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: The object is already closed [90007-187]
+06-10 08:18:34 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Column "value" not found [42122-187]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:345)
+	at org.h2.message.DbException.get(DbException.java:179)
+	at org.h2.message.DbException.get(DbException.java:155)
+	at org.h2.jdbc.JdbcResultSet.getColumnIndex(JdbcResultSet.java:3146)
+	at org.h2.jdbc.JdbcResultSet.get(JdbcResultSet.java:3208)
+	at org.h2.jdbc.JdbcResultSet.getString(JdbcResultSet.java:302)
+	at net.ages.alwb.utils.core.datastores.db.h2.manager.H2ConnectionManager.queryForJson(H2ConnectionManager.java:382)
+	at net.ages.alwb.utils.core.datastores.db.h2.manager.H2ConnectionManager.queryForJsonWhereEqual(H2ConnectionManager.java:345)
+	at ioc.liturgical.ws.managers.databases.internal.InternalDbManager.getSchema(InternalDbManager.java:1929)
+	at ioc.liturgical.ws.managers.databases.internal.InternalDbManager.getSchemas(InternalDbManager.java:211)
+	at ioc.liturgical.ws.managers.databases.internal.InternalDbManager.getForId(InternalDbManager.java:279)
+	at ioc.liturgical.ws.managers.databases.internal.InternalDbManager.existsUser(InternalDbManager.java:1048)
+	at ioc.liturgical.ws.managers.databases.internal.InternalDbManager.getUserStatus(InternalDbManager.java:1991)
+	at ioc.liturgical.ws.app.ServiceProvider.lambda$0(ServiceProvider.java:329)
+	at spark.FilterImpl$1.handle(FilterImpl.java:62)
+	at spark.http.matching.BeforeFilters.execute(BeforeFilters.java:48)
+	at spark.http.matching.MatcherFilter.doFilter(MatcherFilter.java:126)
+	at spark.embeddedserver.jetty.JettyHandler.doHandle(JettyHandler.java:50)
+	at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:189)
+	at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)
+	at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:119)
+	at org.eclipse.jetty.server.Server.handle(Server.java:517)
+	at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:308)
+	at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:242)
+	at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:261)
+	at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:95)
+	at org.eclipse.jetty.io.SelectChannelEndPoint$2.run(SelectChannelEndPoint.java:75)
+	at org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.produceAndRun(ExecuteProduceConsume.java:213)
+	at org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.run(ExecuteProduceConsume.java:147)
+	at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:654)
+	at org.eclipse.jetty.util.thread.QueuedThreadPool$3.run(QueuedThreadPool.java:572)
+	at java.lang.Thread.run(Thread.java:745)
+06-10 08:18:34 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: General error: "java.lang.NullPointerException" [50000-187]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:345)
+	at org.h2.message.DbException.get(DbException.java:168)
+	at org.h2.message.DbException.convert(DbException.java:295)
+	at org.h2.message.DbException.toSQLException(DbException.java:268)
+	at org.h2.message.TraceObject.logAndConvert(TraceObject.java:352)
+	at org.h2.jdbc.JdbcPreparedStatement.executeUpdate(JdbcPreparedStatement.java:148)
+	at net.ages.alwb.utils.core.datastores.db.h2.manager.H2ConnectionManager.update(H2ConnectionManager.java:249)
+	at net.ages.alwb.utils.core.datastores.db.h2.manager.H2ConnectionManager.updateWhereEqual(H2ConnectionManager.java:235)
+	at ioc.liturgical.ws.managers.databases.internal.InternalDbManager.updateLTKVJsonObject(InternalDbManager.java:1963)
+	at ioc.liturgical.ws.managers.databases.internal.InternalDbManager.updateUserStats(InternalDbManager.java:1754)
+	at ioc.liturgical.ws.managers.databases.internal.InternalDbManager.getUserStatus(InternalDbManager.java:2013)
+	at ioc.liturgical.ws.app.ServiceProvider.lambda$0(ServiceProvider.java:329)
+	at spark.FilterImpl$1.handle(FilterImpl.java:62)
+	at spark.http.matching.BeforeFilters.execute(BeforeFilters.java:48)
+	at spark.http.matching.MatcherFilter.doFilter(MatcherFilter.java:126)
+	at spark.embeddedserver.jetty.JettyHandler.doHandle(JettyHandler.java:50)
+	at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:189)
+	at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)
+	at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:119)
+	at org.eclipse.jetty.server.Server.handle(Server.java:517)
+	at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:308)
+	at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:242)
+	at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:261)
+	at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:95)
+	at org.eclipse.jetty.io.SelectChannelEndPoint$2.run(SelectChannelEndPoint.java:75)
+	at org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.produceAndRun(ExecuteProduceConsume.java:213)
+	at org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.run(ExecuteProduceConsume.java:147)
+	at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:654)
+	at org.eclipse.jetty.util.thread.QueuedThreadPool$3.run(QueuedThreadPool.java:572)
+	at java.lang.Thread.run(Thread.java:745)
+Caused by: java.lang.NullPointerException
+	at org.h2.jdbc.JdbcStatement.setExecutingStatement(JdbcStatement.java:1030)
+	at org.h2.jdbc.JdbcPreparedStatement.executeUpdateInternal(JdbcPreparedStatement.java:159)
+	at org.h2.jdbc.JdbcPreparedStatement.executeUpdate(JdbcPreparedStatement.java:143)
+	... 24 more
+06-10 08:25:09 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: The object is already closed [90007-187]
+06-10 08:25:09 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: The object is already closed [90007-187]
+06-10 08:28:50 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: The object is already closed [90007-187]
+06-10 08:31:05 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: General error: "java.lang.NullPointerException" [50000-187]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:345)
+	at org.h2.message.DbException.get(DbException.java:168)
+	at org.h2.message.DbException.convert(DbException.java:295)
+	at org.h2.message.DbException.toSQLException(DbException.java:268)
+	at org.h2.message.TraceObject.logAndConvert(TraceObject.java:352)
+	at org.h2.jdbc.JdbcResultSet.next(JdbcResultSet.java:124)
+	at net.ages.alwb.utils.core.datastores.db.h2.manager.H2ConnectionManager.queryForJson(H2ConnectionManager.java:381)
+	at net.ages.alwb.utils.core.datastores.db.h2.manager.H2ConnectionManager.queryForJsonWhereEqual(H2ConnectionManager.java:345)
+	at ioc.liturgical.ws.managers.databases.internal.InternalDbManager.getSchema(InternalDbManager.java:1929)
+	at ioc.liturgical.ws.managers.databases.internal.InternalDbManager.getSchemas(InternalDbManager.java:211)
+	at ioc.liturgical.ws.managers.databases.internal.InternalDbManager.getForId(InternalDbManager.java:279)
+	at ioc.liturgical.ws.managers.databases.internal.InternalDbManager.existsUnique(InternalDbManager.java:2535)
+	at ioc.liturgical.ws.managers.databases.internal.InternalDbManager.updateLTKVJsonObject(InternalDbManager.java:1953)
+	at ioc.liturgical.ws.managers.databases.internal.InternalDbManager.updateUserStats(InternalDbManager.java:1754)
+	at ioc.liturgical.ws.managers.databases.internal.InternalDbManager.getUserStatus(InternalDbManager.java:2013)
+	at ioc.liturgical.ws.app.ServiceProvider.lambda$0(ServiceProvider.java:329)
+	at spark.FilterImpl$1.handle(FilterImpl.java:62)
+	at spark.http.matching.BeforeFilters.execute(BeforeFilters.java:48)
+	at spark.http.matching.MatcherFilter.doFilter(MatcherFilter.java:126)
+	at spark.embeddedserver.jetty.JettyHandler.doHandle(JettyHandler.java:50)
+	at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:189)
+	at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)
+	at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:119)
+	at org.eclipse.jetty.server.Server.handle(Server.java:517)
+	at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:308)
+	at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:242)
+	at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:261)
+	at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:95)
+	at org.eclipse.jetty.io.SelectChannelEndPoint$2.run(SelectChannelEndPoint.java:75)
+	at org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.produceAndRun(ExecuteProduceConsume.java:213)
+	at org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.run(ExecuteProduceConsume.java:147)
+	at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:654)
+	at org.eclipse.jetty.util.thread.QueuedThreadPool$3.run(QueuedThreadPool.java:572)
+	at java.lang.Thread.run(Thread.java:745)
+Caused by: java.lang.NullPointerException
+	at org.h2.jdbc.JdbcResultSet.nextRow(JdbcResultSet.java:3231)
+	at org.h2.jdbc.JdbcResultSet.next(JdbcResultSet.java:122)
+	... 28 more
+06-10 11:03:51 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: The object is already closed [90007-187]
+06-10 11:07:20 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: The object is already closed [90007-187]
+06-10 14:43:02 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: The object is already closed [90007-187]
+06-10 14:49:54 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: General error: "java.lang.NullPointerException" [50000-187]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:345)
+	at org.h2.message.DbException.get(DbException.java:168)
+	at org.h2.message.DbException.convert(DbException.java:295)
+	at org.h2.message.DbException.toSQLException(DbException.java:268)
+	at org.h2.message.TraceObject.logAndConvert(TraceObject.java:352)
+	at org.h2.jdbc.JdbcPreparedStatement.executeUpdate(JdbcPreparedStatement.java:148)
+	at net.ages.alwb.utils.core.datastores.db.h2.manager.H2ConnectionManager.update(H2ConnectionManager.java:249)
+	at net.ages.alwb.utils.core.datastores.db.h2.manager.H2ConnectionManager.updateWhereEqual(H2ConnectionManager.java:235)
+	at ioc.liturgical.ws.managers.databases.internal.InternalDbManager.updateLTKVJsonObject(InternalDbManager.java:1963)
+	at ioc.liturgical.ws.managers.databases.internal.InternalDbManager.updateUserStats(InternalDbManager.java:1754)
+	at ioc.liturgical.ws.managers.databases.internal.InternalDbManager.getUserStatus(InternalDbManager.java:2013)
+	at ioc.liturgical.ws.app.ServiceProvider.lambda$0(ServiceProvider.java:329)
+	at spark.FilterImpl$1.handle(FilterImpl.java:62)
+	at spark.http.matching.BeforeFilters.execute(BeforeFilters.java:48)
+	at spark.http.matching.MatcherFilter.doFilter(MatcherFilter.java:126)
+	at spark.embeddedserver.jetty.JettyHandler.doHandle(JettyHandler.java:50)
+	at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:189)
+	at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)
+	at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:119)
+	at org.eclipse.jetty.server.Server.handle(Server.java:517)
+	at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:308)
+	at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:242)
+	at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:261)
+	at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:95)
+	at org.eclipse.jetty.io.SelectChannelEndPoint$2.run(SelectChannelEndPoint.java:75)
+	at org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.produceAndRun(ExecuteProduceConsume.java:213)
+	at org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.run(ExecuteProduceConsume.java:147)
+	at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:654)
+	at org.eclipse.jetty.util.thread.QueuedThreadPool$3.run(QueuedThreadPool.java:572)
+	at java.lang.Thread.run(Thread.java:745)
+Caused by: java.lang.NullPointerException
+	at org.h2.jdbc.JdbcStatement.setExecutingStatement(JdbcStatement.java:1030)
+	at org.h2.jdbc.JdbcPreparedStatement.executeUpdateInternal(JdbcPreparedStatement.java:159)
+	at org.h2.jdbc.JdbcPreparedStatement.executeUpdate(JdbcPreparedStatement.java:143)
+	... 24 more
+06-10 14:54:25 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: The object is already closed [90007-187]
+06-11 08:39:59 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: The object is already closed [90007-187]
+06-14 17:14:55 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: The object is already closed [90007-187]

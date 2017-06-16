@@ -5,9 +5,9 @@ import java.time.Instant;
 import com.github.reinert.jjschema.Attributes;
 import com.google.gson.annotations.Expose;
 
-import ioc.liturgical.ws.constants.EXTERNAL_DB_LIBS;
-import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
 import ioc.liturgical.ws.constants.STATUS;
+import ioc.liturgical.ws.constants.db.external.LIBRARIES;
+import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.models.db.supers.LTKDb;
 import net.ages.alwb.utils.nlp.constants.GRAMMAR_ABBREVIATIONS_MAPPER;
 
@@ -16,7 +16,7 @@ public class PerseusAnalysis extends LTKDb {
 
 	private static String schema = PerseusAnalysis.class.getSimpleName();
 	private static double serialVersion = 1.1;
-	private static ONTOLOGY_TOPICS topic = ONTOLOGY_TOPICS.WORD_GRAMMAR;
+	private static TOPICS topic = TOPICS.WORD_GRAMMAR;
 
 	@Attributes(required = true, description = "The token is the word as it appears in the text.")
 	@Expose public String token = "";
@@ -39,7 +39,7 @@ public class PerseusAnalysis extends LTKDb {
 	
 	public PerseusAnalysis() {
 		super(
-				EXTERNAL_DB_LIBS.LINGUISTICS.toSystemDomain()
+				LIBRARIES.LINGUISTICS.toSystemDomain()
 				, ""
 				, ""
 				, schema
@@ -57,15 +57,13 @@ public class PerseusAnalysis extends LTKDb {
 			, String glosses
 			) {
 		super(
-				EXTERNAL_DB_LIBS.LINGUISTICS.toSystemDomain()
+				LIBRARIES.LINGUISTICS.toSystemDomain()
 				, token
-//				, token.length() == 1 ? token + " " : token
 				, lemmaGreek + "/" + GRAMMAR_ABBREVIATIONS_MAPPER.convertToLeipzig(" ", parse, ".")
 				, schema
 				,  serialVersion
 				, topic
 				);
-		super.setStatus(STATUS.FINALIZED);
 		this.token = token;
 		this.greek = greek;
 		this.lemmaBetaCode = lemmaBetaCode;

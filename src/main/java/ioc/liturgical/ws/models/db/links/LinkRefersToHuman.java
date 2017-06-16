@@ -4,8 +4,8 @@ import com.google.gson.annotations.Expose;
 
 import ioc.liturgical.ws.annotations.UiWidget;
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
 import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
+import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToHumanCreateForm;
 import ioc.liturgical.ws.models.db.supers.LTKLink;
 
@@ -22,7 +22,7 @@ public class LinkRefersToHuman extends LTKLink {
 	private static double serialVersion = 1.1;
 	private static String schema = LinkRefersToHuman.class.getSimpleName();
 	private static RELATIONSHIP_TYPES type = RELATIONSHIP_TYPES.REFERS_TO_HUMAN;
-	private static ONTOLOGY_TOPICS ontoTopic = ONTOLOGY_TOPICS.HUMAN;
+	private static TOPICS ontoTopic = TOPICS.HUMAN;
 
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
 	@Attributes(required = false, description = "Word or phrase that makes the reference")

@@ -5,7 +5,7 @@ import com.google.gson.annotations.Expose;
 import ioc.liturgical.ws.annotations.UiWidget;
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.constants.ID_PART_TYPES;
-import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
+import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.models.db.supers.LTK;
 
 
@@ -40,7 +40,7 @@ public class TextLiturgicalTranslationCreateForm extends LTK {
 				, key
 				, schema
 				, serialVersion
-				, ONTOLOGY_TOPICS.TEXT_LITURGICAL
+				, TOPICS.TEXT_LITURGICAL
 				);
 		this.partTypeOfTopic = ID_PART_TYPES.TOPIC_FROM_ID_OF_SELECTED_LITURGICAL_TEXT;
 		this.partTypeOfKey = ID_PART_TYPES.KEY_FROM_ID_OF_SELECTED_LITURGICAL_TEXT;

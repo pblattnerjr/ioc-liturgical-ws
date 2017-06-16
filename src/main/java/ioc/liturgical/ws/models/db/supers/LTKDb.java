@@ -4,7 +4,7 @@ import com.google.gson.annotations.Expose;
 
 import ioc.liturgical.ws.annotations.UiWidget;
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
+import ioc.liturgical.ws.constants.db.external.TOPICS;
 
 import java.util.List;
 
@@ -42,7 +42,7 @@ public class LTKDb extends LTK {
 			, String key
 			, String schema
 			, double serialVersion
-			, ONTOLOGY_TOPICS ontologyTopic
+			, TOPICS ontologyTopic
 			) {
 		super(library, topic, key, schema, serialVersion, ontologyTopic);
 		this.active = true; 

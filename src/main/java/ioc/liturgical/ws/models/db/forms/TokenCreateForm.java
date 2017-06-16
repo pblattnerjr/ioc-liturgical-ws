@@ -1,6 +1,6 @@
 package ioc.liturgical.ws.models.db.forms;
 
-import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
+import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.models.db.supers.LTK;
 
 /**
@@ -23,7 +23,7 @@ public class TokenCreateForm extends LTK {
 
 	private static String schema = TokenCreateForm.class.getSimpleName();
 	private static double serialVersion = 1.1;
-	private static ONTOLOGY_TOPICS ontologyTopic = ONTOLOGY_TOPICS.WORD_INFLECTED;
+	private static TOPICS ontologyTopic = TOPICS.WORD_INFLECTED;
 
 	public String id = "";
     public String dependsOn = "";

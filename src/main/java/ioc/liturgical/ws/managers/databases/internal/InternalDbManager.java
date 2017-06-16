@@ -47,7 +47,6 @@ import ioc.liturgical.ws.models.ws.forms.UserPasswordForm;
 import ioc.liturgical.ws.models.ws.response.DomainWorkflowInfo;
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.ENDPOINTS_ADMIN_API;
-import ioc.liturgical.ws.constants.EXTERNAL_DB_SCHEMA_CLASSES;
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.constants.DOMAIN_TYPES;
 import ioc.liturgical.ws.constants.SYSTEM_MISC_LIBRARY_TOPICS;
@@ -60,6 +59,7 @@ import ioc.liturgical.ws.constants.STATUS;
 import ioc.liturgical.ws.constants.USER_TOPICS;
 import ioc.liturgical.ws.constants.UTILITIES;
 import ioc.liturgical.ws.constants.VERBS;
+import ioc.liturgical.ws.constants.db.external.SCHEMA_CLASSES;
 import ioc.liturgical.ws.managers.auth.UserStatus;
 import ioc.liturgical.ws.managers.exceptions.DbException;
 import net.ages.alwb.utils.core.auth.PasswordHasher;
@@ -1792,7 +1792,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 					ErrorUtils.report(logger, e);
 				}
 			}
-			for (EXTERNAL_DB_SCHEMA_CLASSES s : EXTERNAL_DB_SCHEMA_CLASSES.values()) {
+			for (SCHEMA_CLASSES s : SCHEMA_CLASSES.values()) {
 				try {
 					ValueSchema schema = new ValueSchema(s.ltk);
 					String id = new IdManager(

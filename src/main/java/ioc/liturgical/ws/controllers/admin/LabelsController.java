@@ -38,7 +38,7 @@ public class LabelsController {
 			} else {
 				response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 			}
-			return json.toString();
+			return json.toJsonString();
 		});
 
 		path = ENDPOINTS_ADMIN_API.LABELS.toLibraryTopicPath();
@@ -52,7 +52,7 @@ public class LabelsController {
 			} else {
 				response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 			}
-			return json.toString();
+			return json.toJsonString();
 		});
 
 		path = ENDPOINTS_ADMIN_API.LABELS.toLibraryPath();
@@ -66,7 +66,7 @@ public class LabelsController {
 			} else {
 				response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 			}
-			return json.toString();
+			return json.toJsonString();
 		});
 		
 		/**

@@ -13,7 +13,6 @@ import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.constants.ENDPOINTS_DB_API;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.constants.NEW_FORM_CLASSES_ADMIN_API;
-import ioc.liturgical.ws.constants.NEW_FORM_CLASSES_DB_API;
 import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
 import ioc.liturgical.ws.models.ws.forms.DomainCreateForm;

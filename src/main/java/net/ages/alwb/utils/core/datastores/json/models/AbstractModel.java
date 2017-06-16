@@ -53,6 +53,13 @@ public class AbstractModel {
 	public AbstractModel() {
 	}
 
+	public void disableHtmlEscaping() {
+		gson = new GsonBuilder()
+				.disableHtmlEscaping()
+				.excludeFieldsWithoutExposeAnnotation()
+				.create();
+	}
+	
 	/**
 	 * Used to get an instance from a json string.
 	 * You must first instantiate some subclass, then

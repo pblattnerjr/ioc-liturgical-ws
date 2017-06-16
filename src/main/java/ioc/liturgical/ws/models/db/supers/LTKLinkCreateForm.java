@@ -2,9 +2,9 @@ package ioc.liturgical.ws.models.db.supers;
 
 import com.google.gson.annotations.Expose;
 
-import ioc.liturgical.ws.constants.EXTERNAL_DB_SCHEMA_CLASSES;
-import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
 import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
+import ioc.liturgical.ws.constants.db.external.SCHEMA_CLASSES;
+import ioc.liturgical.ws.constants.db.external.TOPICS;
 
 import com.github.reinert.jjschema.Attributes;
 
@@ -25,7 +25,7 @@ public class LTKLinkCreateForm extends LTK {
 			, String schema
 			, double serialVersion
 			, RELATIONSHIP_TYPES type
-			, ONTOLOGY_TOPICS ontoTopic
+			, TOPICS ontoTopic
 			) {
 		super(
 				library
@@ -45,8 +45,8 @@ public class LTKLinkCreateForm extends LTK {
 				form.getLibrary()
 				, form.getTopic()
 				, form.getKey()
-				, EXTERNAL_DB_SCHEMA_CLASSES.classForSchemaName(form._valueSchemaId).ltkDb.schemaIdAsString()
-				, EXTERNAL_DB_SCHEMA_CLASSES.classForSchemaName(form._valueSchemaId).ltkDb.schemaIdAsNumber()
+				, SCHEMA_CLASSES.classForSchemaName(form._valueSchemaId).ltkDb.schemaIdAsString()
+				, SCHEMA_CLASSES.classForSchemaName(form._valueSchemaId).ltkDb.schemaIdAsNumber()
 				, form.getOntologyTopic()
 				);
 	}

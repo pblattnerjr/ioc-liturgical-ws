@@ -1,7 +1,7 @@
 package ioc.liturgical.ws.models.db.forms;
 
 import ioc.liturgical.ws.constants.ID_PART_TYPES;
-import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
+import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.models.db.supers.LTKOntologyCreateFormEntry;
 
 import com.github.reinert.jjschema.Attributes;
@@ -17,7 +17,7 @@ public class BeingCreateForm extends LTKOntologyCreateFormEntry {
 			String key
 			) {
 		super(
-				ONTOLOGY_TOPICS.BEING
+				TOPICS.BEING
 				, key
 				, BeingCreateForm.class.getSimpleName()
 				,  1.1

@@ -4,9 +4,9 @@ import com.google.gson.annotations.Expose;
 
 import ioc.liturgical.ws.annotations.UiWidget;
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.constants.EXTERNAL_DB_LIBS;
-import ioc.liturgical.ws.constants.EXTERNAL_DB_SCHEMA_CLASSES;
-import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
+import ioc.liturgical.ws.constants.db.external.LIBRARIES;
+import ioc.liturgical.ws.constants.db.external.SCHEMA_CLASSES;
+import ioc.liturgical.ws.constants.db.external.TOPICS;
 
 import com.github.reinert.jjschema.Attributes;
 
@@ -25,14 +25,14 @@ public class LTKOntologyCreateFormEntry extends LTK {
 	@Expose public String description = "";
 	
 	public LTKOntologyCreateFormEntry(
-			ONTOLOGY_TOPICS topic
+			TOPICS topic
 			, String key
 			, String schema
 			, double serialVersion
 			) {
 		super(
-				EXTERNAL_DB_LIBS.ONTOLOGY.toSystemDomain()
-				, topic.keyname
+				LIBRARIES.ONTOLOGY.toSystemDomain()
+				, topic.label
 				, key
 				, schema
 				,  serialVersion
@@ -45,11 +45,11 @@ public class LTKOntologyCreateFormEntry extends LTK {
 			LTKOntologyCreateFormEntry form
 			) {
 		super(
-				EXTERNAL_DB_LIBS.ONTOLOGY.toSystemDomain()
+				LIBRARIES.ONTOLOGY.toSystemDomain()
 				, form.getTopic()
 				, form.getKey()
-				, EXTERNAL_DB_SCHEMA_CLASSES.classForSchemaName(form._valueSchemaId).ltkDb.schemaIdAsString()
-				, EXTERNAL_DB_SCHEMA_CLASSES.classForSchemaName(form._valueSchemaId).ltkDb.schemaIdAsNumber()
+				, SCHEMA_CLASSES.classForSchemaName(form._valueSchemaId).ltkDb.schemaIdAsString()
+				, SCHEMA_CLASSES.classForSchemaName(form._valueSchemaId).ltkDb.schemaIdAsNumber()
 				, form.getOntologyTopic()
 				);
 		this.description = form.getDescription();

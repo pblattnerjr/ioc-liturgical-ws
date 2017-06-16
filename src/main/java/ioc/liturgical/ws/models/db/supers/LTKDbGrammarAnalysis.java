@@ -2,8 +2,8 @@ package ioc.liturgical.ws.models.db.supers;
 
 import com.google.gson.annotations.Expose;
 
-import ioc.liturgical.ws.constants.EXTERNAL_DB_LIBS;
-import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
+import ioc.liturgical.ws.constants.db.external.LIBRARIES;
+import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.constants.PARTS_OF_SPEECH;
 import net.ages.alwb.utils.nlp.constants.DEPENDENCY_LABELS;
 
@@ -16,7 +16,7 @@ import com.github.reinert.jjschema.Attributes;
 @Attributes(title = "LTKDb Grammar Analysis", description = "Abstract Grammar Analysis")
 public class LTKDbGrammarAnalysis extends LTKDb {
 	
-	private static ONTOLOGY_TOPICS topic = ONTOLOGY_TOPICS.GRAMMAR;
+	private static TOPICS topic = TOPICS.GRAMMAR;
 
 	@Attributes(required = true, description = "Form (the form of the word or token as it appears in the text")
 	@Expose public String form = "";
@@ -43,7 +43,7 @@ public class LTKDbGrammarAnalysis extends LTKDb {
 			, double serialVersion
 			) {
 		super(
-				EXTERNAL_DB_LIBS.LINGUISTICS.toSystemDomain()
+				LIBRARIES.LINGUISTICS.toSystemDomain()
 				, form
 				, seq
 				, schema

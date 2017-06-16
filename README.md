@@ -33,3 +33,9 @@ Following are the steps required to add a new endpoint to the REST api.
 
 1. Did you add the endpoint to ioc.liturgical.ws.constants.ADMIN_ENDPOINTS?  If so, did you set INCLUDE_IN_RESOURCE_LIST.YES.value?
 2. Getting a 404 for posts and puts to the endpoint.  Did you add the handler to ServiceProvider?
+
+# ACKNOWLEGEMENTS
+
+This web service makes use of the Princeton Wordnet under the WordNet 3.0 license:
+
+The license can be viewed at https://wordnet.princeton.edu/wordnet/license/

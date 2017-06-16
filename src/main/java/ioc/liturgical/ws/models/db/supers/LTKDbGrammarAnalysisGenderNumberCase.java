@@ -2,8 +2,9 @@ package ioc.liturgical.ws.models.db.supers;
 
 import com.google.gson.annotations.Expose;
 
-import ioc.liturgical.ws.constants.EXTERNAL_DB_LIBS;
-import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
+import ioc.liturgical.ws.constants.db.external.LIBRARIES;
+import ioc.liturgical.ws.constants.db.external.SINGLETON_KEYS;
+import ioc.liturgical.ws.constants.db.external.TOPICS;
 
 import com.github.reinert.jjschema.Attributes;
 
@@ -16,7 +17,7 @@ import com.github.reinert.jjschema.Attributes;
 @Attributes(title = "LTKDb Grammar Analysis for Parts of Speech with Gender, Number, and Case", description = "Abstract Grammar Analysis for parts of speech that have gender, number, and case, e.g. adjectives and nouns.")
 public class LTKDbGrammarAnalysisGenderNumberCase extends LTKDbGrammarAnalysis {
 	
-	private static ONTOLOGY_TOPICS topic = ONTOLOGY_TOPICS.GRAMMAR;
+	private static TOPICS topic = TOPICS.GRAMMAR;
 
 	@Attributes(required = true, description = "Gramatical gender, i.e. Masculine, Feminine, or Neuter")
 	@Expose public String gender = "";

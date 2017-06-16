@@ -1,7 +1,7 @@
 package ioc.liturgical.ws.models.db.docs.ontology;
 
 import ioc.liturgical.ws.constants.ID_PART_TYPES;
-import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
+import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.models.db.forms.BeingCreateForm;
 import ioc.liturgical.ws.models.db.supers.LTKDbOntologyEntry;
 
@@ -16,7 +16,7 @@ public class Being extends LTKDbOntologyEntry {
 	
 	private static String schema = Being.class.getSimpleName();
 	private static double version = 1.1;
-	private static ONTOLOGY_TOPICS ontoTopic = ONTOLOGY_TOPICS.BEING;
+	private static TOPICS ontoTopic = TOPICS.BEING;
 	
 	public Being(
 			String key

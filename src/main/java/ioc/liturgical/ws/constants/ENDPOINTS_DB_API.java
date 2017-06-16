@@ -200,6 +200,12 @@ public enum ENDPOINTS_DB_API {
 			, "Roles"
 			,"Endpoint for role docs"
 			)
+	, TABLES(
+			"tables"
+			, ENDPOINT_TYPES.TABLE
+			, "Table"
+			,"Endpoint for tables"
+			)
 	, TEXTS(
 			"texts"
 			, ENDPOINT_TYPES.NODE
@@ -236,7 +242,7 @@ public enum ENDPOINTS_DB_API {
 	/**
 	 * 
 	 * @param name - endpoint name as appears in the REST API
-	 * @param type - node or relationship
+	 * @param type - node or relationship, etc
 	 * @param label - name used in database, e.g. node label or relationship type name
 	 * @param description
 	 */

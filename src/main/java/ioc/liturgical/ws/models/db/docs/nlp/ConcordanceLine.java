@@ -1,7 +1,8 @@
 package ioc.liturgical.ws.models.db.docs.nlp;
 
-import ioc.liturgical.ws.constants.EXTERNAL_DB_LIBS;
-import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
+import ioc.liturgical.ws.constants.db.external.LIBRARIES;
+import ioc.liturgical.ws.constants.db.external.SINGLETON_KEYS;
+import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.models.db.supers.LTKDb;
 
 import com.github.reinert.jjschema.Attributes;
@@ -17,7 +18,7 @@ public class ConcordanceLine extends LTKDb {
 	
 	private static String schema = ConcordanceLine.class.getSimpleName();
 	private static double version = 1.1;
-	private static ONTOLOGY_TOPICS topic = ONTOLOGY_TOPICS.TEXT_CONCORDANCE;
+	private static TOPICS topic = TOPICS.TEXT_CONCORDANCE;
 	
 	@Attributes(required = true, readonly=true, description = "The inflected word form that is the subject of the concordance")
 	@Expose public String  form = "";
@@ -46,8 +47,8 @@ public class ConcordanceLine extends LTKDb {
 			, String contextRight
 			) {
 		super (
-				EXTERNAL_DB_LIBS.LINGUISTICS.toSystemDomain()
-				, topic.keyname
+				LIBRARIES.LINGUISTICS.toSystemDomain()
+				, topic.label
 				, form + ":" + String.format("%03d", seq)
 				, schema
 				, version

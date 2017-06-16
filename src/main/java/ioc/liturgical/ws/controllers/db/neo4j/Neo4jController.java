@@ -18,6 +18,7 @@ import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.constants.ENDPOINTS_DB_API;
 import ioc.liturgical.ws.constants.ENDPOINT_TYPES;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
+import ioc.liturgical.ws.constants.db.external.SINGLETON_KEYS;
 import ioc.liturgical.ws.controllers.admin.ControllerUtils;
 import ioc.liturgical.ws.managers.auth.AuthDecoder;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
@@ -85,7 +86,6 @@ public class Neo4jController {
 
 		// GET ontology entries for specified parameters
 		path = ENDPOINTS_DB_API.TEXT_ANALYSIS.toLibraryPath();
-		System.out.println("Yoohoo!");
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
@@ -144,6 +144,14 @@ public class Neo4jController {
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
         	return externalManager.getOntologySearchDropdown().toJsonString();
+		});
+
+		// GET data for a react-bootstrap-table
+		path = ENDPOINTS_DB_API.TABLES.toLibraryPath();
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+        	return externalManager.getForId(SINGLETON_KEYS.TABLE_OALD_SENSES.toId());
 		});
 
 		// GET dropdowns for searching relationship properties

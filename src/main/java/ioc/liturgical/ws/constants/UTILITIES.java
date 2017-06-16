@@ -16,7 +16,13 @@ import static java.util.Arrays.asList;
  *
  */
 public enum UTILITIES {
-	Tokenize(
+	EngSensesOne(
+			"EngSensesOne"
+			, 	"Gets English One senses"
+			, new ArrayList<UTILITIES>()
+			, new ArrayList<UTILITIES>()
+			) 
+	, Tokenize(
 			"Tokenize"
 			, 	"Tokenizes each word in the value property, removing punctuation, but preserving the diacritics. For each token that does not yet exist, creates a Token record in the external database. Also records the number of occurrences. If it already exists, it upates the number of occurrences."
 			, new ArrayList<UTILITIES>()

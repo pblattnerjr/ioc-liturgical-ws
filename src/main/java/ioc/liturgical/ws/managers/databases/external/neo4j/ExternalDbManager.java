@@ -3,8 +3,6 @@ package ioc.liturgical.ws.managers.databases.external.neo4j;
 import java.text.Normalizer;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -14,7 +12,6 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.h2.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,13 +26,15 @@ import ioc.liturgical.ws.managers.interfaces.HighLevelDataStoreInterface;
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.BIBLICAL_BOOKS;
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.constants.EXTERNAL_DB_SCHEMA_CLASSES;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.constants.NEW_FORM_CLASSES_DB_API;
-import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
 import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
 import ioc.liturgical.ws.constants.UTILITIES;
 import ioc.liturgical.ws.constants.VERBS;
+import ioc.liturgical.ws.constants.db.external.LIBRARIES;
+import ioc.liturgical.ws.constants.db.external.SCHEMA_CLASSES;
+import ioc.liturgical.ws.constants.db.external.SINGLETON_KEYS;
+import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.managers.databases.external.neo4j.constants.MATCHERS;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryBuilderForDocs;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryBuilderForLinks;
@@ -52,7 +51,7 @@ import ioc.liturgical.ws.models.db.docs.nlp.ConcordanceLine;
 import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalyses;
 import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalysis;
 import ioc.liturgical.ws.models.db.docs.nlp.WordInflected;
-import ioc.liturgical.ws.models.db.docs.ontology.TextLiturgical;
+import ioc.liturgical.ws.models.db.docs.tables.ReactBootstrapTableData;
 import ioc.liturgical.ws.models.db.links.LinkRefersToBiblicalText;
 import ioc.liturgical.ws.models.db.returns.LinkRefersToTextToTextTableRow;
 import ioc.liturgical.ws.models.db.returns.ResultNewForms;
@@ -69,12 +68,12 @@ import net.ages.alwb.utils.core.datastores.json.models.LTKVJsonObject;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 import net.ages.alwb.utils.core.generics.MultiMapWithList;
 import net.ages.alwb.utils.core.id.managers.IdManager;
-import net.ages.alwb.utils.nlp.fetchers.Lexigram;
+import net.ages.alwb.utils.nlp.fetchers.Ox3kUtils;
 import net.ages.alwb.utils.nlp.fetchers.PerseusMorph;
+import net.ages.alwb.utils.nlp.models.GevLexicon;
 import net.ages.alwb.utils.nlp.utils.NlpUtils;
 import opennlp.tools.tokenize.SimpleTokenizer;
 import opennlp.tools.tokenize.Tokenizer;
-
 
 /**
  * Provides the high level interface to the low level database, Neo4j
@@ -271,7 +270,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  if (dbIsWritable() && dbMissingOntologyEntries()) {
 			  try {
 				  logger.info("Initializing ontology for the database.");
-				  this.createConstraintUniqueNodeId(ONTOLOGY_TOPICS.ROOT.keyname);
+				  this.createConstraintUniqueNodeId(TOPICS.ROOT.label);
 				  OntologyGenerator generator = new OntologyGenerator();
 				  for (LTKDbOntologyEntry entry : generator.getEntries()) {
 					  try {
@@ -317,13 +316,13 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	   */
 	  public void buildRelationshipDropdownMaps() {
 		  relationshipTypesArray = this.getRelationshipTypesArray();
-		  relationshipTypesProperties = EXTERNAL_DB_SCHEMA_CLASSES.relationshipPropertyJson();
+		  relationshipTypesProperties = SCHEMA_CLASSES.relationshipPropertyJson();
 		  tagOperatorsDropdown = getTagOperatorsArray();
 	  }
 
 	  public void buildOntologyDropdownMaps() {
-		  ontologyTypesProperties = EXTERNAL_DB_SCHEMA_CLASSES.ontologyPropertyJson();
-		  ontologyTypesArray = EXTERNAL_DB_SCHEMA_CLASSES.ontologyTypesJson();
+		  ontologyTypesProperties = SCHEMA_CLASSES.ontologyPropertyJson();
+		  ontologyTypesArray = SCHEMA_CLASSES.ontologyTypesJson();
 	  }
 
 	  public JsonArray getTagOperatorsArray() {
@@ -359,7 +358,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				// First use the LTK superclass so we can extract the valueSchemaId
 				LTK form = gson.fromJson(json, LTK.class);
 				// Now get a handle to the instances for the specified schema
-				EXTERNAL_DB_SCHEMA_CLASSES schema = EXTERNAL_DB_SCHEMA_CLASSES.classForSchemaName(form.get_valueSchemaId());
+				SCHEMA_CLASSES schema = SCHEMA_CLASSES.classForSchemaName(form.get_valueSchemaId());
 				form = 
 						gson.fromJson(
 								json
@@ -636,7 +635,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			boolean prefixProps = false;
 			String theGenericType = genericType;
 			if (genericType.startsWith("*") && type.startsWith("*")) {
-				theGenericType = ONTOLOGY_TOPICS.ROOT.keyname;
+				theGenericType = TOPICS.ROOT.label;
 			}
 			String theQuery = query;
 			CypherQueryBuilderForDocs builder = new CypherQueryBuilderForDocs(prefixProps)
@@ -782,13 +781,13 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			RequestStatus result = new RequestStatus();
 			LTK form = gson.fromJson(json, LTK.class);
 			if (internalManager.authorized(requestor, VERBS.POST, form.getLibrary())) {
-				String validation = EXTERNAL_DB_SCHEMA_CLASSES.validate(json);
+				String validation = SCHEMA_CLASSES.validate(json);
 				if (validation.length() == 0) {
 				try {
 						LTKDb record = 
 								 gson.fromJson(
 										json
-										, EXTERNAL_DB_SCHEMA_CLASSES
+										, SCHEMA_CLASSES
 											.classForSchemaName(
 													form.get_valueSchemaId())
 											.ltkDb.getClass()
@@ -968,7 +967,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					record = 
 							gson.fromJson(
 									json
-									, EXTERNAL_DB_SCHEMA_CLASSES
+									, SCHEMA_CLASSES
 										.classForSchemaName(
 												record.get_valueSchemaId())
 										.ltkDb.getClass()
@@ -1018,7 +1017,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				obj = 
 						gson.fromJson(
 								json
-								, EXTERNAL_DB_SCHEMA_CLASSES
+								, SCHEMA_CLASSES
 									.classForSchemaName(
 											obj.get_valueSchemaId())
 									.ltkDb.getClass()
@@ -1651,7 +1650,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public ResultJsonObjectArray getRelationshipTypePropertyMaps() {
 			ResultJsonObjectArray result = new ResultJsonObjectArray(false);
 			try {
-				Map<String,List<String>> map = EXTERNAL_DB_SCHEMA_CLASSES.relationshipPropertyMap();
+				Map<String,List<String>> map = SCHEMA_CLASSES.relationshipPropertyMap();
 				List<JsonObject> list = new ArrayList<JsonObject>();
 				JsonObject json = new JsonObject();
 				for ( Entry<String, List<String>> entry : map.entrySet()) {
@@ -1761,9 +1760,9 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public JsonObject getOntologyTagsForAllTypes() {
 			JsonObject result  = new JsonObject();
 			try {
-				for (ONTOLOGY_TOPICS t : ONTOLOGY_TOPICS.values()) {
-					JsonArray value = getOntologyTags(t.keyname);
-					result.add(t.keyname, value);
+				for (TOPICS t : TOPICS.values()) {
+					JsonArray value = getOntologyTags(t.label);
+					result.add(t.label, value);
 				}
 			} catch (Exception e) {
 				ErrorUtils.report(logger, e);
@@ -1921,11 +1920,11 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		 */
 		public Map<String, JsonArray> getDropdownsForOntologyInstances() {
 			Map<String,JsonArray> result = new TreeMap<String,JsonArray>();
-			for (ONTOLOGY_TOPICS t : ONTOLOGY_TOPICS.values()) {
+			for (TOPICS t : TOPICS.values()) {
 				try {
-					JsonArray array = this.getDropdownInstancesForOntologyType(t.keyname);
+					JsonArray array = this.getDropdownInstancesForOntologyType(t.label);
 					if (array != null && array.size() > 0) {
-						result.put(t.keyname, array);
+						result.put(t.label, array);
 					}
 				} catch (Exception e) {
 					ErrorUtils.report(logger, e);
@@ -2165,7 +2164,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			ResultNewForms result = new ResultNewForms(true);
 			result.setQuery(query);
 			result.setDomains(internalManager.getDomainDropdownsForUser(requestor));
-			result.setOntologyTypesDropdown(ONTOLOGY_TOPICS.keyNamesToDropdown());
+			result.setOntologyTypesDropdown(TOPICS.keyNamesToDropdown());
 			result.setOntologyDropdowns(getDropdownsForOntologyInstances());
 			result.setBiblicalBooksDropdown(this.biblicalBookNamesDropdown);
 			result.setBiblicalChaptersDropdown(this.biblicalChapterNumbersDropdown);
@@ -2239,13 +2238,20 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					this.runningUtilityName = utilityName;
 
 					switch (UTILITIES.valueOf(utilityName)) {
-					case FetchPerseusParses:
+					case EngSensesOne: {
+						boolean deleteFirst = false;
+						result = runUtilityCreateTableForEnglishOaldSenses(requestor, deleteFirst);
+						break;
+					}
+					case FetchPerseusParses: {
 						boolean deleteFirst = false;
 						result = runUtilityFetchPerseus(requestor, deleteFirst);
 						break;
-					case Tokenize:
+					}
+					case Tokenize: {
 						result = runUtilityTokenize(requestor, "gr_gr_cog", 0);
 						break;
+					}	
 					default:
 						break;
 					}
@@ -2356,6 +2362,49 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return status;
 		}
 		
+		public RequestStatus runUtilityCreateTableForEnglishOaldSenses(
+				String requestor
+				, boolean deleteFirst
+				) {
+			RequestStatus status = new RequestStatus();
+			
+			try {
+				ResultJsonObjectArray queryResult = null;
+				if (deleteFirst) {
+					queryResult = this.getForQuery(
+							"MATCH (n:WordSenseGev) delete n return count(n)"
+							, false
+							, false
+							);
+				}
+				GevLexicon lexicon = new GevLexicon(
+						Ox3kUtils.DOC_SOURCE.DISK
+						, Ox3kUtils.DOC_SOURCE.DISK
+						, true // save to disk
+						, "/json" // save to this path in the resources folder
+						, false // pretty print
+				);
+				lexicon.load();
+				
+				ReactBootstrapTableData data = new ReactBootstrapTableData(
+						TOPICS.TABLE_LEXICON
+						, SINGLETON_KEYS.TABLE_OALD_SENSES.keyname
+				);
+				data.setData(lexicon.toJsonString());
+				RequestStatus addStatus = this.addLTKDbObject(
+						requestor
+						, data.toJsonString()
+						);
+				status.setCode(addStatus.code);
+				status.setMessage(addStatus.userMessage);
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+				status.setCode(HTTP_RESPONSE_CODES.SERVER_ERROR.code);
+				status.setMessage(e.getMessage());
+			}
+			return status;
+		}
+
 		public RequestStatus runUtilityFetchPerseus(
 				String requestor
 				, boolean deleteFirst

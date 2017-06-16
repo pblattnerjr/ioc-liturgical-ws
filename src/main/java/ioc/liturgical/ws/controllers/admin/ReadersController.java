@@ -24,7 +24,7 @@ public class ReadersController {
 			} else {
 				response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 			}
-			return json.toString();
+			return json.toJsonString();
 		});
 
 		get(ENDPOINTS_ADMIN_API.READERS.toLibraryTopicPath(), (request, response) -> {

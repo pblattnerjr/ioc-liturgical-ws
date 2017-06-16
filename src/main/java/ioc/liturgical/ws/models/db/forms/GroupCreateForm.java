@@ -5,7 +5,7 @@ import com.google.gson.annotations.Expose;
 import ioc.liturgical.ws.annotations.UiWidget;
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.constants.ID_PART_TYPES;
-import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
+import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.models.db.supers.LTK;
 import ioc.liturgical.ws.models.db.supers.LTKOntologyCreateFormEntry;
 
@@ -22,7 +22,7 @@ public class GroupCreateForm extends LTKOntologyCreateFormEntry {
 			String key
 			) {
 		super(
-				ONTOLOGY_TOPICS.GROUP
+				TOPICS.GROUP
 				, key
 				, GroupCreateForm.class.getSimpleName()
 				,  1.1

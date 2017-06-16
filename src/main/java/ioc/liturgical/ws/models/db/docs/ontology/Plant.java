@@ -5,7 +5,7 @@ import com.google.gson.annotations.Expose;
 import ioc.liturgical.ws.annotations.UiWidget;
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.constants.ID_PART_TYPES;
-import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
+import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.models.db.forms.PlantCreateForm;
 import ioc.liturgical.ws.models.db.supers.LTKDbOntologyEntry;
 
@@ -20,7 +20,7 @@ public class Plant extends LTKDbOntologyEntry {
 	
 	private static String schema = Plant.class.getSimpleName();
 	private static double version = 1.1;
-	private static ONTOLOGY_TOPICS ontoTopic = ONTOLOGY_TOPICS.PLANT;
+	private static TOPICS ontoTopic = TOPICS.PLANT;
 	
 	public Plant(
 			String key

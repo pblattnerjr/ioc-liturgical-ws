@@ -2,7 +2,7 @@ package ioc.liturgical.ws.models.db.forms;
 
 import ioc.liturgical.ws.constants.CENTURIES;
 import ioc.liturgical.ws.constants.ID_PART_TYPES;
-import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
+import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.models.db.supers.LTKOntologyCreateFormEntry;
 
 import com.github.reinert.jjschema.Attributes;
@@ -29,7 +29,7 @@ public class EventCreateForm extends LTKOntologyCreateFormEntry {
 			String key
 			) {
 		super(
-				ONTOLOGY_TOPICS.EVENT
+				TOPICS.EVENT
 				, key
 				, schema
 				,  serialVersion

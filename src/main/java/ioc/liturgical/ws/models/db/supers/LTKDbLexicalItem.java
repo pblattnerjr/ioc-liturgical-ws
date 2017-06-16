@@ -2,8 +2,8 @@ package ioc.liturgical.ws.models.db.supers;
 
 import com.google.gson.annotations.Expose;
 
-import ioc.liturgical.ws.constants.EXTERNAL_DB_LIBS;
-import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
+import ioc.liturgical.ws.constants.db.external.LIBRARIES;
+import ioc.liturgical.ws.constants.db.external.TOPICS;
 
 import java.text.Normalizer;
 import java.util.ArrayList;
@@ -16,7 +16,7 @@ import com.github.reinert.jjschema.Attributes;
  * @author mac002
  *
  */
-@Attributes(title = "LTKDb Grammar Lexicon", description = "Abstract Lexicon")
+@Attributes(title = "LTKDb Lexical Item", description = "Abstract Lexical Item")
 public class LTKDbLexicalItem extends LTKDb {
 	
 	private static final String punct = "[;˙·,.;!?\\-(){}\\[\\]\\/:<>%͵·\"'`’_«»‘*•+…‧′|]";
@@ -46,15 +46,15 @@ public class LTKDbLexicalItem extends LTKDb {
 	 * @param serialVersion the version number for this record type
 	 */
 	public LTKDbLexicalItem(
-			ONTOLOGY_TOPICS topic // becomes the topic
+			TOPICS topic // becomes the topic
 			, String form // becomes the key
 			, int frequency
 			, String schema
 			, double serialVersion
 			) {
 		super (
-				EXTERNAL_DB_LIBS.LINGUISTICS.toSystemDomain()
-				, topic.keyname
+				LIBRARIES.LINGUISTICS.toSystemDomain()
+				, topic.label
 				, form
 				, schema
 				, serialVersion

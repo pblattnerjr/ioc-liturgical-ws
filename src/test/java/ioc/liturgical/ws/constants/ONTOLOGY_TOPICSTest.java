@@ -6,40 +6,42 @@ import java.util.List;
 
 import org.junit.Test;
 
+import ioc.liturgical.ws.constants.db.external.TOPICS;
+
 public class ONTOLOGY_TOPICSTest {
 
 	@Test
 	public void testAnimal() {
-		String labels = ONTOLOGY_TOPICS.ANIMAL.toDelimitedLabels();
+		String labels = TOPICS.ANIMAL.toDelimitedLabels();
 		assertTrue(labels.equals("OntoRoot:Being:Animal"));
 	}
 
 	@Test
 	public void testBeing() {
-		String labels = ONTOLOGY_TOPICS.BEING.toDelimitedLabels();
+		String labels = TOPICS.BEING.toDelimitedLabels();
 		assertTrue(labels.equals("OntoRoot:Being"));
 	}
 
 	@Test
 	public void testConcept() {
-		String labels = ONTOLOGY_TOPICS.CONCEPT.toDelimitedLabels();
+		String labels = TOPICS.CONCEPT.toDelimitedLabels();
 		assertTrue(labels.equals("OntoRoot:Concept"));
 	}
 
 	@Test
 	public void testEvent() {
-		String labels = ONTOLOGY_TOPICS.EVENT.toDelimitedLabels();
+		String labels = TOPICS.EVENT.toDelimitedLabels();
 		assertTrue(labels.equals("OntoRoot:Event"));
 	}
 	
 	@Test
 	public void testHuman() {
-		String labels = ONTOLOGY_TOPICS.HUMAN.toDelimitedLabels();
+		String labels = TOPICS.HUMAN.toDelimitedLabels();
 		assertTrue(labels.equals("OntoRoot:Being:Human"));
 	}
 	@Test
 	public void testHumanList() {
-		List<String> labels = ONTOLOGY_TOPICS.HUMAN.toLabelsList();
+		List<String> labels = TOPICS.HUMAN.toLabelsList();
 		assertTrue(labels.get(0).equals("OntoRoot") 
 				&& labels.get(1).contains("Being") 
 				&& labels.get(2).equals("Human"));
@@ -47,12 +49,12 @@ public class ONTOLOGY_TOPICSTest {
 
 	@Test
 	public void testPlace() {
-		String labels = ONTOLOGY_TOPICS.PLACE.toDelimitedLabels();
+		String labels = TOPICS.PLACE.toDelimitedLabels();
 		assertTrue(labels.equals("OntoRoot:Place"));
 	}
 	@Test
 	public void testPlant() {
-		String labels = ONTOLOGY_TOPICS.PLANT.toDelimitedLabels();
+		String labels = TOPICS.PLANT.toDelimitedLabels();
 		assertTrue(labels.equals("OntoRoot:Being:Plant"));
 	}
 	

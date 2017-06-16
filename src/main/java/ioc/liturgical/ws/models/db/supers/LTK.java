@@ -4,7 +4,7 @@ import com.google.gson.annotations.Expose;
 
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.constants.ID_PART_TYPES;
-import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
+import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.constants.STATUS;
 import ioc.liturgical.ws.constants.VISIBILITY;
 import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
@@ -72,7 +72,7 @@ public class LTK extends AbstractModel {
 	@Expose public List<String> tags = new ArrayList<String>();
 	
 	@Attributes(id = "bottom", required = true, readonly = true, minLength = 1, description = "The ontology topic for the schema.")
-	@Expose public ONTOLOGY_TOPICS ontologyTopic = ONTOLOGY_TOPICS.ROOT;
+	@Expose public TOPICS ontologyTopic = TOPICS.ROOT;
 	
 	@Attributes(id = "bottom", required = true, readonly = true, minLength = 1, description = "The Part Type of the Topic part of the ID.")
 	@Expose public ID_PART_TYPES partTypeOfTopic = ID_PART_TYPES.USER_TEXT;
@@ -102,7 +102,7 @@ public class LTK extends AbstractModel {
 			, String key
 			, String schema
 			, double serialVersion
-			, ONTOLOGY_TOPICS ontologyTopic
+			, TOPICS ontologyTopic
 			) {
 		super();
 		this.library = library;
@@ -206,11 +206,11 @@ public class LTK extends AbstractModel {
 		this.id = id;
 	}
 
-	public ONTOLOGY_TOPICS getOntologyTopic() {
+	public TOPICS getOntologyTopic() {
 		return ontologyTopic;
 	}
 
-	public void setOntologyTopic(ONTOLOGY_TOPICS ontologyTopic) {
+	public void setOntologyTopic(TOPICS ontologyTopic) {
 		this.ontologyTopic = ontologyTopic;
 	}
 

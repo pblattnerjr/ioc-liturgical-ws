@@ -1,8 +1,6 @@
 package ioc.liturgical.ws.models.db.docs.nlp;
 
-import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
-import ioc.liturgical.ws.constants.PARTS_OF_SPEECH;
-import ioc.liturgical.ws.models.db.supers.LTKDbGrammarAnalysis;
+import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.models.db.supers.LTKDbLexicalItem;
 
 import com.github.reinert.jjschema.Attributes;
@@ -13,7 +11,7 @@ import com.github.reinert.jjschema.Attributes;
  */
 @Attributes(title = "Lemma Form of a Word", description = "This is a doc that records information about the lemma form of a word.  The inflected form is the word as it appears in text.  The lemma form is used to look up an inflected word in a dictionary.")
 public class WordLemma extends LTKDbLexicalItem {
-	private static ONTOLOGY_TOPICS topic = ONTOLOGY_TOPICS.WORD_LEMMA;
+	private static TOPICS topic = TOPICS.WORD_LEMMA;
 	private static String schema = WordLemma.class.getSimpleName();
 	private static double version = 1.1;
 	

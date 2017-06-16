@@ -8,7 +8,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalyses;
-import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalysis;
 
 
 /**
@@ -43,7 +42,6 @@ public class Lexigram {
 	 */
 	private void fetchAnalyses() {
 		Document doc = null;
-		int seq = 1;
 		try {
 			doc = Jsoup.connect(url + token+"#Hist1")
 					.timeout(3000)

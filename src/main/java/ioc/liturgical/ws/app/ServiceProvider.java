@@ -487,7 +487,7 @@ public class ServiceProvider {
 				} else {
 					response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 				}
-				return json.toString();
+				return json.toJsonString();
 			});
 
 			/**
@@ -502,7 +502,7 @@ public class ServiceProvider {
 				} else {
 					response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 				}
-				return json.toString();
+				return json.toJsonString();
 			});
 
 			/**
@@ -517,7 +517,7 @@ public class ServiceProvider {
 				} else {
 					response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 				}
-				return json.toString();
+				return json.toJsonString();
 			});
 
 			/**
@@ -550,7 +550,7 @@ public class ServiceProvider {
 				} else {
 					response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 				}
-				return json.toString();
+				return json.toJsonString();
 			});
 
 			/**
@@ -565,7 +565,7 @@ public class ServiceProvider {
 				} else {
 					response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 				}
-				return json.toString();
+				return json.toJsonString();
 			});
 
 			/**
@@ -580,7 +580,7 @@ public class ServiceProvider {
 				} else {
 					response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 				}
-				return json.toString();
+				return json.toJsonString();
 			});
 				
 		}

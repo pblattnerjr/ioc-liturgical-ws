@@ -1,5 +1,6 @@
 package net.ages.alwb.utils.nlp.utils;
 
+import java.io.InputStream;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,17 +13,25 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import opennlp.tools.lemmatizer.SimpleLemmatizer;
+import opennlp.tools.tokenize.SimpleTokenizer;
+import opennlp.tools.tokenize.Tokenizer;
+
 import net.ages.alwb.utils.core.generics.MultiMapWithList;
 import ioc.liturgical.ws.models.db.docs.nlp.ConcordanceLine;
 import ioc.liturgical.ws.models.db.docs.nlp.WordInflected;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import net.ages.alwb.utils.core.file.AlwbFileUtils;
 import net.ages.alwb.utils.nlp.constants.BETA_CODES;
 import net.ages.alwb.utils.nlp.models.CharacterInfo;
-import opennlp.tools.tokenize.SimpleTokenizer;
-import opennlp.tools.tokenize.Tokenizer;
+
 
 public class NlpUtils {
 	private static final Logger logger = LoggerFactory.getLogger(NlpUtils.class);
+	
+	private static SimpleLemmatizer lemmatizer;
+	
+	private static String[] posTags = "CC,CD,DT,EX,FW,IN,JJ,JJR,JJS,MD,NN,NNN,NNS,PDT,POS,PRP,PRP$,RB,RBR,RBS,RP,TO,UH,VB,VBD,VBG,VBN,VBP,VBZ,WDT,WP,WP$,WRB".split(",");
 
 	/**
 	 * Creates a map of each character in the string.
@@ -247,6 +256,28 @@ public class NlpUtils {
 		return result;
 	}
 
+		public static String getLemma(String word) {
+			String original = word.trim().toLowerCase();
+			String result = original;
+			try {
+				   if (lemmatizer == null) {
+					   InputStream is = NlpUtils.class.getResourceAsStream("/models/en-lemmatizer.dict");
+				        lemmatizer = new SimpleLemmatizer(is);
+				        is.close();
+				    }
+				   for (String tag : posTags) {
+					    result = lemmatizer.lemmatize(original, tag);
+					    if (! result.equals(original)) {
+					    	result = result + "." + tag;
+					    	break;
+					    }
+				   }
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+			return result;
+		}
+		
 		public static List<String> getTokens(
 			String text
 			, boolean convertToLowerCase

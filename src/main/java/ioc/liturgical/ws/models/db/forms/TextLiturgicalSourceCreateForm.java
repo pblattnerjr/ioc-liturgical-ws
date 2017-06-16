@@ -5,7 +5,7 @@ import com.google.gson.annotations.Expose;
 import ioc.liturgical.ws.annotations.UiWidget;
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.constants.ID_PART_TYPES;
-import ioc.liturgical.ws.constants.ONTOLOGY_TOPICS;
+import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.models.db.supers.LTK;
 
 import com.github.reinert.jjschema.Attributes;
@@ -39,7 +39,7 @@ public class TextLiturgicalSourceCreateForm extends LTK {
 				, key
 				, schema
 				, serialVersion
-				, ONTOLOGY_TOPICS.TEXT_LITURGICAL
+				, TOPICS.TEXT_LITURGICAL
 				);
 		this.partTypeOfTopic = ID_PART_TYPES.USER_TEXT;
 		this.partTypeOfKey = ID_PART_TYPES.USER_TEXT;
