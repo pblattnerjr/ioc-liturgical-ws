@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
 import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
@@ -60,6 +63,38 @@ public class ModelHelpers {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
+	public static Map<String, Object> toHashMap(JsonObject o) {
+		try {
+			JsonObject newO = new JsonObject();
+			for (Entry<String,JsonElement> e : o.entrySet()) {
+				if (e.getValue().isJsonObject()) {
+					JsonObject value = e.getValue().getAsJsonObject();
+					if (value.has("val")) {
+						newO.add(e.getKey(), value.get("val"));
+					} else {
+						newO.add(e.getKey(), value);
+					}
+				} else {
+					newO.add(e.getKey(), e.getValue());
+				}
+			}
+			Type type = new TypeToken<Map<String, Object>>() {
+			}.getType();
+			Map<String, Object> map = new HashMap<String, Object>();
+			map = (Map<String, Object>) gson.fromJson(newO.toString(), type);
+			for (Entry<String, Object> entry : map.entrySet()) {
+				if (entry.getValue() instanceof com.google.gson.internal.LinkedTreeMap) {
+					String value = gson.toJson(entry.getValue());
+					map.put(entry.getKey(), value);
+				}
+			}
+			return map;
+		} catch (Exception e) {
+			ErrorUtils.report(logger, e);
+			return null;
+		}
+	}
 	/**
 	 * Gets a properties map using 'props' as the key This is useful when
 	 * passing a properties parameter, e.g. to Neo4j

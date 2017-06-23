@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.JsonArray;
 import com.google.gson.annotations.Expose;
 
-import ioc.liturgical.ws.controllers.db.neo4j.Neo4jController;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 
 public class DropdownArray extends AbstractModel {

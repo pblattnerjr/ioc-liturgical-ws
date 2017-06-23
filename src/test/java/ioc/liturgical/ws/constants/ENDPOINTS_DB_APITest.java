@@ -55,4 +55,9 @@ public class ENDPOINTS_DB_APITest {
 		String path = ENDPOINTS_DB_API.PLACES.pathname;
 		assert(path.equals("/db/api/v1/ontology/places"));
 	}
+	@Test
+	public void testGrLibTopicsEndpoint() {
+		String path = ENDPOINTS_DB_API.DROPDOWNS_GR_LIB_TOPICS.pathname;
+		assert(path.equals("/db/api/v1/dropdowns/grlibtopics"));
+	}
 }

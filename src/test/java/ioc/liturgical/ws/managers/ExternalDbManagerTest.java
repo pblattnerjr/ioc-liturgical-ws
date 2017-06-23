@@ -18,6 +18,7 @@ import ioc.liturgical.test.framework.LinkRefersToBiblicalTextTextFactory;
 import ioc.liturgical.test.framework.TestUsers;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
+import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.models.RequestStatus;
@@ -73,7 +74,7 @@ public class ExternalDbManagerTest {
 				);
 		
 		// do a clean up in case we aborted during a previous run without deleting Test entries
-		externalManager.getForQuery("match (n:OntoRoot) where n.name starts with \"Test\" delete(n)", false, false);
+		externalManager.getForQuery("match (n:" + TOPICS.ONTOLOGY_ROOT.label + ") where n.name starts with \"Test\" delete(n)", false, false);
 		
 		testReferences = new LinkRefersToBiblicalTextTextFactory();
 		
@@ -82,6 +83,12 @@ public class ExternalDbManagerTest {
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
 	}
+	
+	@Test
+	   public void testgetTopicForParaColTextEditor() {
+			ResultJsonObjectArray result = externalManager.getTopicForParaColTextEditor("actors");
+			assertTrue(result.getCount() > 0);
+	    }
 	
 	@Test
 	   public void testGetAnalysesForText() {
@@ -196,6 +203,16 @@ public class ExternalDbManagerTest {
 	    			externalManager.getRelationshipTags(RELATIONSHIP_TYPES.REFERS_TO_BIBLICAL_TEXT.typename);
 			assertTrue(result.size() > 0);
 	    }
+	
+	
+
+	@Test
+	   public void testgetTopicsDropdown() {
+	    	ResultJsonObjectArray result = 
+	    			externalManager.getTopicsDropdown() ;
+			assertNotNull(result.valueCount > 0);
+	    }
+
 
 	@Test
 	   public void testRelationshipDomainsList() {
@@ -232,7 +249,7 @@ public class ExternalDbManagerTest {
 	
 	@Test
 	   public void testDbHasConstraint() {
-			assertTrue(externalManager.dbHasConstraint("OntoRoot"));
+			assertTrue(externalManager.dbHasConstraint(TOPICS.ROOT.label));
 	    }
 
 	@Test

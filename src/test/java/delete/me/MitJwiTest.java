@@ -36,15 +36,19 @@ public class MitJwiTest {
 			dict.open();
 			for (POS pos : POS.values()) {
 				IIndexWord idxWord = dict.getIndexWord("orange", pos);
-				dumpIndexWord(idxWord);
-				
 				if (idxWord != null) {
-					System.out.println("idx Id = " + idxWord.getID());
-					System.out.println("idx lemma = " + idxWord.getLemma());
+					dumpIndexWord(idxWord);
 					for (IWordID id : idxWord.getWordIDs()) {
 						dumpWord(id, dict);
 					}
 				}
+//				if (idxWord != null) {
+//					System.out.println("idx Id = " + idxWord.getID());
+//					System.out.println("idx lemma = " + idxWord.getLemma());
+//					for (IWordID id : idxWord.getWordIDs()) {
+//						dumpWord(id, dict);
+//					}
+//				}
 			}
 //			for (IPointer ptr : getIPointers(dict)) {
 //				String name = ptr.getName();
@@ -114,13 +118,13 @@ public class MitJwiTest {
 	}
 
 	public static void dumpSynset(String lemma, ISynset synset) {
-		System.out.println("Synset ID = " + synset.getID());
-		System.out.println("LexFile nbr = " + synset.getLexicalFile().getNumber());
-		System.out.println("LexFile name = " + synset.getLexicalFile().getName());
-		System.out.println("LexFile desc = " + synset.getLexicalFile().getDescription());
-		System.out.println("Gloss = " + synset.getGloss());
+		System.out.println("getID() = " + synset.getID());
+		System.out.println("getLexicalFile().getNumber() = " + synset.getLexicalFile().getNumber());
+		System.out.println("getLexicalFile().getName() = " + synset.getLexicalFile().getName());
+		System.out.println("getLexicalFile().getDescription( = " + synset.getLexicalFile().getDescription());
+		System.out.println("getGloss() = " + synset.getGloss());
 		System.out.println("Synonyms = " + getSynsetWords(lemma, synset.getWords()));
-		System.out.println("Type = " + synset.getType());
+		System.out.println("getType() = " + synset.getType());
 		Map<IPointer,List<ISynsetID>> map = synset.getRelatedMap();
 		for (IPointer i : map.keySet()) {
 			System.out.println(i.getName());
@@ -143,28 +147,27 @@ public class MitJwiTest {
 	
 	public static void dumpIndexWord(IIndexWord i) {
 		try {
-			
+			System.out.println("Index Word Dump - start");
+			System.out.println("\tgetID() = " + i.getID());
+			System.out.println("\tgetLemma() = " + i.getLemma());
+			System.out.println("\tgetTagSenseCount() = " + i.getTagSenseCount());
+			System.out.println("\tgetID() = " + i.getID());
+			System.out.println("\tgetPOS() = " + i.getPOS());
+			System.out.println("Index Word Dump - end");
 		} catch (Exception e) {
-			
+			e.printStackTrace();
 		}
-		System.out.println("Index Word Dump - start");
-		System.out.println(i.getID());
-		System.out.println(i.getLemma());
-		System.out.println(i.getTagSenseCount());
-		System.out.println(i.getID());
-		System.out.println(i.getPOS());
-		System.out.println("Index Word Dump - end");
 	}
 	
 	public static void dumpWord(IWord i) {
 		System.out.println("Word Dump - start");
-		System.out.println(i.getLemma());
-		System.out.println(i.getLexicalID());
-		System.out.println(i.getAdjectiveMarker());
-		System.out.println(i.getID());
-		System.out.println(i.getPOS());
-		System.out.println(i.getSenseKey());
-		System.out.println(i.getSynset());
+		System.out.println("\tgetLemma() = " + i.getLemma());
+		System.out.println("\tgetLexicalID() = " + i.getLexicalID());
+		System.out.println("\tgetAdjectiveMarker() = " + i.getAdjectiveMarker());
+		System.out.println("\tgetID() = " + i.getID());
+		System.out.println("\tgetPOS() = " + i.getPOS());
+		System.out.println("\tgetSenseKey() = " + i.getSenseKey());
+		System.out.println("\tgetSynset() = " + i.getSynset());
 		System.out.println("Word Dump - end");
 	}
 	

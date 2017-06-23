@@ -12,7 +12,6 @@ import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 
 import java.text.Normalizer;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
@@ -48,6 +47,9 @@ public class TextLiturgical extends LTKDb {
 
 	@Attributes(id = "bottom", required = false, readonly = true, description = "Line sequence number for this text within its topic.")
 	@Expose  public String seq = "";
+
+	@Attributes(id = "bottom", required = false, readonly = true, description = "Comment from / for Alwb Library topic file")
+	@Expose  public String comment = "";
 
 	public TextLiturgical(
 			String library
@@ -141,6 +143,14 @@ public class TextLiturgical extends LTKDb {
 		String str = "Τὸν \"μὲν 'πρῶτον λόγον ἐποιησάμην περὶ πάντων͵ ὦ Θεόφιλε͵ ὧν ἤρξατο ὁ Ἰησοῦς ποιεῖν τε καὶ διδάσκειν ἄχρι ἧς ἡμέρας ἐντειλάμενος τοῖς ἀποστόλοις διὰ πνεύματος ἁγίου οὓς ἐξελέξατο ἀνελήφθη· οἷς καὶ παρέστησεν ἑαυτὸν ζῶντα μετὰ τὸ παθεῖν αὐτὸν ἐν πολλοῖς τεκμηρίοις͵ δι' ἡμερῶν τεσσαράκοντα ὀπτανόμενος αὐτοῖς καὶ λέγων τὰ περὶ τῆς βασιλείας τοῦ Θεοῦ. Καὶ συναλιζόμενος παρήγγειλεν αὐτοῖς ἀπὸ Ἱεροσολύμων μὴ χωρίζεσθαι͵ ἀλλὰ περιμένειν τὴν ἐπαγγελίαν τοῦ πατρὸς ἣν ἠκούσατέ μου· ὅτι Ἰωάννης μὲν ἐβάπτισεν ὕδατι͵ ὑμεῖς δὲ ἐν πνεύματι βαπτισθήσεσθε ἁγίῳ οὐ μετὰ πολλὰς ταύτας ἡμέρας. Οἱ μὲν οὖν συνελθόντες ἠρώτων αὐτὸν λέγοντες͵ Κύριε͵ εἰ ἐν τῷ χρόνῳ τούτῳ ἀποκαθιστάνεις τὴν βασιλείαν τῷ Ἰσραήλ; εἶπεν δὲ πρὸς αὐτούς͵ Οὐχ ὑμῶν ἐστιν γνῶναι χρόνους ἢ καιροὺς οὓς ὁ πατὴρ ἔθετο ἐν τῇ ἰδίᾳ ἐξουσίᾳ· ἀλλὰ λήψεσθε δύναμιν ἐπελθόντος τοῦ ἁγίου πνεύματος ἐφ' ὑμᾶς͵ καὶ ἔσεσθέ μου μάρτυρες ἔν τε Ἰερουσαλὴμ καὶ ἐν πάσῃ τῇ Ἰουδαίᾳ καὶ Σαμαρείᾳ καὶ ἕως ἐσχάτου τῆς γῆς.";
 		System.out.println(str);
 		System.out.println(punctPattern.matcher(str).replaceAll("").toLowerCase());
+	}
+
+	public String getComment() {
+		return comment;
+	}
+
+	public void setComment(String comment) {
+		this.comment = comment;
 	}
 
 }

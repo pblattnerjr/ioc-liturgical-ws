@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.h2.jdbcx.JdbcConnectionPool;
 import org.h2.tools.DeleteDbFiles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +32,8 @@ public class H2ConnectionManager {
 	private static final Logger logger = LoggerFactory
 			.getLogger(H2ConnectionManager.class);
 
-	private Connection connection = null;
+	private JdbcConnectionPool connectionPool = null;
+//	private Connection connection = null;
 
     private String DB_DRIVER = "org.h2.Driver";
     private String DB_NAME = Constants.DB_NAME;
@@ -40,13 +42,6 @@ public class H2ConnectionManager {
     private String DB_USER = "system";
     private String DB_PASSWORD = "";
     
-    private PreparedStatement createPreparedStatement = null;
-    private PreparedStatement deletePreparedStatement = null;
-    private PreparedStatement insertPreparedStatement = null;
-    private PreparedStatement selectPreparedStatement = null;
-    private PreparedStatement truncatePreparedStatement = null;
-    private PreparedStatement updatePreparedStatement = null;
-
     private Query currentQuery = null;
     
     /**
@@ -62,12 +57,29 @@ public class H2ConnectionManager {
     		if (deleteFirst) {
     			deleteDatabase();
     		}
-        	connection = getDBConnection();
-            connection.setAutoCommit(false);
+    		connectionPool = getDBConnectionPool();
     	} catch (Exception e) {
     		ErrorUtils.report(logger, e);
     	}
     }
+    
+    /**
+     * 
+     * @param deleteFirst - first delete the entire database, then create again
+     */
+    public H2ConnectionManager(boolean deleteFirst) {
+    	try {
+    		if (deleteFirst) {
+    			deleteDatabase();
+    		}
+    		connectionPool = getDBConnectionPool();
+//        	connection = getDBConnection();
+//            connection.setAutoCommit(false);
+    	} catch (Exception e) {
+    		ErrorUtils.report(logger, e);
+    	}
+    }
+
     
     public void setQuery(Query query) {
     	this.currentQuery = query;
@@ -78,21 +90,6 @@ public class H2ConnectionManager {
 		DB_CONNECTION = DB_PROTOCOL + DB_NAME;
     }
 
-    /**
-     * 
-     * @param deleteFirst - first delete the entire database, then create again
-     */
-    public H2ConnectionManager(boolean deleteFirst) {
-    	try {
-    		if (deleteFirst) {
-    			deleteDatabase();
-    		}
-        	connection = getDBConnection();
-            connection.setAutoCommit(false);
-    	} catch (Exception e) {
-    		ErrorUtils.report(logger, e);
-    	}
-    }
     
     public String getDbName() {
     	return DB_NAME;
@@ -103,14 +100,20 @@ public class H2ConnectionManager {
     }
     
     public void createTable(String statement) throws SQLException {
-		createPreparedStatement = connection.prepareStatement(statement);
+//		createPreparedStatement = connection.prepareStatement(statement);
+    	Connection connection = connectionPool.getConnection();
+    	PreparedStatement createPreparedStatement = connection.prepareStatement(statement);
 	    createPreparedStatement.executeUpdate();
         createPreparedStatement.close();
+        connection.close();
     }
+    
     
     public List<String> getTableNames() {
     	List<String> result = new ArrayList<String>();
+    	Connection connection = null;
     	try {
+        	connection = connectionPool.getConnection();
         	String [] types = {"TABLE"};
         	ResultSet rs = connection.getMetaData().getTables(null, null, "%", types);
         	while (rs.next()) {
@@ -118,6 +121,12 @@ public class H2ConnectionManager {
         	}        
         } catch (Exception e) {
         	ErrorUtils.report(logger, e);
+        } finally {
+        	try {
+				connection.close();
+			} catch (SQLException e) {
+				ErrorUtils.report(logger, e);
+			}
         }
     	return result;
     }
@@ -143,11 +152,23 @@ public class H2ConnectionManager {
      * @throws SQLException 
      */
     public void delete(String statement, JsonObject doc) throws SQLException {
-			deletePreparedStatement = connection.prepareStatement(statement);
+    	Connection connection = null;
+    	try {
+        	connection = connectionPool.getConnection();
+        	PreparedStatement deletePreparedStatement = connection.prepareStatement(statement);
 			deletePreparedStatement.setString(1, doc.get("_id").getAsString());
 			deletePreparedStatement.executeUpdate();
 			deletePreparedStatement.close();
-		    commit();
+			connection.commit();
+        } catch (Exception e) {
+        	ErrorUtils.report(logger, e);
+        } finally {
+        	try {
+				connection.close();
+			} catch (SQLException e) {
+				ErrorUtils.report(logger, e);
+			}
+        }
     }
    
     public void truncateTable() throws SQLException {
@@ -161,9 +182,22 @@ public class H2ConnectionManager {
      * @throws SQLException 
      */
     public void truncateTable(String statement) throws SQLException {
-			truncatePreparedStatement = connection.prepareStatement(statement);
+    	Connection connection = null;
+    	try {
+        	connection = connectionPool.getConnection();
+        	PreparedStatement truncatePreparedStatement = connection.prepareStatement(statement);
 			truncatePreparedStatement.executeUpdate();
 			truncatePreparedStatement.close();
+			connection.commit();
+        } catch (Exception e) {
+        	ErrorUtils.report(logger, e);
+        } finally {
+        	try {
+				connection.close();
+			} catch (SQLException e) {
+				ErrorUtils.report(logger, e);
+			}
+        }
     }
 
     public void insert(List<JsonObject> docs) throws SQLException {
@@ -177,14 +211,26 @@ public class H2ConnectionManager {
      * @throws SQLException 
      */
     public void insert(String statement, List<JsonObject> docs) throws SQLException {
-		insertPreparedStatement = connection.prepareStatement(statement);
-        for (JsonObject json : docs) {
-            insertPreparedStatement.setString(1, json.get("_id").getAsString());
-            insertPreparedStatement.setString(2, json.toString());
-            insertPreparedStatement.executeUpdate();
+    	Connection connection = null;
+    	try {
+        	connection = connectionPool.getConnection();
+        	PreparedStatement insertPreparedStatement = connection.prepareStatement(statement);
+            for (JsonObject json : docs) {
+                insertPreparedStatement.setString(1, json.get("_id").getAsString());
+                insertPreparedStatement.setString(2, json.toString());
+                insertPreparedStatement.executeUpdate();
+            }
+    		insertPreparedStatement.close();
+			connection.commit();
+        } catch (Exception e) {
+        	ErrorUtils.report(logger, e);
+        } finally {
+        	try {
+				connection.close();
+			} catch (SQLException e) {
+				ErrorUtils.report(logger, e);
+			}
         }
-		insertPreparedStatement.close();
-		commit();
     }
     
     /**
@@ -201,12 +247,24 @@ public class H2ConnectionManager {
      * @param doc - to be inserted
      */
     public void insert(String statement, JsonObject doc) throws SQLException {
-		insertPreparedStatement = connection.prepareStatement(statement);
-        insertPreparedStatement.setString(1, doc.get("_id").getAsString());
-        insertPreparedStatement.setString(2, doc.toString());
-        insertPreparedStatement.executeUpdate();
-		insertPreparedStatement.close();
-	    commit();
+    	Connection connection = null;
+    	try {
+        	connection = connectionPool.getConnection();
+        	PreparedStatement insertPreparedStatement = connection.prepareStatement(statement);
+            insertPreparedStatement.setString(1, doc.get("_id").getAsString());
+            insertPreparedStatement.setString(2, doc.toString());
+            insertPreparedStatement.executeUpdate();
+    		insertPreparedStatement.close();
+			connection.commit();
+        } catch (Exception e) {
+        	ErrorUtils.report(logger, e);
+        } finally {
+        	try {
+				connection.close();
+			} catch (SQLException e) {
+				ErrorUtils.report(logger, e);
+			}
+        }
     }
 
     /**
@@ -217,12 +275,24 @@ public class H2ConnectionManager {
      * @throws SQLException 
      */
     public void insert(String statement, String key, JsonObject doc) throws SQLException {
-		insertPreparedStatement = connection.prepareStatement(statement);
-        insertPreparedStatement.setString(1, key);
-        insertPreparedStatement.setString(2, doc.toString());
-        insertPreparedStatement.executeUpdate();
-		insertPreparedStatement.close();
-	    commit();
+    	Connection connection = null;
+    	try {
+        	connection = connectionPool.getConnection();
+        	PreparedStatement insertPreparedStatement = connection.prepareStatement(statement);
+            insertPreparedStatement.setString(1, key);
+            insertPreparedStatement.setString(2, doc.toString());
+            insertPreparedStatement.executeUpdate();
+    		insertPreparedStatement.close();
+			connection.commit();
+        } catch (Exception e) {
+        	ErrorUtils.report(logger, e);
+        } finally {
+        	try {
+				connection.close();
+			} catch (SQLException e) {
+				ErrorUtils.report(logger, e);
+			}
+        }
     }
 
     /**
@@ -243,12 +313,24 @@ public class H2ConnectionManager {
      * @throws SQLException 
      */
     public void update(String statement, JsonObject doc) throws SQLException {
-		updatePreparedStatement = connection.prepareStatement(statement);
-        updatePreparedStatement.setString(1, doc.toString());
-        updatePreparedStatement.setString(2, doc.get("_id").getAsString());
-        updatePreparedStatement.executeUpdate();
-		updatePreparedStatement.close();
-	    commit();
+    	Connection connection = null;
+    	try {
+        	connection = connectionPool.getConnection();
+        	PreparedStatement updatePreparedStatement = connection.prepareStatement(statement);
+            updatePreparedStatement.setString(1, doc.toString());
+            updatePreparedStatement.setString(2, doc.get("_id").getAsString());
+            updatePreparedStatement.executeUpdate();
+    		updatePreparedStatement.close();
+			connection.commit();
+        } catch (Exception e) {
+        	ErrorUtils.report(logger, e);
+        } finally {
+        	try {
+				connection.close();
+			} catch (SQLException e) {
+				ErrorUtils.report(logger, e);
+			}
+        }
     }
     
     public boolean contains(String id) throws SQLException {
@@ -269,16 +351,24 @@ public class H2ConnectionManager {
      * @throws SQLException 
      */
     public void update(String statement, String id, JsonObject doc) throws SQLException {
-			updatePreparedStatement = connection.prepareStatement(statement);
+    	Connection connection = null;
+    	try {
+        	connection = connectionPool.getConnection();
+        	PreparedStatement updatePreparedStatement = connection.prepareStatement(statement);
             updatePreparedStatement.setString(1, doc.toString());
             updatePreparedStatement.setString(2, id);
             updatePreparedStatement.executeUpdate();
 			updatePreparedStatement.close();
-		    commit();
-    }
-
-    public void closeSelect() throws SQLException {
-        selectPreparedStatement.close();
+			connection.commit();
+        } catch (Exception e) {
+        	ErrorUtils.report(logger, e);
+        } finally {
+        	try {
+				connection.close();
+			} catch (SQLException e) {
+				ErrorUtils.report(logger, e);
+			}
+        }
     }
 
     /**
@@ -291,12 +381,24 @@ public class H2ConnectionManager {
      * @throws SQLException 
      */
     public ResultSet query(String statement, String where) throws SQLException {
+    	Connection connection = null;
     	ResultSet rs = null;
-		selectPreparedStatement = connection.prepareStatement(statement);
-		if (where != null) {
-			selectPreparedStatement.setString(1, where);
-		}
-        rs = selectPreparedStatement.executeQuery();
+    	try {
+        	connection = connectionPool.getConnection();
+        	PreparedStatement selectPreparedStatement = connection.prepareStatement(statement);
+    		if (where != null) {
+    			selectPreparedStatement.setString(1, where);
+    		}
+            rs = selectPreparedStatement.executeQuery();
+        } catch (Exception e) {
+        	ErrorUtils.report(logger, e);
+        } finally {
+        	try {
+				connection.close();
+			} catch (SQLException e) {
+				ErrorUtils.report(logger, e);
+			}
+        }
         return rs;
     }
    
@@ -316,29 +418,31 @@ public class H2ConnectionManager {
     	return queryForJson(statement,null);
     }
     
-    public void closeConnection() throws SQLException {
-		connection.close();
-    }
-    
-
     public int getRowCount(String statement) {
     	int result = 0;
     	ResultSet rs = null;
-        try {
-			selectPreparedStatement = connection.prepareStatement(statement);
+    	Connection connection = null;
+    	try {
+        	connection = connectionPool.getConnection();
+        	PreparedStatement selectPreparedStatement = connection.prepareStatement(statement);
 	        rs = selectPreparedStatement.executeQuery();
 	        while (rs.next()) {
             	rs.getString("value");
 	        	result = result + 1;
 	        }
 	        selectPreparedStatement.close();
-		} catch (SQLException e) {
+        } catch (Exception e) {
 			result = 0;
-		} catch (Exception e) {
-			result = 0;
-		}
+        	ErrorUtils.report(logger, e);
+        } finally {
+        	try {
+				connection.close();
+			} catch (SQLException e) {
+				result = 0;
+				ErrorUtils.report(logger, e);
+			}
+        }
         return result;
-    	
     }
 
     public List<JsonObject> queryForJsonWhereEqual(String where) throws SQLException {
@@ -373,22 +477,33 @@ public class H2ConnectionManager {
     	List<JsonObject> result = new ArrayList<JsonObject>();
     	JsonParser parser = new JsonParser();
     	ResultSet rs = null;
-		selectPreparedStatement = connection.prepareStatement(statement);
-		if (where != null) {
-			selectPreparedStatement.setString(1, where);
-		}
-        rs = selectPreparedStatement.executeQuery();
-        while (rs.next()) {
-            result.add(parser.parse(rs.getString("value")).getAsJsonObject());
+    	Connection connection = null;
+    	try {
+        	connection = connectionPool.getConnection();
+        	PreparedStatement selectPreparedStatement = connection.prepareStatement(statement);
+    		if (where != null) {
+    			selectPreparedStatement.setString(1, where);
+    		}
+                rs = selectPreparedStatement.executeQuery();
+    	        while (rs.next()) {
+    	           result.add(parser.parse(rs.getString("value")).getAsJsonObject());
+    	        }
+    	        if (! selectPreparedStatement.isClosed()) {
+    		        selectPreparedStatement.close();
+    	        }
+        } catch (Exception e) {
+        	ErrorUtils.report(logger, e);
+        } finally {
+        	try {
+				connection.close();
+			} catch (SQLException e) {
+				ErrorUtils.report(logger, e);
+			}
         }
-        selectPreparedStatement.close();
         return result;
     }
 
 
-    public void commit() throws SQLException {
-			connection.commit();
-    }
     public void deleteDatabase() {
     	String path = AlwbFileUtils.getPathToFile(DB_NAME);
         DeleteDbFiles.execute("./" + path, DB_NAME, true);
@@ -406,11 +521,26 @@ public class H2ConnectionManager {
         		, DB_PASSWORD);
     }
 
-	public Connection getConnection() {
-		return connection;
+    private JdbcConnectionPool getDBConnectionPool() throws SQLException {
+        try {
+            Class.forName(DB_DRIVER);
+        } catch (ClassNotFoundException e) {
+        	ErrorUtils.report(logger, e);
+        }
+        return JdbcConnectionPool.create(
+        		DB_CONNECTION
+        		, DB_USER
+        		, DB_PASSWORD
+        		);
+    }
+
+    public Connection getConnection() {
+		try {
+			return this.connectionPool.getConnection();
+		} catch (SQLException e) {
+			ErrorUtils.report(logger, e);
+			return null;
+		}
 	}
 
-	public void setConnection(Connection connection) {
-		this.connection = connection;
-	}
 }

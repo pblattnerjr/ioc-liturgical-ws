@@ -47,6 +47,32 @@ public class AlwbFileUtils {
 	private static final Logger logger = LoggerFactory
 			.getLogger(AlwbFileUtils.class);
 	
+	public static String fileStatsDirectory(String dir, String extension) {
+		StringBuffer result = new StringBuffer();
+		long fileCount = 0;
+		long lineCount = 0;
+		for (File f : AlwbFileUtils.getFilesInDirectory(dir, extension)) {
+			fileCount = fileCount + 1;
+			lineCount = lineCount + AlwbFileUtils.linesFromFile(f).size();
+		}
+		result.append("Files: ");
+		result.append(fileCount);
+		result.append("\n");
+		result.append("Lines: ");
+		result.append(String.format("%,d", lineCount));
+		result.append("\n");
+		if (extension.equals("java")) {
+			result.append("Function points: ");
+			result.append(String.format("%,d", lineCount * 53));
+			result.append("\n");
+		} else if (extension.equals("js")) {
+			result.append("Function points: ");
+			result.append(String.format("%,d", lineCount * 53)); // same as java, actually
+			result.append("\n");
+		}
+		return result.toString();
+	}
+
 	/**
 	 * Read all the lines in the given file and return as a list
 	 * @param f - the file to read

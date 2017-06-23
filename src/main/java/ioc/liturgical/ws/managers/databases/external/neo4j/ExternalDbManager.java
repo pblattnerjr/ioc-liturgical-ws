@@ -60,6 +60,7 @@ import ioc.liturgical.ws.models.db.supers.LTKDb;
 import ioc.liturgical.ws.models.db.supers.LTKDbOntologyEntry;
 import ioc.liturgical.ws.models.db.supers.LTKLink;
 import ioc.liturgical.ws.models.ws.db.Utility;
+import ioc.liturgical.ws.models.ws.response.column.editor.KeyArraysCollectionBuilder;
 import net.ages.alwb.utils.core.datastores.json.exceptions.BadIdException;
 import net.ages.alwb.utils.core.datastores.json.exceptions.MissingSchemaIdException;
 import net.ages.alwb.utils.core.datastores.json.models.DropdownArray;
@@ -345,6 +346,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  /**
 	   * Adds a reference that subclasses LTK and is a LinkRefersTo relationship.
 	   * 
+	   * 
 	   * @param requestor - id of user who is making the request
 	   * @param relationshipJson - must be subclass of LTK
 	   * @return
@@ -468,7 +470,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				) {
 			ResultJsonObjectArray result = null;
 			if (type == null) {
-				type = "id";
+				type = TOPICS.TEXT.label;
 			}
 			/**
 			 * This is a workaround for ambiguity between the codes used with the Hieratikon sections
@@ -1076,6 +1078,30 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			try {
 				CypherQueryBuilderForDocs builder = new CypherQueryBuilderForDocs(false)
 						.MATCH()
+						.LABEL(TOPICS.ROOT.label)
+						.WHERE("id")
+						.EQUALS(id)
+						.RETURN("*")
+						;
+				CypherQueryForDocs q = builder.build();
+				result  = neo4jManager.getForQuery(q.toString());
+				result.setQuery(q.toString());
+				result.setValueSchemas(internalManager.getSchemas(result.getResult(), null));
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+
+		public ResultJsonObjectArray getForId(
+				String id
+				, String label) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
+				CypherQueryBuilderForDocs builder = new CypherQueryBuilderForDocs(false)
+						.MATCH()
+						.LABEL(label)
 						.WHERE("id")
 						.EQUALS(id)
 						.RETURN("*")
@@ -1192,6 +1218,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public ResultJsonObjectArray getForIdStartsWith(String id) {
 			CypherQueryBuilderForDocs builder = new CypherQueryBuilderForDocs()
 					.MATCH()
+					.LABEL(TOPICS.ROOT.label)
 					.WHERE("id")
 					.STARTS_WITH(id)
 					;
@@ -1752,17 +1779,16 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			
 		}
 
-		/**
-		 * Get the unique set of labels currently in use for the specified relationship type
-		 * @param type name of the relationship
-		 * @return
-		 */
 		public JsonObject getOntologyTagsForAllTypes() {
 			JsonObject result  = new JsonObject();
 			try {
 				for (TOPICS t : TOPICS.values()) {
-					JsonArray value = getOntologyTags(t.label);
-					result.add(t.label, value);
+					if (t == TOPICS.ROOT || t == TOPICS.LINGUISTICS_ROOT || t == TOPICS.TABLES_ROOT) {
+						// ignore
+					} else {
+						JsonArray value = getOntologyTags(t.label);
+						result.add(t.label, value);
+					}
 				}
 			} catch (Exception e) {
 				ErrorUtils.report(logger, e);
@@ -1775,7 +1801,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			JsonArray result  = new JsonArray();
 			result.add(new DropdownItem("Any","*").toJsonObject());
 			try {
-				String q = "match ()-[link:" + type + "]->() return distinct link.library  order by link.library ascending";
+				String q = "match (:Text)-[link:" + type + "]->(:Root) return distinct link.library  order by link.library ascending";
 				ResultJsonObjectArray query = neo4jManager.getForQuery(q);
 				if (query.getResultCount() > 0) {
 					for (JsonObject item : query.getResult()) {
@@ -1788,6 +1814,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
+		// TODO: getRelationshipLibrarysAsDropdownItems runs very slow.  Figure out how to speed it up.
 		public JsonObject getRelationshipLibrarysForAllTypes() {
 			JsonObject result  = new JsonObject();
 			try {
@@ -1856,6 +1883,48 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 		
+		public ResultJsonObjectArray getTopicsDropdown() {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
+				String query = "match (n:gr_gr_cog) return distinct n.topic order by n.topic";
+				ResultJsonObjectArray queryResult = this.getForQuery(query, false, false);
+				DropdownArray array = new DropdownArray();
+				for (JsonObject o : queryResult.getValues()) {
+					String topic = o.get("n.topic").getAsString();
+					array.add(new DropdownItem(topic,topic));
+				}
+				List<JsonObject> list = new ArrayList<JsonObject>();
+				list.add(array.toJsonObject());
+				result.setResult(list);
+				result.setQuery("get Topics dropdown ");
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+		
+		public ResultJsonObjectArray getTopicForParaColTextEditor(String topic) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
+				KeyArraysCollectionBuilder b = new KeyArraysCollectionBuilder(topic, true);
+				String query = "match (n:Liturgical) where n.id starts with 'gr_gr_cog~" + topic + "' return n.key";
+				ResultJsonObjectArray queryResult = this.getForQuery(query, false, false);
+				for (JsonObject o : queryResult.getValues()) {
+					String key = o.get("n.key").getAsString();
+					b.addTemplateKey(topic, key);
+				}
+				List<JsonObject> list = new ArrayList<JsonObject>();
+				list.add(b.getCollection().toJsonObject());
+				result.setResult(list);
+				result.setQuery("get Topic " + topic + " for ParaColTextEditor");
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+
 		public JsonArray getRelationshipTypesArray() {
 			JsonArray result = new JsonArray();
 			try {
@@ -1882,7 +1951,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public boolean dbHasOntologyEntries() {
 			boolean result = false;
 			try {
-				ResultJsonObjectArray entries = getForQuery("match (n:OntoRoot) return count(n)", false, false);
+				ResultJsonObjectArray entries = getForQuery("match (n:" + TOPICS.ONTOLOGY_ROOT.label  + ") return count(n)", false, false);
 				Long count = entries.getValueCount();
 				result = count > 0;
 			} catch (Exception e) {
@@ -1898,7 +1967,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		 */
 		public JsonArray getDropdownInstancesForOntologyType(String type) {
 			JsonArray result = new JsonArray();
-				String query  = "match (n:OntoRoot) where n.topic = \"" + type + "\" return n.id as id, n.name as name";
+				String query  = "match (n:" + TOPICS.ONTOLOGY_ROOT.label + ") where n.topic = \"" + type + "\" return n.id as id, n.name as name";
 				ResultJsonObjectArray entries = getForQuery(query, false, false);
 				for (JsonElement entry : entries.getValues()) {
 					try {
@@ -2484,11 +2553,11 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			RequestStatus status = new RequestStatus();
 			StringBuffer sb = new StringBuffer();
 			try {
-				sb.append("MATCH (s {id: \"");
+				sb.append("MATCH (s:Root {id: \"");
 				sb.append(idOfStartNode);
-				sb.append("\"}), (e {id: \"");
+				sb.append("\"}), (e:Root {id: \"");
 				sb.append(idOfEndNode);
-				sb.append("\"}) create (s)-[:");
+				sb.append("\"}) merge (s)-[:");
 				sb.append(relationshipType.typename);
 				sb.append("]->(e)");
 				ResultJsonObjectArray queryResult = this.getForQuery(sb.toString(),false, false);

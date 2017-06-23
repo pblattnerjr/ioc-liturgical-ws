@@ -3,6 +3,7 @@ package ioc.liturgical.ws.managers;
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.constants.ROLES;
 import ioc.liturgical.ws.constants.VERBS;
+import ioc.liturgical.ws.managers.auth.UserStatus;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.models.ws.db.UserContact;
 import ioc.liturgical.ws.models.ws.db.UserHash;
@@ -75,6 +76,7 @@ public class InternalDbManagerTest extends TestCase {
         assertReadOnlyAuths("testUser04", "gr_gr_cog");
         assertAdminDomainIds();
         assertUsersWithRoleForDomain();
+
     }
     
     private void assertAuths(String user, String library) {
@@ -140,4 +142,5 @@ public class InternalDbManagerTest extends TestCase {
     	assertTrue(accessManager.getDomainReaders("gr_gr_cog").size() > 0);
     	assertTrue(accessManager.getDomainReviewers("gr_gr_cog").size() > 0);
     }
+    
 }

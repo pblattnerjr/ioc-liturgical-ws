@@ -33,7 +33,34 @@ public class AlwbGeneralUtils {
 	private static final Logger LOGGER = LoggerFactory
 			.getLogger(AlwbGeneralUtils.class);
 
-	public final static String QUOTE = "\"";
+    public static String done(long x, long y) {
+  	   int percentage = (int)(x * 100.0 / y + 0.5);
+      	return String.format("%,d%% done.", percentage);
+      }
+
+    /**
+     * Calculates the percent complete
+     * @param x
+     * @param y
+     * @return
+     */
+    public static String done(int x, int y) {
+   	   int percentage = (int) (x * 100.0 / y + 0.5);
+       	return String.format("%,d%% done.", percentage);
+       }
+
+    /**
+     * Computes the percentage of compression
+     * @param x
+     * @param y
+     * @return
+     */
+    public static String compression(int x, int y) {
+    	   int percentage =  100 - (int)(x * 100.0 / y + 0.5);
+        	return String.format("%,d%%", percentage);
+        }
+
+    public final static String QUOTE = "\"";
 	
 	/**
 	 * If the supplied domain is truly a domain, e.g. gr_gr_cog,

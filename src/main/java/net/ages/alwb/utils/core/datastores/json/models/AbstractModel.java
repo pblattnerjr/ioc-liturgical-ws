@@ -46,7 +46,7 @@ public class AbstractModel {
     private static final Logger logger = LoggerFactory.getLogger(AbstractModel.class);
 	protected double serialVersionUID = 1.1;
 
-	protected static Gson gson = new GsonBuilder()
+	public static Gson gson = new GsonBuilder()
 			.excludeFieldsWithoutExposeAnnotation()
 			.create();
 	
@@ -84,7 +84,7 @@ public class AbstractModel {
 	public String toJsonString() {
 		String result = null;
 		try {
-			result = this.gson.toJson(this);
+			result = AbstractModel.gson.toJson(this);
 		} catch (Exception e) {
 			ErrorUtils.report(logger, e);
 			result = null;

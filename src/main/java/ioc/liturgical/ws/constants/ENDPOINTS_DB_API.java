@@ -68,6 +68,12 @@ public enum ENDPOINTS_DB_API {
 			, "domain"
 			,"Endpoint for dropdown values to search docs of type text."
 			)
+	, DROPDOWNS_GR_LIB_TOPICS(
+			"grlibtopics"
+			, ENDPOINT_TYPES.DROPDOWN
+			, "domain"
+			,"Endpoint for dropdown values for the topics in the gr_gr_cog library."
+			)
 	, GROUPS(
 			"groups"
 			, ENDPOINT_TYPES.ONTOLOGY

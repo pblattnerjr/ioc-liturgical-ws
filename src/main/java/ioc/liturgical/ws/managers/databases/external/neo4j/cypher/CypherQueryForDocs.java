@@ -71,6 +71,9 @@ public class CypherQueryForDocs {
 		StringBuilder sb = new StringBuilder();
 		sb.append("MATCH (doc");
 		if (LABEL.length() >0) {
+			if (! LABEL.startsWith(":")) {
+				sb.append(":");
+			}
 			sb.append(LABEL);
 		}
 		sb.append(") ");

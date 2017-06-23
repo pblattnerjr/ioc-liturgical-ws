@@ -197,12 +197,22 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	 * If found, it adds it to the map that the method will return.
 	 * @param list
 	 * @param username - if not null, used to filter list of domains to ones authorized
+	 * TODO: ?? where does it filter???
 	 * @return
 	 */
 	public Map<String, JsonObject> getSchemas(
 			List<JsonObject> list
 			, String username
 			) {
+		/**
+		 * 4 lines below added June 22, 2017 by MAC.   
+		 * Symptom is H2Connection manager throws an error saying the object is already closed
+		 * 
+		 */
+		String user = username;
+		if (user == null) {
+			user = "admins~web_service~wsadmin";
+		}
 		Map<String,JsonObject> result = new TreeMap<String,JsonObject>();
 		for (JsonObject json : list) {
 			if (json.has(Constants.VALUE_SCHEMA_ID)) {
@@ -214,12 +224,11 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 							JsonObject schemaObject = schema.get("schema").getAsJsonObject();
 							JsonObject propertiesObject = schemaObject.get("properties").getAsJsonObject();
 							propertiesObject.add("username", getUserIdsSelectionWidgetSchema());
-							propertiesObject.add("library", getDomainIdsSelectionWidgetSchema(username));
+							propertiesObject.add("library", getDomainIdsSelectionWidgetSchema(user));
 							schemaObject.add("properties", propertiesObject);
 							schema.add("schema", schemaObject);
 						}
 						result.put(id, schema);
-	//					logger.info("id: " + id + " schema: " + schema.toString());
 					}
 				} catch (Exception e) {
 					ErrorUtils.report(logger, e);
@@ -1044,10 +1053,14 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	 * @return
 	 */
 	public boolean existsUser(String user) {	
-		try {
-			ResultJsonObjectArray json = getForId(USER_TOPICS.CONTACT.toId(user));
-			return json.getCount() > 0;
-		} catch (Exception e) {
+		if (user.length() > 0) {
+			try {
+				ResultJsonObjectArray json = getForId(USER_TOPICS.CONTACT.toId(user));
+				return json.getCount() > 0;
+			} catch (Exception e) {
+				return false;
+			}
+		} else {
 			return false;
 		}
 	}
@@ -2551,6 +2564,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		    	result.setCode(HTTP_RESPONSE_CODES.CREATED.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.CREATED.message + ": " + schemaId);
 			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
 				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 				result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
 			}

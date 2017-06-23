@@ -130,6 +130,14 @@ public class Neo4jController {
         	return externalManager.getDropdownItemsForSearchingText().toString();
 		});
 
+		// GET gr_gr_cog topics as a dropdown list
+		path = ENDPOINTS_DB_API.DROPDOWNS_GR_LIB_TOPICS.pathname;
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+        	return externalManager.getTopicsDropdown().toJsonString();
+		});
+
 		// GET dropdowns for searching docs of type text
 		path = ENDPOINTS_DB_API.DROPDOWNS_TEXTS.pathname;
 		ControllerUtils.reportPath(logger, "GET", path);
@@ -151,7 +159,7 @@ public class Neo4jController {
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
-        	return externalManager.getForId(SINGLETON_KEYS.TABLE_OALD_SENSES.toId());
+        	return externalManager.getForId(SINGLETON_KEYS.TABLE_OALD_SENSES.toId()).toJsonString();
 		});
 
 		// GET dropdowns for searching relationship properties
