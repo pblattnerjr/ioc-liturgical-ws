@@ -1,6 +1,7 @@
 package ioc.liturgical.ws.models.ws.response.column.editor;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -30,77 +31,77 @@ import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
   "templateKeys": [
     {
       "_id": "T001",
-      "key": "eu.memorial__euMEM.title",
+      "key": "eu.memorial~euMEM.title",
       "libKeysIndex": 1 // points to libraryKeys[1]
     },
     {
       "_id": "T002",
-      "key": "eu.funeral__euFUN.Key0600.title",
+      "key": "eu.funeral~euFUN.Key0600.title",
       "libKeysIndex": 0
     },
     {
       "_id": "T003",
-      "key": "misc__Mode5",
+      "key": "misc~Mode5",
       "libKeysIndex": 3
     },
     {
       "_id": "T004",
-      "key": "ho.s03__hoMA.FuneralEvlogVerse.text",
+      "key": "ho.s03~hoMA.FuneralEvlogVerse.text",
       "libKeysIndex": 2
     },
     {
       "_id": "T005",
-      "key": "ho.s03__hoMA.FuneralEvlogVerse.text",
+      "key": "ho.s03~hoMA.FuneralEvlogVerse.text",
       "libKeysIndex": 2
     },
     {
       "_id": "T006",
-      "key": "prayers__Allilouia3Doxa.text",
+      "key": "prayers~Allilouia3Doxa.text",
       "libKeysIndex": 4
     },
     {
       "_id": "T007",
-      "key": "rubrical__Thrice",
+      "key": "rubrical~Thrice",
       "libKeysIndex": 6
     },
     {
       "_id": "T008",
-      "key": "prayers__DoxaPatri.text",
+      "key": "prayers~DoxaPatri.text",
       "libKeysIndex": 5
     },
     {
       "_id": "T009",
-      "key": "rubrical__Thrice",
+      "key": "rubrical~Thrice",
       "libKeysIndex": 6
     }
   ],
   "libraryKeys": [
     {
-      "_id": "eu.funeral__euFUN.Key0600.title",
+      "_id": "eu.funeral~euFUN.Key0600.title",
       "ids": [1] // points to templateKeys[1]
     },
     {
-      "_id": "eu.memorial__euMEM.title",
+      "_id": "eu.memorial~euMEM.title",
       "ids": [0] // points to templateKeys[0]
     },
     {
-      "_id": "ho.s03__hoMA.FuneralEvlogVerse.text",
+      "_id": "ho.s03~hoMA.FuneralEvlogVerse.text",
       "ids": [3,4] // points to templateKeys[3] and  templateKeys[4]
     },
     {
-      "_id": "misc__Mode5",
+      "_id": "misc~Mode5",
       "ids": [2]
     },
     {
-      "_id": "prayers__Allilouia3Doxa.text",
+      "_id": "prayers~Allilouia3Doxa.text",
       "ids": [5]
     },
     {
-      "_id": "prayers__DoxaPatri.text",
+      "_id": "prayers~DoxaPatri.text",
       "ids": [7]
     },
     {
-      "_id": "rubrical__Thrice",
+      "_id": "rubrical~Thrice",
       "ids": [6,8]
     }
   ],
@@ -124,12 +125,13 @@ public class KeyArraysCollection extends AbstractModel {
 	 * templateKeys holds the list of keys used by a template or a topic.
 	 * There can be redundant keys in the templateList
 	 */
-	@Expose List<TemplateKeyValue> templateKeys = new ArrayList<TemplateKeyValue>();
+	@Expose List<TemplateTopicKey> templateKeys = new ArrayList<TemplateTopicKey>();
 	/**
 	 * libraryKeys holds the unique set of keys used by the template.  That is,
 	 * each key occurs only one time.
 	 */
-	@Expose List<LibraryKeyValue> libraryKeys = new ArrayList<LibraryKeyValue>();
+	@Expose List<LibraryTopicKey> libraryKeys = new ArrayList<LibraryTopicKey>();
+	@Expose Map<String,List<LibraryTopicKeyValue>> libraryKeyValues = new TreeMap<String,List<LibraryTopicKeyValue>>();
 	@Expose List<String> topics = new ArrayList<String>();
 	private Map<String, Integer> indexMap = new TreeMap<String,Integer>();
 	
@@ -146,16 +148,27 @@ public class KeyArraysCollection extends AbstractModel {
 	public void setAbout(About about) {
 		this.about = about;
 	}
-	public List<TemplateKeyValue> getTemplateKeys() {
+	public List<TemplateTopicKey> getTemplateKeys() {
 		return templateKeys;
 	}
-	public void setTemplateKeys(List<TemplateKeyValue> templateKeys) {
+	public void setTemplateKeys(List<TemplateTopicKey> templateKeys) {
 		this.templateKeys = templateKeys;
 	}
-	public List<LibraryKeyValue> getLibraryKeys() {
+	public List<LibraryTopicKey> getLibraryKeys() {
 		return libraryKeys;
 	}
-	public void setLibraryKeys(List<LibraryKeyValue> libraryKeys) {
+	public Map<String,LibraryTopicKeyValue> getEmptyLtkvMap() {
+		Map<String,LibraryTopicKeyValue> result = new TreeMap<String,LibraryTopicKeyValue>();
+		for (LibraryTopicKeyValue ltkv : this.libraryKeyValues.get(about.library)) {
+			LibraryTopicKeyValue newLtkv =  new LibraryTopicKeyValue();
+			newLtkv.set_id(ltkv.get_id());
+			newLtkv.setIds(ltkv.getIds());
+			newLtkv.setValue("");
+			result.put(newLtkv._id, newLtkv);
+		}
+		return result;
+	}
+	public void setLibraryKeys(List<LibraryTopicKey> libraryKeys) {
 		this.libraryKeys = libraryKeys;
 	}
 	public List<String> getTopics() {
@@ -165,12 +178,37 @@ public class KeyArraysCollection extends AbstractModel {
 		this.topics = topics;
 	}
 	
-	public void addTemplateKeyValue(TemplateKeyValue value) {
+	public void addTemplateKeyValue(TemplateTopicKey value) {
 		templateKeys.add(value);
 	}
 	
-	public void addLibraryKeyValue(LibraryKeyValue value) {
+	public void addLibraryTopicKey(LibraryTopicKey value) {
 		libraryKeys.add(value);
 	}
+
+	public void addLibraryTopicKeyValue(String library, LibraryTopicKeyValue value) {
+		List<LibraryTopicKeyValue> list = new ArrayList<LibraryTopicKeyValue>();
+		if (libraryKeyValues.containsKey(library)) {
+			list = libraryKeyValues.get(library);
+		}
+		list.add(value);
+		libraryKeyValues.put(library, list);
+	}
+
+	public Map<String,List<LibraryTopicKeyValue>> getLibraryKeyValues() {
+		return libraryKeyValues;
+	}
 	
+	public void addLibraryKeyValues(
+			String library
+			, Collection<LibraryTopicKeyValue> libraryKeyValues
+			) {
+		for (LibraryTopicKeyValue value :  libraryKeyValues) {
+			this.addLibraryTopicKeyValue(library, value);
+		}
+	}
+	
+	public void setLibraryKeyValues(Map<String,List<LibraryTopicKeyValue>> libraryKeyValues) {
+		this.libraryKeyValues = libraryKeyValues;
+	}
 }

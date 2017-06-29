@@ -86,8 +86,18 @@ public class ExternalDbManagerTest {
 	
 	@Test
 	   public void testgetTopicForParaColTextEditor() {
-			ResultJsonObjectArray result = externalManager.getTopicForParaColTextEditor("actors");
+			ResultJsonObjectArray result = externalManager.getTopicForParaColTextEditor(
+					"gr_gr_cog"
+					, "actors"
+					);
 			assertTrue(result.getCount() > 0);
+			ResultJsonObjectArray dedes = externalManager.getTopicValuesForParaColTextEditor(
+					"gr_gr_cog"
+					, "actors"
+					, "en_us_dedes,en_uk_lash".split(",")
+					) ;
+			System.out.println(dedes.getValues().get(0).toString());
+			assertTrue(dedes.getCount() > 0);
 	    }
 	
 	@Test

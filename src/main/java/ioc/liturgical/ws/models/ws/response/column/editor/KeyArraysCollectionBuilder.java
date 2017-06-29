@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import ioc.liturgical.ws.constants.Constants;
 import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
 
 /**
@@ -14,27 +15,40 @@ import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
  */
 public class KeyArraysCollectionBuilder {
 	private boolean printPretty = false;
-	private String title = "";
+	private String topic = "";
+	private String library = "";
 	public KeyArraysCollection collection = new KeyArraysCollection();
 	private List<String> topics = new ArrayList<String>();
 	private List<String> templateKeys = new ArrayList<String>();
-	private Map<String, LibraryKeyValue> libraryKeyMap = new TreeMap<String,LibraryKeyValue>();
+	private Map<String, LibraryTopicKey> libraryKeyMap = new TreeMap<String,LibraryTopicKey>();
+	private Map<String, LibraryTopicKeyValue> libraryKeyValueMap = new TreeMap<String,LibraryTopicKeyValue>();
 
 	/**
 	 * 
-	 * @param title title of the template or topic
+	 * @param library library from which the keys come
+	 * @param topic topic or template name
 	 */
-	public KeyArraysCollectionBuilder(String title) {
-		this.title = title;
+	public KeyArraysCollectionBuilder(
+			String library
+			, String topic
+			) {
+		this.library = library;
+		this.topic = topic;
 	}
 	
 	/**
 	 * 
-	 * @param title title of the template or topic
+	 * @param library library from which the keys come
+	 * @param topic topic or template name
 	 * @param printPretty print the json string in a user friendly way
 	 */
-	public KeyArraysCollectionBuilder(String title, boolean printPretty) {
-		this.title = title;
+	public KeyArraysCollectionBuilder(
+			String library
+			, String topic
+			, boolean printPretty
+			) {
+		this.library = library;
+		this.topic = topic;
 		this.printPretty = printPretty;
 	}
 
@@ -43,20 +57,35 @@ public class KeyArraysCollectionBuilder {
 	 * as separate values. 
 	 * @param topic
 	 * @param key
+	 * @param value
+	 * @param seq
 	 */
-	public void addTemplateKey(String topic, String key)  throws MissingSeparatorException {
-		this.addTemplateKey(topic + "__" + key);
+	public void addTemplateKey(
+			String topic
+			, String key
+			, String value
+			, String seq
+			)  throws MissingSeparatorException {
+		this.addTemplateKey(
+				topic + Constants.ID_DELIMITER + key
+				, value
+				, seq
+		);
 	}
 	
 	/**
 	 * Add the template key and update the
 	 * library keys as well
-	 * @param key is actually topic + __ + key
+	 * @param key is actually topic + ~ + key
 	 */
-	public void addTemplateKey(String key) throws MissingSeparatorException {
+	public void addTemplateKey(
+			String key
+			, String value
+			, String seq
+			) throws MissingSeparatorException {
 		// update the topic list
-		if (key.contains("__")) {
-			String[] parts = key.split("__");
+		if (key.contains(Constants.ID_DELIMITER)) {
+			String[] parts = key.split(Constants.ID_DELIMITER);
 			if (topics.contains(parts[0])) {
 				// ignore
 			} else {
@@ -64,14 +93,24 @@ public class KeyArraysCollectionBuilder {
 			}
 			// update the map of library keys
 			int templateKeyIndex = templateKeys.size();
-			LibraryKeyValue lkv = new LibraryKeyValue(printPretty);
+			LibraryTopicKey ltk = new LibraryTopicKey(printPretty);
+			LibraryTopicKeyValue ltkv = new LibraryTopicKeyValue(printPretty);
 			if (libraryKeyMap.containsKey(key)) {
-				lkv = libraryKeyMap.get(key);
+				ltk = libraryKeyMap.get(key);
 			} else {
-				lkv.set_id(key);
+				ltk.set_id(key);
 			}
-			lkv.addIdIndex(templateKeyIndex);
-			libraryKeyMap.put(key, lkv);
+			if (libraryKeyValueMap.containsKey(key)) {
+				ltkv = libraryKeyValueMap.get(key);
+			} else {
+				ltkv.set_id(key);
+				ltkv.setValue(value);
+				ltkv.setSeq(seq);
+			}
+			ltk.addIdIndex(templateKeyIndex);
+			ltkv.addIdIndex(templateKeyIndex);
+			libraryKeyMap.put(key, ltk);
+			libraryKeyValueMap.put(key, ltkv);
 			// now add the template key
 			templateKeys.add(key);
 		} else {
@@ -84,20 +123,22 @@ public class KeyArraysCollectionBuilder {
 		Map<String,Integer> libraryKeyIndex = new TreeMap<String,Integer>();
 		int i = 0;
 		for (String key : libraryKeyMap.keySet()) {
-			collection.addLibraryKeyValue(libraryKeyMap.get(key));
+			collection.addLibraryTopicKey(libraryKeyMap.get(key));
+			collection.addLibraryTopicKeyValue(library, libraryKeyValueMap.get(key));
 			libraryKeyIndex.put(key, i);
 			i++;
 		}
 		int s = templateKeys.size();
 		for (i = 0; i < s; i++) {
-			TemplateKeyValue tkv = new TemplateKeyValue(printPretty);
+			TemplateTopicKey tkv = new TemplateTopicKey(printPretty);
 			tkv.set_id("T" + String.format("%03d", i+1));
 			tkv.setKey(templateKeys.get(i));
 			tkv.setLibKeysIndex(libraryKeyIndex.get(tkv.getKey()));
 			collection.addTemplateKeyValue(tkv);
 		}
 		About about = new About(printPretty);
-		about.setTemplate(title);
+		about.setTemplate(topic);
+		about.setLibrary(library);
 		about.setTemplateKeyCount(collection.getTemplateKeys().size());
 		about.setLibraryKeyCount(collection.getLibraryKeys().size());
 		about.setRedundantKeyCount(about.getTemplateKeyCount() - about.getLibraryKeyCount());

@@ -877,6 +877,16 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			domain.setType(DOMAIN_TYPES.COLLECTIVE);
 			addDomain(wsAdmin, domain.toJsonString());
 
+			// add domain for Fr. Ephrem Lash of Blessed Memory
+			domain = new DomainCreateForm();
+			domain.setLanguageCode("en");
+			domain.setCountryCode("uk");
+			domain.setRealm("lash");
+			domain.setDescription("Notes and Translations by Fr. Ephrem Lash");
+			domain.setLabels(labels);
+			domain.setType(DOMAIN_TYPES.COLLECTIVE);
+			addDomain(wsAdmin, domain.toJsonString());
+
 			// add domain for system ontology
 			domain = new DomainCreateForm();
 			domain.setLanguageCode("en");

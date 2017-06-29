@@ -13,6 +13,7 @@ import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
  */
 public class About extends AbstractModel {
 	@Expose String template = "";
+	@Expose String library = "gr_gr_cog";
 	@Expose String dateGenerated = LocalDateTime.now().toString();
 	@Expose String logname = "";
 	@Expose int templateKeyCount = 0;
@@ -83,5 +84,13 @@ public class About extends AbstractModel {
 
 	public void setCompression(String compression) {
 		this.compression = compression;
+	}
+
+	public String getLibrary() {
+		return library;
+	}
+
+	public void setLibrary(String library) {
+		this.library = library;
 	}
 }

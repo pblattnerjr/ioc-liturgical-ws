@@ -3,6 +3,7 @@ package ioc.liturgical.ws.managers.databases.external.neo4j;
 import java.text.Normalizer;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -12,6 +13,7 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +53,9 @@ import ioc.liturgical.ws.models.db.docs.nlp.ConcordanceLine;
 import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalyses;
 import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalysis;
 import ioc.liturgical.ws.models.db.docs.nlp.WordInflected;
+import ioc.liturgical.ws.models.db.docs.ontology.TextLiturgical;
 import ioc.liturgical.ws.models.db.docs.tables.ReactBootstrapTableData;
+import ioc.liturgical.ws.models.db.forms.TextLiturgicalTranslationCreateForm;
 import ioc.liturgical.ws.models.db.links.LinkRefersToBiblicalText;
 import ioc.liturgical.ws.models.db.returns.LinkRefersToTextToTextTableRow;
 import ioc.liturgical.ws.models.db.returns.ResultNewForms;
@@ -60,7 +64,10 @@ import ioc.liturgical.ws.models.db.supers.LTKDb;
 import ioc.liturgical.ws.models.db.supers.LTKDbOntologyEntry;
 import ioc.liturgical.ws.models.db.supers.LTKLink;
 import ioc.liturgical.ws.models.ws.db.Utility;
+import ioc.liturgical.ws.models.ws.response.column.editor.KeyArraysCollection;
 import ioc.liturgical.ws.models.ws.response.column.editor.KeyArraysCollectionBuilder;
+import ioc.liturgical.ws.models.ws.response.column.editor.LibraryTopicKey;
+import ioc.liturgical.ws.models.ws.response.column.editor.LibraryTopicKeyValue;
 import net.ages.alwb.utils.core.datastores.json.exceptions.BadIdException;
 import net.ages.alwb.utils.core.datastores.json.exceptions.MissingSchemaIdException;
 import net.ages.alwb.utils.core.datastores.json.models.DropdownArray;
@@ -73,6 +80,8 @@ import net.ages.alwb.utils.nlp.fetchers.Ox3kUtils;
 import net.ages.alwb.utils.nlp.fetchers.PerseusMorph;
 import net.ages.alwb.utils.nlp.models.GevLexicon;
 import net.ages.alwb.utils.nlp.utils.NlpUtils;
+import net.ages.alwb.utils.transformers.adapters.AgesHtmlToTemplateHtml;
+import net.ages.alwb.utils.transformers.adapters.models.AgesReactTemplate;
 import opennlp.tools.tokenize.SimpleTokenizer;
 import opennlp.tools.tokenize.Tokenizer;
 
@@ -100,6 +109,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	private boolean   prettyPrint = true;
 	private boolean readOnly = false;
 	private boolean runningUtility = false;
+	private boolean printPretty = true;
 	private String runningUtilityName = "";
 	private Gson gson = new Gson();
 	private String adminUserId = "";
@@ -165,8 +175,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	   * @return
 	   */
 	  public ResultJsonObjectArray getWordAnalyses(String word) {
-		  String query = "match (n:WordGrammar) where n.topic = \""
-				 + word.toLowerCase() + "\" return properties(n)"
+		  String query = "match (n:" + TOPICS.WORD_GRAMMAR.label + ") where n.id starts with \"en_sys_linguistics~"
+				+  word.toLowerCase() + "\" return properties(n)"
 				 ;
 		  ResultJsonObjectArray queryResult = this.getForQuery(
 				  query
@@ -940,6 +950,49 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
+		/**
+		 * Handles both a POST and PUT, i.e. updates a value if exists
+		 * and creates it if not.
+		 * @param id
+		 * @param json
+		 * @return
+		 * @throws BadIdException
+		 * @throws DbException
+		 * @throws MissingSchemaIdException
+		 */
+		public RequestStatus updateValueOfLiturgicalText(
+				String requestor
+				, String id
+				, String json
+				) throws BadIdException, DbException {
+			RequestStatus result = new RequestStatus();
+			IdManager idManager = new IdManager(id);
+			RequestStatus status = null;
+			if (existsUnique(id)) {
+				ResultJsonObjectArray queryResult = this.getForId(id, TOPICS.TEXT_LITURGICAL.label);
+				TextLiturgical text = new TextLiturgical(
+						idManager.getLibrary()
+						, idManager.getTopic()
+						, idManager.getKey()
+						);
+				text = gson.fromJson(queryResult.getFirstObject().toString(), TextLiturgical.class);
+				text.setValue(this.parser.parse(json).getAsJsonObject().get("value").getAsString());
+				status = this.updateLTKDbObject(requestor, text.toJsonString());
+			} else {
+				TextLiturgicalTranslationCreateForm text = new TextLiturgicalTranslationCreateForm(
+						idManager.getLibrary()
+						, idManager.getTopic()
+						, idManager.getKey()
+						);
+				text.setValue(this.parser.parse(json).getAsJsonObject().get("value").getAsString());
+				text.setSeq(this.parser.parse(json).getAsJsonObject().get("seq").getAsString());
+				status = this.addLTKDbObject(requestor, text.toJsonString());
+			}
+			result.setCode(status.code);
+			result.setMessage(result.getUserMessage());
+			return result;
+		}
+
 		public RequestStatus updateLTKVDbObjectAsRelationship(
 				LTKDb json
 				) throws BadIdException, DbException, MissingSchemaIdException {
@@ -1704,7 +1757,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public JsonArray getRelationshipTags(String type) {
 			JsonArray result  = new JsonArray();
 			try {
-				String q = "match ()-[link:" + type + "]->() return distinct link.tags as " + type;
+				String q = "match (:Root)-[link:" + type + "]->(:Root) return distinct link.tags as " + type;
 				ResultJsonObjectArray query = neo4jManager.getForQuery(q);
 				if (query.getResultCount() > 0) {
 					TreeSet<String> labels  = new TreeSet<String>();
@@ -1903,19 +1956,168 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			}
 			return result;
 		}
-		
-		public ResultJsonObjectArray getTopicForParaColTextEditor(String topic) {
+
+		/**
+		 * Extracts hierarchically all the elements of an AGES html file,
+		 * starting with the content div.  It provides information 
+		 * sufficient to render the equivalent HTML using a Javascript library
+		 * @param url
+		 * @return
+		 */
+		public ResultJsonObjectArray getAgesTemplateMetadata(
+				String url
+				) {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
-				KeyArraysCollectionBuilder b = new KeyArraysCollectionBuilder(topic, true);
-				String query = "match (n:Liturgical) where n.id starts with 'gr_gr_cog~" + topic + "' return n.key";
+				AgesHtmlToTemplateHtml ages = new AgesHtmlToTemplateHtml(url, true);
+				AgesReactTemplate template = ages.toReactTemplateMetaData();
+				List<JsonObject> list = new ArrayList<JsonObject>();
+				list.add(template.toJsonObject());
+				result.setResult(list);
+				result.setQuery("get AGES template metadata for " + url);
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+		/**
+		 * For the specified library and topic, add values to the collection.
+		 * This is used by the client side ParaColTextEditor component
+		 * @param collection
+		 * @param library
+		 * @param topic
+		 * @return
+		 */
+		public Collection<LibraryTopicKeyValue> getLibraryTopicValues(
+				Map<String,LibraryTopicKeyValue> keymap
+				, String library
+				, String topic
+				) {
+			String query = "match (n:" +library + ") where n.id starts with '" 
+					+ library 
+					+ Constants.ID_DELIMITER 
+					+ topic 
+					+ "' return n.key, n.value order by n.key "
+					;
+			ResultJsonObjectArray queryResult = this.getForQuery(query, false, false);
+			int i = 0;
+			for (JsonObject o : queryResult.getValues()) {
+				String topicKey = topic + Constants.ID_DELIMITER + o.get("n.key").getAsString();
+				String value = o.get("n.value").getAsString();
+				if (keymap.containsKey(topicKey)) {
+					LibraryTopicKeyValue ltkv = keymap.get(topicKey);
+					ltkv.setValue(value);
+					keymap.put(topicKey, ltkv);
+				}
+			}
+			return keymap.values();
+		}
+		/**
+		 * Returns a json object that has the topic keys for the specified library
+		 * and the values for corresponding topic/keys in the specified valuesLibrary
+		 * @param library
+		 * @param topic
+		 * @param valuesLibrary
+		 * @return topicKeys, libraryKeys, and values for the specified library and the valuesLibrary
+		 */
+		public ResultJsonObjectArray getTopicValuesForParaColTextEditor(
+				String library
+				, String topic
+				, String [] valueLibraries
+				) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
+				KeyArraysCollection collection = this.getTopicCollection(library, topic.trim());
+				for (String valuesLibrary : valueLibraries) {
+					if (! valuesLibrary.equals(library)) {
+						Collection<LibraryTopicKeyValue> ltkvCol = getLibraryTopicValues(
+								collection.getEmptyLtkvMap()
+								, valuesLibrary
+								, topic
+								);
+						collection.addLibraryKeyValues(
+								valuesLibrary
+								, ltkvCol
+								);
+					}
+				}
+				List<JsonObject> list = new ArrayList<JsonObject>();
+				list.add(collection.toJsonObject());
+				result.setResult(list);
+				result.setQuery("get Topic Values for Topic " + topic + " from library " + StringUtils.join(valueLibraries) + " for ParaColTextEditor");
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+
+		/**
+		 * Get the records for each id specified in the list of topicKeys from the specified library 
+		 * If a record is not found, a LibraryKeyValue will still be created, but with an empty value
+		 * @param library
+		 * @param topicKeys
+		 * @return result array, with values of type LibraryKeyValue
+		 */
+		public ResultJsonObjectArray getRecordsForIds(String library, List<String> topicKeys) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
+				List<JsonObject> list = new ArrayList<JsonObject>();
+				for (String topicKey : topicKeys) {
+					LibraryTopicKeyValue lkv = new LibraryTopicKeyValue(printPretty);
+					ResultJsonObjectArray record = this.getForId(library + Constants.ID_DELIMITER + topicKey);
+					lkv.set_id(topicKey);
+					if (record.status.code == HTTP_RESPONSE_CODES.OK.code && record.valueCount == 1) {
+						lkv.setValue(record.getFirstObject().get("value").getAsString());
+					}
+					list.add(lkv.toJsonObject());
+				}
+				result.setResult(list);
+				result.setQuery("get records for Ids in library " + library);
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+		
+		public KeyArraysCollection getTopicCollection(
+				String library
+				, String topic 
+				) throws Exception {
+			KeyArraysCollectionBuilder b = new KeyArraysCollectionBuilder(
+					library,
+					topic
+					, printPretty
+					);
+			try {
+				String query = "match (n:Liturgical) where n.id starts with '" 
+						+ library 
+						+ "~" 
+						+ topic 
+						+ "' return n.key, n.value, n.seq order by n.key"
+				;
 				ResultJsonObjectArray queryResult = this.getForQuery(query, false, false);
 				for (JsonObject o : queryResult.getValues()) {
 					String key = o.get("n.key").getAsString();
-					b.addTemplateKey(topic, key);
+					String value = o.get("n.value").getAsString();
+					String seq = o.get("n.seq").getAsString();
+					b.addTemplateKey(topic, key, value, seq);
 				}
+			} catch (Exception e){
+				throw e;
+			}
+			return b.getCollection();
+		}
+		public ResultJsonObjectArray getTopicForParaColTextEditor(
+				String library
+				, String topic
+				) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
 				List<JsonObject> list = new ArrayList<JsonObject>();
-				list.add(b.getCollection().toJsonObject());
+				list.add(this.getTopicCollection(library, topic).toJsonObject());
 				result.setResult(list);
 				result.setQuery("get Topic " + topic + " for ParaColTextEditor");
 			} catch (Exception e) {
@@ -1967,7 +2169,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		 */
 		public JsonArray getDropdownInstancesForOntologyType(String type) {
 			JsonArray result = new JsonArray();
-				String query  = "match (n:" + TOPICS.ONTOLOGY_ROOT.label + ") where n.topic = \"" + type + "\" return n.id as id, n.name as name";
+				String query  = "match (n:" + TOPICS.ONTOLOGY_ROOT.label + ") where n.id starts with = \"en_sys_ontology~" + type + "~\" return n.id as id, n.name as name";
 				ResultJsonObjectArray entries = getForQuery(query, false, false);
 				for (JsonElement entry : entries.getValues()) {
 					try {

@@ -138,6 +138,25 @@ public class Neo4jController {
         	return externalManager.getTopicsDropdown().toJsonString();
 		});
 
+		// GET keys and values for specified topic and specified libraries
+		// Used by client side Parallel Column Text Editor (ParaColTextEditor)
+		path = ENDPOINTS_DB_API.VIEW_TOPIC.toLibraryPath();
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String[] libraries = null;
+			try {
+				libraries = request.queryParams("l").split(",");
+			} catch (Exception e) {
+				
+			}
+        	return externalManager.getTopicValuesForParaColTextEditor(
+        			"gr_gr_cog" // for now.  In future, support other source texts
+        			, request.queryParams("t")  // topic
+        			, libraries
+        			).toJsonString();
+		});
+
 		// GET dropdowns for searching docs of type text
 		path = ENDPOINTS_DB_API.DROPDOWNS_TEXTS.pathname;
 		ControllerUtils.reportPath(logger, "GET", path);
@@ -201,6 +220,16 @@ public class Neo4jController {
         			, request.queryParams("l") // tags (~labels)
         			, request.queryParams("o") // operator
         			));
+		});
+
+		// GET AGES template created from the specified url parameter
+		path = ENDPOINTS_DB_API.AGES_REACT_TEMPLATE.toLibraryPath();
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+        	return externalManager.getAgesTemplateMetadata(
+        			request.queryParams("u")  // link type (e.g. REFERS_TO_BIBLICAL_TEXT)
+        			).toJsonString();
 		});
 
 		// Get forms for creating new instances of nodes and relationships
@@ -280,7 +309,24 @@ public class Neo4jController {
 		/**
 		 * PUT controllers - updates
 		 */
-		
+		// put (update) the value of a doc 
+		path = ENDPOINTS_DB_API.VALUE.toLibraryPath();
+		ControllerUtils.reportPath(logger, "PUT", path);
+		put(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			String id = request.queryParams("i");
+			String body = request.body();
+
+			RequestStatus requestStatus = externalManager.updateValueOfLiturgicalText(
+					requestor
+					, id
+					, body
+			);
+			response.status(requestStatus.getCode());
+			return requestStatus.toJsonString();
+		});
+
 		// put (update) a doc 
 		path = ENDPOINTS_DB_API.DOCS.toLibraryTopicKeyPath();
 		ControllerUtils.reportPath(logger, "PUT", path);

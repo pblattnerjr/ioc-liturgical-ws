@@ -90,7 +90,7 @@ public class LTK extends AbstractModel {
 	@Attributes(id="bottom", readonly=false, required=true, description="If the library is your user library, you can set the visibility to private.  The record will then only be visible to you personally.  If you set it to private, anyone to whom you have granted read or write access to your user library will be able to see it.  If you set visibility to public, it means it is eligible to be moved to the public, read-only database.")
 	@Expose public VISIBILITY visibility = VISIBILITY.PUBLIC;
 
-	@Attributes(id="bottom", readonly=false, required=true, description="Status of this record.  'Editing' means it has either a draft or undergoing revision.  'Reviewing' means it is being reviewed for someone's approval.  'Finalized' means work has finished on this record.  It is not being edited or reviewed at this time. 'Ready for...' means it is ready for someone to be assigned to the next step.")
+	@Attributes(id="bottom", readonly=false, required=true, description="Status of this record.  'Editing' means it is either a draft or undergoing revision.  'Reviewing' means it is being reviewed for someone's approval.  'Finalized' means work has finished on this record.  It is not being edited or reviewed at this time. 'Ready for...' means it is ready for someone to be assigned to the next step.")
 	@Expose public STATUS status = STATUS.EDITING;
 
 	@Attributes(id="bottom", readonly=false, required=true, description="The ID of the user to whom work has been assigned for this record.")
@@ -226,7 +226,9 @@ public class LTK extends AbstractModel {
 	 * @return
 	 */
 	public String fetchOntologyLabels() {
-		return StringUtils.join(ontologyTopic.toLabelsList(),":");
+		List<String> labels = ontologyTopic.toLabelsList();
+		labels.add(library);
+		return StringUtils.join(labels,":");
 	}
 
 	public ID_PART_TYPES getPartTypeOfTopic() {

@@ -9,15 +9,15 @@ import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
  * @author mac002
  *
  */
-public class TemplateKeyValue extends AbstractModel {
+public class TemplateTopicKey extends AbstractModel {
 	@Expose String _id = "";
 	@Expose String key = "";
 	@Expose int libKeysIndex = 0; // index into the array of libraryKeys
 	
-	public TemplateKeyValue() {
+	public TemplateTopicKey() {
 		super();
 	}
-	public TemplateKeyValue(boolean printPretty) {
+	public TemplateTopicKey(boolean printPretty) {
 		super();
 		super.setPrettyPrint(printPretty);
 	}

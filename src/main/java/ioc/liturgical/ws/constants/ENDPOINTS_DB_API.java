@@ -14,7 +14,13 @@ import ioc.liturgical.ws.constants.Constants;
  *
  */
 public enum ENDPOINTS_DB_API {
-	ANIMALS(
+	AGES_REACT_TEMPLATE(
+			"agesreacttemplate"
+			, ENDPOINT_TYPES.HTML
+			, "AgesReactTemplate"
+			,"Endpoint for an AGES HTML file converted to a React template"
+			)
+	, ANIMALS(
 			"animals"
 			, ENDPOINT_TYPES.ONTOLOGY
 			, "Animals"
@@ -223,6 +229,24 @@ public enum ENDPOINTS_DB_API {
 			, ENDPOINT_TYPES.NLP
 			, "Text Analysis"
 			,"Endpoint for a grammatical analysis of words in a text"
+			)
+	, VALUE(
+			"value"
+			, ENDPOINT_TYPES.NODE
+			, "Value"
+			,"Endpoint for simple value create or update of a text doc"
+			)
+	, VIEW_TEMPLATE(
+			"viewtemplate"
+			, ENDPOINT_TYPES.VIEW
+			, "viewtemplate"
+			,"Endpoint for text topic keys / values as a template"
+			)
+	, VIEW_TOPIC(
+			"viewtopic"
+			, ENDPOINT_TYPES.VIEW
+			, "viewtopic"
+			,"Endpoint for text topic keys / values as a view"
 			)
 	, TOKENS(
 			"tokens"

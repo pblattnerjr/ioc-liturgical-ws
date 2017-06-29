@@ -60,4 +60,29 @@ public class ENDPOINTS_DB_APITest {
 		String path = ENDPOINTS_DB_API.DROPDOWNS_GR_LIB_TOPICS.pathname;
 		assert(path.equals("/db/api/v1/dropdowns/grlibtopics"));
 	}
+	@Test
+	public void testViewTemplateEndpoint() {
+		String path = ENDPOINTS_DB_API.VIEW_TEMPLATE.pathname;
+		assert(path.equals("/db/api/v1/docs/viewtemplate"));
+	}
+	@Test
+	public void testViewTopicEndpoint() {
+		String path = ENDPOINTS_DB_API.VIEW_TOPIC.pathname;
+		assert(path.equals("/db/api/v1/docs/viewtopic"));
+	}
+	@Test
+	public void testViewTopicEndpointWithParms() {
+		String path = ENDPOINTS_DB_API.VIEW_TOPIC.toLibraryPath();
+		assert(path.equals("/db/api/v1/docs/viewtopic/*"));
+	}
+	@Test
+	public void testCreateUpdateValue() {
+		String path = ENDPOINTS_DB_API.VALUE.toLibraryPath();
+		assert(path.equals("/db/api/v1/docs/value/*"));
+	}
+	@Test
+	public void testAgesReactTemplate() {
+		String path = ENDPOINTS_DB_API.AGES_REACT_TEMPLATE.toLibraryPath();
+		assert(path.equals("/db/api/v1/docs/agesreacttemplate/*"));
+	}
 }
