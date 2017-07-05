@@ -7,7 +7,8 @@ import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.constants.ID_PART_TYPES;
 import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.models.db.supers.LTK;
-
+import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import net.ages.alwb.utils.core.id.managers.IdManager;
 
 import com.github.reinert.jjschema.Attributes;
 
@@ -60,6 +61,14 @@ public class TextLiturgicalTranslationCreateForm extends LTK {
 
 	public void setSeq(String seq) {
 		this.seq = seq;
+	}
+	
+	public void convertSeq(String from) {
+		String[] parts = from.split(Constants.ID_DELIMITER);
+		if (parts.length == 3) {
+			IdManager idManager = new IdManager(this.getLibrary(), this.getTopic(), parts[2]);
+			this.setSeq(idManager.getId());
+		}
 	}
 
 }

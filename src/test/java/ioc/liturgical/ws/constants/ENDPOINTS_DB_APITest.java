@@ -81,8 +81,18 @@ public class ENDPOINTS_DB_APITest {
 		assert(path.equals("/db/api/v1/docs/value/*"));
 	}
 	@Test
+	public void testAgesIndexTableData() {
+		String path = ENDPOINTS_DB_API.AGES_INDEX.pathname;
+		assert(path.equals("/db/api/v1/docs/agesindex"));
+	}
+	@Test
 	public void testAgesReactTemplate() {
 		String path = ENDPOINTS_DB_API.AGES_REACT_TEMPLATE.toLibraryPath();
 		assert(path.equals("/db/api/v1/docs/agesreacttemplate/*"));
+	}
+	@Test
+	public void testCloneLibrary() {
+		String path = ENDPOINTS_DB_API.CLONE.toLibraryPath();
+		assert(path.equals("/db/api/v1/docs/clone/*"));
 	}
 }

@@ -1,5 +1,7 @@
 package ioc.liturgical.ws.managers.databases.external.neo4j;
 
+import static org.junit.Assert.assertTrue;
+
 import java.text.Normalizer;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -81,6 +83,8 @@ import net.ages.alwb.utils.nlp.fetchers.PerseusMorph;
 import net.ages.alwb.utils.nlp.models.GevLexicon;
 import net.ages.alwb.utils.nlp.utils.NlpUtils;
 import net.ages.alwb.utils.transformers.adapters.AgesHtmlToTemplateHtml;
+import net.ages.alwb.utils.transformers.adapters.AgesIndexHtmlToReactTableData;
+import net.ages.alwb.utils.transformers.adapters.models.AgesIndexTableData;
 import net.ages.alwb.utils.transformers.adapters.models.AgesReactTemplate;
 import opennlp.tools.tokenize.SimpleTokenizer;
 import opennlp.tools.tokenize.Tokenizer;
@@ -106,10 +110,9 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	private static final Logger logger = LoggerFactory.getLogger(ExternalDbManager.class);
 	private boolean logAllQueries = false;
 	private boolean logQueriesWithNoMatches = false;
-	private boolean   prettyPrint = true;
+	private boolean   printPretty = true;
 	private boolean readOnly = false;
 	private boolean runningUtility = false;
-	private boolean printPretty = true;
 	private String runningUtilityName = "";
 	private Gson gson = new Gson();
 	private String adminUserId = "";
@@ -984,8 +987,21 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						, idManager.getTopic()
 						, idManager.getKey()
 						);
-				text.setValue(this.parser.parse(json).getAsJsonObject().get("value").getAsString());
-				text.setSeq(this.parser.parse(json).getAsJsonObject().get("seq").getAsString());
+				JsonObject body = this.parser.parse(json).getAsJsonObject();
+				text.setValue(body.get("value").getAsString());
+				if (body.has("seq")) {
+					text.setSeq(this.parser.parse(json).getAsJsonObject().get("seq").getAsString());
+				} else {
+					try {
+						idManager = new IdManager("gr_gr_cog", text.getTopic(), text.getKey());
+						ResultJsonObjectArray greek = this.getForId(idManager.getId());
+						if (greek.valueCount == 1) {
+							text.convertSeq(greek.getFirstObject().get("seq").getAsString());
+						}
+					} catch (Exception innerE) {
+						ErrorUtils.report(logger, innerE);
+					}
+				}
 				status = this.addLTKDbObject(requestor, text.toJsonString());
 			}
 			result.setCode(status.code);
@@ -1395,7 +1411,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, int startingSequence  
 				, int endingSequence  
 				) {
-			ResultJsonObjectArray result = new ResultJsonObjectArray(this.prettyPrint);
+			ResultJsonObjectArray result = new ResultJsonObjectArray(this.printPretty);
 			boolean useSequenceNumbers = startingSequence != -1 && endingSequence != -1;
 			ResultJsonObjectArray queryResult = null;
 			
@@ -1598,9 +1614,23 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			JsonObject resultAnalyses = new JsonObject();
 			try {
 				for (JsonElement e : tokens) {
-					ResultJsonObjectArray analyses = this.getWordAnalyses(e.getAsString()); //   getTokenGrammarAnalyses(requestor, e.getAsString());
-					if (! resultAnalyses.has(e.getAsString())) { // the same token value can occur more than one time in a text
-						resultAnalyses.add(e.getAsString(), analyses.getFirstObject().get(e.getAsString()).getAsJsonArray());
+					try {
+						ResultJsonObjectArray analyses = this.getWordAnalyses(e.getAsString()); //   getTokenGrammarAnalyses(requestor, e.getAsString());
+						if (! resultAnalyses.has(e.getAsString())) { // the same token value can occur more than one time in a text
+							if (analyses.valueCount > 0) {
+								resultAnalyses.add(e.getAsString(), analyses.getFirstObject().get(e.getAsString()).getAsJsonArray());
+							} else {
+								JsonArray array = new JsonArray(); 
+								PerseusAnalysis perseusAnalysis = new PerseusAnalysis();
+								perseusAnalysis.setGreek(e.getAsString());
+								perseusAnalysis.setLemmaGreek(e.getAsString());
+								perseusAnalysis.setGlosses("not found");
+								array.add(perseusAnalysis.toJsonObject());
+								resultAnalyses.add(e.getAsString(), array);
+							}
+						}
+					} catch (Exception innerE) {
+						ErrorUtils.report(logger, innerE);
 					}
 				}
 				result.addValue(resultAnalyses);
@@ -1714,11 +1744,11 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		}
 
 		public boolean isPrettyPrint() {
-			return prettyPrint;
+			return printPretty;
 		}
 
 		public void setPrettyPrint(boolean prettyPrint) {
-			this.prettyPrint = prettyPrint;
+			this.printPretty = prettyPrint;
 		}	
 		
 		/**
@@ -1957,6 +1987,24 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
+		public ResultJsonObjectArray getAgesIndexTableData(
+				) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(this.printPretty);
+			try {
+				AgesIndexHtmlToReactTableData ages = new AgesIndexHtmlToReactTableData(this.printPretty);
+				AgesIndexTableData data = ages.toReactTableData();
+				List<JsonObject> list = new ArrayList<JsonObject>();
+				list.add(data.toJsonObject());
+				result.setResult(list);
+				result.setQuery("get AGES index table data");
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+				ErrorUtils.report(logger, e);
+			}
+			return result;
+		}
+
 		/**
 		 * Extracts hierarchically all the elements of an AGES html file,
 		 * starting with the content div.  It provides information 
@@ -1966,11 +2014,35 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		 */
 		public ResultJsonObjectArray getAgesTemplateMetadata(
 				String url
+				, String translationLibrary
 				) {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
-				AgesHtmlToTemplateHtml ages = new AgesHtmlToTemplateHtml(url, true);
+				AgesHtmlToTemplateHtml ages = new AgesHtmlToTemplateHtml(
+						url
+						, translationLibrary
+						, this.printPretty // print pretty
+						);
 				AgesReactTemplate template = ages.toReactTemplateMetaData();
+				
+				/**
+				 * If there is a translation library, 
+				 * search the database for each id that starts with translationLibrary
+				 * to see if it has a value.  Otherwise, the value will be from the
+				 * English part of the AGES web page.
+				 * */
+				if (translationLibrary.length() > 0) {
+					Map<String,String> values = template.getValues();
+					for ( Entry<String,String> entry: values.entrySet()) {
+						if (entry.getKey().startsWith(translationLibrary)) {
+							ResultJsonObjectArray dbValue = this.getForId(entry.getKey(), translationLibrary);
+							if (dbValue.valueCount == 1) {
+								values.put(entry.getKey(), dbValue.getFirstObjectValueAsString());
+							}
+						}
+					}
+					template.setValues(values);
+				}
 				List<JsonObject> list = new ArrayList<JsonObject>();
 				list.add(template.toJsonObject());
 				result.setResult(list);
@@ -1978,6 +2050,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			} catch (Exception e) {
 				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 				result.setStatusMessage(e.getMessage());
+				ErrorUtils.report(logger, e);
 			}
 			return result;
 		}

@@ -867,6 +867,17 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			domain.setLabels(labels);
 			addDomain(wsAdmin, domain.toJsonString());
 
+			// add domain for Fr. Seraphim Dedes
+			domain = new DomainCreateForm();
+			domain.setLanguageCode("en");
+			domain.setCountryCode("us");
+			domain.setRealm("dedes");
+			domain.setDescription("Translations by Fr. Seraphim Dedes");
+			labels = new ArrayList<String>();
+			labels.add("Liturgical");
+			domain.setLabels(labels);
+			addDomain(wsAdmin, domain.toJsonString());
+
 			// add domain for ocmc
 			domain = new DomainCreateForm();
 			domain.setLanguageCode("en");
@@ -882,9 +893,64 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			domain.setLanguageCode("en");
 			domain.setCountryCode("uk");
 			domain.setRealm("lash");
-			domain.setDescription("Notes and Translations by Fr. Ephrem Lash");
+			domain.setDescription("Translations by Fr. Ephrem Lash");
 			domain.setLabels(labels);
 			domain.setType(DOMAIN_TYPES.COLLECTIVE);
+			addDomain(wsAdmin, domain.toJsonString());
+
+			// add domain for Global English Version - BOT
+			domain = new DomainCreateForm();
+			domain.setLanguageCode("en");
+			domain.setCountryCode("uk");
+			domain.setRealm("gevbot");
+			domain.setDescription("GEV-BOT Notes and Translations by Dr. Michael Colburn");
+			labels = new ArrayList<String>();
+			labels.add("Liturgical");
+			domain.setLabels(labels);
+			addDomain(wsAdmin, domain.toJsonString());
+
+			// add domain for Global English Version - SOT
+			domain = new DomainCreateForm();
+			domain.setLanguageCode("en");
+			domain.setCountryCode("uk");
+			domain.setRealm("gevsot");
+			domain.setDescription("GEV-SOT Notes and Translations by Dr. Michael Colburn");
+			labels = new ArrayList<String>();
+			labels.add("Liturgical");
+			domain.setLabels(labels);
+			addDomain(wsAdmin, domain.toJsonString());
+
+			// add domain for Global English Version - MOT
+			domain = new DomainCreateForm();
+			domain.setLanguageCode("en");
+			domain.setCountryCode("uk");
+			domain.setRealm("gevmot");
+			domain.setDescription("GEV-MOT Notes and Translations by Dr. Michael Colburn");
+			labels = new ArrayList<String>();
+			labels.add("Liturgical");
+			domain.setLabels(labels);
+			addDomain(wsAdmin, domain.toJsonString());
+
+			// add domain for Spanish - Guatemala
+			domain = new DomainCreateForm();
+			domain.setLanguageCode("spa");
+			domain.setCountryCode("gt");
+			domain.setRealm("odg");
+			domain.setDescription("Translations in Spanish for the Orthodox Church in Guatemala");
+			labels = new ArrayList<String>();
+			labels.add("Liturgical");
+			domain.setLabels(labels);
+			addDomain(wsAdmin, domain.toJsonString());
+
+			// add domain for Spanish - Guatemala
+			domain = new DomainCreateForm();
+			domain.setLanguageCode("fra");
+			domain.setCountryCode("fra");
+			domain.setRealm("pdg");
+			domain.setDescription("Translations in French by Fr. Dennis Guillaume of blessed memory");
+			labels = new ArrayList<String>();
+			labels.add("Liturgical");
+			domain.setLabels(labels);
 			addDomain(wsAdmin, domain.toJsonString());
 
 			// add domain for system ontology

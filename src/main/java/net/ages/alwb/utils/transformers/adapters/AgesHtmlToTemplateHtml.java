@@ -1,6 +1,5 @@
 package net.ages.alwb.utils.transformers.adapters;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,25 +11,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.controllers.db.neo4j.Neo4jController;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 import net.ages.alwb.utils.transformers.adapters.models.AgesReactTemplate;
 import net.ages.alwb.utils.transformers.adapters.models.HtmlElement;
 
 import org.jsoup.nodes.Element;
-import org.jsoup.parser.ParseSettings;
-import org.jsoup.parser.Parser;
 public class AgesHtmlToTemplateHtml {
 	private static final Logger logger = LoggerFactory.getLogger(AgesHtmlToTemplateHtml.class);
 	private boolean printPretty = false;
 	private String url = "";
+	private String centerLibrary = "";
 	
 	public AgesHtmlToTemplateHtml(String url) {
 		this.url = url;
 	}
 	public AgesHtmlToTemplateHtml(String url, boolean printPretty) {
 		this.url = url;
+		this.printPretty = printPretty;
+	}
+
+	public AgesHtmlToTemplateHtml(String url, String centerLibrary) {
+		this.url = url;
+		this.centerLibrary = centerLibrary;
+	}
+	public AgesHtmlToTemplateHtml(String url, String centerLibrary, boolean printPretty) {
+		this.url = url;
+		this.centerLibrary = centerLibrary;
 		this.printPretty = printPretty;
 	}
 
@@ -61,23 +67,44 @@ public class AgesHtmlToTemplateHtml {
 		AgesReactTemplate result = new AgesReactTemplate(url, printPretty);
 		try {
 	        for (Element valueSpan : valueSpans) {
+	        	String tdClass = this.getClassOfTd(valueSpan);
 	        	String dataKey = valueSpan.attr("data-key");
 	        	String [] parts = dataKey.split("\\|");
 	        	String key = parts[1];
 	        	parts = parts[0].split("_");
-	        	String domain = 
-	        			parts[1] 
-						+ Constants.DOMAIN_DELIMITER 
-						+ parts[2].toLowerCase() 
-						+ Constants.DOMAIN_DELIMITER 
-	        			+ parts[3]
-	        	;
+	        	String domain = "";
+	        	if (tdClass.equals("centerCell")) {
+	        		domain = this.centerLibrary;
+	        	} else {
+	        		domain =
+		        			parts[1] 
+		    						+ Constants.DOMAIN_DELIMITER 
+		    						+ parts[2].toLowerCase() 
+		    						+ Constants.DOMAIN_DELIMITER 
+		    	        			+ parts[3]
+		    	        	;
+	        	}
 	        	String topic = parts[0];
-	        	String value = valueSpan.text();
+	        	String value = "";
+	        	if (valueSpan.hasClass("key")) {
+	        		value = valueSpan.parent().text();
+	        	} else {
+		        	value = valueSpan.text();
+	        	}
 	        	String topicKey = topic + Constants.ID_DELIMITER + key;
 	        	IdManager idManager = new IdManager(domain, topic, key);
 	        	result.addTopicKey(topicKey);
 	        	result.addValue(idManager.getId(), value);
+	        	if (tdClass.equals("centerCell")) {
+	        		valueSpan.attr(
+	        				"data-key"
+	        				, topic
+	        					+ "_" 
+	        						+ domain 
+	        						+ "|" 
+	        						+ key
+	        		); // e.g., titles_en_US_dedes|OnSunday
+	        	}
 	        }
 		} catch (Exception e) {
 			throw e;
@@ -136,17 +163,21 @@ public class AgesHtmlToTemplateHtml {
 	 */
 	public AgesReactTemplate toReactTemplateMetaData() throws Exception {
 		AgesReactTemplate result = new AgesReactTemplate(url, printPretty);
-		Parser parser = Parser.htmlParser();
-		parser.settings(new ParseSettings(true, true));
 		Document doc = null;
 		Element content = null;
 		try {
 			Connection c = Jsoup.connect(url);
-			c.parser(parser);
 			doc = c.timeout(60*1000).get();
 			content = doc.select("div.content").first();
 			content.select("div.media-group").remove();
-			AgesReactTemplate values = this.getValues(content.select("span.kvp"));
+			if (this.centerLibrary.length() > 0) {
+				this.cloneGreek(content);
+			}
+			Elements keys = content.select("span.kvp");
+			if (keys.size() == 0) {
+				keys = content.select("span.key");
+			}
+			AgesReactTemplate values = this.getValues(keys);
 			result.setTopicKeys(values.getTopicKeys());
 			result.setValues(values.getValues());
 			HtmlElement eContent = new HtmlElement(printPretty);
@@ -158,5 +189,13 @@ public class AgesHtmlToTemplateHtml {
 			throw e;
 		}
 		return result;
+	}
+	
+	private void cloneGreek(Element content) {
+		for (Element cell : content.select("td.rightCell")) {
+			Element clone = cell.clone();
+			clone.attr("class","centerCell");
+			cell.before(clone);
+		}
 	}
 }

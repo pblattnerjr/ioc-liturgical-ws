@@ -14,7 +14,13 @@ import ioc.liturgical.ws.constants.Constants;
  *
  */
 public enum ENDPOINTS_DB_API {
-	AGES_REACT_TEMPLATE(
+	AGES_INDEX(
+			"agesindex"
+			, ENDPOINT_TYPES.TABLE
+			, "AgesIndex"
+			,"Endpoint for an index of available AGES HTML files"
+			)
+	, AGES_REACT_TEMPLATE(
 			"agesreacttemplate"
 			, ENDPOINT_TYPES.HTML
 			, "AgesReactTemplate"
@@ -31,6 +37,12 @@ public enum ENDPOINTS_DB_API {
 			, ENDPOINT_TYPES.ONTOLOGY
 			, "Beings"
 			,"Endpoint for being docs"
+			)
+	, CLONE(
+			"clone"
+			, ENDPOINT_TYPES.NODE
+			, "CloneLibrary"
+			,"Endpoint for cloning a library"
 			)
 	, CONCEPTS(
 			"concepts"

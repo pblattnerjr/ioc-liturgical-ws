@@ -282,6 +282,7 @@ public class ServiceProvider {
 					, ws_usr
 					);
 			storeManager.setMaxInactiveMinutes(maxInactiveMinutes);
+			storeManager.setPrettyPrint(debug); // if debugging, json will be pretty print formatted
 			
 			if (initializeExternalDb) {
 				docService = new ExternalDbManager(
@@ -291,6 +292,7 @@ public class ServiceProvider {
 						, externalDbIsReadOnly
 						, storeManager
 						);
+				docService.setPrettyPrint(debug);
 			} else {
 				docService = null;
 			}

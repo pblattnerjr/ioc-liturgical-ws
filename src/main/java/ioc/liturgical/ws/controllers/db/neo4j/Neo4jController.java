@@ -222,13 +222,23 @@ public class Neo4jController {
         			));
 		});
 
+		// GET AGES index table data
+		path = ENDPOINTS_DB_API.AGES_INDEX.pathname;
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+        	return externalManager.getAgesIndexTableData(
+        			).toJsonString();
+		});
+
 		// GET AGES template created from the specified url parameter
 		path = ENDPOINTS_DB_API.AGES_REACT_TEMPLATE.toLibraryPath();
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
         	return externalManager.getAgesTemplateMetadata(
-        			request.queryParams("u")  // link type (e.g. REFERS_TO_BIBLICAL_TEXT)
+        			request.queryParams("u")  // url
+        			, request.queryParams("t")  // translation library
         			).toJsonString();
 		});
 

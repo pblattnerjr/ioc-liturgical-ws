@@ -2,6 +2,7 @@ package ioc.liturgical.ws.constants;
 
 public enum ENDPOINT_TYPES {
 	DROPDOWN
+	, CLONE // used when initializing a new library.  Usually we clone from the Greek
 	, FORM
 	, HTML
 	, NLP
