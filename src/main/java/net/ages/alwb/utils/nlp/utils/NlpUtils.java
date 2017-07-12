@@ -18,6 +18,7 @@ import opennlp.tools.tokenize.SimpleTokenizer;
 import opennlp.tools.tokenize.Tokenizer;
 
 import net.ages.alwb.utils.core.generics.MultiMapWithList;
+import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
 import ioc.liturgical.ws.models.db.docs.nlp.ConcordanceLine;
 import ioc.liturgical.ws.models.db.docs.nlp.WordInflected;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
@@ -110,8 +111,12 @@ public class NlpUtils {
 			, boolean removeDiacritics
 			, int numberOfConcordanceEntries
 			) {
+		int concordSize = numberOfConcordanceEntries;
+		if (concordSize == 0) {
+			concordSize = 1;
+		}
 		MultiMapWithList<WordInflected, ConcordanceLine> result = 
-				new MultiMapWithList<WordInflected, ConcordanceLine>(numberOfConcordanceEntries);
+				new MultiMapWithList<WordInflected, ConcordanceLine>(concordSize);
 		
 		logger.info("tokenizing " + texts.size() + " texts");
 
@@ -141,6 +146,7 @@ public class NlpUtils {
 	        				, value
 	        				, id
 	        				, 100
+	        				, convertToLowerCase
 	        				);
 	        		word.setExampleId(id);
 	        		word.setExampleLeftContext(line.getContextLeft());
@@ -155,6 +161,7 @@ public class NlpUtils {
 	        				, value
 	        				, id
 	        				, 100
+	        				, convertToLowerCase
 	        				);
 	        		result.addValueToMapWithLists(token, line);
 	        	}
@@ -180,10 +187,16 @@ public class NlpUtils {
 			, String text 
 			, String id
 			, int width
+			, boolean lowerCase
 			) {
 		int halfWidth = width / 2;
 		int rawTokenLength = rawToken.length();
-    	int tokenStartIndex = text.indexOf(rawToken);
+    	int tokenStartIndex = 0;
+    	if (lowerCase) {
+    		tokenStartIndex = text.toLowerCase().indexOf(rawToken);
+    	} else {
+    		tokenStartIndex = text.indexOf(rawToken);
+    	}
     	int tokenEndIndex = tokenStartIndex + rawTokenLength;
     	int leftStartIndex = tokenStartIndex - halfWidth;
     	String left = "";
@@ -300,9 +313,10 @@ public class NlpUtils {
 		boolean include = true;
 		Tokenizer tokenizer = SimpleTokenizer.INSTANCE;
 
-	        for (String token : tokenizer.tokenize(text)) {
+	        for (String token : tokenizer.tokenize(AlwbGeneralUtils.toNfc(text))) {
+	        	String a = token;
 	           	if (convertToLowerCase) {
-	        		token = Normalizer.normalize(token, Normalizer.Form.NFD).toLowerCase();
+	        		token = token.toLowerCase();
 	        	}
 	        	if (removeDiacritics) {
 	        		token = Normalizer.normalize(token, Normalizer.Form.NFD)
@@ -323,43 +337,44 @@ public class NlpUtils {
 	        	}
 			return result;
 	}
-
-	
+		
 	public static void main(String[] args) {
 		String test  = "(Εἰς τὰς καθημερινὰς ψάλλεται τό· \"ὁ ἐν ἁγίοις θαυμαστός\". Αἱ δεσποτικαὶ ἑορταὶ ἔχουν ἴδιον Εἰσοδικόν.)";
 //		String test = "(Ψαλλομένου τοῦ Ἀπολυτικίου, γίνεται ὑπὸ τοῦ Ἱερέως ἡ Εἴσοδος μετὰ τοῦ Εὐαγγελίου. Ὁ Ἱερεὺς προσεύχεται χαμηλοφώνως τὴν ἑπομένην εὐχήν:)";
 //		String test = "(τοῦ Ἀπο γίνεται ὑπὸ τοῦ Ἱερέως ἡ Εἴσοδος μετὰ τοῦ Εὐαγγελίου. Ὁ Ἱερεὺς προσεύχεται χαμηλοφώνως τὴν ἑπομένην εὐχήν:)";
 		System.out.println(test);
-		String rawToken = "Εἰς";
-		ConcordanceLine result = getConcordanceLine(
-				rawToken
-				,1
-				, test
-				, "gr_gr_cog~client~cl.eu.lichrysbasil.R005"
-				, 80
-				);
-		System.out.println(result.toString("*"));
-		rawToken = "ἁγίοις";
-		 result = getConcordanceLine(
-				rawToken
-				, 2
-				, test
-				, "gr_gr_cog~client~cl.eu.lichrysbasil.R005"
-				, 80
-				);
-			System.out.println(result.toString("*"));
-			
 			System.out.println("\nTokens:");
 			for (String token : getTokens(
 	 	 	  			test
-	 	 				, false // convertToLowerCase
-	 	 				, false //  ignorePunctuation
-	 	 				, false //  ignoreLatin
-	 	 				, false //  ignoreNumbers
-	 	 				, false //  removeDiacritics
+	 	 				, true // convertToLowerCase
+	 	 				, true //  ignorePunctuation
+	 	 				, true //  ignoreLatin
+	 	 				, true //  ignoreNumbers
+	 	 				, true //  removeDiacritics
 	 	 	    	)) {
 				System.out.println(token);
 			}
+			String rawToken = "Εἰς";
+			ConcordanceLine result = getConcordanceLine(
+					rawToken
+					,1
+					, test
+					, "gr_gr_cog~client~cl.eu.lichrysbasil.R005"
+					, 80
+					, true
+					);
+			System.out.println(result.toString("*"));
+			rawToken = "ἁγίοις";
+			 result = getConcordanceLine(
+					rawToken
+					, 2
+					, test
+					, "gr_gr_cog~client~cl.eu.lichrysbasil.R005"
+					, 80
+					, true
+					);
+				System.out.println(result.toString("*"));
+				
 	}
 	
 }

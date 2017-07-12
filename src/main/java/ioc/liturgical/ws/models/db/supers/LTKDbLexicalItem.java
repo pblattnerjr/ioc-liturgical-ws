@@ -55,7 +55,7 @@ public class LTKDbLexicalItem extends LTKDb {
 		super (
 				LIBRARIES.LINGUISTICS.toSystemDomain()
 				, topic.label
-				, form
+				, Normalizer.normalize(form, Normalizer.Form.NFC)
 				, schema
 				, serialVersion
 				, topic
@@ -95,7 +95,7 @@ public class LTKDbLexicalItem extends LTKDb {
 	}
 
 	public void setExampleLeftContext(String exampleLeftContext) {
-		this.exampleLeftContext = exampleLeftContext;
+		this.exampleLeftContext = Normalizer.normalize(exampleLeftContext, Normalizer.Form.NFC);
 	}
 
 	public String getExampleRightContext() {
@@ -103,7 +103,7 @@ public class LTKDbLexicalItem extends LTKDb {
 	}
 
 	public void setExampleRightContext(String exampleRightContext) {
-		this.exampleRightContext = exampleRightContext;
+		this.exampleRightContext = Normalizer.normalize(exampleRightContext, Normalizer.Form.NFC);
 	}
 
 }

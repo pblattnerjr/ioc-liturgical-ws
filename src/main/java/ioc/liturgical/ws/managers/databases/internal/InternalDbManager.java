@@ -867,6 +867,17 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			domain.setLabels(labels);
 			addDomain(wsAdmin, domain.toJsonString());
 
+			// add domain for Archdiocese of America
+			domain = new DomainCreateForm();
+			domain.setLanguageCode("en");
+			domain.setCountryCode("us");
+			domain.setRealm("goa");
+			domain.setDescription("Translations by the Greek Orthodox Archdiocese of America");
+			labels = new ArrayList<String>();
+			labels.add("Liturgical");
+			domain.setLabels(labels);
+			addDomain(wsAdmin, domain.toJsonString());
+
 			// add domain for Fr. Seraphim Dedes
 			domain = new DomainCreateForm();
 			domain.setLanguageCode("en");
@@ -942,12 +953,34 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			domain.setLabels(labels);
 			addDomain(wsAdmin, domain.toJsonString());
 
-			// add domain for Spanish - Guatemala
+			// add domain for French
 			domain = new DomainCreateForm();
 			domain.setLanguageCode("fra");
 			domain.setCountryCode("fra");
 			domain.setRealm("pdg");
 			domain.setDescription("Translations in French by Fr. Dennis Guillaume of blessed memory");
+			labels = new ArrayList<String>();
+			labels.add("Liturgical");
+			domain.setLabels(labels);
+			addDomain(wsAdmin, domain.toJsonString());
+
+			// add domain for Kikuyu
+			domain = new DomainCreateForm();
+			domain.setLanguageCode("kik");
+			domain.setCountryCode("ke");
+			domain.setRealm("oak");
+			domain.setDescription("Translations in Kikuyu for Archdiocese of Kenya");
+			labels = new ArrayList<String>();
+			labels.add("Liturgical");
+			domain.setLabels(labels);
+			addDomain(wsAdmin, domain.toJsonString());
+
+			// add domain for Swahili - Kenya
+			domain = new DomainCreateForm();
+			domain.setLanguageCode("swh");
+			domain.setCountryCode("ke");
+			domain.setRealm("oak");
+			domain.setDescription("Translations in Swahili for Archdiocese of Kenya");
 			labels = new ArrayList<String>();
 			labels.add("Liturgical");
 			domain.setLabels(labels);

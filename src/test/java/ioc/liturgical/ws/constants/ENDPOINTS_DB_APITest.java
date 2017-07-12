@@ -86,6 +86,11 @@ public class ENDPOINTS_DB_APITest {
 		assert(path.equals("/db/api/v1/docs/agesindex"));
 	}
 	@Test
+	public void testAgesReadOnlyTemplate() {
+		String path = ENDPOINTS_DB_API.AGES_READ_ONLY_TEMPLATE.toLibraryPath();
+		assert(path.equals("/db/api/v1/docs/agesreadonlytemplate/*"));
+	}
+	@Test
 	public void testAgesReactTemplate() {
 		String path = ENDPOINTS_DB_API.AGES_REACT_TEMPLATE.toLibraryPath();
 		assert(path.equals("/db/api/v1/docs/agesreacttemplate/*"));

@@ -15,13 +15,7 @@ public class RunMeToGetLiturgicalProperties {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		showDates("2016","1",24);
-		showDates("2016","1",31);
-		showDates("2016","2",7);
-		showDates("2016","2",14);
-		showDates("2016","2",21);
-		showDates("2016","2",27);
-		showDates("2016","3",21);
+		showDates("2017","2",1);
 	}
 
 	private static void showDates(String year, String month, int day) {

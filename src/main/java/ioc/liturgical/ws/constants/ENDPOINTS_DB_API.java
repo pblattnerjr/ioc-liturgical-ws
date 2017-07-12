@@ -20,6 +20,12 @@ public enum ENDPOINTS_DB_API {
 			, "AgesIndex"
 			,"Endpoint for an index of available AGES HTML files"
 			)
+	, AGES_READ_ONLY_TEMPLATE(
+			"agesreadonlytemplate"
+			, ENDPOINT_TYPES.HTML
+			, "AgesReadOnlyTemplate"
+			,"Endpoint for an AGES HTML file converted to a Read-Only React template"
+			)
 	, AGES_REACT_TEMPLATE(
 			"agesreacttemplate"
 			, ENDPOINT_TYPES.HTML

@@ -60,8 +60,6 @@ public class AgesHtmlToTemplateHtml {
 	/**
 	 * Gets the content for the specified URL
 	 * Builds an array of the ids used in the content.  They are a set (no duplicates).
-	 * Replaces the text values with expressions that are evaluated when the new content is loaded.
-	 * Adds an onClick property to each value.
 	 */
 	public AgesReactTemplate getValues(Elements valueSpans) throws Exception {
 		AgesReactTemplate result = new AgesReactTemplate(url, printPretty);

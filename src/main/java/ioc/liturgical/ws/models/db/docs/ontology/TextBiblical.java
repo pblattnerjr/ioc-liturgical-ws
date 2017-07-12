@@ -10,6 +10,7 @@ import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.models.db.forms.TextBiblicalTranslationCreateForm;
 import ioc.liturgical.ws.models.db.supers.LTKDb;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
 
 import java.text.Normalizer;
 import java.util.regex.Pattern;
@@ -20,7 +21,9 @@ import org.slf4j.LoggerFactory;
 import com.github.reinert.jjschema.Attributes;
 
 /**
- * This class provides a POJO for use in web forms to create or update a domain
+ * This class provides a POJO for Biblical text.
+ * Note that it is critical that all searching and comparison using this text make use of Normalizer.normalize(x,Normalizer.Form.NFC)
+ * so that there is a canonical means to do so.
  * @author mac002
  *
  */
@@ -103,7 +106,7 @@ public class TextBiblical extends LTKDb {
 	}
 
 	public void setValue(String value) {
-		this.value = value;
+		this.value = AlwbGeneralUtils.toNfc(value);
 		try {
 			this.nwp = Normalizer.normalize(value, Normalizer.Form.NFD)
 					.replaceAll("\\p{InCombiningDiacriticalMarks}+", "").toLowerCase();

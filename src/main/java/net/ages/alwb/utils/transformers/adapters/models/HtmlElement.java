@@ -11,7 +11,8 @@ public class HtmlElement extends AbstractModel {
 	@Expose public String key = ""; // required when iterating a Javascript array of HtmlElement
 	@Expose public String tag = "";
 	@Expose public String className = "";
-	@Expose public String dataKey = "";
+	@Expose public String dataKey = ""; // the key we will use to retrieve values.  It might not be the original
+	@Expose public String dataOriginal = ""; // the original key in case we need to use it instead
 	@Expose public String topicKey = "";
 	@Expose public List<HtmlElement> children = new ArrayList<HtmlElement>();
 	
@@ -61,5 +62,11 @@ public class HtmlElement extends AbstractModel {
 	}
 	public void setKey(String key) {
 		this.key = key;
+	}
+	public String getDataOriginal() {
+		return dataOriginal;
+	}
+	public void setDataOriginal(String dataOriginal) {
+		this.dataOriginal = dataOriginal;
 	}
 }

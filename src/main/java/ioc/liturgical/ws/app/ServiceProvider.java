@@ -89,6 +89,10 @@ import net.ages.alwb.utils.core.error.handling.ErrorUtils;
  * The web service provides authentication and authorization as a proxy to the external backend database.
  * User accounts and user authorizations are maintained using a ws admin app. 
  * 
+ * Note: all values of text stored in the database are converted to Normalizer.Form.NFC
+ * and all searches and matches use Normalizer.Form.NFC.  That way there is a 
+ * consistent way to work with text that has diacritics.
+ * 
  * @author mac002
  *
  */

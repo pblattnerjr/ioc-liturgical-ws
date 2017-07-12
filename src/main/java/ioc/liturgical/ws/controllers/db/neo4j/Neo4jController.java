@@ -242,6 +242,22 @@ public class Neo4jController {
         			).toJsonString();
 		});
 
+		// GET AGES read only template created from the specified url parameter
+		path = ENDPOINTS_DB_API.AGES_READ_ONLY_TEMPLATE.toLibraryPath();
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+        	return externalManager.getAgesService(
+        			request.queryParams("u")  // url
+        			, request.queryParams("l")  // left library
+        			, request.queryParams("c")  // center library
+        			, request.queryParams("r")  // right library
+        			, request.queryParams("lf")  // left fallback library
+        			, request.queryParams("cf")  // center fallback library
+        			, request.queryParams("rf")  // right fallback library
+        			).toJsonString();
+		});
+
 		// Get forms for creating new instances of nodes and relationships
 		path = ENDPOINTS_DB_API.NEW.toLibraryPath();
 		ControllerUtils.reportPath(logger, "GET", path);

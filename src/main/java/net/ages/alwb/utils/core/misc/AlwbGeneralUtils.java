@@ -328,6 +328,17 @@ public class AlwbGeneralUtils {
 		}
 		return null;
 	}
+	
+	/**
+	 * Normalizes the string to form NFC. 
+	 * This is the canonical form used throughout the application
+	 * and the database
+	 * @param s
+	 * @return
+	 */
+	public static String toNfc(String s) {
+		return Normalizer.normalize(s, Normalizer.Form.NFC);
+	}
 	/**
 	 * Removes diacritics from UTF-8
 	 * @param text

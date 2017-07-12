@@ -148,6 +148,8 @@ public class IdManager {
 		idParts.add(part1);
 		idParts.add(part2);
 		idParts.add(part3);
+		this.libraryParts.add(part1);
+		this.setDomainParts();
 	}
 
 	/**
@@ -171,6 +173,7 @@ public class IdManager {
 					this.libraryLanguage = parts[0];
 					this.libraryCountry = parts[1];
 					this.libraryRealm = parts[2];
+					this.setLibraryIsDomain(true);
 				}
 			} catch (Exception e) {
 				
@@ -206,6 +209,13 @@ public class IdManager {
 			return this.libraryParts.get(0);
 		}
 	}
+	
+	public void setLibrary(String library) {
+		this.libraryParts.clear();
+		this.idParts.set(0, library);
+		this.libraryParts.add(library);
+		this.setDomainParts();
+	}
 
 	public String getTopic() {
 		if (this.topicParts.size() > 1) {
@@ -213,6 +223,10 @@ public class IdManager {
 		} else {
 			return this.topicParts.get(0);
 		}
+	}
+	
+	public String getTopicKey() {
+		return getTopic() + Constants.ID_DELIMITER + getKey();
 	}
 
 	public String getKey() {
@@ -282,6 +296,15 @@ public class IdManager {
 		return libraryIsDomain;
 	}
 
+	public boolean isLibraryDomain(String domain) {
+		String[] parts = domain.split(Constants.ID_SPLITTER);
+		if (parts.length == 1) {
+			parts = domain.split(Constants.DOMAIN_SPLITTER);
+			return parts.length == 3;
+		} else {
+			return false;
+		}
+	}
 	public void setLibraryIsDomain(boolean libraryIsDomain) {
 		this.libraryIsDomain = libraryIsDomain;
 	}

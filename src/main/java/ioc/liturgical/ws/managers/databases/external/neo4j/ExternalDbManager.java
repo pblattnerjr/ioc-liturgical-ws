@@ -78,10 +78,12 @@ import net.ages.alwb.utils.core.datastores.json.models.LTKVJsonObject;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 import net.ages.alwb.utils.core.generics.MultiMapWithList;
 import net.ages.alwb.utils.core.id.managers.IdManager;
+import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
 import net.ages.alwb.utils.nlp.fetchers.Ox3kUtils;
 import net.ages.alwb.utils.nlp.fetchers.PerseusMorph;
 import net.ages.alwb.utils.nlp.models.GevLexicon;
 import net.ages.alwb.utils.nlp.utils.NlpUtils;
+import net.ages.alwb.utils.transformers.adapters.AgesHtmlToDynamicHtml;
 import net.ages.alwb.utils.transformers.adapters.AgesHtmlToTemplateHtml;
 import net.ages.alwb.utils.transformers.adapters.AgesIndexHtmlToReactTableData;
 import net.ages.alwb.utils.transformers.adapters.models.AgesIndexTableData;
@@ -179,7 +181,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	   */
 	  public ResultJsonObjectArray getWordAnalyses(String word) {
 		  String query = "match (n:" + TOPICS.WORD_GRAMMAR.label + ") where n.id starts with \"en_sys_linguistics~"
-				+  word.toLowerCase() + "\" return properties(n)"
+				+  AlwbGeneralUtils.toNfc(word).toLowerCase() + "\" return properties(n)"
 				 ;
 		  ResultJsonObjectArray queryResult = this.getForQuery(
 				  query
@@ -500,7 +502,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 							, domain
 							, book
 							, chapter
-							, query
+							, AlwbGeneralUtils.toNfc(query) // we stored the text using Normalizer.Form.NFC, so search using it
 							, property
 							, matcher
 							)
@@ -526,7 +528,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					getCypherQueryForOntologySearch(
 							type
 							, genericType
-							, query
+							, AlwbGeneralUtils.toNfc(query)
 							, property
 							, matcher
 							, tags 
@@ -553,7 +555,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					getCypherQueryForLinkSearch(
 							type
 							, library
-							, query
+							, AlwbGeneralUtils.toNfc(query)
 							, property
 							, matcher
 							, tags 
@@ -589,7 +591,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, String matcher
 				) {
 			boolean prefixProps = false;
-			String theQuery = query;
+			String theQuery = AlwbGeneralUtils.toNfc(query);
 			if (matcher.startsWith("rx")) {
 				// ignore
 			} else {
@@ -652,7 +654,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			if (genericType.startsWith("*") && type.startsWith("*")) {
 				theGenericType = TOPICS.ROOT.label;
 			}
-			String theQuery = query;
+			String theQuery = AlwbGeneralUtils.toNfc(query);
 			CypherQueryBuilderForDocs builder = new CypherQueryBuilderForDocs(prefixProps)
 					.MATCH()
 					.TOPIC(type)
@@ -702,7 +704,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				) {
 			
 			boolean prefixProps = false;
-			String theQuery = query;
+			String theQuery = AlwbGeneralUtils.toNfc(query);
 			CypherQueryBuilderForLinks builder = new CypherQueryBuilderForLinks(prefixProps)
 					.MATCH()
 					.TYPE(type)
@@ -1615,10 +1617,11 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			try {
 				for (JsonElement e : tokens) {
 					try {
-						ResultJsonObjectArray analyses = this.getWordAnalyses(e.getAsString()); //   getTokenGrammarAnalyses(requestor, e.getAsString());
-						if (! resultAnalyses.has(e.getAsString())) { // the same token value can occur more than one time in a text
+						String lowerToken = e.getAsString().toLowerCase();
+						ResultJsonObjectArray analyses = this.getWordAnalyses(lowerToken); //   
+						if (! resultAnalyses.has(lowerToken)) { // the same token value can occur more than one time in a text
 							if (analyses.valueCount > 0) {
-								resultAnalyses.add(e.getAsString(), analyses.getFirstObject().get(e.getAsString()).getAsJsonArray());
+								resultAnalyses.add(e.getAsString(), analyses.getFirstObject().get(lowerToken).getAsJsonArray());
 							} else {
 								JsonArray array = new JsonArray(); 
 								PerseusAnalysis perseusAnalysis = new PerseusAnalysis();
@@ -2006,6 +2009,111 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		}
 
 		/**
+		 * Reads the specified AGEs URL and creates a meta representation. 
+		 * The initial values for the text are either the original AGES Greek (gr_gr_ages)
+		 * or the original AGES English (en_us_ages).  These are the 'fallback' libraries.
+		 * 
+		 * Once the meta representation is complete, a second pass through attempts
+		 * to find the corresponding text based on the leftLibrary, centerLibrary, etc.
+		 * 
+		 * If found, that value will replace the original AGES value.
+		 * 
+		 * @param url
+		 * @param leftLibrary
+		 * @param centerLibrary
+		 * @param rightLibrary
+		 * @param leftFallback
+		 * @param centerFallback
+		 * @param rightFallback
+		 * @return
+		 */
+		public ResultJsonObjectArray getAgesService(
+				String url
+				, String leftLibrary
+				, String centerLibrary
+				, String rightLibrary
+				, String leftFallback
+				, String centerFallback
+				, String rightFallback
+				) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
+				IdManager idManager = null;
+				AgesHtmlToDynamicHtml ages = new AgesHtmlToDynamicHtml(
+						url
+						, leftLibrary
+						, centerLibrary
+						, rightLibrary
+						, leftFallback
+						, centerFallback
+						, rightFallback
+						, this.printPretty // print pretty
+						);
+				AgesReactTemplate template = ages.toReactTemplateMetaData();
+				int dbCallCount = 0;
+				// Build a new values map, with entries for left, center, and right
+				Map<String,String> values = template.getValues();
+				for ( Entry<String,String> entry: values.entrySet()) {
+					if (leftLibrary != null && entry.getKey().startsWith(leftLibrary)) {
+						if (
+								leftLibrary.length() == 0 
+								|| leftLibrary.startsWith("gr") 
+								|| leftLibrary.equals("en_us_dedes")
+							) {
+							// ignore
+						} else {
+							dbCallCount++;
+							ResultJsonObjectArray dbValue = this.getForId(entry.getKey(), leftLibrary);
+							if (dbValue.valueCount == 1) {
+								values.put(entry.getKey(), dbValue.getFirstObjectValueAsString());
+							}
+						}
+					} else if (centerLibrary != null && entry.getKey().startsWith(centerLibrary)) {
+						if (
+								centerLibrary.length() == 0 
+								|| centerLibrary.startsWith("gr") 
+								|| centerLibrary.equals("en_us_dedes")
+							) {
+							// ignore
+						} else {
+							dbCallCount++;
+//							logger.info(entry.getKey());
+							ResultJsonObjectArray dbValue = this.getForId(entry.getKey(), centerLibrary);
+							if (dbValue.valueCount == 1) {
+								values.put(entry.getKey(), dbValue.getFirstObjectValueAsString());
+							}
+						}
+					} else if (rightLibrary != null && entry.getKey().startsWith(rightLibrary)) {
+						if (
+								rightLibrary.length() == 0 
+								|| rightLibrary.startsWith("gr") 
+								|| rightLibrary.equals("en_us_dedes")
+							) {
+							// ignore
+						} else {
+							dbCallCount++;
+							ResultJsonObjectArray dbValue = this.getForId(entry.getKey(), rightLibrary);
+							if (dbValue.valueCount == 1) {
+								values.put(entry.getKey(), dbValue.getFirstObjectValueAsString());
+							}
+						}
+					}
+				}
+//				logger.info("getAgesService db calls = " + dbCallCount);
+				template.setValues(values);
+				List<JsonObject> list = new ArrayList<JsonObject>();
+				list.add(template.toJsonObject());
+				result.setResult(list);
+				result.setQuery("get AGES dynamic template for " + url);
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+				ErrorUtils.report(logger, e);
+			}
+			return result;
+		}
+
+		/**
 		 * Extracts hierarchically all the elements of an AGES html file,
 		 * starting with the content div.  It provides information 
 		 * sufficient to render the equivalent HTML using a Javascript library
@@ -2054,6 +2162,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			}
 			return result;
 		}
+
 		/**
 		 * For the specified library and topic, add values to the collection.
 		 * This is used by the client side ParaColTextEditor component
@@ -2754,8 +2863,11 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, boolean deleteFirst
 				) {
 			RequestStatus status = new RequestStatus();
-			
+			String startWith = "Βασιλεία"; // startWith can be used for debugging purposes
+			startWith = AlwbGeneralUtils.toNfc(startWith).toLowerCase();
 			try {
+				List<String> noAnalysisFound = new ArrayList<String>();
+				
 				ResultJsonObjectArray queryResult = null;
 				if (deleteFirst) {
 					queryResult = this.getForQuery(
@@ -2775,34 +2887,48 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			    	count++;
 			    	boolean process = true;
 			    	String token = e.getAsJsonObject().get("n.key").getAsString();
-			    	if (! deleteFirst) {
-			    		ResultJsonObjectArray exists = this.getForQuery(
-								"MATCH (n:WordGrammar) where n.topic = \"" 
-										+ token 
-											+ "\" return n.topic limit 1"
-								, false
-								, false
-						);
-						process = ! (exists.getValueCount() > 0);
-					}
-			    	if (process) {
-						logger.info("fetching analyses from Perseus for " + token + " (" + count + " of " + tokenCount + ")");
-			    		PerseusMorph pm = new PerseusMorph(token);
-			    		PerseusAnalyses analyses = pm.getAnalyses();
-			    		for (PerseusAnalysis analysis : analyses.analyses ) {
-			    			try {
-				    			RequestStatus addStatus = this.addLTKDbObject("wsadmin", analysis.toJsonString());
-				    			if (addStatus.getCode() != 201) {
-				    				logger.error(token + " already has analysis: " + addStatus.getUserMessage());
+			    	if (startWith.length() == 0 || token.startsWith(startWith)) {
+				    	if (! deleteFirst) {
+				    		ResultJsonObjectArray exists = this.getForQuery(
+									"MATCH (n:WordGrammar) where n.topic = \"" 
+											+ token 
+												+ "\" return n.topic limit 1"
+									, false
+									, false
+							);
+							process = ! (exists.getValueCount() > 0);
+						}
+				    	if (process) {
+							logger.info("fetching analyses from Perseus for " + token + " (" + count + " of " + tokenCount + ")");
+				    		PerseusMorph pm = new PerseusMorph(token);
+				    		PerseusAnalyses analyses = pm.getAnalyses();
+				    		if (analyses.getAnalyses().size() == 0) {
+				    			noAnalysisFound.add(token);
+				    		}
+				    		for (PerseusAnalysis analysis : analyses.analyses ) {
+				    			try {
+					    			RequestStatus addStatus = this.addLTKDbObject("wsadmin", analysis.toJsonString());
+					    			if (addStatus.getCode() != 201) {
+					    				logger.error(token + " already has analysis: " + addStatus.getUserMessage());
+					    			}
+				    			} catch (Exception eAdd) {
+				    				ErrorUtils.report(logger, eAdd);
 				    			}
-			    			} catch (Exception eAdd) {
-			    				ErrorUtils.report(logger, eAdd);
-			    			}
-			    		}
+				    		}
+				    	} else {
+							logger.info("!! Analysis exists for " + token + " (" + count + " of " + tokenCount + ")");
+				    	}
 			    	}
 		    	}
+
 				status.setCode(queryResult.getStatus().getCode());
 				status.setMessage(queryResult.getStatus().getUserMessage());
+				if (noAnalysisFound.size() > 0) {
+					logger.info("No lemma found for:");
+					for (String badBoy : noAnalysisFound) {
+						logger.info(badBoy);
+					}
+				}
 			} catch (Exception e) {
 				ErrorUtils.report(logger, e);
 				status.setCode(HTTP_RESPONSE_CODES.SERVER_ERROR.code);
@@ -2810,7 +2936,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			}
 			return status;
 		}
-
+		
 		/**
 		 * Create a relationship between the two specified nodes
 		 * @param requestor

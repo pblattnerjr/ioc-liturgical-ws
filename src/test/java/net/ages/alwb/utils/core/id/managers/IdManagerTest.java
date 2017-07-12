@@ -7,10 +7,12 @@ import org.junit.Test;
 public class IdManagerTest {
 
 	public static String simpleLibrary = "gr_gr_cog";
+	public static String simpleEnglishLibrary = "en_us_dedes";
 	public static String simpleTopic = "actors";
 	public static String simpleKey = "Priest";
 	public static IdManager joiner = new IdManager(simpleLibrary, simpleTopic, simpleKey);
 	public static IdManager simpleIdManager = new IdManager(joiner.getId(), 1, 2);
+	public static IdManager simpleEnglishIdManager = null;
 
 	public static String complexLibrary = "gr_gr_cog~me.m01.d01~doxastakon.text";
 	public static IdManager libraryJoiner = new IdManager(complexLibrary, simpleTopic, simpleKey);
@@ -52,5 +54,14 @@ public class IdManagerTest {
 	}
 	public void complexLibraryKeyTest() {
 		assert complexLibraryManager.getKey().equals(libraryJoiner.getKey());
+	}
+	public void simpleEnglishLibraryKeyTest() {
+		simpleEnglishIdManager = new IdManager(
+				simpleIdManager.getLibrary()
+				, simpleIdManager.getTopic()
+				, simpleIdManager.getKey()
+				);
+		simpleEnglishIdManager.setLibrary(simpleEnglishLibrary);
+		assert simpleEnglishIdManager.getId().equals("en_us_dedes~actors~Priest");
 	}
 }
