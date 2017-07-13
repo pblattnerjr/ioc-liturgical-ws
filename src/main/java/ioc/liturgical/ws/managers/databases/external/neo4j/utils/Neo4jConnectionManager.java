@@ -317,9 +317,9 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			) throws DbException {
 		RequestStatus result = new RequestStatus();
 		setIdConstraint(doc.toSchemaAsLabel());
-		String matchFrom = "MATCH (f) where f.id = \'" 
+		String matchFrom = "MATCH (f:" + TOPICS.TEXT.label + ") where f.id = \'" 
 				+ fromId 
-				+ "\' match (t) where t.id = \'" 
+				+ "\' match (t:" + TOPICS.ONTOLOGY_ROOT.label + ") where t.id = \'" 
 				+ toId 
 				+ "\'"
 				;
