@@ -650,16 +650,22 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, String operator // for tags, e.g. AND, OR
 				) {
 			boolean prefixProps = false;
-			String theGenericType = genericType;
-			if (genericType.startsWith("*") && type.startsWith("*")) {
-				theGenericType = TOPICS.ROOT.label;
+			String theLabel = type;
+			String theProperty = property;
+			if (genericType.startsWith("*")) {
+				if (type.startsWith("*")) {
+					theLabel = TOPICS.ONTOLOGY_ROOT.label;
+				}	
+			}
+			if (theProperty.startsWith("*")) {
+				theProperty = "name";
 			}
 			String theQuery = AlwbGeneralUtils.toNfc(query);
 			CypherQueryBuilderForDocs builder = new CypherQueryBuilderForDocs(prefixProps)
 					.MATCH()
 					.TOPIC(type)
-					.LABEL(theGenericType)
-					.WHERE(property)
+					.LABEL(theLabel)
+					.WHERE(theProperty)
 					;
 			
 			MATCHERS matcherEnum = MATCHERS.forLabel(matcher);
@@ -2863,7 +2869,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, boolean deleteFirst
 				) {
 			RequestStatus status = new RequestStatus();
-			String startWith = "Βασιλεία"; // startWith can be used for debugging purposes
+			String startWith = ""; // "Βασιλεία"; // startWith can be used for debugging purposes
 			startWith = AlwbGeneralUtils.toNfc(startWith).toLowerCase();
 			try {
 				List<String> noAnalysisFound = new ArrayList<String>();

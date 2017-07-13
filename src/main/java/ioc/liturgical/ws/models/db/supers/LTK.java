@@ -93,7 +93,7 @@ public class LTK extends AbstractModel {
 	@Attributes(id="bottom", readonly=false, required=true, description="Status of this record.  'Editing' means it is either a draft or undergoing revision.  'Reviewing' means it is being reviewed for someone's approval.  'Finalized' means work has finished on this record.  It is not being edited or reviewed at this time. 'Ready for...' means it is ready for someone to be assigned to the next step.")
 	@Expose public STATUS status = STATUS.EDITING;
 
-	@Attributes(id="bottom", readonly=false, required=true, description="The ID of the user to whom work has been assigned for this record.")
+	@Attributes(id="bottom", readonly=false, required=false, description="The ID of the user to whom work has been assigned for this record.")
 	@Expose public String assignedToUser = "";
 
 	public LTK(

@@ -21,7 +21,7 @@ public class LinkRefersToBeingCreateForm extends LTKLinkCreateForm {
 	
 	private static double serialVersion = 1.1;
 	private static String schema = LinkRefersToBeingCreateForm.class.getSimpleName();
-	private static RELATIONSHIP_TYPES type = RELATIONSHIP_TYPES.REFERS_TO_HUMAN;
+	private static RELATIONSHIP_TYPES type = RELATIONSHIP_TYPES.REFERS_TO_BEING;
 	private static TOPICS ontoTopic = TOPICS.BEING;
 	
 	@UiWidget(Constants.UI_WIDGET_TEXTAREA)
