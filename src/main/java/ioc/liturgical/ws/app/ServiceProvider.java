@@ -151,7 +151,10 @@ public class ServiceProvider {
 		int minThreads = 2;
 		int timeOutMillis = 30000;
 		
-		ws_pwd = args[0];
+		ws_pwd = System.getenv("WS_PWD");
+		if (ws_pwd == null) {
+			ws_pwd = args[0];
+		}
 		ws_usr = "wsadmin";
 		boolean initializeExternalDb = true;
 		if (args.length > 1) {

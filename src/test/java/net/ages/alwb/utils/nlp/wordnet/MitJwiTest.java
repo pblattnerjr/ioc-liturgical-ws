@@ -4,10 +4,6 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import com.google.gson.JsonObject;
-
-import net.ages.alwb.utils.nlp.wordnet.models.Synset;
-
 public class MitJwiTest {
 
 	@Test

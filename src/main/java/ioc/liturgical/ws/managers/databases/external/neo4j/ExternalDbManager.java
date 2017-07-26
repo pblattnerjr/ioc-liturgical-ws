@@ -76,6 +76,7 @@ import net.ages.alwb.utils.core.datastores.json.models.DropdownArray;
 import net.ages.alwb.utils.core.datastores.json.models.DropdownItem;
 import net.ages.alwb.utils.core.datastores.json.models.LTKVJsonObject;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import net.ages.alwb.utils.core.file.AlwbFileUtils;
 import net.ages.alwb.utils.core.generics.MultiMapWithList;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
@@ -145,12 +146,30 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  this.adminUserId = ServiceProvider.ws_usr;
 		  this.internalManager = internalManager; 
 		  this.readOnly = readOnly;
-		  neo4jManager = new Neo4jConnectionManager(
-				  neo4jDomain
-				  , ServiceProvider.ws_usr
-				  , ServiceProvider.ws_pwd
-				  , readOnly
-				  );
+		  // in case the database is not yet initialized, we will wait 
+		  // try again for maxTries, after waiting for 
+		  int maxTries = 5;
+		  int tries = 0;
+		  long waitPeriod = 15000; // 1000 = 1 second
+		  while (tries <= maxTries) {
+			  neo4jManager = new Neo4jConnectionManager(
+					  neo4jDomain
+					  , ServiceProvider.ws_usr
+					  , ServiceProvider.ws_pwd
+					  , readOnly
+					  );
+			  if (neo4jManager.isConnectionOK()) {
+				  break;
+			  } else {
+				  try {
+					  logger.info("Will retry db connection in " + waitPeriod / 1000 + " seconds...");
+						Thread.sleep(waitPeriod); 
+					} catch (InterruptedException e) {
+						ErrorUtils.report(logger, e);
+					}
+				  tries++;
+			  }
+		  }
 		  this.logAllQueries = logQueries;
 		  this.logQueriesWithNoMatches = logQueriesWithNoMatches;
 		  buildDomainTopicMap();
@@ -2111,6 +2130,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				list.add(template.toJsonObject());
 				result.setResult(list);
 				result.setQuery("get AGES dynamic template for " + url);
+				AlwbFileUtils.writeFile("/volumes/ssd2/template.json", template.getTopElement().toJsonString());
 			} catch (Exception e) {
 				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 				result.setStatusMessage(e.getMessage());
