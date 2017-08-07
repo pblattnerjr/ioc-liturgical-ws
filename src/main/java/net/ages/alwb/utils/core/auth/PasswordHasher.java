@@ -25,6 +25,8 @@ import org.slf4j.LoggerFactory;
 	 * 
 	 * See https://docs.oracle.com/cd/E13209_01/wlcp/wlss30/configwlss/jvmrand.html
 	 * 
+	 * Tags: H2 hangs H2 slow Linux Ubuntu
+	 * 
 	 * @author mac002
 	 *
 	 */

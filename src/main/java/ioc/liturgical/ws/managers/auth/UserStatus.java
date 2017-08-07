@@ -8,19 +8,19 @@ public class UserStatus {
 	boolean mustResetPassword = false;
 	
 	public boolean isAuthenticated() {
-		return authenticated;
+		return this.authenticated;
 	}
 	public void setAuthenticated(boolean authenticated) {
 		this.authenticated = authenticated;
 	}
 	public boolean isAuthorized() {
-		return authorized;
+		return this.authorized;
 	}
 	public void setAuthorized(boolean authorized) {
 		this.authorized = authorized;
 	}
 	public boolean isSessionExpired() {
-		return sessionExpired;
+		return this.sessionExpired;
 	}
 	public void setSessionExpired(boolean sessionExpired) {
 		this.sessionExpired = sessionExpired;

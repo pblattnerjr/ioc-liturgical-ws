@@ -467,6 +467,7 @@ public class ServiceProvider {
 				json.addProperty("wsVersion", Constants.VERSION);
 				json.addProperty("dbServerDomain", externalDbDomain);
 				json.addProperty("databaseReadOnly", externalDbIsReadOnly);
+				json.addProperty("databaseProtected", externalDbAccessIsProtected);
 				return json.toString();
 			});
 

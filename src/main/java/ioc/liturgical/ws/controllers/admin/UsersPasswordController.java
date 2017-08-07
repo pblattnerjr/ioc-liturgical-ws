@@ -1,7 +1,6 @@
 package ioc.liturgical.ws.controllers.admin;
 
 import static spark.Spark.get;
-import static spark.Spark.post;
 import static spark.Spark.put;
 
 import org.slf4j.Logger;
@@ -13,7 +12,6 @@ import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.constants.ENDPOINTS_ADMIN_API;
-import ioc.liturgical.ws.constants.NEW_FORM_CLASSES_ADMIN_API;
 import ioc.liturgical.ws.managers.auth.AuthDecoder;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.models.RequestStatus;
@@ -34,7 +32,6 @@ public class UsersPasswordController {
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
 			String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
 			JsonObject json = storeManager.getUserPasswordChangeForms(requestor, query);
-//			JsonObject json = storeManager.getUserPasswordChangeForms(query);
 			if (json.get("valueCount").getAsInt() > 0) {
 				response.status(HTTP_RESPONSE_CODES.OK.code);
 			} else {

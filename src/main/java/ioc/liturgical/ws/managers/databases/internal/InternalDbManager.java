@@ -336,7 +336,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			form.setRequiresChangeAfterLogin(!requestor.equals(username));
 			record = 
 					new LTKVJsonObject(
-							"users|password|" + username
+							new IdManager("users","password",username).getId()
 						, form.schemaIdAsString()
 						, form.toJsonObject()
 						);
@@ -812,17 +812,24 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			, ROLES role
 			, String lib
 			) throws BadIdException {
-		UserContact userContact = new UserContact();
-		userContact.setFirstname(firstname);
-		userContact.setLastname(lastname);
-		userContact.setEmail(username + "@ioc-liturgical-ws.org");
-		addUserContact(username, userContact);
-		addUserHash(wsAdmin,username, customerNumber);
+		
+		UserCreateForm user = new UserCreateForm();
+		user.setFirstname(firstname);
+		user.setLastname(lastname);
+		user.setPassword(ServiceProvider.ws_pwd);
+		user.setPasswordReenter(user.getPassword());
+		user.setUsername(username);
+		user.setLanguageCode("en");
+		user.setCountryCode("us");
+		user.setEmail(user.getUsername()+"@liml.org");
+		user.setEmailReenter(user.getEmail());
+		addUser(user.getUsername(), user.toJsonString());
 		UserStatistics stats = new UserStatistics();
-		addUserStats(username,stats);
+		addUserStats(user.getUsername(),stats);
 		if (role != null) {
-			grantRole(wsAdmin,role, lib, username);
+			this.grantRole(user.getUsername(), role, lib, user.getUsername());
 		}
+		logger.info("test user " + user.getUsername() + " added");
 	}
 	private void initializeTable() {
 		logger.info("Initializing table " + tablename + " for database " + storename);
@@ -1069,16 +1076,16 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 				// add a test user who can administer all domains
 				initializeUser(
 						"adminForAllDomains"
-						, "all"
-						, "Domains"
+						, "admin"
+						, "ForAllDomains"
 						, ROLES.ADMIN
 						, Constants.DOMAINS_LIB
 						);
 	
 				initializeUser(
 						"adminForEnUsDedes"
-						, "one"
-						, "Domain"
+						, "admin"
+						, "ForEnUsDedes"
 						, ROLES.ADMIN
 						, "en_us_dedes"
 						);
@@ -1086,8 +1093,8 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 
 				initializeUser(
 						"notAnAdmin"
-						, "can't"
-						, "DoAnything"
+						, "not"
+						, "AnAdmin"
 						, null
 						, null
 						);
@@ -2336,6 +2343,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			isAuthorized = true;
 		} else if (isAdminForAnyLib(username) && isAdminPath(library)) {
 			isAuthorized = true;
+			isAuthorized = true;
  		} else {
 			if (isLibAdmin(library, username)) {
 				isAuthorized = true;
@@ -2344,6 +2352,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		    	case GET: {
 					if (isLibAuthor(library, username) 
 							|| isLibReader(library, username)
+							|| library.equals("login")
 							) {
 						isAuthorized = true;
 					}
@@ -2373,7 +2382,12 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		if (suppressAuth) { // used for debugging purposes
 			return true;
 		} else {
-			return isAuthorized;
+			if (isAuthorized) {
+				return true;
+			} else {
+				logger.info(username + " not authorized for " + verb + " against " + library);
+				return false;
+			}
 		}
 	}
 	
