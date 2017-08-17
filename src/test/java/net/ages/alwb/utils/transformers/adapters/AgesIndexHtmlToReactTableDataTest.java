@@ -10,9 +10,9 @@ public class AgesIndexHtmlToReactTableDataTest {
 
 	@Test
 	public void test() {
-		AgesIndexHtmlToReactTableData ages = new AgesIndexHtmlToReactTableData(true);
+		AgesWebsiteIndexToReactTableData ages = new AgesWebsiteIndexToReactTableData(true);
 		try {
-			AgesIndexTableData data = ages.toReactTableData();
+			AgesIndexTableData data = ages.toReactTableDataFromHtml();
 			System.out.println(data.toJsonString());
 			assertTrue(data != null);
 		} catch (Exception e) {

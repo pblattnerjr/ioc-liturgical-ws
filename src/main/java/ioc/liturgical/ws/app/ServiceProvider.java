@@ -175,6 +175,7 @@ public class ServiceProvider {
 		JsonObjectStoreManager.STORE_TYPE store_type = JsonObjectStoreManager.STORE_TYPE.DB;
 
 		try {
+			logger.info("ioc-liturgical-ws version: " + Constants.VERSION);
 			ServiceProvider.class.getClassLoader();
 			String location = getLocation();
 			logger.info("Jar is executing from: " + location);
@@ -341,6 +342,14 @@ public class ServiceProvider {
 							, method
 							, library
 							);
+					if (debug) {
+						logger.info("Method: " + method);
+						logger.info("Path: " + path);
+						logger.info("Library " + library);
+						logger.info("User: " + authDecoder.getUsername());
+						logger.info("Authenticated = " + status.isAuthenticated());
+						logger.info("Authorized = " + status.isAuthorized());
+					}
 					if (status.isAuthenticated()) {
 						if (status.isSessionExpired() && request.pathInfo().length() == 1
 								&& request.pathInfo().startsWith("/")) {

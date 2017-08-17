@@ -86,7 +86,7 @@ import net.ages.alwb.utils.nlp.models.GevLexicon;
 import net.ages.alwb.utils.nlp.utils.NlpUtils;
 import net.ages.alwb.utils.transformers.adapters.AgesHtmlToDynamicHtml;
 import net.ages.alwb.utils.transformers.adapters.AgesHtmlToTemplateHtml;
-import net.ages.alwb.utils.transformers.adapters.AgesIndexHtmlToReactTableData;
+import net.ages.alwb.utils.transformers.adapters.AgesWebsiteIndexToReactTableData;
 import net.ages.alwb.utils.transformers.adapters.models.AgesIndexTableData;
 import net.ages.alwb.utils.transformers.adapters.models.AgesReactTemplate;
 import opennlp.tools.tokenize.SimpleTokenizer;
@@ -2019,8 +2019,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				) {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(this.printPretty);
 			try {
-				AgesIndexHtmlToReactTableData ages = new AgesIndexHtmlToReactTableData(this.printPretty);
-				AgesIndexTableData data = ages.toReactTableData();
+				AgesWebsiteIndexToReactTableData ages = new AgesWebsiteIndexToReactTableData(this.printPretty);
+				AgesIndexTableData data = ages.toReactTableDataFromJson();
 				List<JsonObject> list = new ArrayList<JsonObject>();
 				list.add(data.toJsonObject());
 				result.setResult(list);

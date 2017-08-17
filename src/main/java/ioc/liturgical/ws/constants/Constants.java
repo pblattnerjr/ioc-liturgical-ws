@@ -1,7 +1,7 @@
 package ioc.liturgical.ws.constants;
 
 public class Constants {
-		public static final String VERSION = "1.2.8"; // should match most recent jar
+		public static final String VERSION = "1.3.1"; // should match most recent jar
 		public static final String ID_DELIMITER = "~";
 		public static final String ID_SPLITTER = "~";
 		public static final String PIPE_SPLITTER = "\\|";
