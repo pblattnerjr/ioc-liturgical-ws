@@ -1812,10 +1812,13 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		 * @param type name of the relationship
 		 * @return
 		 */
-		public JsonArray getRelationshipTags(String type) {
+		public JsonArray getRelationshipTags(
+				String type
+				, String nodeLabel
+				) {
 			JsonArray result  = new JsonArray();
 			try {
-				String q = "match (:Root)-[link:" + type + "]->(:Root) return distinct link.tags as " + type;
+				String q = "match (:Root)-[link:" + type + "]->(:" + nodeLabel + ") return distinct link.tags as " + type;
 				ResultJsonObjectArray query = neo4jManager.getForQuery(q);
 				if (query.getResultCount() > 0) {
 					TreeSet<String> labels  = new TreeSet<String>();
@@ -1880,7 +1883,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			JsonObject result  = new JsonObject();
 			try {
 				for (RELATIONSHIP_TYPES t : RELATIONSHIP_TYPES.values()) {
-					JsonArray value = getRelationshipTags(t.typename);
+					JsonArray value = getRelationshipTags(t.typename, t.topic.label);
 					result.add(t.typename, value);
 				}
 			} catch (Exception e) {
@@ -1908,11 +1911,14 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			
 		}
 
-		public JsonArray getRelationshipLibrarysAsDropdownItems(String type) {
+		public JsonArray getRelationshipLibrarysAsDropdownItems(
+				String type
+				, String label
+				) {
 			JsonArray result  = new JsonArray();
 			result.add(new DropdownItem("Any","*").toJsonObject());
 			try {
-				String q = "match (:Text)-[link:" + type + "]->(:Root) return distinct link.library  order by link.library ascending";
+				String q = "match (:Text)-[link:" + type + "]->(:" + label + ") return distinct link.library  order by link.library ascending";
 				ResultJsonObjectArray query = neo4jManager.getForQuery(q);
 				if (query.getResultCount() > 0) {
 					for (JsonObject item : query.getResult()) {
@@ -1933,7 +1939,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				any.add(new DropdownItem("Any","*").toJsonObject());
 				result.add("*", any);
 				for (RELATIONSHIP_TYPES t : RELATIONSHIP_TYPES.values()) {
-					JsonArray value = getRelationshipLibrarysAsDropdownItems(t.typename);
+					JsonArray value = getRelationshipLibrarysAsDropdownItems(
+							t.typename
+							, t.topic.label
+							);
 					result.add(t.typename, value);
 				}
 			} catch (Exception e) {
@@ -1973,11 +1982,20 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
 				JsonObject values = new JsonObject();
+
 				values.add("typeList", this.relationshipTypesArray);
-				values.add("typeLibraries", this.getRelationshipLibrarysForAllTypes());
+logger.info("typelist");
+				values.add("tagOperators", this.tagOperatorsDropdown);
+logger.info("typeOperators");
 				values.add("typeProps", this.relationshipTypesProperties);
-				values.add("typeTags", getRelationshipTagsForAllTypes());
+logger.info("typeProps");
 				values.add("tagOperators", tagOperatorsDropdown);
+logger.info("typeOperators");
+
+				values.add("typeLibraries", this.getRelationshipLibrarysForAllTypes());
+logger.info("typelibraries");
+				values.add("typeTags", getRelationshipTagsForAllTypes());
+logger.info("typeTags");
 				JsonObject jsonDropdown = new JsonObject();
 				jsonDropdown.add("dropdown", values);
 

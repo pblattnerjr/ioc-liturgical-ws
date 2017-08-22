@@ -205,12 +205,14 @@ public class ExternalDbManagerTest {
 			assertTrue(result.getStatus().getCode() == 200 && result.getResultCount() > 0);
 	    }
 	
-	
 	@Test
 	   public void testRelationshipLabelsList() {
 		// if this fails, make sure you have run the CreateABunchOfReferences unit test first
 	    	JsonArray result = 
-	    			externalManager.getRelationshipTags(RELATIONSHIP_TYPES.REFERS_TO_BIBLICAL_TEXT.typename);
+	    			externalManager.getRelationshipTags(
+	    					RELATIONSHIP_TYPES.REFERS_TO_BIBLICAL_TEXT.typename
+	    					, TOPICS.TEXT_BIBLICAL.label
+	    					);
 			assertTrue(result.size() > 0);
 	    }
 	
