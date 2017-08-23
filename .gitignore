@@ -1,0 +1,8 @@
+/.settings/
+/target/
+/ioc-liturgical-db.mv.db
+/test-db.mv.db
+/ioc-liturgical-db.trace.db
+/dependency-reduced-pom.xml
+/hs_err_pid6868.log
+/hs_err_pid6874.log
