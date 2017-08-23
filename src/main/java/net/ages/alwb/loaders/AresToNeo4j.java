@@ -50,12 +50,7 @@ public class AresToNeo4j {
 
 
 	/**
-	 * Quick and Dirty program to load a neo4j database from ares files.
-	 * 
-	 * We probably need two types of databases:
-	 * 
-	 * 1. Read only with indirect values already resolved.
-	 * 2. Updatable that reflects how the ares files look.
+	 * Program to load a neo4j database from ares files.
 	 * 
 	 * @param args
 	 */
@@ -80,24 +75,24 @@ public class AresToNeo4j {
 		
 		// Load the ares
 		LibraryProxyManager libProxyManager;
-//		String alwbPath = "/Users/mac002/Git/alwb-repositories/ages";
-		String alwbPath = "/Users/mac002/Git/alwb-repositories/kenya";
+		String alwbPath = "/Users/mac002/Git/alwb-repositories/ages";
+//		String alwbPath = "/Users/mac002/Git/alwb-repositories/kenya";
 		List<String> domainsToProcess = new ArrayList<String>();
 		/**
 		 * Add each domain that you want to process
 		 */
-//		domainsToProcess.add("en_US_dedes");
-//		domainsToProcess.add("gr_GR_cog");
-//		domainsToProcess.add("en_US_repass");
-//		domainsToProcess.add("en_US_goa");
-//		domainsToProcess.add("en_US_oca");
-//		domainsToProcess.add("en_UK_lash");
-//		domainsToProcess.add("en_US_constantinides");
-//		domainsToProcess.add("en_US_boyer");
+		domainsToProcess.add("en_US_dedes");
+		domainsToProcess.add("gr_GR_cog");
+		domainsToProcess.add("en_US_repass");
+		domainsToProcess.add("en_US_goa");
+		domainsToProcess.add("en_US_oca");
+		domainsToProcess.add("en_UK_lash");
+		domainsToProcess.add("en_US_constantinides");
+		domainsToProcess.add("en_US_boyer");
 		
 		// Kenya
-		domainsToProcess.add("kik_KE_oak");
-		domainsToProcess.add("swh_KE_oak");
+//		domainsToProcess.add("kik_KE_oak");
+//		domainsToProcess.add("swh_KE_oak");
 		
 		// added by Meg
 //		domainsToProcess.add("fra_FR_oaf");
@@ -312,7 +307,7 @@ public class AresToNeo4j {
 		String query = "create (n:" + doc.fetchOntologyLabels() + ") set n = {props} return n";
 		try {
 			Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
-//			if (doc.getTopic().equals("prayers") && doc.getKey().equals("enarxis02")) {
+			//if (doc.getTopic().equals("yodude") && doc.getKey().equals("enarxis02")) {
 				StatementResult neoResult = session.run(query, props);
 				count = neoResult.consume().counters().nodesCreated();
 				if (count > 0) {
@@ -322,7 +317,7 @@ public class AresToNeo4j {
 			    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 			    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + "  " + doc.getId());
 				}
-//			}
+			//}
 		} catch (Exception e){
 			if (e.getMessage().contains("already exists")) {
 				result.setCode(HTTP_RESPONSE_CODES.CONFLICT.code);

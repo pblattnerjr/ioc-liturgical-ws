@@ -1,7 +1,5 @@
 package ioc.liturgical.ws.managers.databases.external.neo4j;
 
-import static org.junit.Assert.assertTrue;
-
 import java.text.Normalizer;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -35,7 +33,6 @@ import ioc.liturgical.ws.constants.NEW_FORM_CLASSES_DB_API;
 import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
 import ioc.liturgical.ws.constants.UTILITIES;
 import ioc.liturgical.ws.constants.VERBS;
-import ioc.liturgical.ws.constants.db.external.LIBRARIES;
 import ioc.liturgical.ws.constants.db.external.SCHEMA_CLASSES;
 import ioc.liturgical.ws.constants.db.external.SINGLETON_KEYS;
 import ioc.liturgical.ws.constants.db.external.TOPICS;
@@ -1984,18 +1981,14 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				JsonObject values = new JsonObject();
 
 				values.add("typeList", this.relationshipTypesArray);
-logger.info("typelist");
 				values.add("tagOperators", this.tagOperatorsDropdown);
-logger.info("typeOperators");
 				values.add("typeProps", this.relationshipTypesProperties);
-logger.info("typeProps");
 				values.add("tagOperators", tagOperatorsDropdown);
-logger.info("typeOperators");
-
+				
+				// the following two method calls should be the focus for any future optimizations
 				values.add("typeLibraries", this.getRelationshipLibrarysForAllTypes());
-logger.info("typelibraries");
 				values.add("typeTags", getRelationshipTagsForAllTypes());
-logger.info("typeTags");
+
 				JsonObject jsonDropdown = new JsonObject();
 				jsonDropdown.add("dropdown", values);
 
