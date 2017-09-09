@@ -3,6 +3,7 @@ package ioc.liturgical.ws.managers.databases.external.neo4j.cypher;
 public class CypherQueryBuilderForLinks {
 	private String MATCH = "";
 	private String TYPE = "";
+	private String EXCLUDE_TYPE;
 	private String LIBRARY = "";
 	private String WHERE = "";
 	private String EQUALS = "";
@@ -35,6 +36,13 @@ public class CypherQueryBuilderForLinks {
         return this;
     }
     
+    public CypherQueryBuilderForLinks EXCLUDE_TYPE(String TYPE) {
+    	if (TYPE.length() > 0) {
+          this.EXCLUDE_TYPE = TYPE;
+    	}
+        return this;
+    }
+
     public CypherQueryBuilderForLinks LIBRARY(String LIBRARY) {
     	if (LIBRARY.startsWith("*") || LIBRARY.toLowerCase().startsWith("all") || LIBRARY.length() == 0) {
     		// ignore
@@ -118,6 +126,7 @@ public class CypherQueryBuilderForLinks {
         return new CypherQueryForLinks(
         		MATCH
         		, TYPE
+        		, EXCLUDE_TYPE
         		, LIBRARY
         		, WHERE
         		, CONTAINS

@@ -88,7 +88,15 @@ public class AlwbFileUtils {
 		}
 		return list;
 	}
-	
+
+	public static String fileAsString(File f) {
+		StringBuffer result = new StringBuffer();
+		List<String> list  = linesFromFile(f);
+		for (String line : list) {
+			result.append(line);
+		}
+		return result.toString();
+	}
 	public static List<String> linesFromFile(InputStream is) {
 		List<String> list = new ArrayList<String>();
 		try {

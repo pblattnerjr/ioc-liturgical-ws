@@ -33,7 +33,7 @@ public class LoginController {
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			AuthDecoder authDecoder = new AuthDecoder(request.headers("Authorization"));
-			return "{userMessage: \"Welcome " + authDecoder.getUsername() + "\"";
+			return storeManager.getUserContact(authDecoder.getUsername()).toJsonString();
 		});
 
 	}

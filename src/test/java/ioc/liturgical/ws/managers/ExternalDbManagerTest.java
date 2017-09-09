@@ -178,6 +178,7 @@ public class ExternalDbManagerTest {
 	    					, "c" // matcher
 	    					, "a,b" // tags
 	    					, "or" // operator
+	    					, "n" // exclude biblical texts. 
 	    					);
 			assertTrue(result.getStatus().getCode() == 200);
 	    }

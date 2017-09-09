@@ -2148,6 +2148,14 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		return Instant.now().toString();
 	}
 
+	public String getUserDomain(String username) {
+		try {
+			return getUser(username).getDomain();
+		} catch (Exception e) {
+			return null;
+		}
+	}
+	
 	public User getUser(String username) {
 		try {			
 			ResultJsonObjectArray obj = getForId(SYSTEM_MISC_LIBRARY_TOPICS.USERS.toId(username));

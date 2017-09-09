@@ -9,6 +9,7 @@ import ioc.liturgical.ws.models.db.docs.ontology.Animal;
 import ioc.liturgical.ws.models.db.docs.ontology.Being;
 import ioc.liturgical.ws.models.db.docs.ontology.Concept;
 import ioc.liturgical.ws.models.db.docs.ontology.Event;
+import ioc.liturgical.ws.models.db.docs.ontology.God;
 import ioc.liturgical.ws.models.db.docs.ontology.Group;
 import ioc.liturgical.ws.models.db.docs.ontology.Human;
 import ioc.liturgical.ws.models.db.docs.ontology.Mystery;
@@ -20,11 +21,10 @@ import ioc.liturgical.ws.models.db.links.LinkRefersToAnimal;
 import ioc.liturgical.ws.models.db.links.LinkRefersToBeing;
 import ioc.liturgical.ws.models.db.links.LinkRefersToBiblicalText;
 import ioc.liturgical.ws.models.db.links.LinkRefersToEvent;
-import ioc.liturgical.ws.models.db.links.LinkRefersToGroup;
+import ioc.liturgical.ws.models.db.links.LinkRefersToGod;
 import ioc.liturgical.ws.models.db.links.LinkRefersToHuman;
 import ioc.liturgical.ws.models.db.links.LinkRefersToMystery;
 import ioc.liturgical.ws.models.db.links.LinkRefersToPlace;
-import ioc.liturgical.ws.models.db.supers.LTK;
 import ioc.liturgical.ws.models.db.supers.LTKDbOntologyEntry;
 import ioc.liturgical.ws.models.db.supers.LTKLink;
 
@@ -53,14 +53,16 @@ public class OntologyGenerator {
 	 * The Spirit is revealed in a strange visit, 
 	 * descending as a dove upon Him.
 	 * 
-	 * The greek (source) text id = "gr_gr_cog~~me.m01.d10~meMA.Kathisma11.text"
+	 * The greek (source) text id = "gr_gr_cog~me.m01.d10~meMA.Kathisma11.text"
 	 * 
 	 * It makes the following references:
 	 * 
+	 * God:
+	 * 		GodTheFather, GodTheSon, and GodTheHolySpirit
 	 * Animals:
 	 *     Dove
 	 * Beings:
-	 * 		GodTheFather, GodTheSon, and GodTheHolySpirit
+	 * 		ArchangelGabriel, ArchangelMichael
 	 * Biblical Text: Matthew, Mark, Luke, and John, which all refer to the baptism of Christ.
 	 * Events:
 	 * 		BaptismOfChrist
@@ -80,12 +82,13 @@ public class OntologyGenerator {
 		String startId = "gr_gr_cog~me.m01.d10~meMA.Kathisma11.text"; 
 		//   key = string literals below
 		
+		// God
+		links.add(new LinkRefersToGod(library, startId, "en_sys_ontology~God~GodTheFather"));
+		links.add(new LinkRefersToGod(library, startId, "en_sys_ontology~God~GodTheSon"));
+		links.add(new LinkRefersToGod(library, startId, "en_sys_ontology~God~GodTheHolySpirit"));
+
 		// Animals
 		links.add(new LinkRefersToAnimal(library, startId, "en_sys_ontology~Animal~Dove"));
-		// Beings
-		links.add(new LinkRefersToBeing(library, startId, "en_sys_ontology~Being~GodTheFather"));
-		links.add(new LinkRefersToBeing(library, startId, "en_sys_ontology~Being~GodTheSon"));
-		links.add(new LinkRefersToBeing(library, startId, "en_sys_ontology~Being~GodTheHolySpirit"));
 		// Biblical Texts
 		links.add(new LinkRefersToBiblicalText(library, startId, "gr_gr_ntpt~MAT~C03:13"));
 		links.add(new LinkRefersToBiblicalText(library, startId, "gr_gr_ntpt~LUK~C03:21"));
@@ -104,14 +107,15 @@ public class OntologyGenerator {
 	}
 	
 	private void generateEntries() {
+		// God
+		entries.add(new God("God"));
+		entries.add(new God("GodTheFather", "God the Father"));
+		entries.add(new God("GodTheSon", "God the Son"));
+		entries.add(new God("GodTheHolySpirit", "God the Holy Spirit"));
 		// Animals
 			entries.add(new Animal("Dove"));
 			entries.add(new Animal("Serpent"));
 		// Beings
-			entries.add(new Being("God"));
-			entries.add(new Being("GodTheFather", "God the Father"));
-			entries.add(new Being("GodTheSon", "God the Son"));
-			entries.add(new Being("GodTheHolySpirit", "God the Holy Spirit"));
 			entries.add(new Being("GabrielTheArchangel", "Gabriel the Archangel"));
 			entries.add(new Being("MichaelTheArchangel", "Michael the Archangel"));
 			entries.add(new Being("Satan"));

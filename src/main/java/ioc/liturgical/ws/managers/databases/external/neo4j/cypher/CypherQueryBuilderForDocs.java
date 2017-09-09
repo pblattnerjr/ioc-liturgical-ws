@@ -3,6 +3,7 @@ package ioc.liturgical.ws.managers.databases.external.neo4j.cypher;
 public class CypherQueryBuilderForDocs {
 	private String MATCH = "";
 	private String LABEL = "";
+	private String EXCLUDE_LABEL = "";
 	private String WHERE = "";
 	private String EQUALS = "";
 	private String STARTS_WITH = "";
@@ -51,6 +52,10 @@ public class CypherQueryBuilderForDocs {
         return this;
     }
 
+    public CypherQueryBuilderForDocs EXCLUDE_LABEL(String LABEL) {
+        this.EXCLUDE_LABEL = LABEL;
+        return this;
+    }
     public CypherQueryBuilderForDocs CONTAINS(String CONTAINS) {
         this.CONTAINS = CONTAINS;
         return this;
@@ -138,6 +143,7 @@ public class CypherQueryBuilderForDocs {
         return new CypherQueryForDocs(
         		MATCH
         		, LABEL
+        		, EXCLUDE_LABEL
         		, WHERE
         		, CONTAINS
         		, EQUALS

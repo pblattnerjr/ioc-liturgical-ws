@@ -21,7 +21,7 @@ import com.github.reinert.jjschema.Attributes;
 public class LTKDb extends LTK {
 	
 	@UiWidget(Constants.UI_WIDGET_RADIO)
-	@Attributes(id="bottom", required = true, description = "Is this domain active?")
+	@Attributes(id="bottom", required = true, description = "Is this record active?")
 	@Expose public boolean active = true;
 
 	@Attributes(id="bottom",readonly=true, description="The user ID of the person who created it.")

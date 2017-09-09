@@ -20,16 +20,31 @@ import net.ages.alwb.utils.core.datastores.json.models.DropdownItem;
  */
 public enum TOPICS {
 	ROOT("Root", "The root node of the topics.", null)
+	, COMMENTS_ROOT(
+			"CommentsRoot"
+			, "The root node for comments about a text or a relationship."
+			, TOPICS.ROOT
+			)
 	, LINGUISTICS_ROOT(
 			"LinguisticsRoot"
 			, "The root node for Information about a language: its lexicon, semantics, phonology, morphology, grammar."
 			, TOPICS.ROOT
 			)
+	, NOTES_ROOT(
+			"NoteRoot"
+			, "The root node for personal notes made by a user."
+			, TOPICS.ROOT
+			)
 	, ONTOLOGY_ROOT("OntologyRoot", "The root node of the text ontology.", ROOT)
 	, TABLES_ROOT("TablesRoot", "The root node of the Tables.", ROOT)
+	, GOD(
+			"God"
+			, "The creator of all that exists."
+			, TOPICS.ONTOLOGY_ROOT
+			)
 	, BEING(
 			"Being"
-			, "A living entity such as God, an angel, a human being, a plant, or an animal."
+			, "A living, created entity such as an angel, a human being, a plant, or an animal."
 			, TOPICS.ONTOLOGY_ROOT
 			)
 	, ANIMAL(

@@ -12,8 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import ioc.liturgical.ws.constants.Constants;
 import net.ages.alwb.utils.core.id.managers.IdManager;
-import net.ages.alwb.utils.transformers.adapters.models.AgesReactTemplate;
-import net.ages.alwb.utils.transformers.adapters.models.HtmlElement;
+import net.ages.alwb.utils.transformers.adapters.models.MetaTemplate;
+import net.ages.alwb.utils.transformers.adapters.models.TemplateElement;
 
 import org.jsoup.nodes.Element;
 public class AgesHtmlToTemplateHtml {
@@ -61,8 +61,8 @@ public class AgesHtmlToTemplateHtml {
 	 * Gets the content for the specified URL
 	 * Builds an array of the ids used in the content.  They are a set (no duplicates).
 	 */
-	public AgesReactTemplate getValues(Elements valueSpans) throws Exception {
-		AgesReactTemplate result = new AgesReactTemplate(url, printPretty);
+	public MetaTemplate getValues(Elements valueSpans) throws Exception {
+		MetaTemplate result = new MetaTemplate(url, printPretty);
 		try {
 	        for (Element valueSpan : valueSpans) {
 	        	String tdClass = this.getClassOfTd(valueSpan);
@@ -110,12 +110,12 @@ public class AgesHtmlToTemplateHtml {
 		return result;
 	}
 
-	private List<HtmlElement> getChildren(Elements children, int seq) throws Exception {
-		List<HtmlElement> result = new ArrayList<HtmlElement>();
+	private List<TemplateElement> getChildren(Elements children, int seq) throws Exception {
+		List<TemplateElement> result = new ArrayList<TemplateElement>();
 		try {
 			for (Element child : children) {
 				try {
-					HtmlElement eChild = new HtmlElement(true);
+					TemplateElement eChild = new TemplateElement(true);
 					eChild.setTag(child.tagName());
 					if (child.hasAttr("class")) {
 						eChild.setClassName(child.attr("class"));
@@ -159,8 +159,8 @@ public class AgesHtmlToTemplateHtml {
 	 * @return
 	 * @throws Exception
 	 */
-	public AgesReactTemplate toReactTemplateMetaData() throws Exception {
-		AgesReactTemplate result = new AgesReactTemplate(url, printPretty);
+	public MetaTemplate toReactTemplateMetaData() throws Exception {
+		MetaTemplate result = new MetaTemplate(url, printPretty);
 		Document doc = null;
 		Element content = null;
 		try {
@@ -175,10 +175,10 @@ public class AgesHtmlToTemplateHtml {
 			if (keys.size() == 0) {
 				keys = content.select("span.key");
 			}
-			AgesReactTemplate values = this.getValues(keys);
+			MetaTemplate values = this.getValues(keys);
 			result.setTopicKeys(values.getTopicKeys());
 			result.setValues(values.getValues());
-			HtmlElement eContent = new HtmlElement(printPretty);
+			TemplateElement eContent = new TemplateElement(printPretty);
 			eContent.setTag(content.tagName());
 			eContent.setClassName(content.attr("class"));
 			eContent.setChildren(this.getChildren(content.children(), 0));

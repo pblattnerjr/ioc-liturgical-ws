@@ -7,7 +7,7 @@ import java.util.Map.Entry;
 
 import org.junit.Test;
 
-import net.ages.alwb.utils.transformers.adapters.models.AgesReactTemplate;
+import net.ages.alwb.utils.transformers.adapters.models.MetaTemplate;
 
 public class AgesHtmlToDynamicHtmlTest {
 
@@ -24,7 +24,7 @@ public class AgesHtmlToDynamicHtmlTest {
 				, true // print pretty
 				);
 		try {
-			AgesReactTemplate template = ages.toReactTemplateMetaData();
+			MetaTemplate template = ages.toReactTemplateMetaData();
 //			System.out.println(template.getTopElement().toJsonString());
 			Map<String,String> values = template.getValues();
 			for ( Entry<String,String> entry: values.entrySet()) {

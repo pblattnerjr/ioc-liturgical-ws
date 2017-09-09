@@ -10,7 +10,6 @@ import com.google.common.base.Joiner;
 
 import ioc.liturgical.ws.constants.Constants;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
-import net.ages.alwb.utils.core.file.AlwbFileUtils;
 import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
 
 /**
@@ -29,7 +28,7 @@ import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
  */
 public class IdManager {
 	private static final Logger logger = LoggerFactory.getLogger(IdManager.class);
-
+	public enum COLUMNS {Primary, Center, Right};
 	private List<String> idParts = new ArrayList<String>();
 	private List<String> libraryParts = new ArrayList<String>();
 	private List<String> topicParts = new ArrayList<String>();
@@ -40,9 +39,13 @@ public class IdManager {
 	private boolean libraryIsDomain = false;
 	private String delimiter = Constants.ID_DELIMITER;
 	private String splitter = Constants.ID_SPLITTER;
+	private String domainSplitter = Constants.DOMAIN_SPLITTER;
 	private int topicIndex = 1;
 	private int keyIndex = 2;
 	
+	public IdManager() {
+	}
+
 	/**
 	 * This constructor expects the id to have parts delimited by Constants.ID_DELIMTER
 	 * and it should be a simple ID.  That is, there should not be other IDs embedded
@@ -163,6 +166,17 @@ public class IdManager {
 			) {
 		idParts.add(part1);
 		idParts.add(part2);
+	}
+	
+	public void setDomain(String domain) {
+		String [] parts = domain.split(this.domainSplitter);
+		if (parts.length == 3) {
+			this.setLibraryLanguage(parts[0]);
+			this.setLibraryCountry(parts[1]);
+			this.setLibraryRealm(parts[2]);
+			this.setLibraryIsDomain(true);
+		}
+		
 	}
 	
 	private void setDomainParts() {
@@ -359,6 +373,17 @@ public String getOslwResourceForValue(String value) {
 	return sb.toString();
 }
 
+public String getOslwSetDomain(COLUMNS column) {
+	StringBuffer sb = new StringBuffer();
+	sb.append("\\ltSet" + column.name() + "Domain{");
+	sb.append(this.libraryLanguage);
+	sb.append("}{");
+	sb.append(this.libraryCountry);
+	sb.append("}{");
+	sb.append(this.libraryRealm);
+	sb.append("}%\n");
+	return sb.toString();
+}
 	/**
 	 * If the ID is actually a sequence number, e.g.
 	 * 

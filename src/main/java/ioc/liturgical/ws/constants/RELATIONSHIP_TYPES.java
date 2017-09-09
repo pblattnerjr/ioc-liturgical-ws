@@ -33,6 +33,11 @@ public enum RELATIONSHIP_TYPES {
 			, "Doc makes reference to an event."
 			, TOPICS.EVENT
 			)
+	, REFERS_TO_GOD(
+			"REFERS_TO_GOD"
+			, "Doc makes reference to God."
+			, TOPICS.GOD
+			)
 	, REFERS_TO_GROUP(
 			"REFERS_TO_GROUP"
 			, "Doc makes reference to a group of people."

@@ -44,6 +44,7 @@ import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryFor
 import ioc.liturgical.ws.managers.databases.external.neo4j.utils.DomainTopicMapBuilder;
 import ioc.liturgical.ws.managers.databases.external.neo4j.utils.Neo4jConnectionManager;
 import ioc.liturgical.ws.managers.databases.external.neo4j.utils.OntologyGenerator;
+import ioc.liturgical.ws.managers.databases.external.neo4j.utils.ReturnPropertyList;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.managers.exceptions.DbException;
 import ioc.liturgical.ws.models.RequestStatus;
@@ -85,7 +86,7 @@ import net.ages.alwb.utils.transformers.adapters.AgesHtmlToDynamicHtml;
 import net.ages.alwb.utils.transformers.adapters.AgesHtmlToTemplateHtml;
 import net.ages.alwb.utils.transformers.adapters.AgesWebsiteIndexToReactTableData;
 import net.ages.alwb.utils.transformers.adapters.models.AgesIndexTableData;
-import net.ages.alwb.utils.transformers.adapters.models.AgesReactTemplate;
+import net.ages.alwb.utils.transformers.adapters.models.MetaTemplate;
 import opennlp.tools.tokenize.SimpleTokenizer;
 import opennlp.tools.tokenize.Tokenizer;
 
@@ -325,7 +326,14 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 								  link
 								  );
 						  if (status.getCode() != HTTP_RESPONSE_CODES.CREATED.code) {
-							  throw new Exception("Error creating ontology");
+							  throw new Exception(
+									  "Error creating ontology for " 
+											  + link.getTopic() 
+											  + " "
+											  + link.getType() 
+											  + " " 
+											  + link.getKey()
+											  );
 						  } else {
 							  logger.info("Added to the ontology " 
 									  + link.getTopic() + " " 
@@ -564,9 +572,29 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, String matcher
 				, String tags // tags to match
 				, String operator // for tags, e.g. AND, OR
+				, String excludeType
 				) {
 			ResultJsonObjectArray result = null;
-
+			String linkHandle = "link";
+			String toHandle = "to";
+			String orderBy = "";
+			ReturnPropertyList propsToReturn = new ReturnPropertyList();
+			propsToReturn.add(linkHandle, "id");
+			propsToReturn.addType(linkHandle);
+			propsToReturn.add(linkHandle, "library");
+			propsToReturn.add(linkHandle, "topic","fromId");
+			propsToReturn.add(linkHandle, "key","toId");
+			propsToReturn.add(linkHandle, "tags");
+			propsToReturn.add(linkHandle, "ontologyTopic");
+			propsToReturn.add(linkHandle, "comments");
+			if (type.equals(RELATIONSHIP_TYPES.REFERS_TO_BIBLICAL_TEXT.typename)) {
+				propsToReturn.add(toHandle, "value");
+				propsToReturn.add(toHandle, "seq");
+				orderBy = "seq";
+			} else {
+				propsToReturn.add(toHandle, "name", "toName");
+				orderBy = "toId";
+			}
 			result = getForQuery(
 					getCypherQueryForLinkSearch(
 							type
@@ -576,6 +604,58 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 							, matcher
 							, tags 
 							, operator
+							, propsToReturn.toString()
+							, orderBy
+							, excludeType
+							)
+					, true
+					, true
+					);
+			return result;
+		}
+
+		public ResultJsonObjectArray getRelationshipsByFromId(
+				String type // to match
+				, String library // library to match
+				, String query
+				, String property
+				, String matcher
+				, String tags // tags to match
+				, String operator // for tags, e.g. AND, OR
+				) {
+			ResultJsonObjectArray result = null;
+			String linkHandle = "link";
+			String toHandle = "to";
+			String orderBy = "";
+			ReturnPropertyList propsToReturn = new ReturnPropertyList();
+			propsToReturn.add(linkHandle, "id");
+			propsToReturn.addType(linkHandle);
+			propsToReturn.add(linkHandle, "library");
+			propsToReturn.add(linkHandle, "topic","fromId");
+			propsToReturn.add(linkHandle, "key","toId");
+			propsToReturn.add(linkHandle, "tags");
+			propsToReturn.add(linkHandle, "ontologyTopic");
+			propsToReturn.add(linkHandle, "comments");
+			if (type.equals(RELATIONSHIP_TYPES.REFERS_TO_BIBLICAL_TEXT.typename)) {
+				propsToReturn.add(toHandle, "value");
+				propsToReturn.add(toHandle, "seq");
+				orderBy = "seq";
+			} else {
+				propsToReturn.add(toHandle, "name", "toName");
+				orderBy = "toId";
+			}
+			result = getForQuery(
+					getCypherQueryForLinkSearch(
+							type
+							, library
+							, AlwbGeneralUtils.toNfc(query)
+							, property
+							, matcher
+							, tags 
+							, operator
+							, propsToReturn.toString()
+							, orderBy
+							, ""
 							)
 					, true
 					, true
@@ -668,10 +748,14 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			boolean prefixProps = false;
 			String theLabel = type;
 			String theProperty = property;
-			if (genericType.startsWith("*")) {
-				if (type.startsWith("*")) {
-					theLabel = TOPICS.ONTOLOGY_ROOT.label;
-				}	
+			if (genericType.length() > 0) {
+				if (genericType.startsWith("*")) {
+					if (type.startsWith("*")) {
+						theLabel = TOPICS.ONTOLOGY_ROOT.label;
+					}	
+				} else {
+					theLabel = genericType;
+				}
 			}
 			if (theProperty.startsWith("*")) {
 				theProperty = "name";
@@ -683,6 +767,13 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					.LABEL(theLabel)
 					.WHERE(theProperty)
 					;
+			
+			if (genericType.startsWith("*")) {
+				if (type.startsWith("*")) {
+					// there are too many texts to do a generic search, so filter them out
+					builder.EXCLUDE_LABEL("Text");
+				}	
+			}
 			
 			MATCHERS matcherEnum = MATCHERS.forLabel(matcher);
 			
@@ -711,7 +802,6 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			builder.ORDER_BY("doc.seq"); // 
 
 			CypherQueryForDocs q = builder.build();
-			
 			return q.toString();
 		}
 
@@ -723,6 +813,9 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, String matcher
 				, String tags // tags to match
 				, String operator // for tags, e.g. AND, OR
+				, String propsToReturn
+				, String orderBy
+				, String excludeType
 				) {
 			
 			boolean prefixProps = false;
@@ -731,8 +824,12 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					.MATCH()
 					.TYPE(type)
 					.LIBRARY(library)
-					.WHERE(property)
+					.WHERE(property)					
 					;
+			
+			if (excludeType != null && excludeType.length() > 0) {
+				builder.EXCLUDE_TYPE(excludeType);
+			}
 			
 			MATCHERS matcherEnum = MATCHERS.forLabel(matcher);
 			
@@ -756,8 +853,13 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			}
 			builder.TAGS(tags);
 			builder.TAG_OPERATOR(operator);
-			builder.RETURN("link.library as library, link.topic as fromId, type(link) as type, link.key as toId, link.tags as tags");
-			builder.ORDER_BY("fromId + type + toId ascending"); // TODO: in future this could be a parameter in REST API
+			// TODO: consider returning properties(link)
+			builder.RETURN(propsToReturn);
+			if (orderBy == null || orderBy.length() == 0) {
+				builder.ORDER_BY("id");
+			} else {
+				builder.ORDER_BY(orderBy);
+			}
 
 			CypherQueryForLinks q = builder.build();
 			
@@ -903,7 +1005,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			ResultJsonObjectArray result = new ResultJsonObjectArray(true);
 			if (internalManager.authorized(
 					requestor
-					, VERBS.DELETE
+					, VERBS.GET
 					, library
 					)) {
 		    	result = getForIdOfRelationship(id);
@@ -1210,6 +1312,11 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
+		/**
+		 * TODO: the query needs to be optimized by using the appropriate node type
+		 * @param id
+		 * @return
+		 */
 		public ResultJsonObjectArray getForIdOfRelationship(String id) {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
@@ -1894,7 +2001,13 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			JsonObject result  = new JsonObject();
 			try {
 				for (TOPICS t : TOPICS.values()) {
-					if (t == TOPICS.ROOT || t == TOPICS.LINGUISTICS_ROOT || t == TOPICS.TABLES_ROOT) {
+					if (
+							t == TOPICS.ROOT 
+							|| t == TOPICS.COMMENTS_ROOT 
+							|| t == TOPICS.LINGUISTICS_ROOT 
+							|| t == TOPICS.NOTES_ROOT 
+							|| t == TOPICS.TABLES_ROOT
+							) {
 						// ignore
 					} else {
 						JsonArray value = getOntologyTags(t.label);
@@ -2074,7 +2187,6 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				) {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
-				IdManager idManager = null;
 				AgesHtmlToDynamicHtml ages = new AgesHtmlToDynamicHtml(
 						url
 						, leftLibrary
@@ -2085,7 +2197,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						, rightFallback
 						, this.printPretty // print pretty
 						);
-				AgesReactTemplate template = ages.toReactTemplateMetaData();
+				MetaTemplate template = ages.toReactTemplateMetaData();
 				int dbCallCount = 0;
 				// Build a new values map, with entries for left, center, and right
 				Map<String,String> values = template.getValues();
@@ -2141,7 +2253,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				list.add(template.toJsonObject());
 				result.setResult(list);
 				result.setQuery("get AGES dynamic template for " + url);
-				AlwbFileUtils.writeFile("/volumes/ssd2/template.json", template.getTopElement().toJsonString());
+				AlwbFileUtils.writeFile("/volumes/ssd2/template.json", template.toJsonString());
 			} catch (Exception e) {
 				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 				result.setStatusMessage(e.getMessage());
@@ -2150,6 +2262,52 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
+		/**
+		 * Reads a json string encoding the metadata for a liturgical book or service,
+		 * generates OSLO files from the metadata,
+		 * calls Xelatex to generate a PDF file
+		 * and returns the path to the file.
+		 * 
+		 * The generated PDF can have one, two, or three columns.
+		 * If one column, there is only a left library to be used.
+		 * If two columns, there is a left and right library to be used.
+		 * If three columns, there is a left, center, and right library to be used.
+		 * There are also 'fallback' libraries that can be specified.  That is,
+		 * if a specified library does not contain the required topic/key, then
+		 * the fallback library will be searched.
+		 * 
+		 * If the language = English, if the fallback is not found, it will default to AGES_ENGLISH,
+		 * i.e. en_us_dedes.
+		 * 
+		 * Otherwise, if the fallback is not found, it will use gr_gr_cog.
+		 * 
+		 * @param metaService - a json string containing the metadata of the service
+		 * @param leftLibrary
+		 * @param centerLibrary
+		 * @param rightLibrary
+		 * @param leftFallback
+		 * @param centerFallback
+		 * @param rightFallback
+		 * @return path to the PDF file
+		 */
+		public ResultJsonObjectArray metaServiceToPdf(
+				String metaService
+				, String leftLibrary
+				, String centerLibrary
+				, String rightLibrary
+				, String leftFallback
+				, String centerFallback
+				, String rightFallback
+				) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+				ErrorUtils.report(logger, e);
+			}
+			return result;
+		}
 		/**
 		 * Extracts hierarchically all the elements of an AGES html file,
 		 * starting with the content div.  It provides information 
@@ -2168,7 +2326,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						, translationLibrary
 						, this.printPretty // print pretty
 						);
-				AgesReactTemplate template = ages.toReactTemplateMetaData();
+				MetaTemplate template = ages.toReactTemplateMetaData();
 				
 				/**
 				 * If there is a translation library, 
@@ -2372,7 +2530,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public boolean dbHasOntologyEntries() {
 			boolean result = false;
 			try {
-				ResultJsonObjectArray entries = getForQuery("match (n:" + TOPICS.ONTOLOGY_ROOT.label  + ") return count(n)", false, false);
+				ResultJsonObjectArray entries = getForQuery("match (n:" + TOPICS.ONTOLOGY_ROOT.label  + ") where not (n:Text) return count(n)", false, false);
 				Long count = entries.getValueCount();
 				result = count > 0;
 			} catch (Exception e) {

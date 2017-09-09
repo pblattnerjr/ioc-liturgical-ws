@@ -20,6 +20,12 @@ public enum ENDPOINTS_DB_API {
 			, "AgesIndex"
 			,"Endpoint for an index of available AGES HTML files"
 			)
+	, AGES_PDF(
+			"agespdf"
+			, ENDPOINT_TYPES.PDF
+			, "AgesPdf"
+			,"Endpoint for an AGES html file converted to a PDF file"
+			)
 	, AGES_READ_ONLY_TEMPLATE(
 			"agesreadonlytemplate"
 			, ENDPOINT_TYPES.HTML
@@ -103,6 +109,12 @@ public enum ENDPOINTS_DB_API {
 			, ENDPOINT_TYPES.ONTOLOGY
 			, "Groups"
 			,"Endpoint for group docs"
+			)
+	, GOD(
+			"God"
+			, ENDPOINT_TYPES.ONTOLOGY
+			, "God"
+			,"Endpoint for docs about God"
 			)
 	, HUMANS(
 			"humans"

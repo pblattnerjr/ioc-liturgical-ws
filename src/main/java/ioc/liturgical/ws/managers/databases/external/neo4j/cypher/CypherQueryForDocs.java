@@ -9,6 +9,7 @@ public class CypherQueryForDocs {
 	private static final Logger logger = LoggerFactory.getLogger(CypherQueryForDocs.class);
 	private String MATCH = "";
 	private String LABEL = "";
+	private String EXCLUDE_LABEL = "";
 	private String WHERE = "";
 	private String CONTAINS = "";
 	private String EQUALS = "";
@@ -29,6 +30,7 @@ public class CypherQueryForDocs {
 	public CypherQueryForDocs(
 			String MATCH
 			, String LABEL
+			, String EXCLUDE_LABEL
 			, String WHERE
 			, String CONTAINS
 			, String EQUALS
@@ -48,6 +50,7 @@ public class CypherQueryForDocs {
 			) {
 		this.MATCH = MATCH; // empty string--just used to make builder look like cypher.
 		this.LABEL = LABEL;
+		this.EXCLUDE_LABEL = EXCLUDE_LABEL;
 		this.WHERE = WHERE;
 		this.CONTAINS = CONTAINS;
 		this.EQUALS = EQUALS;
@@ -132,11 +135,23 @@ public class CypherQueryForDocs {
 			sb.append(tagMatcher("doc.tags", TAGS, TAG_OPERATOR));
 		}
 
+		if (EXCLUDE_LABEL.length() > 0) {
+			if (whereClause.length() > 0) {
+				sb.append(" AND NOT ");
+			} else {
+				sb.append(" WHERE NOT ");
+			}
+			sb.append("(doc:" + EXCLUDE_LABEL + ") ");
+		}
+
 		if (RETURN.contains("split")) {
 			sb.append(" RETURN " + RETURN);
 		} else if (RETURN.equals("*") || RETURN.length() == 0){
 			sb.append(" RETURN properties(doc)");
 		} else {
+			if (! RETURN.contains("_valueSchemaId")) {
+				RETURN = RETURN + ",_valueSchemaId";
+			}
 			if (prefixProperties) {
 				sb.append(" RETURN doc." + RETURN.replaceAll(" ", "").replaceAll(",", ", doc."));
 			} else {

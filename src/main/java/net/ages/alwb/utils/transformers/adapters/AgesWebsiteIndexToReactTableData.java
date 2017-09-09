@@ -1,6 +1,5 @@
 package net.ages.alwb.utils.transformers.adapters;
 
-import java.io.IOException;
 import java.util.Map.Entry;
 
 import org.jsoup.Connection;
@@ -138,19 +137,16 @@ public class AgesWebsiteIndexToReactTableData {
 													String fileHref = serviceLanguageEntryValue.get("href").getAsString();
 													String type = serviceLanguageEntryValue.get("type").getAsString();
 													if (serviceLanguageEntry.getKey().startsWith("GR-EN") && type.startsWith("Text/Music")) {
-//														System.out.println(serviceTypeEntry.getKey());
 														String theYear = fileHref.substring(4, 8);
 														String theMonth = fileHref.substring(9, 11);
 														String monthDay = fileHref.substring(12,14);
 														String date = theYear + "/" + theMonth + "/" + monthDay;
-//														String date = yearEntry.getKey() + "/" + monthEntry.getKey() + "/" + dayEntry.getKey().trim().split("-")[0];
 														String dayOfWeekName = dayEntry.getKey().trim().split("-")[1];
 														String [] hrefParts = fileHref.split("/");
 														if (hrefParts.length == 8) {
 																	AgesIndexTableRowData row = new AgesIndexTableRowData(printPretty);
 																	row.setDate(date);
 																	row.setDayOfWeek(dayOfWeekName);
-//																	row.setType(hrefParts[5]);
 																	row.setType(serviceTypeEntry.getKey());
 																	row.setUrl(baseUrl + fileHref);
 																	result.addRow(row);
@@ -191,7 +187,6 @@ public class AgesWebsiteIndexToReactTableData {
 		} catch (Exception e) {
 			throw e;
 		}
-		System.out.println(result.toJsonString());
 		return result;
 	}
 	

@@ -4,6 +4,13 @@ import static spark.Spark.get;
 import static spark.Spark.post;
 import static spark.Spark.put;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import javax.servlet.http.HttpServletResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +56,7 @@ public class Neo4jController {
 			} else {
 				response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 			}
-			return json.toString();
+			return json.toJsonString();
 		});
 
 		// GET docs for specified parameters
@@ -219,6 +226,7 @@ public class Neo4jController {
         			, request.queryParams("m") // matcher (e.g. contains, starts with, regex)
         			, request.queryParams("l") // tags (~labels)
         			, request.queryParams("o") // operator
+        			, request.queryParams("x") // exclude biblical texts
         			));
 		});
 
@@ -256,6 +264,32 @@ public class Neo4jController {
         			, request.queryParams("cf")  // center fallback library
         			, request.queryParams("rf")  // right fallback library
         			).toJsonString();
+		});
+
+		// /Users/mac002/Downloads/priestsServiceBook.pdf
+		// GET PDF genrated from an AGES HTML file using the specified url parameter
+		path = ENDPOINTS_DB_API.AGES_PDF.pathname;
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			  try {
+			        Path filePath = Paths.get("/Users/mac002/Downloads/priestsServiceBook.pdf");
+			        byte[] data = Files.readAllBytes(filePath);
+			 /**
+			  * Options:
+			  * 1. Regenerate the json, then create the PDF
+			  * 2. Pass in the json and use it to create the PDF
+			  * 3. Generate a PDF whenever the json is generated.
+			  */
+			        HttpServletResponse httpServletResponse = response.raw();
+			        httpServletResponse.setContentType("application/pdf");
+			        httpServletResponse.addHeader("Content-Disposition", "inline; filename=priestsservicebook.pdf");
+			        httpServletResponse.getOutputStream().write(data);
+			        httpServletResponse.getOutputStream().close();
+			    } catch (IOException e) {
+			        e.printStackTrace();
+			    }
+			 
+			    return "";
 		});
 
 		// Get forms for creating new instances of nodes and relationships

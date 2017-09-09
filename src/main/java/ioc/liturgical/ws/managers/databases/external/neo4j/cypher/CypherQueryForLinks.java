@@ -10,6 +10,7 @@ public class CypherQueryForLinks {
 
 	private String MATCH = "";
 	private String TYPE = "";
+	private String EXCLUDE_TYPE = "";
 	private String LIBRARY = "";
 	private String WHERE = "";
 	private String CONTAINS = "";
@@ -25,6 +26,7 @@ public class CypherQueryForLinks {
 	public CypherQueryForLinks(
 			String MATCH
 			, String TYPE
+			, String EXCLUDE_TYPE
 			, String LIBRARY
 			, String WHERE
 			, String CONTAINS
@@ -39,6 +41,7 @@ public class CypherQueryForLinks {
 			) {
 		this.MATCH = MATCH; // empty string--just used to make builder look like cypher.
 		this.TYPE = TYPE;
+		this.EXCLUDE_TYPE = EXCLUDE_TYPE;
 		this.LIBRARY = LIBRARY;
 		this.WHERE = WHERE;
 		this.CONTAINS = CONTAINS;
@@ -55,11 +58,11 @@ public class CypherQueryForLinks {
 
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("MATCH (from)-[link");
+		sb.append("MATCH (from:OntologyRoot)-[link");
 		if (TYPE.length() >0) {
 			sb.append(TYPE);
 		}
-		sb.append("]->(to) ");
+		sb.append("]->(to:OntologyRoot) ");
 
 		StringBuffer whereClause = new StringBuffer();
 		if (STARTS_WITH.length() > 0) {
@@ -92,6 +95,16 @@ public class CypherQueryForLinks {
 			}
 			sb.append(tagMatcher("link.tags", TAGS, TAG_OPERATOR));
 		}
+		
+		if (EXCLUDE_TYPE != null && EXCLUDE_TYPE.length() > 0) {
+			if (whereClause.length() > 0) {
+				sb.append(" AND NOT ");
+			} else {
+				sb.append(" WHERE NOT ");
+			}
+			sb.append("type(link) = '" + EXCLUDE_TYPE + "' ");
+		}
+
 		sb.append(" RETURN " + RETURN);
 		sb.append(" ORDER BY " + ORDER_BY);
 		return sb.toString();
@@ -262,6 +275,16 @@ public class CypherQueryForLinks {
 
 	public void setTAG_OPERATOR(String tAG_OPERATOR) {
 		TAG_OPERATOR = tAG_OPERATOR;
+	}
+
+
+	public String getEXCLUDE_TYPE() {
+		return EXCLUDE_TYPE;
+	}
+
+
+	public void setEXCLUDE_TYPE(String eXCLUDE_TYPE) {
+		EXCLUDE_TYPE = eXCLUDE_TYPE;
 	}
 
 }

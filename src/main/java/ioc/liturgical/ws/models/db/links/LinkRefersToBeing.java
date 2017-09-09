@@ -16,7 +16,7 @@ import com.github.reinert.jjschema.Attributes;
  * @author mac002
  *
  */
-@Attributes(title = "Reference to Being", description = "This is a doc that records information about a reference made in a text to a being.  For example, a liturgical text might be a hymn that refers to God, or an angel.  Note that there are some subtypes of being: animal, human, plant.  Use the subytype if applicable.")
+@Attributes(title = "Reference to Being", description = "This is a doc that records information about a reference made in a text to a being.  For example, a liturgical text might be a hymn that refers to an angel.  Note that there are some subtypes of being: animal, human, plant.  Use the subytype if applicable.")
 public class LinkRefersToBeing extends LTKLink {
 
 	private static double serialVersion = 1.1;

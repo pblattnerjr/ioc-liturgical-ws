@@ -17,6 +17,7 @@ import ioc.liturgical.ws.models.db.docs.ontology.Animal;
 import ioc.liturgical.ws.models.db.docs.ontology.Being;
 import ioc.liturgical.ws.models.db.docs.ontology.Concept;
 import ioc.liturgical.ws.models.db.docs.ontology.Event;
+import ioc.liturgical.ws.models.db.docs.ontology.God;
 import ioc.liturgical.ws.models.db.docs.ontology.Group;
 import ioc.liturgical.ws.models.db.docs.ontology.Human;
 import ioc.liturgical.ws.models.db.docs.ontology.Mystery;
@@ -31,6 +32,7 @@ import ioc.liturgical.ws.models.db.forms.AnimalCreateForm;
 import ioc.liturgical.ws.models.db.forms.BeingCreateForm;
 import ioc.liturgical.ws.models.db.forms.ConceptCreateForm;
 import ioc.liturgical.ws.models.db.forms.EventCreateForm;
+import ioc.liturgical.ws.models.db.forms.GodCreateForm;
 import ioc.liturgical.ws.models.db.forms.GroupCreateForm;
 import ioc.liturgical.ws.models.db.forms.HumanCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToAnimalCreateForm;
@@ -38,6 +40,7 @@ import ioc.liturgical.ws.models.db.forms.LinkRefersToBeingCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToConceptCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToEventCreateForm;
+import ioc.liturgical.ws.models.db.forms.LinkRefersToGodCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToGroupCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToHumanCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToMysteryCreateForm;
@@ -59,6 +62,7 @@ import ioc.liturgical.ws.models.db.links.LinkRefersToBeing;
 import ioc.liturgical.ws.models.db.links.LinkRefersToBiblicalText;
 import ioc.liturgical.ws.models.db.links.LinkRefersToConcept;
 import ioc.liturgical.ws.models.db.links.LinkRefersToEvent;
+import ioc.liturgical.ws.models.db.links.LinkRefersToGod;
 import ioc.liturgical.ws.models.db.links.LinkRefersToGroup;
 import ioc.liturgical.ws.models.db.links.LinkRefersToHuman;
 import ioc.liturgical.ws.models.db.links.LinkRefersToMystery;
@@ -99,6 +103,10 @@ public enum SCHEMA_CLASSES {
 			new EventCreateForm(" ")
 			, new Event(" ")
 			)
+	, GOD(
+			new GodCreateForm(" ")
+			, new God(" ")
+			)
 	, GROUP(
 			new GroupCreateForm(" ")
 			, new Group(" ")
@@ -130,6 +138,10 @@ public enum SCHEMA_CLASSES {
 	, LINK_REFERS_TO_EVENT(
 			new LinkRefersToEventCreateForm(" "," ","")
 			, new LinkRefersToEvent(" "," ","")
+			)
+	, LINK_REFERS_TO_GOD(
+			new LinkRefersToGodCreateForm(" "," ","")
+			, new LinkRefersToGod(" "," ","")
 			)
 	, LINK_REFERS_TO_GROUP(
 			new LinkRefersToGroupCreateForm(" "," ","")

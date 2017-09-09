@@ -4,7 +4,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import net.ages.alwb.utils.transformers.adapters.models.AgesReactTemplate;
+import net.ages.alwb.utils.transformers.adapters.models.MetaTemplate;
 
 public class AgesHtmlToTemplateHtmlTest {
 	
@@ -13,7 +13,7 @@ public class AgesHtmlToTemplateHtmlTest {
 		String url = "http://www.agesinitiatives.com/dcs/public/dcs/h/b/baptism/gr-en/index.html";
 		AgesHtmlToTemplateHtml ages = new AgesHtmlToTemplateHtml(url, true);
 		try {
-			AgesReactTemplate result = ages.toReactTemplateMetaData();
+			MetaTemplate result = ages.toReactTemplateMetaData();
 			assertTrue(result.getTopElement().getChildren().size() > 0);
 		} catch (Exception e) {
 			assertTrue(e.getMessage().length() == 0);
