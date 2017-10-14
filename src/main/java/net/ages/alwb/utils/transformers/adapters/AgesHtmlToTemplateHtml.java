@@ -16,6 +16,7 @@ import net.ages.alwb.utils.transformers.adapters.models.MetaTemplate;
 import net.ages.alwb.utils.transformers.adapters.models.TemplateElement;
 
 import org.jsoup.nodes.Element;
+
 public class AgesHtmlToTemplateHtml {
 	private static final Logger logger = LoggerFactory.getLogger(AgesHtmlToTemplateHtml.class);
 	private boolean printPretty = false;
@@ -61,7 +62,10 @@ public class AgesHtmlToTemplateHtml {
 	 * Gets the content for the specified URL
 	 * Builds an array of the ids used in the content.  They are a set (no duplicates).
 	 */
-	public MetaTemplate getValues(Elements valueSpans) throws Exception {
+	public MetaTemplate getValues(
+			Elements valueSpans
+			, Elements versionDesignations
+			) throws Exception {
 		MetaTemplate result = new MetaTemplate(url, printPretty);
 		try {
 	        for (Element valueSpan : valueSpans) {
@@ -91,6 +95,48 @@ public class AgesHtmlToTemplateHtml {
 	        	}
 	        	String topicKey = topic + Constants.ID_DELIMITER + key;
 	        	IdManager idManager = new IdManager(domain, topic, key);
+	        	result.addDomain(domain);
+	        	result.addTopicKey(topicKey);
+	        	result.addValue(idManager.getId(), value);
+	        	if (tdClass.equals("centerCell")) {
+	        		valueSpan.attr(
+	        				"data-key"
+	        				, topic
+	        					+ "_" 
+	        						+ domain 
+	        						+ "|" 
+	        						+ key
+	        		); // e.g., titles_en_US_dedes|OnSunday
+	        	}
+	        }
+	        for (Element valueSpan : versionDesignations) {
+	        	String tdClass = this.getClassOfTd(valueSpan);
+	        	String dataKey = valueSpan.select("span.key").attr("data-key");
+	        	String [] parts = dataKey.split("\\|");
+	        	String key = parts[1];
+	        	parts = parts[0].split("_");
+	        	String domain = "";
+	        	if (tdClass.equals("centerCell")) {
+	        		domain = this.centerLibrary;
+	        	} else {
+	        		domain =
+		        			parts[1] 
+		    						+ Constants.DOMAIN_DELIMITER 
+		    						+ parts[2].toLowerCase() 
+		    						+ Constants.DOMAIN_DELIMITER 
+		    	        			+ parts[3]
+		    	        	;
+	        	}
+	        	String topic = parts[0];
+	        	String value = "";
+	        	if (valueSpan.hasClass("key")) {
+	        		value = valueSpan.parent().text();
+	        	} else {
+		        	value = valueSpan.text();
+	        	}
+	        	String topicKey = topic + Constants.ID_DELIMITER + key;
+	        	IdManager idManager = new IdManager(domain, topic, key);
+	        	result.addDomain(domain);
 	        	result.addTopicKey(topicKey);
 	        	result.addValue(idManager.getId(), value);
 	        	if (tdClass.equals("centerCell")) {
@@ -120,6 +166,9 @@ public class AgesHtmlToTemplateHtml {
 					if (child.hasAttr("class")) {
 						eChild.setClassName(child.attr("class"));
 					}
+					if (child.parent().hasAttr("class")) {
+						eChild.setParentClassName(child.parent().attr("class"));
+					}
 					if (child.hasAttr("data-key")) {
 			        	String dataKey = child.attr("data-key");
 			        	String [] parts = dataKey.split("\\|");
@@ -135,8 +184,16 @@ public class AgesHtmlToTemplateHtml {
 			        	String topic = parts[0];
 			        	String topicKey = topic + Constants.ID_DELIMITER + key;
 			        	IdManager idManager = new IdManager(domain, topic, key);
-						eChild.setDataKey(idManager.getId());
-						eChild.setTopicKey(topicKey);
+			        	eChild.setDataDomain(domain);
+			        	if (key.equals("version.designation")) {
+			        		if (child.attr("class").equals("key")) {
+								eChild.setDataKey(idManager.getId());
+								eChild.setTopicKey(topicKey);
+			        		}
+			        	} else {
+							eChild.setDataKey(idManager.getId());
+							eChild.setTopicKey(topicKey);
+			        	}
 					}
 					seq = seq + 1;
 					eChild.setKey("V" + seq);
@@ -167,7 +224,10 @@ public class AgesHtmlToTemplateHtml {
 			Connection c = Jsoup.connect(url);
 			doc = c.timeout(60*1000).get();
 			content = doc.select("div.content").first();
-			content.select("div.media-group").remove();
+			// remove rows that contain a media-group
+			content.select("tr:has(div.media-group)").remove();
+			content.select("tr:has(div.media-group-empty)").remove();
+
 			if (this.centerLibrary.length() > 0) {
 				this.cloneGreek(content);
 			}
@@ -175,12 +235,17 @@ public class AgesHtmlToTemplateHtml {
 			if (keys.size() == 0) {
 				keys = content.select("span.key");
 			}
-			MetaTemplate values = this.getValues(keys);
+			Elements versionDesignations = content.select("span.versiondesignation");
+			MetaTemplate values = this.getValues(keys, versionDesignations);
+			result.setDomains(values.getDomains());
 			result.setTopicKeys(values.getTopicKeys());
 			result.setValues(values.getValues());
 			TemplateElement eContent = new TemplateElement(printPretty);
 			eContent.setTag(content.tagName());
 			eContent.setClassName(content.attr("class"));
+			if (content.parent().hasAttr("class")) {
+				eContent.setParentClassName(content.parent().attr("class"));
+			}
 			eContent.setChildren(this.getChildren(content.children(), 0));
 			result.setTopElement(eContent);
 		} catch (Exception e) {

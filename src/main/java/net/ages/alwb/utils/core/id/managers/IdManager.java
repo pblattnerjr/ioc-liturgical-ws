@@ -1,7 +1,15 @@
 package net.ages.alwb.utils.core.id.managers;
 
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Locale;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Joiner;
 
 import ioc.liturgical.ws.constants.Constants;
+import iso.IsoLangThreeToTwo;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
 
@@ -168,16 +177,6 @@ public class IdManager {
 		idParts.add(part2);
 	}
 	
-	public void setDomain(String domain) {
-		String [] parts = domain.split(this.domainSplitter);
-		if (parts.length == 3) {
-			this.setLibraryLanguage(parts[0]);
-			this.setLibraryCountry(parts[1]);
-			this.setLibraryRealm(parts[2]);
-			this.setLibraryIsDomain(true);
-		}
-		
-	}
 	
 	private void setDomainParts() {
 		if (this.libraryParts.size() == 1) {
@@ -226,7 +225,11 @@ public class IdManager {
 	
 	public void setLibrary(String library) {
 		this.libraryParts.clear();
-		this.idParts.set(0, library);
+		if (this.idParts.size() == 0) {
+			this.idParts.add(library);
+		} else {
+			this.idParts.set(0, library);
+		}
 		this.libraryParts.add(library);
 		this.setDomainParts();
 	}
@@ -349,6 +352,18 @@ public class IdManager {
 		return sb.toString();
 	}
 
+/**
+ * Returns gr\textunderscore gr\textunderscore cog~topic~key (as an example)
+ * @return
+ */
+public String getOslwPexId() {
+	return this.getOslwLibrary() + "~" + this.getTopicKey();
+}
+
+public String getOslwLibrary() {
+	return this.getLibraryLanguage() + "\\textunderscore " + this.getLibraryCountry() + "\\textunderscore " + this.getLibraryRealm();
+}
+
 public String getOslwResourceForValue(String value) {
 	StringBuffer sb = new StringBuffer();
 	if (libraryIsDomain 
@@ -367,8 +382,139 @@ public String getOslwResourceForValue(String value) {
 		sb.append("}{");
 		sb.append(this.keyParts.get(0));
 		sb.append("}{\n");
-		sb.append(value.trim());
-		sb.append("\n}%\n");
+		if (value != null && value.length() > 0) {
+			sb.append(value.trim());
+			sb.append("\n");
+		}
+		sb.append("}%\n");
+		
+		// if this value is an actor, then also add a version that has a colon
+		if (this.topicParts.get(0).equals("actors")) {
+			sb.append("\\itId{");
+			sb.append(this.libraryLanguage);
+			sb.append("}{");
+			sb.append(this.libraryCountry);
+			sb.append("}{");
+			sb.append(this.libraryRealm);
+			sb.append("}{");
+			sb.append(this.topicParts.get(0));
+			sb.append("}{");
+			sb.append(this.keyParts.get(0) + ".colon");
+			sb.append("}{\n");
+			sb.append("\\itRid{");
+			sb.append(this.topicParts.get(0));
+			sb.append("}{");
+			sb.append(this.keyParts.get(0) + "\\grcolon");
+			sb.append("}");
+			sb.append("\n}%\n");
+		}
+	}
+	return sb.toString();
+}
+
+public String getOslwTopicKey() {
+	StringBuffer sb = new StringBuffer();
+	if (this.topicParts.size() > 0 && this.keyParts.size() > 0) {
+		sb.append("{");
+		sb.append(this.topicParts.get(0));
+		sb.append("}{");
+		sb.append(this.keyParts.get(0));
+		sb.append("}");
+	}
+	return sb.toString();
+}
+
+public String getOslwRid() {
+	StringBuffer sb = new StringBuffer();
+	sb.append("\\itRid");
+	sb.append(this.getOslwTopicKey());
+	return sb.toString();
+}
+
+public String getOslwSid() {
+	StringBuffer sb = new StringBuffer();
+	sb.append("\\itSid");
+	sb.append("{");
+	sb.append(this.libraryLanguage);
+	sb.append("}{");
+	sb.append(this.libraryCountry);
+	sb.append("}{");
+	sb.append(this.libraryRealm);
+	sb.append("}{");
+	sb.append(this.topicParts.get(0));
+	sb.append("}{");
+	sb.append(this.keyParts.get(0));
+	sb.append("}\n");
+	return sb.toString();
+}
+
+
+/**
+ * Returns an OSLW ID whose value is a RID redirect to the specified topic and key.
+ * A RID is a Relative ID, i.e. one that uses the same domain as the enclosing \it resource.
+ *  
+ * @param topic
+ * @param key
+ * @return
+ */
+public String getOslwRedirectRid(String topic, String key) {
+	StringBuffer sb = new StringBuffer();
+	if (libraryIsDomain 
+			&& this.libraryParts.size() == 1 
+			&& this.topicParts.size() == 1 
+			&& this.keyParts.size() == 1
+			) {
+		sb.append("\\itId{");
+		sb.append(this.libraryLanguage);
+		sb.append("}{");
+		sb.append(this.libraryCountry);
+		sb.append("}{");
+		sb.append(this.libraryRealm);
+		sb.append("}{");
+		sb.append(topic);
+		sb.append("}{");
+		sb.append(key);
+		sb.append("}{\n");
+		sb.append("\\itRid{");
+		sb.append(this.topicParts.get(0));
+		sb.append("}{");
+		sb.append(this.keyParts.get(0));
+		sb.append("}\n}%\n");
+	}
+	return sb.toString();
+}
+
+/**
+ * Returns an OSLW ID whose value is a SID  redirect to the specified topic and key.
+ * A SID is a Specific ID. This with use a different domain than the enclosing resource
+ *  
+ * @param topic
+ * @param key
+ * @return
+ */
+public String getOslwRedirectSid(String domain, String topic, String key) {
+	StringBuffer sb = new StringBuffer();
+	if (libraryIsDomain 
+			&& this.libraryParts.size() == 1 
+			&& this.topicParts.size() == 1 
+			&& this.keyParts.size() == 1
+			) {
+		sb.append("\\itId{");
+		sb.append(this.libraryLanguage);
+		sb.append("}{");
+		sb.append(this.libraryCountry);
+		sb.append("}{");
+		sb.append(this.libraryRealm);
+		sb.append("}{");
+		sb.append(topic);
+		sb.append("}{");
+		sb.append(key);
+		sb.append("}{\n");
+		sb.append("\\itRid{");
+		sb.append(this.topicParts.get(0));
+		sb.append("}{");
+		sb.append(this.keyParts.get(0));
+		sb.append("}\n}%\n");
 	}
 	return sb.toString();
 }
@@ -464,6 +610,50 @@ public String getOslwSetDomain(COLUMNS column) {
 	 */
 	public static String createSeqNbr(String library, String topic, int value) {
 		return library + "~" + topic + "~" + AlwbGeneralUtils.padNumber("L", 5, value);
+	}
+	
+	/**
+	 * Get the locale for this ID's language code.
+	 * If not found, uses English (en)
+	 * @return
+	 */
+	public Locale getLocale() {
+		Locale result = Locale.forLanguageTag("en");
+		if (this.libraryLanguage!= null && this.libraryLanguage.length() > 0) {
+			try {
+				result = Locale.forLanguageTag(IsoLangThreeToTwo.threeToTwo(this.libraryLanguage));
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+		}
+		return result;
+	}
+	
+	/**
+	 * Returns the specified date, formatted for the locale of the ID language and country,
+	 * If not found, it will be formatted for English.
+	 * Note, per the Java Locale documentation:
+	 * When a language has both an alpha-2 code and an alpha-3 code, the alpha-2 code must be used.
+	 * @param year
+	 * @param month
+	 * @param day
+	 * @return
+	 */
+	public String getLocaleDate(String year, String month, String day) {
+		String result = "";
+		try {
+			int theYear = Integer.parseInt(year);
+			int theMonth = (Integer.parseInt(month)); 
+			int theMonthDay = Integer.parseInt(day);
+			LocalDate date = LocalDate.of(theYear, theMonth, theMonthDay);
+			DateTimeFormatter pattern = DateTimeFormatter
+					.ofLocalizedDate(FormatStyle.FULL)
+					.withLocale(this.getLocale());
+			result = date.format(pattern);
+		} catch (Exception e) {
+			ErrorUtils.report(logger, e);
+		}
+		return result;
 	}
 	
 }

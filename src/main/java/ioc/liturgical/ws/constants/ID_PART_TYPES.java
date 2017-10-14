@@ -39,9 +39,17 @@ public enum ID_PART_TYPES {
 			"KeyFromIdOfSelectedLiturgicalText"
 			, "The key  part of the ID from a user selected liturgical text."
 			)
+	, NOTE_USING_ID_OF_SELECTED_TEXT(
+			"NoteUsingIdOfSelectedText"
+			, "The ID of a user selected text about which the user will make a note."
+			)
 	, ONTOLOGY_TOPIC(
 			"OntologyTopic"
 			, "An ontology topic"
+			)
+	, TIMESTAMP(
+			"DateTimeStamp"
+			, "A system generated date-time stamp"
 			)
 	, TOPIC_FROM_ID_OF_SELECTED_BIBLICAL_VERSE(
 			"TopicFromIdOfSelectedBiblicalVerse"

@@ -4,6 +4,7 @@ import static spark.Spark.get;
 import static spark.Spark.post;
 import static spark.Spark.put;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,6 +27,7 @@ import ioc.liturgical.ws.constants.ENDPOINTS_DB_API;
 import ioc.liturgical.ws.constants.ENDPOINT_TYPES;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.constants.db.external.SINGLETON_KEYS;
+import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.controllers.admin.ControllerUtils;
 import ioc.liturgical.ws.managers.auth.AuthDecoder;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
@@ -91,7 +93,7 @@ public class Neo4jController {
         			));
 		});
 
-		// GET ontology entries for specified parameters
+		// GET text analysis for specified ID
 		path = ENDPOINTS_DB_API.TEXT_ANALYSIS.toLibraryPath();
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
@@ -99,6 +101,38 @@ public class Neo4jController {
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
 			String id = request.splat()[0];
 			return externalManager.getWordGrammarAnalyses(requestor, id).toJsonString();
+		});
+
+		// GET user note for specified ID
+		path = ENDPOINTS_DB_API.NOTES.toLibraryPath();
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
+			ResultJsonObjectArray json = externalManager.getForIdStartsWith(query, TOPICS.NOTE_USER);
+			if (json.getValueCount() > 0) {
+				response.status(HTTP_RESPONSE_CODES.OK.code);
+			} else {
+				response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
+			}
+			return json.toString();
+		});
+
+		// GET user notes matching specified parameters
+		path = ENDPOINTS_DB_API.NOTES.pathname;
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+        	return gson.toJson(externalManager.searchNotes(
+        			requestor
+        			, request.queryParams("t")  // note type (e.g. NoteUser)
+        			, request.queryParams("q")   // query
+        			, request.queryParams("p") // property of the doc (e.g. the ID, the value)
+        			, request.queryParams("m") // matcher (e.g. contains, starts with, regex)
+        			, request.queryParams("l") // tags (~labels)
+        			, request.queryParams("o") // operator
+        			));
 		});
 
 		/**
@@ -180,6 +214,14 @@ public class Neo4jController {
         	return externalManager.getOntologySearchDropdown().toJsonString();
 		});
 
+		// GET dropdowns for searching notes
+		path = ENDPOINTS_DB_API.DROPDOWNS_NOTES.pathname;
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+        	return externalManager.getNotesSearchDropdown().toJsonString();
+		});
+
 		// GET data for a react-bootstrap-table
 		path = ENDPOINTS_DB_API.TABLES.toLibraryPath();
 		ControllerUtils.reportPath(logger, "GET", path);
@@ -255,6 +297,7 @@ public class Neo4jController {
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
         	return externalManager.getAgesService(
         			request.queryParams("u")  // url
         			, request.queryParams("l")  // left library
@@ -263,26 +306,31 @@ public class Neo4jController {
         			, request.queryParams("lf")  // left fallback library
         			, request.queryParams("cf")  // center fallback library
         			, request.queryParams("rf")  // right fallback library
+        			, requestor
         			).toJsonString();
 		});
 
-		// /Users/mac002/Downloads/priestsServiceBook.pdf
-		// GET PDF genrated from an AGES HTML file using the specified url parameter
+		// GET PDF generated from an AGES HTML file using the specified url parameter
 		path = ENDPOINTS_DB_API.AGES_PDF.pathname;
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			  try {
-			        Path filePath = Paths.get("/Users/mac002/Downloads/priestsServiceBook.pdf");
+      				String id = request.queryParams("id");
+			        Path filePath = Paths.get(Constants.PDF_FOLDER + "/" + id + ".pdf");
+			        File file = new File(Constants.PDF_FOLDER + "/" + id + ".pdf");
+			        if (! file.exists()) { // wait because the pdf still might be generating
+			        	long millis =  15000; // 60000 = 1 minute
+			        	for (int i = 0; i < 5; i++) {
+			        		Thread.sleep(millis);
+			        		if (file.exists()) {
+			        			break;
+			        		}
+			        	}
+			        }
 			        byte[] data = Files.readAllBytes(filePath);
-			 /**
-			  * Options:
-			  * 1. Regenerate the json, then create the PDF
-			  * 2. Pass in the json and use it to create the PDF
-			  * 3. Generate a PDF whenever the json is generated.
-			  */
 			        HttpServletResponse httpServletResponse = response.raw();
 			        httpServletResponse.setContentType("application/pdf");
-			        httpServletResponse.addHeader("Content-Disposition", "inline; filename=priestsservicebook.pdf");
+			        httpServletResponse.addHeader("Content-Disposition", "inline; filename=" + id + ".pdf");
 			        httpServletResponse.getOutputStream().write(data);
 			        httpServletResponse.getOutputStream().close();
 			    } catch (IOException e) {
@@ -351,6 +399,20 @@ public class Neo4jController {
 			response.status(requestStatus.getCode());
 			return requestStatus.toJsonString();
 		});
+		
+		// post a note
+		path = ENDPOINTS_DB_API.NOTES.pathname;
+		ControllerUtils.reportPath(logger, "POST", path);
+		post(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			RequestStatus requestStatus = externalManager.addNote(
+					requestor
+					, request.body()
+					);
+			response.status(requestStatus.getCode());
+			return requestStatus.toJsonString();
+		});
 
 		// post a reference
 		path = ENDPOINTS_DB_API.LINKS.pathname;
@@ -389,6 +451,20 @@ public class Neo4jController {
 
 		// put (update) a doc 
 		path = ENDPOINTS_DB_API.DOCS.toLibraryTopicKeyPath();
+		ControllerUtils.reportPath(logger, "PUT", path);
+		put(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			RequestStatus requestStatus = externalManager.updateLTKDbObject(
+					requestor
+					, request.body()
+					);
+			response.status(requestStatus.getCode());
+			return requestStatus.toJsonString();
+		});
+
+		// put (update) a note 
+		path = ENDPOINTS_DB_API.NOTES.toLibraryTopicKeyPath();
 		ControllerUtils.reportPath(logger, "PUT", path);
 		put(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);

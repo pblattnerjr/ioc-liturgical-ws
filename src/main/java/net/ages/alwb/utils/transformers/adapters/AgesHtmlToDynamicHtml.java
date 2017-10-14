@@ -3,6 +3,7 @@ package net.ages.alwb.utils.transformers.adapters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.jsoup.Connection;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import ioc.liturgical.ws.constants.Constants;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 import net.ages.alwb.utils.core.id.managers.IdManager;
+import net.ages.alwb.utils.core.misc.AlwbUrl;
 import net.ages.alwb.utils.transformers.adapters.models.MetaTemplate;
 import net.ages.alwb.utils.transformers.adapters.models.TemplateElement;
 
@@ -38,6 +40,7 @@ public class AgesHtmlToDynamicHtml {
 	private String leftFallback = "";
 	private String centerFallback = "";
 	private String rightFallback = "";
+	private String languageCodes = "";
 	private Map<String,String> greekValues = new TreeMap<String,String>();
 	private Map<String,String> englishValues = new TreeMap<String,String>();
 	
@@ -57,6 +60,7 @@ public class AgesHtmlToDynamicHtml {
 		this.leftFallback = leftFallback;
 		this.centerFallback = centerFallback;
 		this.rightFallback = rightFallback;
+		this.setLanguageCodes();
 	}
 	public AgesHtmlToDynamicHtml(
 			String url
@@ -76,8 +80,26 @@ public class AgesHtmlToDynamicHtml {
 		this.centerFallback = centerFallback;
 		this.rightFallback = rightFallback;
 		this.printPretty = printPretty;
+		this.setLanguageCodes();
 	}
 
+	private void setLanguageCodes() {
+		StringBuffer codes = new StringBuffer();
+		IdManager idManager = new IdManager();
+		idManager.setLibrary(this.leftLibrary);
+		codes.append(idManager.getLibraryLanguage());
+		if (this.centerLibrary != null && this.centerLibrary.length() > 0) {
+			codes.append("-");
+			idManager.setLibrary(this.centerLibrary);
+			codes.append(idManager.getLibraryLanguage());
+		}
+		if (this.rightLibrary != null && this.rightLibrary.length() > 0) {
+			idManager.setLibrary(this.rightLibrary);
+			codes.append("-");
+			codes.append(idManager.getLibraryLanguage());
+		}
+		this.languageCodes = codes.toString();
+	}
 	/**
 	 * 
 	 * Walks up the hierarchy of the parents of element e
@@ -96,14 +118,14 @@ public class AgesHtmlToDynamicHtml {
 		return result;
 	}
 	
-	private void loadOriginalValues(Elements valueSpans) {
+	private void loadOriginalValues(
+			Elements valueSpans
+			, Elements versionDesignations
+			) {
 		try {
         	IdManager idManager = null;
 	        for (Element valueSpan : valueSpans) {
 	        	String dataKey = valueSpan.attr("data-key");
-	        	if (dataKey.endsWith("euLI.Key0200.text")) {
-	        		System.out.print("");
-	        	}
 	        	String [] parts = dataKey.split("\\|");
 	        	String key = parts[1];
 	        	parts = parts[0].split("_");
@@ -144,8 +166,60 @@ public class AgesHtmlToDynamicHtml {
 		        	}
 	        	}
 	        }
+	        for (Element valueSpan : versionDesignations) {
+	        	String dataKey = valueSpan.select("span.key").attr("data-key");
+	        	String [] parts = dataKey.split("\\|");
+	        	String key = parts[1];
+	        	parts = parts[0].split("_");
+	        	String domain = parts[1] 
+						+ Constants.DOMAIN_DELIMITER 
+						+ parts[2].toLowerCase() 
+						+ Constants.DOMAIN_DELIMITER 
+	        			+ parts[3]
+	        	;
+	        	String topic = parts[0];
+	        	String value = "";
+	        	if (valueSpan.hasClass("key")) {
+	        		value = valueSpan.parent().text().trim();
+	        	} else {
+		        	value = valueSpan.text().trim();
+	        	}
+	        	idManager = new IdManager(domain, topic, key);
+	        	if (domain.startsWith("gr")) {
+	        		if (this.greekValues.containsKey(idManager.getId())) {
+	        			// ignore it
+	        		} else {
+		        		this.greekValues.put(idManager.getId(), value);
+	        		}
+	        	} else {
+	        		if (this.englishValues.containsKey(idManager.getId())) {
+	        			// ignore it
+	        		} else {
+		        		this.englishValues.put(idManager.getId(), value);
+	        		}
+	        	}
+	        }
 		} catch (Exception e) {
 			throw e;
+		}
+	}
+	
+	private void equalizeTopicKeys() {
+		// make sure that the englishValues contains the same topic-keys as the greekValues
+		for (String key : greekValues.keySet()) {
+			IdManager idManager = new IdManager(key);
+			idManager.setLibrary("en_us_ages");
+			if (! englishValues.containsKey(idManager.getId())) {
+				englishValues.put(idManager.getId(), "");
+			}
+		}
+		// make sure that the greekValues contains the same topic-keys as the englishValues
+		for (String key : englishValues.keySet()) {
+			IdManager idManager = new IdManager(key);
+			idManager.setLibrary("gr_gr_ages");
+			if (! greekValues.containsKey(idManager.getId())) {
+				greekValues.put(idManager.getId(), "");
+			}
 		}
 	}
 	
@@ -176,6 +250,13 @@ public class AgesHtmlToDynamicHtml {
 	 */
 	public MetaTemplate getValues(Elements valueSpans) throws Exception {
 		MetaTemplate result = new MetaTemplate(url, printPretty);
+		// first add all the Greek and English values just in case
+		for (Entry<String,String> entry : this.greekValues.entrySet()) {
+			result.addValue(entry.getKey(), entry.getValue());
+		}
+		for (Entry<String,String> entry : this.englishValues.entrySet()) {
+			result.addValue(entry.getKey(), entry.getValue());
+		}
 		try {
 	        for (Element valueSpan : valueSpans) {
 	        	String tdClass = this.getClassOfTd(valueSpan);
@@ -198,16 +279,8 @@ public class AgesHtmlToDynamicHtml {
 		        	idManager.setLibrary(fallbackDomain);
 		        	String value = "";
 		        	if (domain.startsWith("gr")) {
-			        	if (dataKey.endsWith("euLI.Key0200.text")) {
-//			        		System.out.println(idManager.getId());
-//			        		System.out.println(greekValues.get(idManager.getId()));
-			        	}
 		        		value = greekValues.get(idManager.getId());
 		        	} else {
-			        	if (dataKey.endsWith("euLI.Key0200.text")) {
-//			        		System.out.println(idManager.getId());
-//			        		System.out.println(greekValues.get(idManager.getId()));
-			        	}
 		        		value = englishValues.get(idManager.getId());
 		        	}
 		        	if (value == null || value.length() == 0) {
@@ -222,6 +295,7 @@ public class AgesHtmlToDynamicHtml {
 		        	}
 		        	String topicKey = idManager.getTopicKey();
 		        	idManager.setLibrary(domain);
+		        	result.addDomain(domain);
 		        	result.addTopicKey(topicKey);
 		        	result.addValue(idManager.getId(), value);
 	        		valueSpan.attr(
@@ -287,10 +361,8 @@ public class AgesHtmlToDynamicHtml {
 							index++;
 						}
 					}
-					if (rightKeys.size() < index) {
+					if (index < rightKeys.size()) {
 						result = rightKeys.get(index).attr("data-key"); 
-					} else {
-						System.out.print("");
 					}
 				} else {
 					int index = 0;
@@ -302,10 +374,8 @@ public class AgesHtmlToDynamicHtml {
 							index++;
 						}
 					}
-					if (leftKeys.size() < index) {
+					if (index < leftKeys.size()) {
 						result = leftKeys.get(index).attr("data-key"); 
-					} else {
-						System.out.print("");
 					}
 				}
 			}
@@ -332,6 +402,10 @@ public class AgesHtmlToDynamicHtml {
 						eChild.setClassName(child.attr("class"));
 					}
 					if (child.hasAttr("data-key")) {
+						if (child.parent().hasAttr("class")) {
+							Element parent = child.parent();
+							eChild.setParentClassName(child.parent().attr("class"));
+						}
 			        	String dataKey = child.attr("data-key");
 			        	String [] parts = dataKey.split("\\|");
 			        	String key = parts[1];
@@ -346,8 +420,15 @@ public class AgesHtmlToDynamicHtml {
 			        	String topic = parts[0];
 			        	String topicKey = topic + Constants.ID_DELIMITER + key;
 			        	IdManager idManager = new IdManager(domain, topic, key);
-						eChild.setDataKey(idManager.getId());
-						eChild.setTopicKey(topicKey);
+			        	if (key.equals("version.designation")) {
+			        		if (child.attr("class").equals("key")) {
+								eChild.setDataKey(idManager.getId());
+								eChild.setTopicKey(topicKey);
+			        		}
+			        	} else {
+							eChild.setDataKey(idManager.getId());
+							eChild.setTopicKey(topicKey);
+			        	}
 					}
 					if (child.hasAttr("data-original")) {
 			        	String dataOriginal = child.attr("data-original");
@@ -394,16 +475,21 @@ public class AgesHtmlToDynamicHtml {
 		try {
 			Connection c = Jsoup.connect(url);
 			doc = c.timeout(60*1000).get();
+			AlwbUrl urlUtils = new AlwbUrl(url);
+			result.setPdfFilename(urlUtils.getFileName(), this.languageCodes);
 			content = doc.select("div.content").first();
-			
-			content.select("div.media-group").remove();
-			content.select("div.media-group-empty").remove();
-			
+
+			// remove rows that contain a media-group
+			content.select("tr:has(div.media-group)").remove();
+			content.select("tr:has(div.media-group-empty)").remove();
+
 			Elements keys = content.select("span.kvp");
+			Elements versionDesignations = content.select("span.versiondesignation");
 			if (keys.size() == 0) {
 				keys = content.select("span.key");
 			}
-			this.loadOriginalValues(keys); // save off the Greek and English values
+			this.loadOriginalValues(keys, versionDesignations); // save off the Greek and English values
+			this.equalizeTopicKeys(); // sometimes the Greek or English has extra topic-keys.  Make sure they both have the same ones.
 			
 			if (this.centerLibrary.length() > 0) { // add the center column and get the keys again so they have the new column
 				this.cloneGreek(content);
@@ -413,6 +499,7 @@ public class AgesHtmlToDynamicHtml {
 				}
 			}
 			MetaTemplate values = this.getValues(keys);
+			result.setDomains(values.getDomains());
 			result.setTopicKeys(values.getTopicKeys());
 			result.setValues(values.getValues());
 			if (this.centerLibrary == null || this.centerLibrary.length() == 0) {
@@ -438,6 +525,9 @@ public class AgesHtmlToDynamicHtml {
 			TemplateElement eContent = new TemplateElement(printPretty);
 			eContent.setTag(content.tagName());
 			eContent.setClassName(content.attr("class"));
+			if (content.parent().hasAttr("class")) {
+				eContent.setParentClassName(content.parent().attr("class"));
+			}
 			eContent.setChildren(this.getChildren(content.children(), 0));
 			result.setTopElement(eContent);
 		} catch (Exception e) {
@@ -446,9 +536,10 @@ public class AgesHtmlToDynamicHtml {
 		return result;
 	}
 	/**
-	 * Because the content parameter is actually a pointer,
-	 * this is manipulating it by cloning the rightCell (the Greek)
-	 * and inserting a center cell.
+	 * Because Java uses pass by reference for parameters,
+	 * the content parameter is actually a pointer.
+	 * This method uses the pointer to clone the rightCell (the Greek)
+	 * and insert a center cell.
 	 * @param content
 	 */
 	private void cloneGreek(Element content) {

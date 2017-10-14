@@ -13,45 +13,50 @@ import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
  * @author mac002
  *
  */
-public class TemplateElement extends AbstractModel {
-	@Expose public String key = ""; // required when iterating a Javascript array of HtmlElement
+public class KvpCellElement extends AbstractModel {
 	@Expose public String tag = "";
-	@Expose public String className = "";
 	@Expose public String parentClassName = "";
 	@Expose public String dataDomain = "";
 	@Expose public String dataKey = ""; // the key we will use to retrieve values.  It might not be the original
 	@Expose public String dataOriginal = ""; // the original key in case we need to use it instead
 	@Expose public String topicKey = "";
-	@Expose public List<TemplateElement> children = new ArrayList<TemplateElement>();
 	
 
-	public TemplateElement() {
+	public KvpCellElement() {
 		super();
 	}
-	public TemplateElement(boolean printPretty) {
+	
+	public KvpCellElement(TemplateElement template) {
+		super();
+		this.tag = template.getTag();
+		this.parentClassName = template.getParentClassName();
+		this.dataDomain = template.getDataDomain();
+		this.dataKey = template.getDataKey();
+		this.dataOriginal = template.getDataOriginal();
+		this.topicKey = template.getTopicKey();
+	}
+	
+	public KvpCellElement(boolean printPretty) {
 		super();
 		super.setPrettyPrint(printPretty);
 	}
+
+	public KvpCellElement(TemplateElement template, boolean printPretty) {
+		super();
+		super.setPrettyPrint(printPretty);
+		this.tag = template.getTag();
+		this.parentClassName = template.getParentClassName();
+		this.dataDomain = template.getDataDomain();
+		this.dataKey = template.getDataKey();
+		this.dataOriginal = template.getDataOriginal();
+		this.topicKey = template.getTopicKey();
+}
+
 	public String getTag() {
 		return tag;
 	}
 	public void setTag(String tag) {
 		this.tag = tag;
-	}
-	public String getClassName() {
-		return className;
-	}
-	public void setClassName(String className) {
-		this.className = className;
-	}
-	public List<TemplateElement> getChildren() {
-		return children;
-	}
-	public void setChildren(List<TemplateElement> children) {
-		this.children = children;
-	}
-	public void addChild(TemplateElement child) {
-		this.children.add(child);
 	}
 	public String getDataKey() {
 		return dataKey;
@@ -64,12 +69,6 @@ public class TemplateElement extends AbstractModel {
 	}
 	public void setTopicKey(String topicKey) {
 		this.topicKey = topicKey;
-	}
-	public String getKey() {
-		return key;
-	}
-	public void setKey(String key) {
-		this.key = key;
 	}
 	public String getDataOriginal() {
 		return dataOriginal;

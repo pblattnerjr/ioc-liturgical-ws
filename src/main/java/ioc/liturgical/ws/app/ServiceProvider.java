@@ -288,6 +288,7 @@ public class ServiceProvider {
 					, deleteExistingDataStoreRecords
 					, createTestUsers
 					, ws_usr
+					, ws_pwd
 					);
 			storeManager.setMaxInactiveMinutes(maxInactiveMinutes);
 			storeManager.setPrettyPrint(debug); // if debugging, json will be pretty print formatted

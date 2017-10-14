@@ -10,6 +10,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,8 +41,10 @@ import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.managers.databases.external.neo4j.constants.MATCHERS;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryBuilderForDocs;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryBuilderForLinks;
+import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryBuilderForNotes;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryForDocs;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryForLinks;
+import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryForNotes;
 import ioc.liturgical.ws.managers.databases.external.neo4j.utils.DomainTopicMapBuilder;
 import ioc.liturgical.ws.managers.databases.external.neo4j.utils.Neo4jConnectionManager;
 import ioc.liturgical.ws.managers.databases.external.neo4j.utils.OntologyGenerator;
@@ -68,6 +72,7 @@ import ioc.liturgical.ws.models.ws.response.column.editor.KeyArraysCollection;
 import ioc.liturgical.ws.models.ws.response.column.editor.KeyArraysCollectionBuilder;
 import ioc.liturgical.ws.models.ws.response.column.editor.LibraryTopicKey;
 import ioc.liturgical.ws.models.ws.response.column.editor.LibraryTopicKeyValue;
+import net.ages.alwb.tasks.PdfGenerationTask;
 import net.ages.alwb.utils.core.datastores.json.exceptions.BadIdException;
 import net.ages.alwb.utils.core.datastores.json.exceptions.MissingSchemaIdException;
 import net.ages.alwb.utils.core.datastores.json.models.DropdownArray;
@@ -78,6 +83,7 @@ import net.ages.alwb.utils.core.file.AlwbFileUtils;
 import net.ages.alwb.utils.core.generics.MultiMapWithList;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
+import net.ages.alwb.utils.core.misc.AlwbUrl;
 import net.ages.alwb.utils.nlp.fetchers.Ox3kUtils;
 import net.ages.alwb.utils.nlp.fetchers.PerseusMorph;
 import net.ages.alwb.utils.nlp.models.GevLexicon;
@@ -122,6 +128,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  Pattern punctPattern = Pattern.compile("[˙·,.;!?(){}\\[\\]<>%]"); // punctuation 
 	  DomainTopicMapBuilder domainTopicMapbuilder = new DomainTopicMapBuilder();
 	  JsonObject dropdownItemsForSearchingText = new JsonObject();
+	  JsonArray noteTypesArray = new JsonArray();
+	  JsonObject noteTypesProperties = new JsonObject();
 	  JsonArray ontologyTypesArray = new JsonArray();
 	  JsonObject ontologyTypesProperties = new JsonObject();
 	  JsonArray relationshipTypesArray = new JsonArray();
@@ -174,6 +182,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  buildRelationshipDropdownMaps();
 		  buildBiblicalDropdowns();
 		  if (neo4jManager.isConnectionOK()) {
+			  buildNotesDropdownMaps();
 			  buildOntologyDropdownMaps();
 			  initializeOntology();
 			  if (! this.existsWordAnalyses("ἀβλαβεῖς")) {
@@ -240,6 +249,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  this.logQueriesWithNoMatches = logQueriesWithNoMatches;
 		  if (buildDomainMap) {
 			  buildDomainTopicMap();
+			  buildNotesDropdownMaps();
 			  buildOntologyDropdownMaps();
 			  buildBiblicalDropdowns();
 			  buildRelationshipDropdownMaps();
@@ -360,6 +370,11 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  tagOperatorsDropdown = getTagOperatorsArray();
 	  }
 
+	  public void buildNotesDropdownMaps() {
+		  noteTypesProperties = SCHEMA_CLASSES.notePropertyJson();
+		  noteTypesArray = SCHEMA_CLASSES.noteTypesJson();
+	  }
+
 	  public void buildOntologyDropdownMaps() {
 		  ontologyTypesProperties = SCHEMA_CLASSES.ontologyPropertyJson();
 		  ontologyTypesArray = SCHEMA_CLASSES.ontologyTypesJson();
@@ -441,7 +456,33 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
-	  private ResultJsonObjectArray setValueSchemas(ResultJsonObjectArray result) {
+		  /**
+		   * Adds a note that subclasses LTK and is a HAS_NOTE relationship.
+		   * 
+		   * 
+		   * @param requestor - id of user who is making the request
+		   * @param relationshipJson - must be subclass of LTK
+		   * @return
+		   */
+			public RequestStatus addNote(
+					String requestor
+					, String json
+					) {
+				RequestStatus result = new RequestStatus();
+				try {
+							result = this.addLTKVDbObjectAsNote(
+									requestor
+									, json
+									, RELATIONSHIP_TYPES.HAS_NOTE
+									);
+				} catch (Exception e) {
+					result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+					result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+				}
+				return result;
+			}
+
+			private ResultJsonObjectArray setValueSchemas(ResultJsonObjectArray result) {
 			List<JsonObject> jsonList = result.getResult();
 			result.setValueSchemas(internalManager.getSchemas(jsonList, null));
 			result.setResult(jsonList);
@@ -536,7 +577,46 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
-		
+		/**
+		 * Search the database for notes that match the supplied parameters.
+		 * At this time, only known to work for type NoteUser.
+		 * TODO: test for other note types when added.
+		 * @param requestor
+		 * @param type
+		 * @param query
+		 * @param property
+		 * @param matcher
+		 * @param tags
+		 * @param operator
+		 * @return
+		 */
+		public ResultJsonObjectArray searchNotes(
+				String requestor
+				, String type
+				, String query
+				, String property
+				, String matcher
+				, String tags // tags to match
+				, String operator // for tags, e.g. AND, OR
+				) {
+			ResultJsonObjectArray result = null;
+
+			result = getForQuery(
+					getCypherQueryForNotesSearch(
+							requestor
+							, type
+							, AlwbGeneralUtils.toNfc(query)
+							, property
+							, matcher
+							, tags 
+							, operator
+							)
+					, true
+					, true
+					);
+			return result;
+		}
+
 		public ResultJsonObjectArray searchOntology(
 				String type // to match
 				, String genericType // generic type to match
@@ -736,6 +816,80 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return q.toString();
 		}
 		
+		/**
+		 * Build Cypher query for searching notes.  Currently only known to work for NoteUser.
+		 * TODO: test for other types of notes when they are added.
+		 * @param requestor - used when the note type is NoteUser.  In such cases, the library is the user's personal domain.
+		 * @param type
+		 * @param query
+		 * @param property
+		 * @param matcher
+		 * @param tags
+		 * @param operator
+		 * @return
+		 */
+		private String getCypherQueryForNotesSearch(
+				String requestor
+				, String type
+				, String query
+				, String property
+				, String matcher
+				, String tags // tags to match
+				, String operator // for tags, e.g. AND, OR
+				) {
+			boolean prefixProps = false;
+			String theLabel = type;
+			String theProperty = property;
+			if (theProperty.startsWith("*")) {
+				theProperty = "value";
+			}
+			String theQuery = AlwbGeneralUtils.toNfc(query);
+			CypherQueryBuilderForNotes builder = null;
+			
+			if (type.equals(TOPICS.NOTE_USER.label)) {
+				builder = new CypherQueryBuilderForNotes(prefixProps)
+						.MATCH()
+						.LIBRARY(this.getUserDomain(requestor))
+						.LABEL(theLabel)
+						.WHERE(theProperty)
+						;
+			} else {
+				builder = new CypherQueryBuilderForNotes(prefixProps)
+						.MATCH()
+						.LABEL(theLabel)
+						.WHERE(theProperty)
+						;
+			}
+			
+			MATCHERS matcherEnum = MATCHERS.forLabel(matcher);
+			
+			switch (matcherEnum) {
+			case STARTS_WITH: {
+				builder.STARTS_WITH(theQuery);
+				break;
+			}
+			case ENDS_WITH: {
+				builder.ENDS_WITH(theQuery);
+				break;
+			}
+			case REG_EX: {
+				builder.MATCHES_PATTERN(theQuery);
+				break;
+			} 
+			default: {
+				builder.CONTAINS(theQuery);
+				break;
+			}
+			}
+			builder.TAGS(tags);
+			builder.TAG_OPERATOR(operator);
+			builder.RETURN("from.value as text, to.id as id, to.library as library, to.topic as topic, to.key as key, to.value as value, to.tags as tags");
+			builder.ORDER_BY("to.seq"); // 
+
+			CypherQueryForNotes q = builder.build();
+			return q.toString();
+		}
+
 		private String getCypherQueryForOntologySearch(
 				String type
 				, String genericType
@@ -998,6 +1152,68 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
+        /**
+		 * The topic of the json ID must be set to the 'from' aka 'start' node ID
+		 * of the relationship.
+         * @param requestor user ID of requestor
+         * @param json representation of the node
+         * @return
+         */
+		public RequestStatus addLTKVDbObjectAsNote(
+				String requestor
+				, String json // must be a subclass of LTKDb
+				, RELATIONSHIP_TYPES type
+				)  {
+			RequestStatus result = new RequestStatus();
+			LTK form = gson.fromJson(json, LTK.class);
+			if (internalManager.authorized(requestor, VERBS.POST, form.getLibrary())) {
+				String validation = SCHEMA_CLASSES.validate(json);
+				if (validation.length() == 0) {
+				try {
+						LTKDb record = 
+								 gson.fromJson(
+										json
+										, SCHEMA_CLASSES
+											.classForSchemaName(
+													form.get_valueSchemaId())
+											.ltkDb.getClass()
+							);
+						record.setSubClassProperties(json);
+						record.setActive(true);
+						record.setCreatedBy(requestor);
+						record.setModifiedBy(requestor);
+						record.setCreatedWhen(getTimestamp());
+						record.setModifiedWhen(record.getCreatedWhen());
+					    RequestStatus insertStatus = neo4jManager.insert(record);		
+					    result.setCode(insertStatus.getCode());
+					    result.setDeveloperMessage(insertStatus.getDeveloperMessage());
+					    result.setUserMessage(insertStatus.getUserMessage());
+					    this.createRelationship(
+					    		requestor
+					    		, record.getTopic()
+					    		, type
+					    		, record.getId()
+					    		);
+					} catch (Exception e) {
+						result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+						result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+					}
+				} else {
+					result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+					JsonObject message = stringToJson(validation);
+					if (message == null) {
+						result.setMessage(validation);
+					} else {
+						result.setMessage(message.get("message").getAsString());
+					}
+				}
+			} else {
+				result.setCode(HTTP_RESPONSE_CODES.UNAUTHORIZED.code);
+				result.setMessage(HTTP_RESPONSE_CODES.UNAUTHORIZED.message);
+			}
+			return result;
+		}
+
 		public ResultJsonObjectArray getRelationshipById(
 				String requestor
 				, String library
@@ -1254,7 +1470,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			}
 		}
 
-		private String getTimestamp() {
+		public String getTimestamp() {
 			return Instant.now().toString();
 		}
 
@@ -1311,6 +1527,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			}
 			return result;
 		}
+
 
 		/**
 		 * TODO: the query needs to be optimized by using the appropriate node type
@@ -1408,6 +1625,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				result.setQuery(q.toString());
 				result.setValueSchemas(internalManager.getSchemas(result.getResult(), null));
 			} catch (Exception e) {
+				e.printStackTrace();
 				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 				result.setStatusMessage(e.getMessage());
 			}
@@ -1429,6 +1647,29 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
+		/**
+		 * 
+		 * @param id starting part of ID to search for
+		 * @param topic - the TOPIC for this type of doc
+		 * @return
+		 */
+ 		public ResultJsonObjectArray getForIdStartsWith(String id, TOPICS topic) {
+			CypherQueryBuilderForDocs builder = new CypherQueryBuilderForDocs()
+					.MATCH()
+					.LABEL(topic.label)
+					.WHERE("id")
+					.STARTS_WITH(id)
+					;
+			builder.RETURN("id, value, seq");
+			builder.ORDER_BY("doc.seq");
+			CypherQueryForDocs q = builder.build();
+			ResultJsonObjectArray result = getForQuery(q.toString(), true, true);
+			return result;
+		}
+
+		public ResultJsonObjectArray getUsersNotes(String requestor) {
+			return getForIdStartsWith(this.internalManager.getUserDomain(requestor), TOPICS.NOTE_USER);
+		}
 
 		/**
 		 * Get the record for the specified ID
@@ -1630,6 +1871,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				return ref;
 		}
 
+		public String getUserDomain(String requestor) {
+			return this.internalManager.getUserDomain(requestor);
+		}
+		
 		public RequestStatus deleteForId(String requestor, String id) {
 			RequestStatus result = new RequestStatus();
 			IdManager idManager = new IdManager(id);
@@ -1646,6 +1891,45 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 		
+		/**
+		 * Deletes the note node for the specified ID and all relationships
+		 * between that node and others.
+		 * 
+		 * This is a dangerous method.  Be sure you know what you
+		 * are doing.
+		 * 
+		 * @param requestor
+		 * @param id
+		 * @return
+		 */
+		public RequestStatus deleteNoteAndRelationshipsForId(
+				String requestor
+				, String id
+				) {
+			RequestStatus result = new RequestStatus();
+			IdManager idManager = new IdManager(id, 1, 4);
+			if (internalManager.authorized(
+					requestor
+					, VERBS.DELETE
+					, idManager.getLibrary()
+					)) {
+				try {
+					result = neo4jManager.deleteNodeAndRelationshipsForId(id);
+				} catch (DbException e) {
+					ErrorUtils.report(logger, e);
+					result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+					result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+				} catch (Exception e) {
+					result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+					result.setMessage(e.getMessage());
+				}
+			} else {
+				result.setCode(HTTP_RESPONSE_CODES.UNAUTHORIZED.code);
+				result.setMessage(HTTP_RESPONSE_CODES.UNAUTHORIZED.message);
+			}
+			return result;
+		}
+
 		@Override
 		public RequestStatus deleteForId(String id) {
 			RequestStatus result = new RequestStatus();
@@ -1662,6 +1946,30 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 		
+		public ResultJsonObjectArray getNotesSearchDropdown() {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
+				JsonObject values = new JsonObject();
+				values.add("typeList", this.noteTypesArray);
+				values.add("typeProps", this.noteTypesProperties);
+				values.add("typeTags", getNotesTagsForAllTypes());
+				values.add("tagOperators", tagOperatorsDropdown);
+				JsonObject jsonDropdown = new JsonObject();
+				jsonDropdown.add("dropdown", values);
+
+				List<JsonObject> list = new ArrayList<JsonObject>();
+				list.add(jsonDropdown);
+
+				result.setResult(list);
+				result.setQuery("get dropdowns for notes search");
+
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+
 		public ResultJsonObjectArray getOntologySearchDropdown() {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
@@ -1830,21 +2138,6 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
-		public RequestStatus deleteRelationshipForId(String id) {
-			RequestStatus result = new RequestStatus();
-			try {
-		    	result = neo4jManager.deleteRelationshipWhereEqual(id);
-			} catch (DbException e) {
-				ErrorUtils.report(logger, e);
-				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-				result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
-			} catch (Exception e) {
-				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-				result.setMessage(e.getMessage());
-			}
-			return result;
-		}
-
 		/**
 		 * 
 		 * @param id of the relationship
@@ -1948,7 +2241,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
-		public JsonArray getOntologyTags(String type) {
+		public JsonArray getTags(String type) {
 			JsonArray result  = new JsonArray();
 			try {
 				String q = "match (n:"+ type + ") return distinct n.tags as " + type;
@@ -1978,6 +2271,35 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
+		public JsonArray getOntologyTags(String type) {
+			JsonArray result  = new JsonArray();
+			try {
+				String q = "match (n:"+ type + ") return distinct n.tags as " + type;
+				ResultJsonObjectArray query = neo4jManager.getForQuery(q);
+				if (query.getResultCount() > 0) {
+					TreeSet<String> labels  = new TreeSet<String>();
+					for (JsonObject obj : query.getResult()) {
+						if (obj.has(type)) {
+							JsonArray queryResult  = obj.get(type).getAsJsonArray();
+							// combine the labels into a unique list
+							for (JsonElement e : queryResult) {
+								if (! labels.contains(e.getAsString())) {
+									labels.add(e.getAsString());
+								}
+							}
+						}
+					}
+					// add the labels to a JsonArray of Option Entries.
+					for (String label : labels) {
+						DropdownItem entry = new DropdownItem(label);
+						result.add(entry.toJsonObject());
+					}
+				}
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+			return result;
+		}
 		/**
 		 * Get the unique set of labels currently in use for the specified relationship type
 		 * @param type name of the relationship
@@ -1986,7 +2308,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public JsonObject getRelationshipTagsForAllTypes() {
 			JsonObject result  = new JsonObject();
 			try {
-				for (RELATIONSHIP_TYPES t : RELATIONSHIP_TYPES.values()) {
+				for (RELATIONSHIP_TYPES t : RELATIONSHIP_TYPES.filterByTypeName("REFERS_TO")) {
 					JsonArray value = getRelationshipTags(t.typename, t.topic.label);
 					result.add(t.typename, value);
 				}
@@ -2006,11 +2328,31 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 							|| t == TOPICS.COMMENTS_ROOT 
 							|| t == TOPICS.LINGUISTICS_ROOT 
 							|| t == TOPICS.NOTES_ROOT 
+							|| t == TOPICS.NOTE_USER 
 							|| t == TOPICS.TABLES_ROOT
 							) {
 						// ignore
 					} else {
 						JsonArray value = getOntologyTags(t.label);
+						result.add(t.label, value);
+					}
+				}
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+			return result;
+			
+		}
+
+		public JsonObject getNotesTagsForAllTypes() {
+			JsonObject result  = new JsonObject();
+			try {
+				for (TOPICS t : TOPICS.values()) {
+					if (
+							t == TOPICS.NOTES_ROOT 
+							|| t == TOPICS.NOTE_USER 
+							) {
+						JsonArray value = getTags(t.label);
 						result.add(t.label, value);
 					}
 				}
@@ -2048,7 +2390,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				JsonArray any  = new JsonArray();
 				any.add(new DropdownItem("Any","*").toJsonObject());
 				result.add("*", any);
-				for (RELATIONSHIP_TYPES t : RELATIONSHIP_TYPES.values()) {
+				for (RELATIONSHIP_TYPES t : RELATIONSHIP_TYPES.filterByTypeName("REFERS_TO")) {
 					JsonArray value = getRelationshipLibrarysAsDropdownItems(
 							t.typename
 							, t.topic.label
@@ -2157,6 +2499,118 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
+		private  String getTitleForCover(
+				AlwbUrl url
+				, String library
+				, String fallbackLibrary
+				) {
+			return this.getTitle(url, "cover", library, fallbackLibrary);
+		}
+
+		private  String getTitleForHeader(
+				AlwbUrl url
+				, String library
+				, String fallbackLibrary
+				) {
+			return this.getTitle(url, "header", library, fallbackLibrary);
+		}
+
+		/**
+		 * Gets the title to use for the specified book or service code.
+		 * If not found, will attempt to get the title for en_us_dedes.
+		 * @param AlwbUrl instance using the url of the book or service
+		 * @param titleType "cover" or "header"
+		 * @param library
+		 * @param fallbackLibrary
+		 * @return
+		 */
+		private  String getTitle(
+				AlwbUrl url
+				, String titleType
+				, String library
+				, String fallbackLibrary
+				) {
+			String result = "";
+			String titleKey = url.getName()  + ".pdf." + titleType;
+			// first initialize the result to the value for en_us_dedes in case nothing else matches
+			IdManager idManager = new IdManager(
+					"en_us_dedes" 
+					+ Constants.ID_DELIMITER
+					+ "template.titles"
+					+ Constants.ID_DELIMITER
+					+ titleKey
+					);
+			ResultJsonObjectArray titleValue = this.getForId(
+					idManager.getId()
+					, "en_us_dedes"
+					);
+			if (titleValue.valueCount == 1) {
+				result = titleValue.getFirstObjectValueAsString();
+			}
+			// now see if we can get the title for the specified library
+			try {
+				idManager = new IdManager(
+						library 
+						+ Constants.ID_DELIMITER
+						+ "template.titles"
+						+ Constants.ID_DELIMITER
+						+ titleKey
+						);
+				titleValue = this.getForId(
+						idManager.getId()
+						, library
+						);
+				if (titleValue.valueCount == 1) {
+					result = titleValue.getFirstObjectValueAsString();
+				} else if (fallbackLibrary != null && fallbackLibrary.length() > 0){
+					// since we did not find a title for the specified library, try using the fallback
+					idManager.setLibrary(fallbackLibrary);
+					titleValue = this.getForId(
+							idManager.getId()
+							, library
+							);
+					if (titleValue.valueCount == 1) {
+						result = titleValue.getFirstObjectValueAsString();
+					}
+				}
+			} catch (Exception e) {
+				// ignore
+			}
+			return result;
+		}
+
+		/**
+		 * If the URL is for a service, there is a date for the service.
+		 * This method will return the date formatted for the locale of the library.
+		 * @param url
+		 * @param library
+		 * @return
+		 */
+		private  String getTitleDate(
+				AlwbUrl url
+				, String library
+				) {
+			String result = "";
+			if (url.isService()) {
+				IdManager idManager = new IdManager(
+						library 
+						+ Constants.ID_DELIMITER
+						+ "dummy"
+						+ Constants.ID_DELIMITER
+						+ "dummy"
+						);
+				String serviceDate = idManager.getLocaleDate(
+						url.getYear()
+						, url.getMonth()
+						, url.getDay()
+						);
+				if (serviceDate.length() > 0) {
+					result = serviceDate;
+				}
+			}
+			return result;
+		}
+
 		/**
 		 * Reads the specified AGEs URL and creates a meta representation. 
 		 * The initial values for the text are either the original AGES Greek (gr_gr_ages)
@@ -2184,6 +2638,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, String leftFallback
 				, String centerFallback
 				, String rightFallback
+				, String requestor // username
 				) {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
@@ -2198,48 +2653,71 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						, this.printPretty // print pretty
 						);
 				MetaTemplate template = ages.toReactTemplateMetaData();
-				int dbCallCount = 0;
-				// Build a new values map, with entries for left, center, and right
+				String title = template.getPdfFilename();
 				Map<String,String> values = template.getValues();
-				for ( Entry<String,String> entry: values.entrySet()) {
+				
+				// Get the title information
+				AlwbUrl urlUtils = new AlwbUrl(url);
+				template.setLeftTitle(this.getTitleForCover(urlUtils, leftLibrary, leftFallback));
+				template.setLeftHeaderTitle(this.getTitleForHeader(urlUtils, leftLibrary, leftFallback));
+				template.setLeftTitleDate(this.getTitleDate(urlUtils, leftLibrary));
+				if (centerLibrary != null && centerLibrary.length() > 0) {
+					template.setCenterTitle(this.getTitleForCover(urlUtils, centerLibrary, centerFallback));
+					template.setCenterHeaderTitle(this.getTitleForHeader(urlUtils, centerLibrary, centerFallback));
+					template.setCenterTitleDate(this.getTitleDate(urlUtils, centerLibrary));
+				}
+				if (rightLibrary != null && rightLibrary.length() > 0) {
+					template.setRightTitle(this.getTitleForCover(urlUtils, rightLibrary, rightFallback));
+					template.setRightHeaderTitle(this.getTitleForHeader(urlUtils, rightLibrary, rightFallback));
+					template.setRightTitleDate(this.getTitleDate(urlUtils, rightLibrary));
+				}
+				/**
+				 * Build a new values map, with entries for left, center, and right.
+				 * If the requested left, center, or right library is gr_gr_cog, or en_us_dedes
+				 * we do not need to add them. We already have them.
+				 */
+				for ( Entry<String,String> entry: template.getValues().entrySet()) {
+//					System.out.println("Left: " + leftLibrary + " center: " + centerLibrary + " right: " + rightLibrary);
+//					System.out.println(entry.getKey());
 					if (leftLibrary != null && entry.getKey().startsWith(leftLibrary)) {
 						if (
-								leftLibrary.length() == 0 
-								|| leftLibrary.startsWith("gr") 
+								leftLibrary.equals("gr_gr_cog")  
 								|| leftLibrary.equals("en_us_dedes")
 							) {
 							// ignore
 						} else {
-							dbCallCount++;
 							ResultJsonObjectArray dbValue = this.getForId(entry.getKey(), leftLibrary);
 							if (dbValue.valueCount == 1) {
 								values.put(entry.getKey(), dbValue.getFirstObjectValueAsString());
 							}
 						}
-					} else if (centerLibrary != null && entry.getKey().startsWith(centerLibrary)) {
+					} else if (
+							centerLibrary != null 
+							&& centerLibrary.length() != 0 
+							&& entry.getKey().startsWith(centerLibrary)
+							) {
 						if (
-								centerLibrary.length() == 0 
-								|| centerLibrary.startsWith("gr") 
+								centerLibrary.equals("gr_gr_cog")  
 								|| centerLibrary.equals("en_us_dedes")
 							) {
-							// ignore
+								// ignore
 						} else {
-							dbCallCount++;
-//							logger.info(entry.getKey());
 							ResultJsonObjectArray dbValue = this.getForId(entry.getKey(), centerLibrary);
 							if (dbValue.valueCount == 1) {
 								values.put(entry.getKey(), dbValue.getFirstObjectValueAsString());
 							}
 						}
-					} else if (rightLibrary != null && entry.getKey().startsWith(rightLibrary)) {
+					} else if (
+							rightLibrary != null 
+							&& rightLibrary.length() != 0 
+							&& entry.getKey().startsWith(rightLibrary)
+							) {
 						if (
-								rightLibrary.length() == 0 
-								|| rightLibrary.startsWith("gr") 
+								rightLibrary.equals("gr_gr_cog")  
 								|| rightLibrary.equals("en_us_dedes")
 							) {
-							// ignore
+								// ignore
 						} else {
-							dbCallCount++;
 							ResultJsonObjectArray dbValue = this.getForId(entry.getKey(), rightLibrary);
 							if (dbValue.valueCount == 1) {
 								values.put(entry.getKey(), dbValue.getFirstObjectValueAsString());
@@ -2247,13 +2725,23 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						}
 					}
 				}
-//				logger.info("getAgesService db calls = " + dbCallCount);
 				template.setValues(values);
+
+				// create a thread that will generate a PDF
+				ExecutorService executorService = Executors.newSingleThreadExecutor();
+				String pdfId = this.createId(requestor);
+				template.setPdfId(pdfId); // this gives the client an id for retrieving the pdf
+				executorService.execute(
+						new PdfGenerationTask(template, pdfId)
+//						new PdfGenerationTask(template, "/Users/mac002/git/ocmc-translation-projects/ioc-liturgical-docker/pdf/data/servicedata.tex")
+						);
+				executorService.shutdown();
+
+				// add the template to the result.
 				List<JsonObject> list = new ArrayList<JsonObject>();
-				list.add(template.toJsonObject());
 				result.setResult(list);
 				result.setQuery("get AGES dynamic template for " + url);
-				AlwbFileUtils.writeFile("/volumes/ssd2/template.json", template.toJsonString());
+				list.add(template.toJsonObject());
 			} catch (Exception e) {
 				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 				result.setStatusMessage(e.getMessage());
@@ -2262,6 +2750,15 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
+		/**
+		 * Creates an ID by concatenating the request (username)
+		 * and the current timestamp
+		 * @param requestor
+		 * @return
+		 */
+		public String createId(String requestor) {
+			return requestor + "-" + this.getTimestamp().replaceAll(":", ".");
+		}
 		/**
 		 * Reads a json string encoding the metadata for a liturgical book or service,
 		 * generates OSLO files from the metadata,
@@ -2336,7 +2833,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				 * */
 				if (translationLibrary.length() > 0) {
 					Map<String,String> values = template.getValues();
-					for ( Entry<String,String> entry: values.entrySet()) {
+					for ( Entry<String,String> entry: template.getValues().entrySet()) {
 						if (entry.getKey().startsWith(translationLibrary)) {
 							ResultJsonObjectArray dbValue = this.getForId(entry.getKey(), translationLibrary);
 							if (dbValue.valueCount == 1) {
@@ -2350,6 +2847,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				list.add(template.toJsonObject());
 				result.setResult(list);
 				result.setQuery("get AGES template metadata for " + url);
+				// TODO: remove for production
+				AlwbFileUtils.writeFile("/volumes/ssd2/templates/editor.json", template.toJsonString());
 			} catch (Exception e) {
 				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 				result.setStatusMessage(e.getMessage());
@@ -2509,8 +3008,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			try {
 				DropdownArray types = new DropdownArray();
 				types.add(new DropdownItem("Any","*"));
-				for (RELATIONSHIP_TYPES t : RELATIONSHIP_TYPES.values()) {
-					types.addSingleton(t.typename);
+				for (RELATIONSHIP_TYPES t : RELATIONSHIP_TYPES.filterByTypeName("REFERS_TO")) {
+						types.addSingleton(t.typename);
 				}
 				result = types.toJsonArray();
 			} catch (Exception e) {

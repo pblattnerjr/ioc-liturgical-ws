@@ -46,5 +46,6 @@ public class Constants {
 		public static final String UI_WIDGET_RADIO = "radio";
 		public static final String UI_WIDGET_SELECT = "select";
 		public static final String DEFAULT_BOLT_URL =  "bolt://neo4j:1234@localhost"; // "bolt://neo4j:neo4j@localhost:7687";
-		  public static final String DEFAULT_URL = "bolt://neo4j:1234@localhost";
+		public static final String DEFAULT_URL = "bolt://neo4j:1234@localhost";
+		public static final String PDF_FOLDER  = "/Users/mac002/git/ocmc-translation-projects/ioc-liturgical-docker/pdf/data";  
 }

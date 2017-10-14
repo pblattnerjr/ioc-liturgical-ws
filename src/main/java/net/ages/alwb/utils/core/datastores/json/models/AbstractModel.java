@@ -1,7 +1,5 @@
 package net.ages.alwb.utils.core.datastores.json.models;
 
-
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +20,10 @@ import com.google.gson.JsonParser;
 
 import ioc.liturgical.ws.annotations.UiWidget;
 import ioc.liturgical.ws.constants.Constants;
+import ioc.liturgical.ws.constants.NEW_FORM_CLASSES_DB_API;
 import ioc.liturgical.ws.models.SchemaException;
 import ioc.liturgical.ws.models.SchemaExceptionDescription;
+import ioc.liturgical.ws.models.ws.db.WsPaths;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.reinert.jjschema.Attributes;
@@ -118,6 +118,16 @@ public class AbstractModel {
 		return toJsonSchemaObject(this.getClass());
 	}
 
+	public WsPaths resolveEndpointPaths() {
+		WsPaths result = new WsPaths();
+		try {
+			result = NEW_FORM_CLASSES_DB_API.getEndpointPathsForAbstractModel(this.getClass());
+		} catch (Exception e) {
+			ErrorUtils.report(logger, e);
+		}
+		return result;
+	}
+	
 	public JsonObject toJsonSchemaObject(@SuppressWarnings("rawtypes") Class theClass) {
 		JsonSchemaFactory schemaFactory = new JsonSchemaV4Factory();
 		schemaFactory.setAutoPutDollarSchema(true);

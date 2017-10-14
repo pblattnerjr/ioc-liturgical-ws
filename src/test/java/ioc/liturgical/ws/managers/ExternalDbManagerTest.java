@@ -29,14 +29,14 @@ import ioc.liturgical.ws.models.db.docs.ontology.Animal;
 import ioc.liturgical.ws.models.db.docs.ontology.Being;
 import ioc.liturgical.ws.models.db.docs.ontology.Concept;
 import ioc.liturgical.ws.models.db.docs.ontology.Event;
+import ioc.liturgical.ws.models.db.docs.personal.UserNote;
 import ioc.liturgical.ws.models.db.forms.AnimalCreateForm;
-import ioc.liturgical.ws.models.db.forms.BeingCreateForm;
 import ioc.liturgical.ws.models.db.forms.ConceptCreateForm;
 import ioc.liturgical.ws.models.db.forms.EventCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
+import ioc.liturgical.ws.models.db.forms.UserNoteCreateForm;
 import ioc.liturgical.ws.models.db.links.LinkRefersToBiblicalText;
 import net.ages.alwb.utils.core.file.AlwbFileUtils;
-import net.ages.alwb.utils.core.id.managers.IdManager;
 import net.ages.alwb.utils.nlp.fetchers.PerseusMorph;
 
 public class ExternalDbManagerTest {
@@ -60,6 +60,7 @@ public class ExternalDbManagerTest {
 				, true // truncate tables (if you don't delete the old db)
 				, true // create test users
 				, TestUsers.WS_ADMIN.id // the username of the wsadmin
+				, pwd
 				);
 
 		externalManager = new ExternalDbManager(
@@ -152,7 +153,7 @@ public class ExternalDbManagerTest {
 	    	assertTrue(ref.getBib().equals(update));
 	    	
 	    	// delete
-	    	status = externalManager.deleteRelationshipForId(ref.getId());
+	    	status = externalManager.deleteForRelationshipId(TestUsers.WS_ADMIN.id, ref.getId());
 	    	assertTrue(status.getCode() == 200);
 	    }
 	
@@ -164,6 +165,84 @@ public class ExternalDbManagerTest {
 	    					RELATIONSHIP_TYPES.REFERS_TO_BIBLICAL_TEXT.typename
 	    					);
 			assertTrue(result.getResultCount() > 0 && result.getStatus().getCode() == 200);
+	    }
+
+	@Test
+	   public void testUserNoteCRUD() {
+
+		// TODO: create multiple notes and then test to read notes by domain.
+		
+		String user = "mcolburn";
+		String domain = externalManager.getUserDomain(user);
+		
+		// create
+		UserNoteCreateForm form = new UserNoteCreateForm(
+					domain
+					, "gr_gr_cog~actors~Priest"
+					, externalManager.getTimestamp()
+				   );
+		form.setValue("create a note");
+		   RequestStatus status = externalManager.addNote(
+	    			user
+	    			, form.toJsonString()
+	    			);
+	    	assertTrue(status.getCode() == 201); // created
+	    	
+	    	String firstNoteId = form.getId();
+	    	
+	    	// read
+	    	ResultJsonObjectArray result = externalManager.getForId(
+	    			form.getId()
+	    			);
+	    	UserNote ref = (UserNote) gson.fromJson(
+					result.getValues().get(0)
+					, UserNote.class
+			);	
+ 	       assertTrue(ref.getId().equals(form.getId()));
+	    	
+	    	// update
+	    	String update = "updated note";
+	    	ref.setValue(update);
+			externalManager.updateLTKDbObject(
+	    			user
+	    			, ref.toJsonString()
+					);
+	    	result = externalManager.getForId(
+	    			ref.getId()
+	    			);
+	    	ref = (UserNote) gson.fromJson(
+					result.getValues().get(0)
+					, UserNote.class
+			);	
+	    	assertTrue(ref.getValue().equals(update));
+	    	
+			// create a second instance
+			form = new UserNoteCreateForm(
+						domain
+						, "gr_gr_cog~actors~Priest"
+						, externalManager.getTimestamp()
+					   );
+			form.setValue("create note number 2");
+			   status = externalManager.addNote(
+		    			user
+		    			, form.toJsonString()
+		    			);
+		    	assertTrue(status.getCode() == 201); // created
+		    	
+		    	String secondNoteId = form.getId();
+
+		    	// get all notes for the user
+		    	result = externalManager.getUsersNotes(user);
+		    	assertTrue(result.valueCount == 2);
+
+		    	// delete first note
+	    	status = externalManager.deleteNoteAndRelationshipsForId(user, firstNoteId);
+	    	assertTrue(status.getCode() == 200);
+
+	    	// delete second note
+    	status = externalManager.deleteNoteAndRelationshipsForId(user, secondNoteId);
+    	assertTrue(status.getCode() == 200);
+
 	    }
 
 	@Test

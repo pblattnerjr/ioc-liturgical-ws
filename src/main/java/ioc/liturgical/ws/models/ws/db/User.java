@@ -13,6 +13,7 @@ import com.google.gson.annotations.Expose;
 import net.ages.alwb.utils.core.auth.PasswordHasher;
 import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import net.ages.alwb.utils.core.id.managers.IdManager;
 
 public class User extends AbstractModel {
 	private static final Logger logger = LoggerFactory.getLogger(User.class);
@@ -159,5 +160,13 @@ public class User extends AbstractModel {
 		this.domain = domain;
 	}
 
+	public void setDomain(String language, String country, String username) {
+		try {
+			IdManager idManager = new IdManager(language, country, username);
+			this.domain = idManager.getId();
+		} catch (Exception e) {
+			ErrorUtils.report(logger, e);
+		}
+	}
 		
 }

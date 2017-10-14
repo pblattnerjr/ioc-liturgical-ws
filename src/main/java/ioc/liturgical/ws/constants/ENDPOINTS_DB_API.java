@@ -80,6 +80,12 @@ public enum ENDPOINTS_DB_API {
 			, "domain"
 			,"Endpoint for dropdown values for domains."
 			)
+	, DROPDOWNS_NOTES(
+			"notes"
+			, ENDPOINT_TYPES.DROPDOWN
+			, "notes"
+			,"Endpoint for dropdown values to search notes."
+			)
 	, DROPDOWNS_ONTOLOGY(
 			"ontology"
 			, ENDPOINT_TYPES.DROPDOWN
@@ -211,6 +217,12 @@ public enum ENDPOINTS_DB_API {
 			, ENDPOINT_TYPES.NODE
 			,"Forms for creating new docs."
 			, ""
+			)
+	, NOTES(
+			"notes"
+			, ENDPOINT_TYPES.NODE
+			, "notes"
+			,"Endpoint for notes about texts"
 			)
 	, OBJECTS(
 			"objects"

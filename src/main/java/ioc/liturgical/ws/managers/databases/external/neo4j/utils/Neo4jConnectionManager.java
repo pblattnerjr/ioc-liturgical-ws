@@ -623,7 +623,12 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		return sb.toString();
 	}
 
-
+	/**
+	 * Delete a relationship where the relationship itself has an ID
+	 * @param id of relationship
+	 * @return
+	 * @throws DbException
+	 */
 	public RequestStatus deleteRelationshipWhereEqual(String id) throws DbException {
 		RequestStatus result = new RequestStatus();
 		int count = 0;
@@ -650,6 +655,40 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		return result;
 	}
 	
+	/**
+	 * Deletes the node matching the specified ID and all its relationships.
+	 * @param id
+	 * @return
+	 * @throws DbException
+	 */
+	public RequestStatus deleteNodeAndRelationshipsForId(
+			String id
+			) throws DbException {
+		RequestStatus result = new RequestStatus();
+		int count = 0;
+		String query = 
+				"match ()-[r]->(t) where t.id = \"" 
+				+ id 
+		        + "\" delete t, r";
+		try (org.neo4j.driver.v1.Session session = driver.session()) {
+			StatementResult neoResult = session.run(query);
+			count = neoResult.consume().counters().relationshipsDeleted();
+			if (count > 0) {
+		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": deleted " + id);
+			} else {
+		    	result.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message + " " + id);
+			}
+		} catch (Exception e){
+			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+			result.setDeveloperMessage(e.getMessage());
+		}
+		recordQuery(query, result.getCode(), count);
+		return result;
+	}
+
 	public RequestStatus processConstraintQuery(String query) {
 		RequestStatus result = new RequestStatus();
 		try (org.neo4j.driver.v1.Session session = driver.session()) {

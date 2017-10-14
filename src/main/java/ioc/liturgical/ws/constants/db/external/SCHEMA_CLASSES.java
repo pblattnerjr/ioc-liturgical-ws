@@ -27,6 +27,7 @@ import ioc.liturgical.ws.models.db.docs.ontology.Plant;
 import ioc.liturgical.ws.models.db.docs.ontology.Role;
 import ioc.liturgical.ws.models.db.docs.ontology.TextBiblical;
 import ioc.liturgical.ws.models.db.docs.ontology.TextLiturgical;
+import ioc.liturgical.ws.models.db.docs.personal.UserNote;
 import ioc.liturgical.ws.models.db.docs.tables.ReactBootstrapTableData;
 import ioc.liturgical.ws.models.db.forms.AnimalCreateForm;
 import ioc.liturgical.ws.models.db.forms.BeingCreateForm;
@@ -57,6 +58,7 @@ import ioc.liturgical.ws.models.db.forms.TextBiblicalSourceCreateForm;
 import ioc.liturgical.ws.models.db.forms.TextBiblicalTranslationCreateForm;
 import ioc.liturgical.ws.models.db.forms.TextLiturgicalSourceCreateForm;
 import ioc.liturgical.ws.models.db.forms.TextLiturgicalTranslationCreateForm;
+import ioc.liturgical.ws.models.db.forms.UserNoteCreateForm;
 import ioc.liturgical.ws.models.db.links.LinkRefersToAnimal;
 import ioc.liturgical.ws.models.db.links.LinkRefersToBeing;
 import ioc.liturgical.ws.models.db.links.LinkRefersToBiblicalText;
@@ -72,6 +74,7 @@ import ioc.liturgical.ws.models.db.links.LinkRefersToPlant;
 import ioc.liturgical.ws.models.db.links.LinkRefersToRole;
 import ioc.liturgical.ws.models.db.supers.LTK;
 import ioc.liturgical.ws.models.db.supers.LTKDb;
+import ioc.liturgical.ws.models.db.supers.LTKDbNote;
 import ioc.liturgical.ws.models.db.supers.LTKDbOntologyEntry;
 import ioc.liturgical.ws.models.db.supers.LTKLink;
 import net.ages.alwb.utils.core.datastores.json.models.DropdownItem;
@@ -174,6 +177,10 @@ public enum SCHEMA_CLASSES {
 	, MYSTERY(
 			new MysteryCreateForm(" ")
 			, new Mystery(" ")
+			)
+	, NOTE_USER(
+			new UserNoteCreateForm(" "," ","")
+			, new UserNote(" "," ","")
 			)
 	, OBJECT(
 			new ObjectCreateForm(" ")
@@ -400,6 +407,42 @@ public enum SCHEMA_CLASSES {
 						entry.getTopic()
 						, ModelHelpers.getPropertiesAsDropdownItems(entry)
 				);
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Creates a Json Object with keys that are the typename and
+	 * values that are a JsonArray of the property names for the
+	 * schema assocated with that typename.
+	 * @return
+	 */
+	public static JsonObject notePropertyJson() {
+		JsonObject result = new JsonObject();
+		JsonArray anyProps = new JsonArray();
+		anyProps.add(new DropdownItem("Any","*").toJsonObject());
+		anyProps.add(new DropdownItem("id","id").toJsonObject());
+		result.add("*", anyProps);
+		for (SCHEMA_CLASSES s : SCHEMA_CLASSES.values()) {
+			if (s.ltkDb instanceof ioc.liturgical.ws.models.db.supers.LTKDbNote) {
+				LTKDbNote entry = (LTKDbNote) s.ltkDb;
+				result.add(
+						entry.getOntologyTopic().label
+						, ModelHelpers.getPropertiesAsDropdownItems(entry)
+				);
+			}
+		}
+		return result;
+	}
+
+	public static JsonArray noteTypesJson() {
+		JsonArray result = new JsonArray();
+		result.add(new DropdownItem("Any","*").toJsonObject());
+		for (SCHEMA_CLASSES s : SCHEMA_CLASSES.values()) {
+			if (s.ltkDb instanceof ioc.liturgical.ws.models.db.supers.LTKDbNote) {
+				LTKDbNote entry = (LTKDbNote) s.ltkDb;
+				result.add(new DropdownItem(entry.getOntologyTopic().label).toJsonObject());
 			}
 		}
 		return result;

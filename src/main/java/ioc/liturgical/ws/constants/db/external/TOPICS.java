@@ -32,8 +32,13 @@ public enum TOPICS {
 			)
 	, NOTES_ROOT(
 			"NoteRoot"
-			, "The root node for personal notes made by a user."
+			, "The root node for notes on a text."
 			, TOPICS.ROOT
+			)
+	, NOTE_USER(
+			"NoteUser"
+			, "The root node for personal notes made by a user."
+			, TOPICS.NOTES_ROOT
 			)
 	, ONTOLOGY_ROOT("OntologyRoot", "The root node of the text ontology.", ROOT)
 	, TABLES_ROOT("TablesRoot", "The root node of the Tables.", ROOT)
@@ -326,5 +331,22 @@ public enum TOPICS {
 		}
 		return result;
 	}
+	
+	/**
+	 * Returns a list of TOPICS whose hyponymn matches the supplied parameter.
+	 * For example, filterByTopicHyponymn(TOPICS.
+	 * @param hyponymn
+	 * @return
+	 */
+	public static List<TOPICS> filterByTopicHyponymn(TOPICS hyponymn) {
+		List<TOPICS> result = new ArrayList<TOPICS>();
+		for (TOPICS t : TOPICS.values()) {
+			if (t.hyponym.equals(hyponymn)) {
+				result.add(t);
+			}
+		}
+		return result;
+	}
+
 
 }

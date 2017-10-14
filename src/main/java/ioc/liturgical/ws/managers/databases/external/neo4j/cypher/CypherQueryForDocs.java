@@ -5,6 +5,17 @@ import org.slf4j.LoggerFactory;
 
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 
+/**
+ * Provides a means to build a query for searching docs.
+ * There are three types of query builders:
+ * docs - a query that only matches a node
+ * notes - a query that matches two nodes and the relationship between them
+ * links - a query that matches three nodes and relationships between them.  
+ *             A link is a node that holds information about the relationship between
+ *             two other nodes.  A link uses the REFERS_TO relationship type.
+ * @author mac002
+ *
+ */
 public class CypherQueryForDocs {
 	private static final Logger logger = LoggerFactory.getLogger(CypherQueryForDocs.class);
 	private String MATCH = "";
@@ -22,6 +33,7 @@ public class CypherQueryForDocs {
 	private String MATCHES_PATTERN = "";
 	private String TAGS = "";
 	private String TAG_OPERATOR = "";
+	private String LIBRARY = "";
 	private String TOPIC = "";
 	private String RETURN = "";
 	private String ORDER_BY = "";
@@ -43,6 +55,7 @@ public class CypherQueryForDocs {
 			, String MATCHES_PATTERN
 			, String TAGS
 			, String TAG_OPERATOR
+			, String LIBRARY
 			, String TOPIC
 			, String RETURN
 			, String ORDER_BY
@@ -67,6 +80,7 @@ public class CypherQueryForDocs {
 		this.TAG_OPERATOR = TAG_OPERATOR;
 		this.TAGS = TAGS;
 		this.TOPIC = TOPIC;
+		this.LIBRARY = LIBRARY;
 	};
 	
 
@@ -111,6 +125,15 @@ public class CypherQueryForDocs {
 				whereClause.append(" WHERE ");
 			}
 			whereClause.append("doc." + WHERE + " <= '" + LESS_THAN_OR_EQUAL + "' ");
+		}
+
+		if (LIBRARY.length() > 0) {
+			if (whereClause.length() > 0) {
+				whereClause.append(" AND ");
+			} else {
+				whereClause.append(" WHERE ");
+			}
+			whereClause.append("doc.id starts with \"" + LIBRARY + "\"");
 		}
 
 		if (TOPIC.length() > 0) {
@@ -390,6 +413,16 @@ public class CypherQueryForDocs {
 
 	public void setPrefixProperties(boolean prefixProperties) {
 		this.prefixProperties = prefixProperties;
+	}
+
+
+	public String getLIBRARY() {
+		return LIBRARY;
+	}
+
+
+	public void setLIBRARY(String lIBRARY) {
+		LIBRARY = lIBRARY;
 	}
 
 

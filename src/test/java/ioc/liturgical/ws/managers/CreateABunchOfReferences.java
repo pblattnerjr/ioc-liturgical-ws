@@ -36,6 +36,7 @@ public class CreateABunchOfReferences {
 				, true // truncate tables (if you don't delete the old db)
 				, true // create test users
 				, TestUsers.WS_ADMIN.id // the username of the wsadmin
+				, pwd
 				);
 
 		externalManager = new ExternalDbManager(

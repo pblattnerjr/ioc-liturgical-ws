@@ -1,5 +1,8 @@
 package ioc.liturgical.ws.constants;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ioc.liturgical.ws.constants.db.external.TOPICS;
 
 /**
@@ -77,6 +80,11 @@ public enum RELATIONSHIP_TYPES {
 			"WORD_ANALYSIS"
 			, "reference to a grammatical analysis of a word."
 			, TOPICS.WORD_GRAMMAR
+	 )
+	, HAS_NOTE(
+			"HAS_NOTE"
+			, "note made about a node"
+			, TOPICS.NOTES_ROOT
 	 )
 	, EXAMPLE(
 			"EXAMPLE"
@@ -232,6 +240,59 @@ public enum RELATIONSHIP_TYPES {
 		this.typename = typename;
 		this.description = description;
 		this.topic = topic;
+	}
+	
+	/**
+	 * Get RELATIONSHIP_TYPES values that are Links, i.e. "REFERS_TO"
+	 * @return
+	 */
+	public static List<RELATIONSHIP_TYPES> Links() {
+		return RELATIONSHIP_TYPES.filterByTypeName("REFERS_TO");
+	}
+
+	/**
+	 * Returns a filtered list of RELATIONSHIP_TYPES whose typename starts with the supplied parameter
+	 * @param startsWith
+	 * @return
+	 */
+	public static List<RELATIONSHIP_TYPES> filterByTypeName(String startsWith) {
+		List<RELATIONSHIP_TYPES> result = new ArrayList<RELATIONSHIP_TYPES>();
+		for (RELATIONSHIP_TYPES t : RELATIONSHIP_TYPES.values()) {
+			if (t.typename.startsWith(startsWith)) {
+				result.add(t);
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Returns a filtered list of RELATIONSHIP_TYPES whose topic matches the supplied parameter
+	 * @param topic
+	 * @return
+	 */
+	public static List<RELATIONSHIP_TYPES> filterByTopic(TOPICS topic) {
+		List<RELATIONSHIP_TYPES> result = new ArrayList<RELATIONSHIP_TYPES>();
+		for (RELATIONSHIP_TYPES t : RELATIONSHIP_TYPES.values()) {
+			if (t.topic.equals(topic)) {
+				result.add(t);
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Returns a filtered list of RELATIONSHIP_TYPES whose topic hyponymn matches the supplied parameter
+	 * @param hyponymn
+	 * @return
+	 */
+	public static List<RELATIONSHIP_TYPES> filterByTopicHyponymn(TOPICS hyponymn) {
+		List<RELATIONSHIP_TYPES> result = new ArrayList<RELATIONSHIP_TYPES>();
+		for (RELATIONSHIP_TYPES t : RELATIONSHIP_TYPES.values()) {
+			if (t.topic.hyponym.equals(hyponymn)) {
+				result.add(t);
+			}
+		}
+		return result;
 	}
 
 }

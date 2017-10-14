@@ -31,6 +31,7 @@ public class InternalDbManagerTest extends TestCase {
 				, true // truncate tables (if you don't delete the old db)
 				, true // create test users
 				, wsAdmin // the username of the wsadmin
+				, password
 				);
 		
 		for (int i=1; i < 5; i++) {

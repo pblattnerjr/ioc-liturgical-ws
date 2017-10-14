@@ -4,15 +4,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.TreeMap;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 
+import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 import ioc.liturgical.ws.models.RequestStatus;
 import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
 import net.ages.alwb.utils.core.datastores.json.models.DropdownItem;
+import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 
 /**
  * Holds the results for a request for the forms to create new instances of things.
@@ -20,6 +26,7 @@ import net.ages.alwb.utils.core.datastores.json.models.DropdownItem;
  *
  */
 public class ResultNewForms extends AbstractModel {
+	private static final Logger logger = LoggerFactory.getLogger(ResultNewForms.class);
 	@Expose public String query;
 	@Expose public RequestStatus status;
 	@Expose public Long valueCount = Long.parseLong("0");
@@ -122,10 +129,14 @@ public class ResultNewForms extends AbstractModel {
 		Map<String,DropdownItem> dropdownMap = new TreeMap<String,DropdownItem>();
 		try {
 			for (Entry<String, JsonObject> entry  : valueSchemas.entrySet()) {
-				String value = entry.getKey();
-				String label = entry.getValue().get("schema").getAsJsonObject().get("title").getAsString();
-				DropdownItem d = new DropdownItem(label,value);
-				dropdownMap.put(label, d);
+				try {
+					String value = entry.getKey();
+					String label = entry.getValue().get("schema").getAsJsonObject().get("title").getAsString();
+					DropdownItem d = new DropdownItem(label,value);
+					dropdownMap.put(label, d);
+				} catch (Exception entryException) {
+					ErrorUtils.report(logger, entryException, entry.getKey() + " bad schema");
+				}
 			}
 			for (DropdownItem d : dropdownMap.values()) {
 				formsDropdown.add(d.toJsonObject());

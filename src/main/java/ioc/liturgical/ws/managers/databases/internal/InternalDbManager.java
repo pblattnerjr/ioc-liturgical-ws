@@ -26,8 +26,6 @@ import com.google.gson.JsonParser;
 import ioc.liturgical.ws.managers.interfaces.HighLevelDataStoreInterface;
 import ioc.liturgical.ws.models.RequestStatus;
 import ioc.liturgical.ws.models.ResultJsonObjectArray;
-import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
-import ioc.liturgical.ws.models.db.links.LinkRefersToBiblicalText;
 import ioc.liturgical.ws.models.ws.db.Domain;
 import ioc.liturgical.ws.models.ws.db.Label;
 import ioc.liturgical.ws.models.ws.db.User;
@@ -43,9 +41,7 @@ import ioc.liturgical.ws.models.ws.forms.LabelCreateForm;
 import ioc.liturgical.ws.models.ws.forms.SelectionWidgetSchema;
 import ioc.liturgical.ws.models.ws.forms.UserCreateForm;
 import ioc.liturgical.ws.models.ws.forms.UserPasswordChangeForm;
-import ioc.liturgical.ws.models.ws.forms.UserPasswordForm;
 import ioc.liturgical.ws.models.ws.response.DomainWorkflowInfo;
-import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.ENDPOINTS_ADMIN_API;
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.constants.DOMAIN_TYPES;
@@ -84,6 +80,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	private boolean suppressAuth = false; // for debugging purposes, if true, causes authorized() to always return true
 	private boolean prettyPrint = true;
 	private String wsAdmin = "wsadmin";
+	private String wsAdminPwd = "";
 	private boolean initialized = true;
 	private Gson gson = new Gson();
 	private String storename = null;
@@ -103,13 +100,15 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	
 	public H2ConnectionManager manager;
 	
-	public InternalDbManager(
+
+		public InternalDbManager(
 			String storename
 			, String tablename
 			, boolean deleteOldDb
 			, boolean deleteOldTableRows
 			, boolean createTestUsers
 			, String wsAdmin
+			, String wsAdminPwd
 			) {
  
 		this.storename = storename;
@@ -118,6 +117,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		this.deleteOldTableRows = deleteOldTableRows;
 		this.createTestUsers = createTestUsers;
 		this.wsAdmin = wsAdmin;
+		this.wsAdminPwd = wsAdminPwd;
 		
 		try {
 			manager = 
@@ -215,9 +215,20 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		}
 		Map<String,JsonObject> result = new TreeMap<String,JsonObject>();
 		for (JsonObject json : list) {
+			String id = null;
 			if (json.has(Constants.VALUE_SCHEMA_ID)) {
+				id = json.get(Constants.VALUE_SCHEMA_ID).getAsString();
+			} else if (json.has("doc." + Constants.VALUE_SCHEMA_ID)) {
+				id = json.get("doc." + Constants.VALUE_SCHEMA_ID).getAsString();
+			} else if (json.has("link")) {
+				if (json.get("link").getAsJsonObject().has("properties")) {
+					if (json.get("link").getAsJsonObject().get("properties").getAsJsonObject().has(Constants.VALUE_SCHEMA_ID)) {
+						id = json.get("link").getAsJsonObject().get("properties").getAsJsonObject().get(Constants.VALUE_SCHEMA_ID).getAsJsonObject().get("val").getAsString();
+					}
+				}
+			}
+			if (id != null) {
 				try {
-					String id = json.get(Constants.VALUE_SCHEMA_ID).getAsString();
 					JsonObject schema = getSchema(id);
 					if (schema != null && ! result.containsKey(id)) {
 						if (id.startsWith(AuthorizationCreateForm.class.getSimpleName())) {
@@ -816,7 +827,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		UserCreateForm user = new UserCreateForm();
 		user.setFirstname(firstname);
 		user.setLastname(lastname);
-		user.setPassword(ServiceProvider.ws_pwd);
+		user.setPassword(this.wsAdminPwd);
 		user.setPasswordReenter(user.getPassword());
 		user.setUsername(username);
 		user.setLanguageCode("en");
@@ -847,7 +858,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			user.setFirstname("IOC Liturgical");
 			user.setLastname("Web Services Admin");
 			user.setEmail("admin@ioc-liturgical-db.org");
-			user.setPassword(ServiceProvider.ws_pwd);
+			user.setPassword(this.wsAdminPwd);
 			user.setEmailReenter(user.getEmail());
 			user.setPasswordReenter(user.getPassword());
 			user.setUsername(wsAdmin);
@@ -1018,7 +1029,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 				user.setLastname("Pentiuc");
 				user.setTitle("Rev. Dr.");
 				user.setEmail("epentiuc@hchc.edu");
-				user.setPassword(ServiceProvider.ws_pwd);
+				user.setPassword(this.wsAdminPwd);
 				user.setEmailReenter(user.getEmail());
 				user.setPasswordReenter(user.getPassword());
 				user.setUsername(username);
@@ -1038,7 +1049,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 				user.setLastname("Dedes");
 				user.setTitle("Fr.");
 				user.setEmail("seraphimdedes@gmail.com");
-				user.setPassword(ServiceProvider.ws_pwd);
+				user.setPassword(this.wsAdminPwd);
 				user.setEmailReenter(user.getEmail());
 				user.setPasswordReenter(user.getPassword());
 				user.setUsername(username);
@@ -1058,7 +1069,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 				user.setLastname("Colburn");
 				user.setTitle("Dr.");
 				user.setEmail("m.colburn@ocmc.org");
-				user.setPassword(ServiceProvider.ws_pwd);
+				user.setPassword(this.wsAdminPwd);
 				user.setEmailReenter(user.getEmail());
 				user.setPasswordReenter(user.getPassword());
 				user.setUsername(username);
@@ -2150,7 +2161,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 
 	public String getUserDomain(String username) {
 		try {
-			return getUser(username).getDomain();
+			return getUserContact(username).getDomain();
 		} catch (Exception e) {
 			return null;
 		}
@@ -2360,7 +2371,10 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		    	case GET: {
 					if (isLibAuthor(library, username) 
 							|| isLibReader(library, username)
+							|| library.equals("docs")
 							|| library.equals("login")
+							|| library.equals("links")
+							|| library.equals("nlp")
 							) {
 						isAuthorized = true;
 					}

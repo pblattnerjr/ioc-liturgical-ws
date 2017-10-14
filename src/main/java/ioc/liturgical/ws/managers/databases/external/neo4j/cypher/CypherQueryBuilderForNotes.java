@@ -1,7 +1,7 @@
 package ioc.liturgical.ws.managers.databases.external.neo4j.cypher;
 
 /**
- *  Provides a means to build a query for searching links.
+ *  Provides a means to build a query for searching notes.
  * There are three types of query builders:
  * docs - a query that only matches a node
  * notes - a query that matches two nodes and the relationship between them
@@ -13,7 +13,7 @@ package ioc.liturgical.ws.managers.databases.external.neo4j.cypher;
  *
  */
 
-public class CypherQueryBuilderForLinks {
+public class CypherQueryBuilderForNotes {
 	private String MATCH = "";
 	private String TYPE = "";
 	private String EXCLUDE_TYPE;
@@ -28,19 +28,20 @@ public class CypherQueryBuilderForLinks {
 	private String TAG_OPERATOR = "or";
 	private String RETURN = "";
 	private String ORDER_BY = "";
+	private String LABEL = "";
     private boolean prefixProperties = true;
     
-	public CypherQueryBuilderForLinks(){};
+	public CypherQueryBuilderForNotes(){};
 	
-	public CypherQueryBuilderForLinks(boolean prefixProperties) { 
+	public CypherQueryBuilderForNotes(boolean prefixProperties) { 
 		this.prefixProperties = prefixProperties;
 	}
 
-	public CypherQueryBuilderForLinks MATCH() {
+	public CypherQueryBuilderForNotes MATCH() {
 		return this;
 	}
 	
-    public CypherQueryBuilderForLinks TYPE(String TYPE) {
+    public CypherQueryBuilderForNotes TYPE(String TYPE) {
     	if (TYPE.startsWith("*") || TYPE.toLowerCase().startsWith("all") || TYPE.length() == 0) {
     		// ignore
     	} else {
@@ -49,23 +50,40 @@ public class CypherQueryBuilderForLinks {
         return this;
     }
     
-    public CypherQueryBuilderForLinks EXCLUDE_TYPE(String TYPE) {
+    public CypherQueryBuilderForNotes EXCLUDE_TYPE(String TYPE) {
     	if (TYPE.length() > 0) {
           this.EXCLUDE_TYPE = TYPE;
     	}
         return this;
     }
 
-    public CypherQueryBuilderForLinks LIBRARY(String LIBRARY) {
+
+    public CypherQueryBuilderForNotes LABEL(String LABEL) {
+    	if (LABEL.startsWith("*") || LABEL.toLowerCase().startsWith("all") || LABEL.length() == 0) {
+    		// ignore
+    	} else {
+    		String[] parts = LABEL.split("\\.");
+    		for (String part : parts) {
+            	if (this.LABEL.length() > 0) {
+                    this.LABEL = this.LABEL + ":" + part;
+            	} else {
+                    this.LABEL = part;
+            	}
+    		}
+    	}
+        return this;
+    }
+
+    public CypherQueryBuilderForNotes LIBRARY(String LIBRARY) {
     	if (LIBRARY.startsWith("*") || LIBRARY.toLowerCase().startsWith("all") || LIBRARY.length() == 0) {
     		// ignore
     	} else {
-          this.LIBRARY = " link.library = \'" + LIBRARY + "\'";
+          this.LIBRARY = " to.library = \'" + LIBRARY + "\'";
     	}
         return this;
     }
     
-    public CypherQueryBuilderForLinks TAGS(String TAGS) {
+    public CypherQueryBuilderForNotes TAGS(String TAGS) {
     	if (TAGS.startsWith("*") || TAGS.toLowerCase().startsWith("all") || TAGS.length() == 0) {
     		// ignore
     	} else {
@@ -74,12 +92,12 @@ public class CypherQueryBuilderForLinks {
         return this;
     }
 
-    public CypherQueryBuilderForLinks TAG_OPERATOR(String operator) {
+    public CypherQueryBuilderForNotes TAG_OPERATOR(String operator) {
     	this.TAG_OPERATOR = operator;
         return this;
     }
 
-    public CypherQueryBuilderForLinks WHERE(String WHERE) {
+    public CypherQueryBuilderForNotes WHERE(String WHERE) {
     	if (WHERE.startsWith("*") || WHERE.toLowerCase().startsWith("all") || WHERE.length() == 0) {
     		// ignore
     	} else {
@@ -88,7 +106,7 @@ public class CypherQueryBuilderForLinks {
         return this;
     }
 
-    public CypherQueryBuilderForLinks CONTAINS(String CONTAINS) {
+    public CypherQueryBuilderForNotes CONTAINS(String CONTAINS) {
     	if (CONTAINS.startsWith("*") || CONTAINS.toLowerCase().startsWith("all") || CONTAINS.length() == 0) {
     		// ignore
     	} else {
@@ -97,12 +115,12 @@ public class CypherQueryBuilderForLinks {
         return this;
     }
 
-    public CypherQueryBuilderForLinks STARTS_WITH(String STARTS_WITH) {
+    public CypherQueryBuilderForNotes STARTS_WITH(String STARTS_WITH) {
         this.STARTS_WITH = STARTS_WITH;
         return this;
     }
 
-    public CypherQueryBuilderForLinks EQUALS(String EQUALS) {
+    public CypherQueryBuilderForNotes EQUALS(String EQUALS) {
     	if (EQUALS.startsWith("*") || EQUALS.toLowerCase().startsWith("all") || EQUALS.length() == 0) {
     		// ignore
     	} else {
@@ -111,7 +129,7 @@ public class CypherQueryBuilderForLinks {
         return this;
     }
 
-    public CypherQueryBuilderForLinks ENDS_WITH(String ENDS_WITH) {
+    public CypherQueryBuilderForNotes ENDS_WITH(String ENDS_WITH) {
     	if (ENDS_WITH.startsWith("*") || ENDS_WITH.toLowerCase().startsWith("all") || ENDS_WITH.length() == 0) {
     		// ignore
     	} else {
@@ -120,27 +138,28 @@ public class CypherQueryBuilderForLinks {
         return this;
     }
 
-    public CypherQueryBuilderForLinks MATCHES_PATTERN(String MATCHES_PATTERN) {
+    public CypherQueryBuilderForNotes MATCHES_PATTERN(String MATCHES_PATTERN) {
         this.MATCHES_PATTERN = MATCHES_PATTERN;
         return this;
     }
 
-    public CypherQueryBuilderForLinks RETURN(String RETURN) {
+    public CypherQueryBuilderForNotes RETURN(String RETURN) {
         this.RETURN = RETURN;
         return this;
     }
     
-    public CypherQueryBuilderForLinks ORDER_BY(String ORDER_BY) {
+    public CypherQueryBuilderForNotes ORDER_BY(String ORDER_BY) {
         this.ORDER_BY = ORDER_BY;
         return this;
     }
     
-    public CypherQueryForLinks build() {
-        return new CypherQueryForLinks(
+    public CypherQueryForNotes build() {
+        return new CypherQueryForNotes(
         		MATCH
         		, TYPE
         		, EXCLUDE_TYPE
         		, LIBRARY
+        		, LABEL
         		, WHERE
         		, CONTAINS
         		, EQUALS

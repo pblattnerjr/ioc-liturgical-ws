@@ -1,5 +1,17 @@
 package ioc.liturgical.ws.managers.databases.external.neo4j.cypher;
 
+/**
+ *  Provides a means to build a query for searching docs.
+ * There are three types of query builders:
+ * docs - a query that only matches a node
+ * notes - a query that matches two nodes and the relationship between them
+ * links - a query that matches three nodes and relationships between them.  
+ *             A link is a node that holds information about the relationship between
+ *             two other nodes.  A link uses the REFERS_TO relationship type.
+
+ * @author mac002
+ *
+ */
 public class CypherQueryBuilderForDocs {
 	private String MATCH = "";
 	private String LABEL = "";
@@ -16,6 +28,7 @@ public class CypherQueryBuilderForDocs {
 	private String CONTAINS = "";
 	private String TAGS = "";
 	private String TAG_OPERATOR = "or";
+	private String LIBRARY = "";
 	private String TOPIC = "";
 	private String RETURN = "";
 	private String ORDER_BY = "";
@@ -120,6 +133,15 @@ public class CypherQueryBuilderForDocs {
         return this;
     }
 
+    public CypherQueryBuilderForDocs LIBRARY(String LIBRARY) {
+    	if (LIBRARY.startsWith("*")) {
+            this.LIBRARY = "";
+    	} else {
+            this.LIBRARY = LIBRARY;
+    	}
+        return this;
+    }
+
     public CypherQueryBuilderForDocs TOPIC(String TOPIC) {
     	if (TOPIC.startsWith("*")) {
             this.TOPIC = "";
@@ -156,6 +178,7 @@ public class CypherQueryBuilderForDocs {
         		, MATCHES_PATTERN
         		, TAGS
         		, TAG_OPERATOR
+        		, LIBRARY
         		, TOPIC
         		, RETURN
         		, ORDER_BY

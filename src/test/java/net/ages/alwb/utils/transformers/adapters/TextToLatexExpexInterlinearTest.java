@@ -19,6 +19,7 @@ public class TextToLatexExpexInterlinearTest {
 				, s
 				, translations
 				, false
+				, true
 				);
 		String result = t.convert();
 		System.out.println(result);

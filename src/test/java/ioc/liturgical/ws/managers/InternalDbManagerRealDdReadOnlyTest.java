@@ -27,6 +27,7 @@ public class InternalDbManagerRealDdReadOnlyTest {
 				, false // truncate tables (if you don't delete the old db)
 				, false // create test users
 				, uid // the username of the wsadmin
+				, pwd
 				);
 	}
 

@@ -4,7 +4,6 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -13,40 +12,42 @@ import java.util.TreeMap;
 import org.junit.Test;
 
 import net.ages.alwb.utils.core.file.AlwbFileUtils;
+import net.ages.alwb.utils.transformers.adapters.MetaTemplateToPdf;
+import net.ages.alwb.utils.transformers.adapters.TextToLatexExpexInterlinear;
+import switches.AgesHtmlToOslwSwitch;
 
 public class MetaTemplateToPdfTest {
 
 	@Test
 	public void test() {
-		String path = "/Volumes/ssd2/template.json";
+		boolean createExpex = false;
+		String path = "/Volumes/ssd2/templates";
+		String out = "/Volumes/ssd2/templatesOut/servicedata.tex";
 		MetaTemplateToPdf xform = null;
-		Map<String,String> x = new TreeMap<String,String>();
-		
+		Map<String, String> x = new TreeMap<String, String>();
+
 		try {
-			for (File f : AlwbFileUtils.getFilesInDirectory("/Volumes/ssd2/templates", "json")) {
-				xform = new MetaTemplateToPdf (
-						AlwbFileUtils.fileAsString(f)
-						);
-				for (Entry<String,String> entry : xform.x.entrySet()) {
-					if (! x.containsKey(entry.getKey())) {
-						x.put(entry.getKey(), entry.getValue());
+			for (File f : AlwbFileUtils.getFilesInDirectory(path, "json")) {
+				xform = new MetaTemplateToPdf(AlwbFileUtils.fileAsString(f));
+				StringBuffer sb = new StringBuffer();
+				sb.append(xform.getTexFileContent().toString());
+				for (Entry<String, String> entry : x.entrySet()) {
+					if (createExpex) {
+						String s = "Βυθοῦ ἀνεκάλυψε πυθμένα, καὶ διὰ ξηρᾶς οἰκείους ἕλκει, ἐν αὐτῷ κατακαλύψας ἀντιπάλους,  ὁ κραταιός, ἐν πολέμοις Κύριος˙ ὅτι δεδόξασται.";
+						List<String> translations = new ArrayList<String>();
+						translations.add("T 1");
+						TextToLatexExpexInterlinear t = new TextToLatexExpexInterlinear(entry.getKey(),
+								entry.getValue(), translations, false, true);
+						sb.append(t.convert());
+					} else {
+						if (!entry.getKey().contains("media")) {
+							System.out.println(AgesHtmlToOslwSwitch.getOslw(entry.getKey()) + entry.getValue() + "\n");
+							sb.append(AgesHtmlToOslwSwitch.getOslw(entry.getKey()) + entry.getValue() + "\n");
+						}
 					}
 				}
 			}
-			StringBuffer sb = new StringBuffer();
-			sb.append("switch (command) {\n");
-			for (Entry<String,String> entry : x.entrySet()) {
-						sb.append("\tcase \"");
-						sb.append(entry.getKey());
-						sb.append("\":\n");
-						sb.append("\t// " + entry.getValue() + "\n");
-						sb.append("\t\tbreak;\n");
-						sb.append("\t}\n");
-			}
-			sb.append("\tdefault:\n");
-			sb.append("\t}\n");
-			sb.append("}\n");
-			System.out.println(sb.toString());			
+			AlwbFileUtils.writeFile(out, xform.getTexFileContent().toString());
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail(e.getMessage());

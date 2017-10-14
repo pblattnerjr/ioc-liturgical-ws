@@ -8,7 +8,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 import net.ages.alwb.utils.nlp.constants.DEPENDENCY_LABEL_MAPPER;
 import net.ages.alwb.utils.nlp.fetchers.PerseusXmlMorph;
@@ -35,7 +38,8 @@ import opennlp.tools.tokenize.Tokenizer;
  *
  */
 public class TextToLatexExpexInterlinear {
-	
+	private static final Logger logger = LoggerFactory.getLogger(TextToLatexExpexInterlinear.class);
+
 	private static Pattern odePattern = Pattern.compile("Ode([0-9])C([0-9])(.?)");
 	public static final String newPage = "\\newpage\n";
 	public static final String sectionGramParaText = "\\subsubsection{\\gramParaText}\n";
@@ -66,6 +70,7 @@ public class TextToLatexExpexInterlinear {
 	
 	// class properties
 	private String id = "";
+	private IdManager idManager = null;
 	private String text = "";
 	private boolean newClauseRestartsNumbers = false;
 	private String library = "";
@@ -94,18 +99,25 @@ public class TextToLatexExpexInterlinear {
 		, String text
 		, List<String> translations
 		, boolean newClauseRestartsNumbers
+		, boolean getPerseusParses
 		) {
 		this.id = id;
-		IdManager idManager = new IdManager(id);
-		this.library = idManager.getLibrary();
-		this.topic = idManager.getTopic();
-		this.key = idManager.getKey();
-		parseKey();
-		this.text = text;
-		this.translations = translations.toArray(new String[0]);
-		this.newClauseRestartsNumbers = newClauseRestartsNumbers;
-		TextParser tp = new TextParser(text);
-		parses = tp.parse();
+		this.idManager = new IdManager(id);
+		try {
+			this.library = idManager.getLibrary();
+			this.topic = idManager.getTopic();
+			this.key = idManager.getKey();
+			parseKey();
+			this.text = text;
+			this.translations = translations.toArray(new String[0]);
+			this.newClauseRestartsNumbers = newClauseRestartsNumbers;
+			if (getPerseusParses) {
+				TextParser tp = new TextParser(text);
+				parses = tp.parse();
+			}
+		} catch (Exception e) {
+			ErrorUtils.report(logger, e);
+		}
 	}
 	
 	
@@ -269,16 +281,30 @@ public class TextToLatexExpexInterlinear {
 	}
 	
 	public String convert() {
+		return this.convert(true,true,true,true);
+	}
+	public String convert(
+			boolean newPage
+			, boolean subSection
+			, boolean gramParaText
+			, boolean includeDependencyTree
+			) {
 		StringBuffer result = new StringBuffer();
 		Tokenizer tokenizer = SimpleTokenizer.INSTANCE;
         String [] theTokens = tokenizer.tokenize(text);
         firstWord = theTokens[0];
 
-		result.append(newPage);
-		result.append(this.getDocOdeSubSection());
-		result.append(sectionGramParaText);
-		result.append(this.getParaText());
-		result.append(sectionGramInterlinearText);
+        if (newPage) {
+    		result.append(newPage);
+        }
+        if (subSection) {
+    		result.append(this.getDocOdeSubSection());
+        }
+        if (gramParaText) {
+    		result.append(sectionGramParaText);
+    		result.append(this.getParaText());
+    		result.append(sectionGramInterlinearText);
+        }
 		
         int count = 0;
         int size = theTokens.length;
@@ -315,7 +341,7 @@ public class TextToLatexExpexInterlinear {
 		        		innerSb.append(s + "/" + s + "/" + "PM/" + s + "]\n");
 	        		}
 	        		if (s.startsWith(",")) {
-        				clauseSb.append(wrapInner(innerSb.toString(), subTextList));
+        				clauseSb.append(wrapInner(innerSb.toString(), subTextList, includeDependencyTree));
         				innerSb = new StringBuffer();
           				subTextList = new ArrayList<String>();
           			} else if (
@@ -333,7 +359,7 @@ public class TextToLatexExpexInterlinear {
           				if (this.newClauseRestartsNumbers) {
             				count = 0;
           				}
-        				clauseSb.append(wrapInner(innerSb.toString(), subTextList));
+        				clauseSb.append(wrapInner(innerSb.toString(), subTextList, includeDependencyTree));
         				innerSb = new StringBuffer();
         				result.append(wrapOuter(clauseSb.toString()));
            				clauseSb = new StringBuffer();
@@ -350,14 +376,20 @@ public class TextToLatexExpexInterlinear {
 		return result.toString();
 	}
 	
-	private String wrapInner(String s, List<String> subtext) {
+	private String wrapInner(
+			String s
+			, List<String> subtext
+			, boolean includeDependencyTree
+			) {
 		StringBuffer result = new StringBuffer();
 		// open
 		result.append(ExPexExampleClauseTagOpen);
 		result.append(StringUtils.join(subtext, " "));
 
 		// stub out the dependency tree
-		result.append(getDepTree(subtext));
+		if (includeDependencyTree) {
+			result.append(getDepTree(subtext));
+		}
 		
 		// add the interlinear
 		result.append(ExPexGlossTagOpen);
@@ -381,7 +413,7 @@ public class TextToLatexExpexInterlinear {
 	private String wrapOuter(String s) {
 		StringBuffer result = new StringBuffer();
 		// open
-		result.append(ExPexExampleTagOpen);
+		result.append(ExPexExampleTagOpen + " " + this.idManager.getOslwPexId());
 		// add the string
 		result.append(s);
 		// close

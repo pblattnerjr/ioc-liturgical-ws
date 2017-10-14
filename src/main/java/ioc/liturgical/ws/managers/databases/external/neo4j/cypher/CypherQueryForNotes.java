@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 
 /**
- *  Provides a means to build a query for searching links.
+ *  Provides a means to build a query for searching notes.
  * There are three types of query builders:
  * docs - a query that only matches a node
  * notes - a query that matches two nodes and the relationship between them
@@ -18,13 +18,14 @@ import net.ages.alwb.utils.core.error.handling.ErrorUtils;
  *
  */
 
-public class CypherQueryForLinks {
-	private static final Logger logger = LoggerFactory.getLogger(CypherQueryForLinks.class);
+public class CypherQueryForNotes {
+	private static final Logger logger = LoggerFactory.getLogger(CypherQueryForNotes.class);
 
 	private String MATCH = "";
 	private String TYPE = "";
 	private String EXCLUDE_TYPE = "";
 	private String LIBRARY = "";
+	private String LABEL = "";
 	private String WHERE = "";
 	private String CONTAINS = "";
 	private String EQUALS = "";
@@ -36,11 +37,12 @@ public class CypherQueryForLinks {
 	private String RETURN = "";
 	private String ORDER_BY = "";
 	
-	public CypherQueryForLinks(
+	public CypherQueryForNotes(
 			String MATCH
 			, String TYPE
 			, String EXCLUDE_TYPE
 			, String LIBRARY
+			, String LABEL
 			, String WHERE
 			, String CONTAINS
 			, String EQUALS
@@ -56,6 +58,7 @@ public class CypherQueryForLinks {
 		this.TYPE = TYPE;
 		this.EXCLUDE_TYPE = EXCLUDE_TYPE;
 		this.LIBRARY = LIBRARY;
+		this.LABEL = LABEL;
 		this.WHERE = WHERE;
 		this.CONTAINS = CONTAINS;
 		this.EQUALS = EQUALS;
@@ -71,23 +74,25 @@ public class CypherQueryForLinks {
 
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("MATCH (from:OntologyRoot)-[link");
+		sb.append("MATCH (from:Text)-[link");
 		if (TYPE.length() >0) {
 			sb.append(TYPE);
 		}
-		sb.append("]->(to:OntologyRoot) ");
+		sb.append("]->(to:");
+		sb.append(LABEL);
+		sb.append(") ");
 
 		StringBuffer whereClause = new StringBuffer();
 		if (STARTS_WITH.length() > 0) {
-			whereClause.append("WHERE link." + WHERE + " STARTS WITH '" + STARTS_WITH + "' ");
+			whereClause.append("WHERE to." + WHERE + " STARTS WITH '" + STARTS_WITH + "' ");
 		} else if (EQUALS.length() > 0 ) {
-			whereClause.append("WHERE link." + WHERE + " = '" + EQUALS + "' ");
+			whereClause.append("WHERE to." + WHERE + " = '" + EQUALS + "' ");
 		} else 	if (ENDS_WITH.length() > 0) {
-			whereClause.append("WHERE link." + WHERE + " ENDS WITH '" + ENDS_WITH + "' ");
+			whereClause.append("WHERE to." + WHERE + " ENDS WITH '" + ENDS_WITH + "' ");
 		} else if (CONTAINS.length() > 0) {
-			whereClause.append("WHERE link." + WHERE + " CONTAINS '" + CONTAINS + "' ");
+			whereClause.append("WHERE to." + WHERE + " CONTAINS '" + CONTAINS + "' ");
 		} else if (MATCHES_PATTERN.length() > 0) {
-			whereClause.append("WHERE link." + WHERE + " =~ '" + MATCHES_PATTERN + "' ");
+			whereClause.append("WHERE to." + WHERE + " =~ '" + MATCHES_PATTERN + "' ");
 		} 
 		if (whereClause.length() > 0) {
 			sb.append(whereClause);
@@ -106,7 +111,7 @@ public class CypherQueryForLinks {
 			} else {
 				sb.append(" WHERE ");
 			}
-			sb.append(tagMatcher("link.tags", TAGS, TAG_OPERATOR));
+			sb.append(tagMatcher("to.tags", TAGS, TAG_OPERATOR));
 		}
 		
 		if (EXCLUDE_TYPE != null && EXCLUDE_TYPE.length() > 0) {
@@ -115,7 +120,7 @@ public class CypherQueryForLinks {
 			} else {
 				sb.append(" WHERE NOT ");
 			}
-			sb.append("type(link) = '" + EXCLUDE_TYPE + "' ");
+			sb.append("type(to) = '" + EXCLUDE_TYPE + "' ");
 		}
 
 		sb.append(" RETURN " + RETURN);
@@ -298,6 +303,16 @@ public class CypherQueryForLinks {
 
 	public void setEXCLUDE_TYPE(String eXCLUDE_TYPE) {
 		EXCLUDE_TYPE = eXCLUDE_TYPE;
+	}
+
+
+	public String getLABEL() {
+		return LABEL;
+	}
+
+
+	public void setLABEL(String lABEL) {
+		LABEL = lABEL;
 	}
 
 }

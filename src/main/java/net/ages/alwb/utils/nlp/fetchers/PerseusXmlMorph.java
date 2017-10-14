@@ -1,6 +1,5 @@
 package net.ages.alwb.utils.nlp.fetchers;
 
-import net.ages.alwb.utils.nlp.utils.NlpUtils;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -11,6 +10,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ioc.liturgical.ws.models.db.docs.nlp.Adjective;
 import ioc.liturgical.ws.models.db.docs.nlp.Adverb;
@@ -23,6 +24,7 @@ import ioc.liturgical.ws.models.db.docs.nlp.Preposition;
 import ioc.liturgical.ws.models.db.docs.nlp.Pronoun;
 import ioc.liturgical.ws.models.db.docs.nlp.Verb;
 import ioc.liturgical.ws.models.db.supers.LTKDbGrammarAnalysis;
+import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 import net.ages.alwb.utils.nlp.constants.BETA_CODES;
 import net.ages.alwb.utils.nlp.constants.UnicodeGreekToExtendedGreek;
 
@@ -41,6 +43,7 @@ import net.ages.alwb.utils.nlp.constants.UnicodeGreekToExtendedGreek;
  *
  */
 public class PerseusXmlMorph {
+	private static final Logger logger = LoggerFactory.getLogger(PerseusXmlMorph.class);
 
 	private Charset utf8Charset = Charset.forName("UTF-8");
 	private static String url = "http://www.perseus.tufts.edu/hopper/xmlmorph";
@@ -65,12 +68,12 @@ public class PerseusXmlMorph {
 			doc = Jsoup.connect(url)
 					.data("lang", "greek")
 					.data("lookup", betaCode) 
-					.timeout(3000)
+					.timeout(300000)
 					.get();
 			if (doc != null) {
 				Elements elements = doc.select("analysis");
 				for (Element e : elements) {
-					String form = UnicodeGreekToExtendedGreek.normalize(e.select("form").first().text().trim());
+					String form = UnicodeGreekToExtendedGreek.normalize(this.get(e,"form"));
 //					List<Integer> diffIndex = Utils.getDiff(word, form);
 //					if (diffIndex.size() > 0) {
 //						System.out.println(word + " differs from " + form);
@@ -88,19 +91,20 @@ public class PerseusXmlMorph {
 							paddedSequence = "a" + seq;
 						}
 						seq++;
-						String pos = e.select("pos").first().text().trim();
-						String lemma = e.select("lemma").first().text().trim();
-						String expandedForm = e.select("expandedForm").first().text().trim();
-						String dialect = e.select("feature").first().text().trim();
+						try {
+						String pos = this.get(e,"pos");
+						String lemma = this.get(e,"lemma");
+						String expandedForm = this.get(e,"expandedForm");
+						String dialect = this.get(e,"feature");
 						switch (pos) {
 							case "adj" : {
 								Adjective obj = new Adjective(form, paddedSequence);
 								obj.setLemma(lemma);
 								obj.setExpandedForm(expandedForm);
 								obj.setDialect(dialect);
-								obj.setNumber( e.select("number").first().text() );
-								obj.setGender( e.select("gender").first().text() );
-								obj.setgCase( e.select("case").first().text() );
+								obj.setNumber( this.get(e,"number") );
+								obj.setGender( this.get(e,"gender") );
+								obj.setgCase( this.get(e,"case") );
 								analyses.add(obj);
 								break;
 							}
@@ -117,9 +121,9 @@ public class PerseusXmlMorph {
 								obj.setLemma(lemma);
 								obj.setExpandedForm(expandedForm);
 								obj.setDialect(dialect);
-								obj.setNumber( e.select("number").first().text() );
-								obj.setGender( e.select("gender").first().text() );
-								obj.setgCase( e.select("case").first().text() );
+								obj.setNumber( this.get(e,"number") );
+								obj.setGender( this.get(e,"gender") );
+								obj.setgCase( this.get(e,"case") );
 								analyses.add(obj);
 								break;
 							}
@@ -144,9 +148,9 @@ public class PerseusXmlMorph {
 								obj.setLemma(lemma);
 								obj.setExpandedForm(expandedForm);
 								obj.setDialect(dialect);
-								obj.setNumber( e.select("number").first().text() );
-								obj.setGender( e.select("gender").first().text() );
-								obj.setgCase( e.select("case").first().text() );
+								obj.setNumber( this.get(e,"number") );
+								obj.setGender( this.get(e,"gender") );
+								obj.setgCase( this.get(e,"case") );
 								analyses.add(obj);
 								break;
 							}
@@ -155,12 +159,12 @@ public class PerseusXmlMorph {
 								obj.setLemma(lemma);
 								obj.setExpandedForm(expandedForm);
 								obj.setDialect(dialect);
-								obj.setNumber( e.select("number").first().text() );
-								obj.setGender( e.select("gender").first().text() );
-								obj.setgCase( e.select("case").first().text() );
-								obj.setNumber( e.select("number").first().text() );
-								obj.setTense( e.select("tense").first().text() );
-								obj.setVoice( e.select("voice").first().text() );
+								obj.setNumber( this.get(e,"number") );
+								obj.setGender( this.get(e,"gender") );
+								obj.setgCase( this.get(e,"case") );
+								obj.setNumber( this.get(e,"number") );
+								obj.setTense( this.get(e,"tense") );
+								obj.setVoice( this.get(e,"voice") );
 								analyses.add(obj);
 								break;
 							}
@@ -177,9 +181,9 @@ public class PerseusXmlMorph {
 								obj.setLemma(lemma);
 								obj.setExpandedForm(expandedForm);
 								obj.setDialect(dialect);
-								obj.setNumber( e.select("number").first().text() );
-								obj.setGender( e.select("gender").first().text() );
-								obj.setgCase( e.select("case").first().text() );
+								obj.setNumber( this.get(e,"number") );
+								obj.setGender( this.get(e,"gender") );
+								obj.setgCase( this.get(e,"case") );
 								analyses.add(obj);
 								break;
 							}
@@ -188,11 +192,15 @@ public class PerseusXmlMorph {
 								obj.setLemma(lemma);
 								obj.setExpandedForm(expandedForm);
 								obj.setDialect(dialect);
-								obj.setPerson( e.select("person").first().text() );
-								obj.setNumber( e.select("number").first().text() );
-								obj.setTense( e.select("tense").first().text() );
-								obj.setMood( e.select("mood").first().text() );
-								obj.setVoice( e.select("voice").first().text() );
+								obj.setMood( this.get(e,"mood") );
+								if (obj.getMood().startsWith("inf")) {
+									// ignore
+								} else {
+									obj.setPerson( this.get(e,"person") );
+									obj.setNumber( this.get(e,"number") );
+									obj.setTense( this.get(e,"tense") );
+								}
+								obj.setVoice( this.get(e,"voice") );
 								analyses.add(obj);
 								break;
 							}
@@ -200,6 +208,9 @@ public class PerseusXmlMorph {
 								throw new Exception("unknown part of speech: " + pos);
 							}
 						}
+					} catch (Exception innerE) {
+						ErrorUtils.report(logger, innerE);
+					}
 					}
 				}
 			}
@@ -209,6 +220,24 @@ public class PerseusXmlMorph {
 			e.printStackTrace();
 		}
 				
+	}
+	
+	/**
+	 * Isolates the attempted read of a property into a try/catch block
+	 * @param element
+	 * @param property
+	 * @return value of the requested property
+	 */
+	public String get(Element element, String property) {
+		String result = "";
+		try {
+			if (element.hasAttr(property)) {
+				result = element.select(property).first().text().trim();
+			} 
+		} catch (Exception e) {
+			ErrorUtils.report(logger, e);
+		}
+		return result;
 	}
 
 	public String getWord() {

@@ -68,7 +68,7 @@ public class LTK extends AbstractModel {
 	@Attributes(id = "bottom", required = true, readonly = true, minLength = 1, description = "The key part of the ID")
 	@Expose public String key = "";
 
-	@Attributes(description="Tags to use when searching for this Doc.")
+	@Attributes(id="top", description="Tags to use when searching for this Doc.")
 	@Expose public List<String> tags = new ArrayList<String>();
 	
 	@Attributes(id = "bottom", required = true, readonly = true, minLength = 1, description = "The ontology topic for the schema.")
