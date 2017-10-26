@@ -25,7 +25,7 @@ public class AgesHtmlToDynamicHtmlTest {
 				);
 		try {
 			MetaTemplate template = ages.toReactTemplateMetaData();
-//			System.out.println(template.getTopElement().toJsonString());
+		System.out.println(template.getTopElement().toJsonString());
 			Map<String,String> values = template.getValues();
 			for ( Entry<String,String> entry: values.entrySet()) {
 				if (entry.getKey().startsWith("en_us_ages~ps~psa118.v12.text")) {

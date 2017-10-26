@@ -62,6 +62,12 @@ public enum ENDPOINTS_DB_API {
 			, "Concepts"
 			,"Endpoint for abstract concept docs"
 			)
+	, DEPENDENCY_TREE(
+			"dependencyTree"
+			, ENDPOINT_TYPES.NODE
+			, "DependencyTree"
+			,"Endpoint for dependency tree information"
+			)
 	, DOCS(
 			""
 			, ENDPOINT_TYPES.NODE

@@ -94,26 +94,22 @@ public class CypherQueryForNotes {
 		} else if (MATCHES_PATTERN.length() > 0) {
 			whereClause.append("WHERE to." + WHERE + " =~ '" + MATCHES_PATTERN + "' ");
 		} 
-		if (whereClause.length() > 0) {
-			sb.append(whereClause);
-		}
 		if (LIBRARY.length() > 0) {
 			if (whereClause.length() > 0) {
-				sb.append(" AND ");
+				whereClause.append(" AND ");
 			} else {
-				sb.append(" WHERE ");
+				whereClause.append(" WHERE ");
 			}
-			sb.append(LIBRARY);
+			whereClause.append(LIBRARY);
 		}
 		if (TAGS.length() > 0) {
 			if (whereClause.length() > 0) {
-				sb.append(" AND ");
+				whereClause.append(" AND ");
 			} else {
-				sb.append(" WHERE ");
+				whereClause.append(" WHERE ");
 			}
-			sb.append(tagMatcher("to.tags", TAGS, TAG_OPERATOR));
+			whereClause.append(tagMatcher("to.tags", TAGS, TAG_OPERATOR));
 		}
-		
 		if (EXCLUDE_TYPE != null && EXCLUDE_TYPE.length() > 0) {
 			if (whereClause.length() > 0) {
 				sb.append(" AND NOT ");
@@ -123,6 +119,9 @@ public class CypherQueryForNotes {
 			sb.append("type(to) = '" + EXCLUDE_TYPE + "' ");
 		}
 
+		if (whereClause.length() > 0) {
+			sb.append(whereClause);
+		}
 		sb.append(" RETURN " + RETURN);
 		sb.append(" ORDER BY " + ORDER_BY);
 		return sb.toString();

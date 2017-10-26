@@ -67,6 +67,11 @@ public enum TOPICS {
 			, "Something that happens or occurs."
 			, TOPICS.ONTOLOGY_ROOT
 			)
+	, DEPENDENCY_TREE(
+			"DependencyTree"
+			, "Information used to render a dependency tree"
+			, TOPICS.LINGUISTICS_ROOT
+			)
 	, GRAMMAR(
 			"Grammar"
 			, "Linguistic information about a word or its relationship to other words"

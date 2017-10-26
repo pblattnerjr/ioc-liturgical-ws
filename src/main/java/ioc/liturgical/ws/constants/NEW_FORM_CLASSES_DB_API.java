@@ -2,6 +2,7 @@ package ioc.liturgical.ws.constants;
 
 import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
 import ioc.liturgical.ws.models.db.docs.nlp.ConcordanceLine;
+import ioc.liturgical.ws.models.db.docs.nlp.DependencyTree;
 import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalysis;
 import ioc.liturgical.ws.models.db.forms.AnimalCreateForm;
 import ioc.liturgical.ws.models.db.forms.BeingCreateForm;
@@ -14,6 +15,7 @@ import ioc.liturgical.ws.models.db.forms.LinkRefersToBeingCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToConceptCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToEventCreateForm;
+import ioc.liturgical.ws.models.db.forms.LinkRefersToGodCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToGroupCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToHumanCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToMysteryCreateForm;
@@ -101,6 +103,12 @@ public enum NEW_FORM_CLASSES_DB_API {
 		, ENDPOINTS_DB_API.LINKS
 		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
 		)
+, NEW_DEPENDENCY_TREE(
+		"Dependency Tree"
+		, new DependencyTree("")
+		, ENDPOINTS_DB_API.DOCS
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
 , NEW_EVENT(
 		"Event"
 		, new EventCreateForm("")
@@ -110,6 +118,12 @@ public enum NEW_FORM_CLASSES_DB_API {
 , NEW_LINK_REFERS_TO_EVENT(
 		"doc refers to event"
 		, new LinkRefersToEventCreateForm("","","")
+		, ENDPOINTS_DB_API.LINKS
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
+, NEW_LINK_REFERS_TO_GOD(
+		"doc refers to God"
+		, new LinkRefersToGodCreateForm("","","")
 		, ENDPOINTS_DB_API.LINKS
 		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
 		)

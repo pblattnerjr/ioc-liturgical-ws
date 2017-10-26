@@ -17,7 +17,7 @@ import net.ages.alwb.utils.core.datastores.json.models.DropdownItem;
 public enum PARTS_OF_SPEECH {
 	ADJ("adj", "adjective")
 	, ADV("adv", "adverb")
-	, ARTICLE("article", "article")
+	, ARTICLE("art", "article")
 	, CONJ("conj", "conjunction")
 	, EXCLA("excla", "exclamation")
 	, NOUN("noun", "noun")

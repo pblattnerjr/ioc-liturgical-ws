@@ -35,6 +35,7 @@ import ioc.liturgical.ws.constants.NEW_FORM_CLASSES_DB_API;
 import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
 import ioc.liturgical.ws.constants.UTILITIES;
 import ioc.liturgical.ws.constants.VERBS;
+import ioc.liturgical.ws.constants.db.external.LIBRARIES;
 import ioc.liturgical.ws.constants.db.external.SCHEMA_CLASSES;
 import ioc.liturgical.ws.constants.db.external.SINGLETON_KEYS;
 import ioc.liturgical.ws.constants.db.external.TOPICS;
@@ -54,6 +55,7 @@ import ioc.liturgical.ws.managers.exceptions.DbException;
 import ioc.liturgical.ws.models.RequestStatus;
 import ioc.liturgical.ws.models.ResultJsonObjectArray;
 import ioc.liturgical.ws.models.db.docs.nlp.ConcordanceLine;
+import ioc.liturgical.ws.models.db.docs.nlp.DependencyTree;
 import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalyses;
 import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalysis;
 import ioc.liturgical.ws.models.db.docs.nlp.WordInflected;
@@ -72,6 +74,7 @@ import ioc.liturgical.ws.models.ws.response.column.editor.KeyArraysCollection;
 import ioc.liturgical.ws.models.ws.response.column.editor.KeyArraysCollectionBuilder;
 import ioc.liturgical.ws.models.ws.response.column.editor.LibraryTopicKey;
 import ioc.liturgical.ws.models.ws.response.column.editor.LibraryTopicKeyValue;
+import net.ages.alwb.tasks.OntologyTagsUpdateTask;
 import net.ages.alwb.tasks.PdfGenerationTask;
 import net.ages.alwb.utils.core.datastores.json.exceptions.BadIdException;
 import net.ages.alwb.utils.core.datastores.json.exceptions.MissingSchemaIdException;
@@ -132,6 +135,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  JsonObject noteTypesProperties = new JsonObject();
 	  JsonArray ontologyTypesArray = new JsonArray();
 	  JsonObject ontologyTypesProperties = new JsonObject();
+	  JsonObject ontologyTags = new JsonObject();
 	  JsonArray relationshipTypesArray = new JsonArray();
 	  JsonObject relationshipTypesProperties = new JsonObject();
 	  JsonArray tagOperatorsDropdown = new JsonArray();
@@ -207,7 +211,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	   */
 	  public ResultJsonObjectArray getWordAnalyses(String word) {
 		  String query = "match (n:" + TOPICS.WORD_GRAMMAR.label + ") where n.id starts with \"en_sys_linguistics~"
-				+  AlwbGeneralUtils.toNfc(word).toLowerCase() + "\" return properties(n)"
+				+  AlwbGeneralUtils.toNfc(word).toLowerCase() + "~\" return properties(n)"
 				 ;
 		  ResultJsonObjectArray queryResult = this.getForQuery(
 				  query
@@ -378,6 +382,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  public void buildOntologyDropdownMaps() {
 		  ontologyTypesProperties = SCHEMA_CLASSES.ontologyPropertyJson();
 		  ontologyTypesArray = SCHEMA_CLASSES.ontologyTypesJson();
+		  ontologyTags = getOntologyTagsForAllTypes();
 	  }
 
 	  public JsonArray getTagOperatorsArray() {
@@ -614,6 +619,11 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					, true
 					, true
 					);
+			try {
+				System.out.println(result.getValuesAsJsonArray().toString());
+			} catch (Exception e) {
+				
+			}
 			return result;
 		}
 
@@ -655,24 +665,29 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, String excludeType
 				) {
 			ResultJsonObjectArray result = null;
+			String fromHandle = "from";
 			String linkHandle = "link";
 			String toHandle = "to";
 			String orderBy = "";
 			ReturnPropertyList propsToReturn = new ReturnPropertyList();
+			propsToReturn.add(fromHandle, "id", "fromId");
+			propsToReturn.add(fromHandle, "value", "fromValue");
 			propsToReturn.add(linkHandle, "id");
 			propsToReturn.addType(linkHandle);
 			propsToReturn.add(linkHandle, "library");
-			propsToReturn.add(linkHandle, "topic","fromId");
-			propsToReturn.add(linkHandle, "key","toId");
+//			propsToReturn.add(linkHandle, "topic","fromId");
+//			propsToReturn.add(linkHandle, "key","toId");
 			propsToReturn.add(linkHandle, "tags");
 			propsToReturn.add(linkHandle, "ontologyTopic");
 			propsToReturn.add(linkHandle, "comments");
+			propsToReturn.add(linkHandle, "_valueSchemaId");
+			propsToReturn.add(toHandle, "id", "toId");
 			if (type.equals(RELATIONSHIP_TYPES.REFERS_TO_BIBLICAL_TEXT.typename)) {
-				propsToReturn.add(toHandle, "value");
+				propsToReturn.add(toHandle, "value", "toValue");
 				propsToReturn.add(toHandle, "seq");
 				orderBy = "seq";
 			} else {
-				propsToReturn.add(toHandle, "name", "toName");
+				propsToReturn.add(toHandle, "name", "toValue");
 				orderBy = "toId";
 			}
 			result = getForQuery(
@@ -883,7 +898,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			}
 			builder.TAGS(tags);
 			builder.TAG_OPERATOR(operator);
-			builder.RETURN("from.value as text, to.id as id, to.library as library, to.topic as topic, to.key as key, to.value as value, to.tags as tags");
+			builder.RETURN("from.value as text, to.id as id, to.library as library, to.topic as topic, to.key as key, to.value as value, to.tags as tags, to._valueSchemaId as _valueSchemaId");
 			builder.ORDER_BY("to.seq"); // 
 
 			CypherQueryForNotes q = builder.build();
@@ -952,7 +967,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			builder.TAGS(tags);
 			builder.TAG_OPERATOR(operator);
 
-			builder.RETURN("id, library, topic, key, name, description, tags");
+			builder.RETURN("id, library, topic, key, name, description, tags, _valueSchemaId");
 			builder.ORDER_BY("doc.seq"); // 
 
 			CypherQueryForDocs q = builder.build();
@@ -1097,6 +1112,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					    result.setCode(insertStatus.getCode());
 					    result.setDeveloperMessage(insertStatus.getDeveloperMessage());
 					    result.setUserMessage(insertStatus.getUserMessage());
+					    this.updateObjects(record.ontologyTopic);
 					} catch (Exception e) {
 						result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 						result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
@@ -1392,6 +1408,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						record.setCreatedWhen(getTimestamp());
 						record.setModifiedWhen(record.getCreatedWhen());
 						neo4jManager.updateWhereEqual(record);
+						this.updateObjects(record.ontologyTopic);
 					} else {
 						result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 						JsonObject message = stringToJson(validation);
@@ -1976,7 +1993,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				JsonObject values = new JsonObject();
 				values.add("typeList", this.ontologyTypesArray);
 				values.add("typeProps", this.ontologyTypesProperties);
-				values.add("typeTags", getOntologyTagsForAllTypes());
+				values.add("typeTags", this.ontologyTags);
 				values.add("tagOperators", tagOperatorsDropdown);
 				JsonObject jsonDropdown = new JsonObject();
 				jsonDropdown.add("dropdown", values);
@@ -2036,10 +2053,55 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						.getFirstObject()
 				);
 				result.addValue(analyses);
+
+				// add the dependency tree to the result
+				JsonObject tree = new JsonObject();
+				String treeId = LIBRARIES.LINGUISTICS.toSystemDomain()
+						+ Constants.DOMAIN_DELIMITER
+						+ TOPICS.DEPENDENCY_TREE.label
+						+ Constants.DOMAIN_DELIMITER
+						+ id;
+				ResultJsonObjectArray treeData = this.getForId(requestor, treeId);
+				if (treeData.getResultCount() == 0) {
+					String value = getValueForLiturgicalText(requestor,id);
+					if (value.length() > 0) {
+						DependencyTree dependencyTree = new DependencyTree(
+								id
+								, value
+								);
+						treeData = new ResultJsonObjectArray(this.printPretty);
+						treeData.addValue(dependencyTree.toJsonObject());
+					}
+					tree.add(
+							"treeData"
+							, treeData
+							.getFirstObject()
+					);
+				}
+				result.addValue(tree);
+
 				result.setQuery("get word grammar analyses for text with id =  " + id);
 			} catch (Exception e) {
 				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+
+		/**
+		 * Reads the database for a LiturgicalText matching the id.
+		 * If found, the return value will contain the value of the text.
+		 * If not found, the return value will be an empty string.
+		 * @param requestor
+		 * @param id
+		 * @return
+		 */
+		public String getValueForLiturgicalText(String requestor, String id) {
+			String result = "";
+			ResultJsonObjectArray queryResult = this.getForId(id, TOPICS.TEXT_LITURGICAL.label);
+			if (queryResult.valueCount > 0) {
+				TextLiturgical text = gson.fromJson(queryResult.getFirstObject().toString(), TextLiturgical.class);
+				result = text.getValue();
 			}
 			return result;
 		}
@@ -2733,7 +2795,6 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				template.setPdfId(pdfId); // this gives the client an id for retrieving the pdf
 				executorService.execute(
 						new PdfGenerationTask(template, pdfId)
-//						new PdfGenerationTask(template, "/Users/mac002/git/ocmc-translation-projects/ioc-liturgical-docker/pdf/data/servicedata.tex")
 						);
 				executorService.shutdown();
 
@@ -2748,6 +2809,33 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				ErrorUtils.report(logger, e);
 			}
 			return result;
+		}
+
+		/**
+		 * Creates a thread that will update objects such as tag dropdowns
+		 * that are database intensive reads.  This provides a faster way
+		 * to respond to web service requests for them.
+		 */
+		private void updateObjects(TOPICS topic) {
+			try {
+			    if (TOPICS.getSubRoot(topic).equals(TOPICS.ONTOLOGY_ROOT)) {
+					ExecutorService executorService = Executors.newSingleThreadExecutor();
+					executorService.execute(
+							new OntologyTagsUpdateTask(this)
+							);
+					executorService.shutdown();
+			    }
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+		}
+		
+		public void updateOntologyTags() {
+			try {
+				this.ontologyTags = this.getOntologyTagsForAllTypes();
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
 		}
 
 		/**
@@ -3339,7 +3427,6 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 
 		
 		private void loadTheophanyGrammar() {
-			Set<String> result = new TreeSet<String>();
 		    Set<String> tokens = getTopicUniqueTokens(
 		    		"gr_gr_cog"
 		    		, "me.m01.d06"

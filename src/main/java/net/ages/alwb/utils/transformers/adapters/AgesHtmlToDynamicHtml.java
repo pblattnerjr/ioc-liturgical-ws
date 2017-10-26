@@ -9,6 +9,7 @@ import java.util.TreeMap;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +21,6 @@ import net.ages.alwb.utils.core.misc.AlwbUrl;
 import net.ages.alwb.utils.transformers.adapters.models.MetaTemplate;
 import net.ages.alwb.utils.transformers.adapters.models.TemplateElement;
 
-import org.jsoup.nodes.Element;
 
 /**
  * Reads an AGES html page for a service or sacrament, and
@@ -350,7 +350,7 @@ public class AgesHtmlToDynamicHtml {
 		}
 		try {
 			String key = "";
-			if (rightKeys.size() > 0) { // handles the case where we only have one column
+			if (rightKeys != null) { // handles the case where we only have one column
 				if (cellClass.equals("leftCell") || cellClass.equals("centerCell")) {
 					int index = 0;
 					for (Element keySpan : leftKeys) {

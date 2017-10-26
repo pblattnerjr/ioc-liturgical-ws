@@ -16,17 +16,17 @@ import opennlp.tools.tokenize.Tokenizer;
 public class TextParser {
 	
 	private String text = "";
+	private String [] tokens = null;
 	
 	public TextParser(String text) {
 		this.text = text;
-		this.parse();
+        Tokenizer tokenizer = SimpleTokenizer.INSTANCE;
+        this.tokens = tokenizer.tokenize(this.text);
 	}
 
 	public Map<String, PerseusXmlMorph> parse() {
 		Map<String, PerseusXmlMorph> result = new TreeMap<String,PerseusXmlMorph>();
-        Tokenizer tokenizer = SimpleTokenizer.INSTANCE;
-        String [] theTokens = tokenizer.tokenize(this.text);
-        for (String token : theTokens) {
+        for (String token : tokens) {
         	boolean analyze = true;
         	if (token.length() == 1) {
         		if (DEPENDENCY_LABEL_MAPPER.isPunctuation(token)) {
@@ -52,6 +52,22 @@ public class TextParser {
 		String s2 = " Ἅπαντες πιστοί, ἐν ᾧ τὴν τελείωσιν ἐλάβομεν, θεολογοῦντες ἀσιγήτως, σὺν Ἀγγέλοις δοξάσωμεν, Πατέρα Υἱὸν καὶ Πνεῦμα Ἅγιον· τοῦτο γὰρ Τριὰς ὑποστάσεσιν ὁμοούσιος, εἷς δὲ Θεός, ᾧ καὶ ψάλλομεν· Ὁ τῶν Πατέρων Κύριος, καὶ Θεὸς εὐλογητὸς εἶ.";
 
 		TextParser p = new TextParser(s1);
+	}
+
+	public String getText() {
+		return text;
+	}
+
+	public void setText(String text) {
+		this.text = text;
+	}
+
+	public String[] getTokens() {
+		return tokens;
+	}
+
+	public void setTokens(String[] tokens) {
+		this.tokens = tokens;
 	}
 
 }

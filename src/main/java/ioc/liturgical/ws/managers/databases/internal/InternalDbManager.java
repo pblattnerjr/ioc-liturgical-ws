@@ -245,7 +245,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 					ErrorUtils.report(logger, e);
 				}
 			} else {
-				logger.info("missing schema id for " + json.toString());
+				logger.info("InternalDbManager.getSchemas() reports missing schema id for " + json.toString());
 			}
 		}
 		return result;
@@ -931,8 +931,8 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			domain = new DomainCreateForm();
 			domain.setLanguageCode("en");
 			domain.setCountryCode("uk");
-			domain.setRealm("gevbot");
-			domain.setDescription("GEV-BOT Notes and Translations by Dr. Michael Colburn");
+			domain.setRealm("gev");
+			domain.setDescription("GEV Notes and Translations by Dr. Michael Colburn");
 			labels = new ArrayList<String>();
 			labels.add("Liturgical");
 			domain.setLabels(labels);
@@ -942,8 +942,8 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			domain = new DomainCreateForm();
 			domain.setLanguageCode("en");
 			domain.setCountryCode("uk");
-			domain.setRealm("gevsot");
-			domain.setDescription("GEV-SOT Notes and Translations by Dr. Michael Colburn");
+			domain.setRealm("gesot");
+			domain.setDescription("GE-SOT Notes and Translations by Dr. Michael Colburn");
 			labels = new ArrayList<String>();
 			labels.add("Liturgical");
 			domain.setLabels(labels);
@@ -953,8 +953,8 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			domain = new DomainCreateForm();
 			domain.setLanguageCode("en");
 			domain.setCountryCode("uk");
-			domain.setRealm("gevmot");
-			domain.setDescription("GEV-MOT Notes and Translations by Dr. Michael Colburn");
+			domain.setRealm("gemot");
+			domain.setDescription("GE-MOT Notes and Translations by Dr. Michael Colburn");
 			labels = new ArrayList<String>();
 			labels.add("Liturgical");
 			domain.setLabels(labels);

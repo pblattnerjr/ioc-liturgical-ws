@@ -85,12 +85,19 @@ public class DEPENDENCY_LABEL_MAPPER {
     	if (map.containsKey(n)) {
     		return map.get(n);
     	} else {
-    		return DEPENDENCY_LABELS.TBD;
+    		if (s.equals("·")) {
+    			return DEPENDENCY_LABELS.APOS;
+    		} else {
+        		return DEPENDENCY_LABELS.TBD;
+    		}
     	}
     }
     
     public static boolean isPunctuation(String s) {
     	boolean result = false;
+    	if (s.equals("·")) {
+    		System.out.print("");
+    	}
     	String n = AlwbGeneralUtils.normalize(s);
     	DEPENDENCY_LABELS label = getLabel(n);
     	result = n.length() == 1

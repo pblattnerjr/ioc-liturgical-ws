@@ -11,6 +11,7 @@ import com.google.gson.JsonObject;
 
 import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
 import ioc.liturgical.ws.models.db.docs.nlp.ConcordanceLine;
+import ioc.liturgical.ws.models.db.docs.nlp.DependencyTree;
 import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalysis;
 import ioc.liturgical.ws.models.db.docs.nlp.WordInflected;
 import ioc.liturgical.ws.models.db.docs.ontology.Animal;
@@ -101,6 +102,10 @@ public enum SCHEMA_CLASSES {
 	, CONCEPT(
 			new ConceptCreateForm(" ")
 			, new Concept(" ")
+			)
+	, DEPENDENCY_TREE(
+			new DependencyTree(" ")
+			, new DependencyTree(" ")
 			)
 	, EVENT(
 			new EventCreateForm(" ")

@@ -1,11 +1,7 @@
 package ioc.liturgical.ws.models.db.docs.nlp;
 
-import ioc.liturgical.ws.constants.ID_PART_TYPES;
 import ioc.liturgical.ws.constants.PARTS_OF_SPEECH;
-import ioc.liturgical.ws.constants.db.external.TOPICS;
-import ioc.liturgical.ws.models.db.forms.AnimalCreateForm;
 import ioc.liturgical.ws.models.db.supers.LTKDbGrammarAnalysisGenderNumberCase;
-import ioc.liturgical.ws.models.db.supers.LTKDbOntologyEntry;
 
 import com.github.reinert.jjschema.Attributes;
 
