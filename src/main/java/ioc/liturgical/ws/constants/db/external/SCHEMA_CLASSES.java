@@ -11,8 +11,8 @@ import com.google.gson.JsonObject;
 
 import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
 import ioc.liturgical.ws.models.db.docs.nlp.ConcordanceLine;
-import ioc.liturgical.ws.models.db.docs.nlp.DependencyTree;
 import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalysis;
+import ioc.liturgical.ws.models.db.docs.nlp.TokenAnalysis;
 import ioc.liturgical.ws.models.db.docs.nlp.WordInflected;
 import ioc.liturgical.ws.models.db.docs.ontology.Animal;
 import ioc.liturgical.ws.models.db.docs.ontology.Being;
@@ -59,6 +59,7 @@ import ioc.liturgical.ws.models.db.forms.TextBiblicalSourceCreateForm;
 import ioc.liturgical.ws.models.db.forms.TextBiblicalTranslationCreateForm;
 import ioc.liturgical.ws.models.db.forms.TextLiturgicalSourceCreateForm;
 import ioc.liturgical.ws.models.db.forms.TextLiturgicalTranslationCreateForm;
+import ioc.liturgical.ws.models.db.forms.TokenAnalysisCreateForm;
 import ioc.liturgical.ws.models.db.forms.UserNoteCreateForm;
 import ioc.liturgical.ws.models.db.links.LinkRefersToAnimal;
 import ioc.liturgical.ws.models.db.links.LinkRefersToBeing;
@@ -102,10 +103,6 @@ public enum SCHEMA_CLASSES {
 	, CONCEPT(
 			new ConceptCreateForm(" ")
 			, new Concept(" ")
-			)
-	, DEPENDENCY_TREE(
-			new DependencyTree(" ")
-			, new DependencyTree(" ")
 			)
 	, EVENT(
 			new EventCreateForm(" ")
@@ -226,6 +223,10 @@ public enum SCHEMA_CLASSES {
 	, TEXT_LITURGICAL_TRANSLATION(
 			new TextLiturgicalTranslationCreateForm(" "," ", " ")
 			, new TextLiturgical(" "," ", " ")
+			)
+	, TREE_NODE(
+			new TokenAnalysisCreateForm("","0")
+			, new TokenAnalysis("","0")
 			)
 	;
 

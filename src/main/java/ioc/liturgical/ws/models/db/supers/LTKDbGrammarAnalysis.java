@@ -4,7 +4,7 @@ import com.google.gson.annotations.Expose;
 
 import ioc.liturgical.ws.constants.db.external.LIBRARIES;
 import ioc.liturgical.ws.constants.db.external.TOPICS;
-import ioc.liturgical.ws.constants.PARTS_OF_SPEECH;
+import ioc.liturgical.ws.constants.nlp.PARTS_OF_SPEECH;
 import net.ages.alwb.utils.nlp.constants.DEPENDENCY_LABELS;
 
 import com.github.reinert.jjschema.Attributes;

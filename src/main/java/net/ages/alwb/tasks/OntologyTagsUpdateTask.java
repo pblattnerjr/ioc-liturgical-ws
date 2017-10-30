@@ -1,15 +1,5 @@
 package net.ages.alwb.tasks;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
-import net.ages.alwb.utils.core.file.AlwbFileUtils;
-import net.ages.alwb.utils.transformers.adapters.MetaTemplateToPdf;
-import net.ages.alwb.utils.transformers.adapters.models.MetaTemplate;
 
 /**
  * Runs a task (separate thread) to generate the Xelatex content for

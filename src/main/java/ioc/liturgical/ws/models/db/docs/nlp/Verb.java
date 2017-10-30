@@ -1,11 +1,9 @@
 package ioc.liturgical.ws.models.db.docs.nlp;
 
 import com.google.gson.annotations.Expose;
-
-import ioc.liturgical.ws.constants.PARTS_OF_SPEECH;
-
 import com.github.reinert.jjschema.Attributes;
 
+import ioc.liturgical.ws.constants.nlp.PARTS_OF_SPEECH;
 import ioc.liturgical.ws.models.db.supers.LTKDbGrammarAnalysis;
 
 /**

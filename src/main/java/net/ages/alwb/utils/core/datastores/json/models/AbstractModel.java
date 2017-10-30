@@ -130,9 +130,14 @@ public class AbstractModel {
 	
 	public JsonObject toJsonSchemaObject(@SuppressWarnings("rawtypes") Class theClass) {
 		JsonSchemaFactory schemaFactory = new JsonSchemaV4Factory();
-		schemaFactory.setAutoPutDollarSchema(true);
-		JsonNode productSchema = schemaFactory.createSchema(theClass);
-		return new JsonParser().parse(productSchema.toString()).getAsJsonObject();
+		JsonNode productSchema = null;
+		try {
+			productSchema = schemaFactory.createSchema(theClass);
+			return new JsonParser().parse(productSchema.toString()).getAsJsonObject();
+		} catch (Exception e) {
+			ErrorUtils.report(logger, e, "Class = " + theClass.getCanonicalName());
+		}
+		return null;
 	}
 		
 	public boolean valid(String json) {

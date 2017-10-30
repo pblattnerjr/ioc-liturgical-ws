@@ -493,6 +493,19 @@ public class Neo4jController {
 			return requestStatus.toJsonString();
 		});
 
+		// put (update) a token analysis 
+		path = ENDPOINTS_DB_API.TOKEN_ANALYSIS.toLibraryTopicKeyPath();
+		ControllerUtils.reportPath(logger, "PUT", path);
+		put(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			RequestStatus requestStatus = externalManager.updateTokenAnalysis(
+					requestor
+					, request.body()
+					);
+			response.status(requestStatus.getCode());
+			return requestStatus.toJsonString();
+		});
 
 }
 

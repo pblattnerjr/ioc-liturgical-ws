@@ -32,6 +32,7 @@ import ioc.liturgical.ws.models.db.forms.TextBiblicalSourceCreateForm;
 import ioc.liturgical.ws.models.db.forms.TextBiblicalTranslationCreateForm;
 import ioc.liturgical.ws.models.db.forms.TextLiturgicalSourceCreateForm;
 import ioc.liturgical.ws.models.db.forms.TextLiturgicalTranslationCreateForm;
+import ioc.liturgical.ws.models.db.forms.TokenAnalysisCreateForm;
 import ioc.liturgical.ws.models.db.forms.UserNoteCreateForm;
 import ioc.liturgical.ws.models.ws.db.WsPaths;
 
@@ -101,12 +102,6 @@ public enum NEW_FORM_CLASSES_DB_API {
 		"doc refers to concept"
 		, new LinkRefersToConceptCreateForm("","","")
 		, ENDPOINTS_DB_API.LINKS
-		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
-		)
-, NEW_DEPENDENCY_TREE(
-		"Dependency Tree"
-		, new DependencyTree("")
-		, ENDPOINTS_DB_API.DOCS
 		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
 		)
 , NEW_EVENT(
@@ -245,6 +240,12 @@ public enum NEW_FORM_CLASSES_DB_API {
 		"Liturgical Text (Source)"
 		, new TextLiturgicalSourceCreateForm("","","")
 		, ENDPOINTS_DB_API.DOCS
+		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
+		)
+, NEW_TOKEN_ANALYSIS(
+		"Token Analysis"
+		, new TokenAnalysisCreateForm("","")
+		, ENDPOINTS_DB_API.TOKEN_ANALYSIS
 		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
 		)
 	;

@@ -26,7 +26,7 @@ public class DependencyTree extends LTKDb {
 	private static double serialVersion = 1.1;
 	private static TOPICS ontologyTopic = TOPICS.DEPENDENCY_TREE;
 	
-	@Expose List<List<String>> nodes = new ArrayList<List<String>>();
+	@Expose List<TokenAnalysis> nodes = new ArrayList<TokenAnalysis>();
 
 	public DependencyTree(
 			String key
@@ -81,7 +81,6 @@ public class DependencyTree extends LTKDb {
 		}
 		i = 0;
 		int punctIndex = 0;
-		this.addNode("Root", "", "", "", "", "", "");
 		for (String token : p.getTokens()) {
 			if (token.trim().length() > 0) {
 				String dependsOn = punctuationLabels.get(punctIndex).getLeft();
@@ -125,40 +124,29 @@ public class DependencyTree extends LTKDb {
 						}
 					}
 				}
-				this.addNode(Integer.toString(i), dependsOn, token, token, gloss, label , parse);
+				TokenAnalysis treeNode = new TokenAnalysis(
+						this.key
+						, Integer.toString(i)
+						);
+				treeNode.setToken(token);
+				treeNode.setDependsOn(dependsOn);
+				treeNode.setLemma(token);
+				treeNode.setGloss(gloss);
+				treeNode.setLabel(label);
+				treeNode.setGrammar(parse);
+				this.nodes.add(treeNode);
 			}
 			i++;
 		}
 
 	}
-	
-	public List<List<String>> getNodes() {
+
+	public List<TokenAnalysis> getNodes() {
 		return nodes;
 	}
 
-	public void setNodes(List<List<String>> nodes) {
+	public void setNodes(List<TokenAnalysis> nodes) {
 		this.nodes = nodes;
 	}
-	
-	// "0","4", "ὁ", "ὁ", "the","ATR","DET.M.SG.NOM"
-	public void addNode(
-			String index
-			, String dependsOn
-			, String token
-			, String lemma
-			, String gloss
-			, String label
-			, String parse
-			) {
-		List<String> node = new ArrayList<String>();
-		node.add(index);
-		node.add(dependsOn);
-		node.add(token);
-		node.add(lemma);
-		node.add(gloss);
-		node.add(label);
-		node.add(parse);
-		this.nodes.add(node);
-	}
-	
+		
 }

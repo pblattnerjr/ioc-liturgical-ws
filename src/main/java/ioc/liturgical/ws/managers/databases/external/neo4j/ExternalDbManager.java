@@ -58,6 +58,7 @@ import ioc.liturgical.ws.models.db.docs.nlp.ConcordanceLine;
 import ioc.liturgical.ws.models.db.docs.nlp.DependencyTree;
 import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalyses;
 import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalysis;
+import ioc.liturgical.ws.models.db.docs.nlp.TokenAnalysis;
 import ioc.liturgical.ws.models.db.docs.nlp.WordInflected;
 import ioc.liturgical.ws.models.db.docs.ontology.TextLiturgical;
 import ioc.liturgical.ws.models.db.docs.tables.ReactBootstrapTableData;
@@ -72,8 +73,8 @@ import ioc.liturgical.ws.models.db.supers.LTKLink;
 import ioc.liturgical.ws.models.ws.db.Utility;
 import ioc.liturgical.ws.models.ws.response.column.editor.KeyArraysCollection;
 import ioc.liturgical.ws.models.ws.response.column.editor.KeyArraysCollectionBuilder;
-import ioc.liturgical.ws.models.ws.response.column.editor.LibraryTopicKey;
 import ioc.liturgical.ws.models.ws.response.column.editor.LibraryTopicKeyValue;
+import net.ages.alwb.tasks.DependencyNodesCreateTask;
 import net.ages.alwb.tasks.OntologyTagsUpdateTask;
 import net.ages.alwb.tasks.PdfGenerationTask;
 import net.ages.alwb.utils.core.datastores.json.exceptions.BadIdException;
@@ -1468,6 +1469,37 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 		
+		/**
+		 * 
+		 * Updates a word (token) analysis.
+		 * TODO: should create link between its predecessor and successor
+		 * (n:Liturgical)<-[a:NextToken]-(o:WordAnalysis)<-[b:NextToken]- ...etc.
+		 * @param requestor
+		 * @param id
+		 * @param json must be from on object of type LTKDb
+		 * @return
+		 */
+		public RequestStatus updateTokenAnalysis(
+				String requestor
+				, String json
+				) {
+			RequestStatus result = new RequestStatus();
+			try {
+				TokenAnalysis obj = gson.fromJson(json, TokenAnalysis.class);
+				String validation = obj.validate(json);
+				if (validation.length() == 0) {
+						result = updateLTKDbObject(requestor, obj.toJsonString());
+				} else {
+					result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+					result.setMessage(validation);
+				}
+			} catch (Exception e) {
+				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+			}
+			return result;
+		}
+
 		@Override
 		public boolean existsUnique(String id) {
 			try {
@@ -1656,9 +1688,9 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					.LABEL(TOPICS.ROOT.label)
 					.WHERE("id")
 					.STARTS_WITH(id)
+					.RETURN("*")
+					.ORDER_BY("doc.seq");
 					;
-			builder.RETURN("id, value, seq");
-			builder.ORDER_BY("doc.seq");
 			CypherQueryForDocs q = builder.build();
 			ResultJsonObjectArray result = getForQuery(q.toString(), true, true);
 			return result;
@@ -1676,9 +1708,9 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					.LABEL(topic.label)
 					.WHERE("id")
 					.STARTS_WITH(id)
+					.RETURN("*")
+					.ORDER_BY("doc.seq");
 					;
-			builder.RETURN("id, value, seq");
-			builder.ORDER_BY("doc.seq");
 			CypherQueryForDocs q = builder.build();
 			ResultJsonObjectArray result = getForQuery(q.toString(), true, true);
 			return result;
@@ -2057,11 +2089,9 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				// add the dependency tree to the result
 				JsonObject tree = new JsonObject();
 				String treeId = LIBRARIES.LINGUISTICS.toSystemDomain()
-						+ Constants.DOMAIN_DELIMITER
-						+ TOPICS.DEPENDENCY_TREE.label
-						+ Constants.DOMAIN_DELIMITER
+						+ Constants.ID_DELIMITER
 						+ id;
-				ResultJsonObjectArray treeData = this.getForId(requestor, treeId);
+				ResultJsonObjectArray treeData = this.getForIdStartsWith(treeId, TOPICS.WORD_GRAMMAR);
 				if (treeData.getResultCount() == 0) {
 					String value = getValueForLiturgicalText(requestor,id);
 					if (value.length() > 0) {
@@ -2071,15 +2101,24 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 								);
 						treeData = new ResultJsonObjectArray(this.printPretty);
 						treeData.addValue(dependencyTree.toJsonObject());
+						// create a thread that will save the new values to the database
+						ExecutorService executorService = Executors.newSingleThreadExecutor();
+						executorService.execute(
+								new DependencyNodesCreateTask(
+										this
+										, requestor
+										, dependencyTree.getNodes())
+								);
+						executorService.shutdown();
 					}
-					tree.add(
-							"treeData"
-							, treeData
-							.getFirstObject()
-					);
 				}
+//				treeData.setPrettyPrint(true);
+//				System.out.println(treeData);
+				tree.add(
+						"nodes"
+						, treeData.getValuesAsJsonArray()
+						);
 				result.addValue(tree);
-
 				result.setQuery("get word grammar analyses for text with id =  " + id);
 			} catch (Exception e) {
 				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
@@ -2144,6 +2183,35 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		}
 
 		public ResultJsonObjectArray getTokenGrammarAnalyses(
+				String requestor
+				, String token
+			) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
+				ResultJsonObjectArray queryResult = getForQuery(
+						"MATCH (n:WordGrammar) where n.topic = \"" 
+								+ token.toLowerCase() 
+								+ "\" return n.concise"
+								, false
+								, false
+			  );
+				result.setQuery("get grammar analyses for token " + token);
+				JsonObject analyses = new JsonObject();
+				JsonArray array = new JsonArray();
+				for (JsonObject o : queryResult.getValues()) {
+					String concise = o.get("n.concise").getAsString();
+					array.add(concise);
+				}
+				analyses.add(token, array);
+				result.addValue(analyses);
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+
+		public ResultJsonObjectArray getTokenTreeNode(
 				String requestor
 				, String token
 			) {

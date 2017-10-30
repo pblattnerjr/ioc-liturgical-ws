@@ -6,8 +6,6 @@ import ioc.liturgical.ws.constants.db.external.LIBRARIES;
 import ioc.liturgical.ws.constants.db.external.TOPICS;
 
 import java.text.Normalizer;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Pattern;
 
 import com.github.reinert.jjschema.Attributes;

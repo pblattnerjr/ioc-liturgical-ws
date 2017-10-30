@@ -1,6 +1,6 @@
 package ioc.liturgical.ws.models.db.docs.nlp;
 
-import ioc.liturgical.ws.constants.PARTS_OF_SPEECH;
+import ioc.liturgical.ws.constants.nlp.PARTS_OF_SPEECH;
 import ioc.liturgical.ws.models.db.supers.LTKDbGrammarAnalysisGenderNumberCase;
 
 import com.github.reinert.jjschema.Attributes;

@@ -5,7 +5,6 @@ import java.time.Instant;
 import com.github.reinert.jjschema.Attributes;
 import com.google.gson.annotations.Expose;
 
-import ioc.liturgical.ws.constants.STATUS;
 import ioc.liturgical.ws.constants.db.external.LIBRARIES;
 import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.models.db.supers.LTKDb;

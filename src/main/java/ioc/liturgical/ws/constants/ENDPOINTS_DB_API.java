@@ -302,6 +302,12 @@ public enum ENDPOINTS_DB_API {
 			, "Token"
 			,"Endpoint for text tokens"
 			)
+	, TOKEN_ANALYSIS(
+			"token/analysis"
+			, ENDPOINT_TYPES.NLP
+			, "Token Analysis"
+			,"Endpoint for a grammatical analysis of tokens"
+			)
 	, WORD_ANALYSIS(
 			"word/analysis"
 			, ENDPOINT_TYPES.NLP

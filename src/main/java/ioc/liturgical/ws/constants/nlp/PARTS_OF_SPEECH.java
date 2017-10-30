@@ -1,4 +1,4 @@
-package ioc.liturgical.ws.constants;
+package ioc.liturgical.ws.constants.nlp;
 
 import java.util.ArrayList;
 import java.util.List;
