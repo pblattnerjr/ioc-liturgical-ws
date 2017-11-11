@@ -37,8 +37,6 @@ public class DependencyNodesCreateTask implements Runnable {
 	public void run() {
 		synchronized(this) {
 			for (TokenAnalysis node : nodes) {
-				node.setPrettyPrint(true);
-				System.out.println(node.toJsonString());
 				try {
 					RequestStatus status = manager.addLTKDbObject(requestor, node.toJsonString());
 					if (status.getCode() != HTTP_RESPONSE_CODES.CREATED.code) {

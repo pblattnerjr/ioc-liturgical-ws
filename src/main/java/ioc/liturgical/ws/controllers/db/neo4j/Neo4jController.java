@@ -47,7 +47,22 @@ public class Neo4jController {
 	 */
 	public Neo4jController(ExternalDbManager externalManager) {
 	
-		String path = ENDPOINTS_DB_API.DOCS.toLibraryTopicKeyPath();
+		// GET analyses for treebank matching specified parameters
+		String path = ENDPOINTS_DB_API.TREEBANKS.toLibraryTopicPath();
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			String idTopic = request.splat()[1];
+        	return gson.toJson(externalManager.getDependencyDiagramData(
+        			requestor
+        			, idTopic
+        			, request.queryParams("t")  // ontology type
+        			));
+		});
+
+
+		path = ENDPOINTS_DB_API.DOCS.toLibraryTopicKeyPath();
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
@@ -127,6 +142,23 @@ public class Neo4jController {
         	return gson.toJson(externalManager.searchNotes(
         			requestor
         			, request.queryParams("t")  // note type (e.g. NoteUser)
+        			, request.queryParams("q")   // query
+        			, request.queryParams("p") // property of the doc (e.g. the ID, the value)
+        			, request.queryParams("m") // matcher (e.g. contains, starts with, regex)
+        			, request.queryParams("l") // tags (~labels)
+        			, request.queryParams("o") // operator
+        			));
+		});
+
+		// GET analyses for treebank matching specified parameters
+		path = ENDPOINTS_DB_API.TREEBANKS.pathname;
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+        	return gson.toJson(externalManager.searchTreebanks(
+        			requestor
+        			, request.queryParams("t")  // type (e.g. PtbWord)
         			, request.queryParams("q")   // query
         			, request.queryParams("p") // property of the doc (e.g. the ID, the value)
         			, request.queryParams("m") // matcher (e.g. contains, starts with, regex)
@@ -220,6 +252,14 @@ public class Neo4jController {
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
         	return externalManager.getNotesSearchDropdown().toJsonString();
+		});
+
+		// GET dropdowns for searching treebank
+		path = ENDPOINTS_DB_API.DROPDOWNS_TREEBANKS.pathname;
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+        	return externalManager.getTreebanksSearchDropdown().toJsonString();
 		});
 
 		// GET data for a react-bootstrap-table

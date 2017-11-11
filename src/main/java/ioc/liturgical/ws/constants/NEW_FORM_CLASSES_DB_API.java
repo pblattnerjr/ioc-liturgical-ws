@@ -2,8 +2,7 @@ package ioc.liturgical.ws.constants;
 
 import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
 import ioc.liturgical.ws.models.db.docs.nlp.ConcordanceLine;
-import ioc.liturgical.ws.models.db.docs.nlp.DependencyTree;
-import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalysis;
+import ioc.liturgical.ws.models.db.docs.nlp.WordAnalysis;
 import ioc.liturgical.ws.models.db.forms.AnimalCreateForm;
 import ioc.liturgical.ws.models.db.forms.BeingCreateForm;
 import ioc.liturgical.ws.models.db.forms.ConceptCreateForm;
@@ -176,9 +175,9 @@ public enum NEW_FORM_CLASSES_DB_API {
 		, ENDPOINTS_DB_API.LINKS
 		, RESTRICTION_FILTERS.ALL_DOMAINS_ADMIN
 		)
-, NEW_PERSEUS_ANALYSIS(
-		"Perseus Analysis"
-		, new PerseusAnalysis()
+, NEW_WORD_ANALYSIS(
+		"Word Analysis"
+		, new WordAnalysis()
 		, ENDPOINTS_DB_API.WORD_ANALYSIS
 		, RESTRICTION_FILTERS.WS_ADMIN
 		)

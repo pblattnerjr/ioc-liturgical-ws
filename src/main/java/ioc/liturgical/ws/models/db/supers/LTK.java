@@ -129,6 +129,10 @@ public class LTK extends AbstractModel {
 	public String getTopic() {
 		return topic;
 	}
+	
+	public String getTopicKey() {
+		return this.topic + Constants.ID_DELIMITER + this.key;
+	}
 
 	public void setTopic(String topic) {
 		this.topic = topic;

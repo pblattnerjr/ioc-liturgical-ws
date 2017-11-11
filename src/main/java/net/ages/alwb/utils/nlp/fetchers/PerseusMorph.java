@@ -12,8 +12,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalyses;
-import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalysis;
+import ioc.liturgical.ws.models.db.docs.nlp.WordAnalyses;
+import ioc.liturgical.ws.models.db.docs.nlp.WordAnalysis;
 import net.ages.alwb.utils.nlp.constants.GRAMMAR_ABBREVIATIONS;
 
 
@@ -35,11 +35,11 @@ public class PerseusMorph {
 
 	private static String url = "http://www.perseus.tufts.edu/hopper/morph";
 	private String token = "";
-	private PerseusAnalyses analyses = null;
+	private WordAnalyses analyses = null;
 
 	public PerseusMorph(String token) {
 		this.token = token.trim();
-		analyses = new PerseusAnalyses(token);
+		analyses = new WordAnalyses(token);
 		this.fetchAnalyses();
 	}
 	
@@ -49,7 +49,7 @@ public class PerseusMorph {
 	 */
 	private void fetchAnalyses() {
 		if (token.length() == 1 && net.ages.alwb.utils.nlp.constants.Constants.PUNCTUATION.contains(token)) {
-			PerseusAnalysis analysis = new PerseusAnalysis(
+			WordAnalysis analysis = new WordAnalysis(
 					token
 					, token
 					, token
@@ -79,7 +79,7 @@ public class PerseusMorph {
 							for (Element r : rows) {
 								String greek = r.select("td.greek").first().text().trim();
 								String parse = r.child(1).text().trim();
-								PerseusAnalysis analysis = new PerseusAnalysis(
+								WordAnalysis analysis = new WordAnalysis(
 										token
 										, greek
 										, lemmaGreek
@@ -123,11 +123,11 @@ public class PerseusMorph {
 		this.token = token;
 	}
 
-	public PerseusAnalyses getAnalyses() {
+	public WordAnalyses getAnalyses() {
 		return analyses;
 	}
 
-	public void setAnalyses(PerseusAnalyses analyses) {
+	public void setAnalyses(WordAnalyses analyses) {
 		this.analyses = analyses;
 	}
 

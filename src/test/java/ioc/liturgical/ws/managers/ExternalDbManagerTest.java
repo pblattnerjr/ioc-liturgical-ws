@@ -23,8 +23,8 @@ import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.models.RequestStatus;
 import ioc.liturgical.ws.models.ResultJsonObjectArray;
-import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalyses;
-import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalysis;
+import ioc.liturgical.ws.models.db.docs.nlp.WordAnalyses;
+import ioc.liturgical.ws.models.db.docs.nlp.WordAnalysis;
 import ioc.liturgical.ws.models.db.docs.ontology.Animal;
 import ioc.liturgical.ws.models.db.docs.ontology.Being;
 import ioc.liturgical.ws.models.db.docs.ontology.Concept;
@@ -402,8 +402,8 @@ public class ExternalDbManagerTest {
 		    		);
 		    for (String token : tokens) {
 		    		PerseusMorph pm = new PerseusMorph(token);
-		    		PerseusAnalyses analyses = pm.getAnalyses();
-		    		for (PerseusAnalysis analysis : analyses.analyses ) {
+		    		WordAnalyses analyses = pm.getAnalyses();
+		    		for (WordAnalysis analysis : analyses.analyses ) {
 		    			System.out.println(analysis.toJsonString());
 		    			String s= analysis.toExPexInterlinear(true);
 		    			if (!result.contains(s)) {

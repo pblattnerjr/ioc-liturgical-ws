@@ -112,6 +112,21 @@ public enum TOPICS {
 			, "A celestial or geographic location."
 			, TOPICS.ONTOLOGY_ROOT
 			)
+	, PERSEUS_TREEBANK(
+			"PerseusTreebank"
+			, "Persesus Treebank."
+			, TOPICS.GRAMMAR
+			)
+	, PERSEUS_TREEBANK_SENTENCE(
+			"PtbSentence"
+			, "A sentence from a text from the Persesus Treebank."
+			, TOPICS.PERSEUS_TREEBANK
+			)
+	, PERSEUS_TREEBANK_WORD(
+			"PtbWord"
+			, "Grammatical Information about a token (e.g., a word or punctuation mark) from the Persesus Treebank."
+			, TOPICS.PERSEUS_TREEBANK
+			)
 	, ROLE(
 			"Role"
 			, "A role that entity can play or be."
@@ -146,6 +161,11 @@ public enum TOPICS {
 			"Speech"
 			, "Text that records a speech made by someone."
 			, TOPICS.TEXT
+			)
+	, TOKEN_GRAMMAR(
+			"TokenGrammar"
+			, "Grammatical Information about a token (e.g., a word or punctuation mark)."
+			, TOPICS.GRAMMAR
 			)
 	, WORDNET(
 			"WordNet"

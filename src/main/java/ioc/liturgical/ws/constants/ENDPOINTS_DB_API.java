@@ -116,6 +116,12 @@ public enum ENDPOINTS_DB_API {
 			, "domain"
 			,"Endpoint for dropdown values for the topics in the gr_gr_cog library."
 			)
+	, DROPDOWNS_TREEBANKS(
+			"treebanks"
+			, ENDPOINT_TYPES.DROPDOWN
+			, "treebanks"
+			,"Endpoint for dropdown values to search treebanks."
+			)
 	, GROUPS(
 			"groups"
 			, ENDPOINT_TYPES.ONTOLOGY
@@ -277,6 +283,12 @@ public enum ENDPOINTS_DB_API {
 			, ENDPOINT_TYPES.NLP
 			, "Text Analysis"
 			,"Endpoint for a grammatical analysis of words in a text"
+			)
+	, TREEBANKS(
+			"treebanks"
+			, ENDPOINT_TYPES.NODE
+			, "treebanks"
+			,"Endpoint for treebanks"
 			)
 	, VALUE(
 			"value"

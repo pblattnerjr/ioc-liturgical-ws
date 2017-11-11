@@ -7,7 +7,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalyses;
+import ioc.liturgical.ws.models.db.docs.nlp.WordAnalyses;
 
 
 /**
@@ -28,11 +28,11 @@ public class Lexigram {
 
 	private static String url = "http://www.lexigram.gr/lex/arch/";
 	private String token = "";
-	private PerseusAnalyses analyses = null;
+	private WordAnalyses analyses = null;
 
 	public Lexigram(String token) {
 		this.token = token;
-		analyses = new PerseusAnalyses(token);
+		analyses = new WordAnalyses(token);
 		this.fetchAnalyses();
 	}
 	
@@ -83,11 +83,11 @@ public class Lexigram {
 		this.token = token;
 	}
 
-	public PerseusAnalyses getAnalyses() {
+	public WordAnalyses getAnalyses() {
 		return analyses;
 	}
 
-	public void setAnalyses(PerseusAnalyses analyses) {
+	public void setAnalyses(WordAnalyses analyses) {
 		this.analyses = analyses;
 	}
 

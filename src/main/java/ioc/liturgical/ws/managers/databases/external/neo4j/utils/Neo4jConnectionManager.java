@@ -74,7 +74,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			  , String password
 			  , boolean readOnly
 			  ) {
-		  this.boltUrl = "bolt://"+boltUrl;
+		  this.boltUrl = "bolt://"+boltUrl+":7687";
 		  this.username = username;
 		  this.password = password;
 		  this.readOnly  = readOnly;
@@ -432,6 +432,36 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 				);
 	}
 
+	public RequestStatus mergeWhereEqual(LTKDb doc) throws DbException {
+		RequestStatus result = new RequestStatus();
+		int count = 0;
+		setIdConstraint(doc.toSchemaAsLabel());
+		String query = 
+				"match (n:" + TOPICS.ROOT.label + ") where n.id = \"" 
+				+ doc.getId() 
+		        + "\" on create set n = {props} "
+		        + "\" on merge set n = {props} "
+		        + "return count(n)";
+		try (org.neo4j.driver.v1.Session session = driver.session()) {
+			Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
+			StatementResult neoResult = session.run(query, props);
+			count = neoResult.consume().counters().propertiesSet();
+			if (count > 0) {
+		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": updated " + doc.getId());
+			} else {
+		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + " " + doc.getId());
+			}
+		} catch (Exception e){
+			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+			result.setDeveloperMessage(e.getMessage());
+		}
+    	recordQuery(query, result.getCode(), count);
+		return result;
+	}
+
 	public String relationshipQueryBuilder(
 			String fromId
 			, String fromLabel
@@ -441,11 +471,11 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			, String verb
 			) {
 		StringBuffer sb = new StringBuffer();
-		sb.append("MATCH (f");
+		sb.append("MATCH (f:");
 		sb.append(fromLabel);
 		sb.append(") where f.id = \'"); 
 		sb.append(fromId); 
-		sb.append("\' match (t");
+		sb.append("\' match (t:");
 		sb.append(toLabel);
 		sb.append(") where t.id = \'" );
 		sb.append(toId); 
