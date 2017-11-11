@@ -1,4 +1,5 @@
 /.settings/
+/repo/
 /target/
 /ioc-liturgical-db.mv.db
 /test-db.mv.db
