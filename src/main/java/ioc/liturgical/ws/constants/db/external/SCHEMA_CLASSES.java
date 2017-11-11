@@ -11,7 +11,9 @@ import com.google.gson.JsonObject;
 
 import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
 import ioc.liturgical.ws.models.db.docs.nlp.ConcordanceLine;
-import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalysis;
+import ioc.liturgical.ws.models.db.docs.nlp.PtbSentence;
+import ioc.liturgical.ws.models.db.docs.nlp.PtbWord;
+import ioc.liturgical.ws.models.db.docs.nlp.WordAnalysis;
 import ioc.liturgical.ws.models.db.docs.nlp.TokenAnalysis;
 import ioc.liturgical.ws.models.db.docs.nlp.WordInflected;
 import ioc.liturgical.ws.models.db.docs.ontology.Animal;
@@ -78,9 +80,11 @@ import ioc.liturgical.ws.models.db.supers.LTK;
 import ioc.liturgical.ws.models.db.supers.LTKDb;
 import ioc.liturgical.ws.models.db.supers.LTKDbNote;
 import ioc.liturgical.ws.models.db.supers.LTKDbOntologyEntry;
+import ioc.liturgical.ws.models.db.supers.LTKDbTokenAnalysis;
 import ioc.liturgical.ws.models.db.supers.LTKLink;
 import net.ages.alwb.utils.core.datastores.json.models.DropdownItem;
 import net.ages.alwb.utils.core.datastores.json.models.ModelHelpers;
+import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 
 /**
  * Enumerates classes that have schemas for storing in the database
@@ -188,9 +192,17 @@ public enum SCHEMA_CLASSES {
 			new ObjectCreateForm(" ")
 			, new Object(" ")
 			)
-	, PERSEUS_ANALYSIS(
-			new PerseusAnalysis()
-			, new PerseusAnalysis()
+	, WORD_ANALYSIS(
+			new WordAnalysis()
+			, new WordAnalysis()
+			)
+	, PERSEUS_TREEBANK_SENTENCE(
+			new PtbSentence("","0")
+			, new PtbSentence("","0")
+			)
+	, PERSEUS_TREEBANK_WORD(
+			new PtbWord("","0")
+			, new PtbWord("","0")
 			)
 	, PLACE(
 			new PlaceCreateForm(" ")
@@ -285,16 +297,22 @@ public enum SCHEMA_CLASSES {
 	 */
 	public static String validate(String json) {
 		String result = "";
+		SCHEMA_CLASSES theClass = null;
+		String schema = "";
 		try {
 			LTK ltk = gson.fromJson(json, LTK.class);
-			SCHEMA_CLASSES theClass = classForSchemaName(ltk.get_valueSchemaId());
-			if (ltk.get_valueSchemaId().contains("CreateForm")) {
-				result = theClass.ltk.validate(json);
-			} else {
-				result = theClass.ltkDb.validate(json);
-			}
+			schema = ltk.get_valueSchemaId();
+			 theClass = classForSchemaName(schema);
+				if (ltk.get_valueSchemaId().contains("CreateForm")) {
+					result = theClass.ltk.validate(json);
+				} else {
+					result = theClass.ltkDb.validate(json);
+				}
 		} catch (Exception e) {
-			result = e.getMessage();
+			if (theClass == null) {
+				System.out.println("SCHEMA_CLASSES does not include " + schema);
+			}
+			e.printStackTrace();
 		}
 		return result;
 	}
@@ -448,6 +466,42 @@ public enum SCHEMA_CLASSES {
 		for (SCHEMA_CLASSES s : SCHEMA_CLASSES.values()) {
 			if (s.ltkDb instanceof ioc.liturgical.ws.models.db.supers.LTKDbNote) {
 				LTKDbNote entry = (LTKDbNote) s.ltkDb;
+				result.add(new DropdownItem(entry.getOntologyTopic().label).toJsonObject());
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Creates a Json Object with keys that are the typename and
+	 * values that are a JsonArray of the property names for the
+	 * schema assocated with that typename.
+	 * @return
+	 */
+	public static JsonObject tokenAnalysisPropertyJson() {
+		JsonObject result = new JsonObject();
+		JsonArray anyProps = new JsonArray();
+		anyProps.add(new DropdownItem("Any","*").toJsonObject());
+		anyProps.add(new DropdownItem("id","id").toJsonObject());
+		result.add("*", anyProps);
+		for (SCHEMA_CLASSES s : SCHEMA_CLASSES.values()) {
+			if (s.ltkDb instanceof ioc.liturgical.ws.models.db.supers.LTKDbTokenAnalysis) {
+				LTKDbTokenAnalysis entry = (LTKDbTokenAnalysis) s.ltkDb;
+				result.add(
+						entry.getOntologyTopic().label
+						, ModelHelpers.getPropertiesAsDropdownItems(entry)
+				);
+			}
+		}
+		return result;
+	}
+
+	public static JsonArray tokenAnalysisTypesJson() {
+		JsonArray result = new JsonArray();
+		result.add(new DropdownItem("Any","*").toJsonObject());
+		for (SCHEMA_CLASSES s : SCHEMA_CLASSES.values()) {
+			if (s.ltkDb instanceof ioc.liturgical.ws.models.db.supers.LTKDbTokenAnalysis) {
+				LTKDbTokenAnalysis entry = (LTKDbTokenAnalysis) s.ltkDb;
 				result.add(new DropdownItem(entry.getOntologyTopic().label).toJsonObject());
 			}
 		}

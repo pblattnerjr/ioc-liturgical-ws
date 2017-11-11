@@ -7,12 +7,12 @@ import com.google.gson.annotations.Expose;
 
 import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
 
-public class PerseusAnalyses extends AbstractModel {
+public class WordAnalyses extends AbstractModel {
 
 	@Expose public String token = "";
-	@Expose public List<PerseusAnalysis> analyses = new ArrayList<PerseusAnalysis>();
+	@Expose public List<WordAnalysis> analyses = new ArrayList<WordAnalysis>();
 	
-	public PerseusAnalyses(
+	public WordAnalyses(
 			String token
 			) {
 		super();
@@ -27,15 +27,15 @@ public class PerseusAnalyses extends AbstractModel {
 		this.token = token;
 	}
 	
-	public void addAnalysis(PerseusAnalysis analysis) {
+	public void addAnalysis(WordAnalysis analysis) {
 		this.analyses.add(analysis);
 	}
 
-	public List<PerseusAnalysis> getAnalyses() {
+	public List<WordAnalysis> getAnalyses() {
 		return analyses;
 	}
 
-	public void setAnalyses(List<PerseusAnalysis> analyses) {
+	public void setAnalyses(List<WordAnalysis> analyses) {
 		this.analyses = analyses;
 	}
 

@@ -10,10 +10,25 @@ import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.models.db.supers.LTKDb;
 import net.ages.alwb.utils.nlp.constants.GRAMMAR_ABBREVIATIONS_MAPPER;
 
-@Attributes(title = "Grammatical Analysis", description = "Grammatical analysis of a word.")
-public class PerseusAnalysis extends LTKDb {
+/**
+ * Word Analysis
+ * 
+ * Usually these are analyses from the Perseus (Tuft University) morphological analysis tool.
+ * But, they can also be analyses added by uses of this system.
+ * 
+ * Note the difference between a TokenAnalysis and a WordAnalysis.
+ * A TokenAnalysis is the grammatical analysis of a specific token 
+ * occurring in a specific text.  A WordAnalysis has no direct association
+ * with any particular text.  It is just a potential analysis for a given inflected form.
+ * 
+ * @author mac002
+ * @see TokenAnalysis
+ *
+ */
+@Attributes(title = "Word Analysis", description = "Grammatical analysis of a word.")
+public class WordAnalysis extends LTKDb {
 
-	private static String schema = PerseusAnalysis.class.getSimpleName();
+	private static String schema = WordAnalysis.class.getSimpleName();
 	private static double serialVersion = 1.1;
 	private static TOPICS topic = TOPICS.WORD_GRAMMAR;
 
@@ -36,7 +51,7 @@ public class PerseusAnalysis extends LTKDb {
 	@Attributes(required = true, description = "Where the information for this parse came from.")
 	@Expose public String source = "";
 	
-	public PerseusAnalysis() {
+	public WordAnalysis() {
 		super(
 				LIBRARIES.LINGUISTICS.toSystemDomain()
 				, ""
@@ -47,7 +62,7 @@ public class PerseusAnalysis extends LTKDb {
 				);
 	}
 	
-	public PerseusAnalysis(
+	public WordAnalysis(
 			String token
 			, String greek
 			, String lemmaGreek

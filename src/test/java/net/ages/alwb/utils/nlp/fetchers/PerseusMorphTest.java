@@ -4,8 +4,8 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalyses;
-import ioc.liturgical.ws.models.db.docs.nlp.PerseusAnalysis;
+import ioc.liturgical.ws.models.db.docs.nlp.WordAnalyses;
+import ioc.liturgical.ws.models.db.docs.nlp.WordAnalysis;
 import opennlp.tools.tokenize.SimpleTokenizer;
 import opennlp.tools.tokenize.Tokenizer;
 
@@ -18,8 +18,8 @@ public class PerseusMorphTest {
         String [] theTokens = tokenizer.tokenize(s);
         for (String token : theTokens) {
     		PerseusMorph pm = new PerseusMorph(token);
-    		PerseusAnalyses analyses = pm.getAnalyses();
-    		for (PerseusAnalysis analysis : analyses.analyses ) {
+    		WordAnalyses analyses = pm.getAnalyses();
+    		for (WordAnalysis analysis : analyses.analyses ) {
     			System.out.println(analysis.toExPexInterlinear(true));
     		}
         }

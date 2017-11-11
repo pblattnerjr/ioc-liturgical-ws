@@ -1,5 +1,7 @@
 package ioc.liturgical.ws.models.db.docs.nlp;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 
 import ioc.liturgical.ws.constants.db.external.LIBRARIES;
@@ -147,6 +149,14 @@ public class DependencyTree extends LTKDb {
 
 	public void setNodes(List<TokenAnalysis> nodes) {
 		this.nodes = nodes;
+	}
+	
+	public List<JsonObject> nodesToJsonObjectList() {
+		List<JsonObject> result = new ArrayList<JsonObject>();
+		for (TokenAnalysis tokenAnalysis : this.nodes) {
+			result.add(tokenAnalysis.toJsonObject());
+		}
+		return result;
 	}
 		
 }

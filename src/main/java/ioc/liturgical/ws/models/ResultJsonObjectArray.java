@@ -6,10 +6,12 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 
 import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
+import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 
 public class ResultJsonObjectArray extends AbstractModel {
 	@Expose public String query;
@@ -175,15 +177,20 @@ public class ResultJsonObjectArray extends AbstractModel {
 	 * @return
 	 */
 	public JsonObject getFirstObjectValueAsObject() {
-		if (this.valueCount > 0) {
-			return this.getValues()
-					.get(0)
-					.getAsJsonObject()
-					.get("value")
-					.getAsJsonObject();
-		} else {
-			return null;
-		}
+		JsonObject result = null;
+			if (this.valueCount > 0) {
+				result = this.getValues()
+						.get(0)
+						.getAsJsonObject();
+				if (result.has("value")) {
+					JsonElement e = result.get("value");
+					if (e.isJsonObject()) {
+						result = result.get("value")
+								.getAsJsonObject();
+					}
+				}
+			}
+		return result;
 	}
 
 	/**

@@ -896,6 +896,17 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			domain.setLabels(labels);
 			addDomain(wsAdmin, domain.toJsonString());
 
+			// add domain for Archdiocese of Guatemala
+			domain = new DomainCreateForm();
+			domain.setLanguageCode("spa");
+			domain.setCountryCode("gtm");
+			domain.setRealm("saog");
+			domain.setDescription("Translations for the Holy Orthodox Archbishopric in Guatemala");
+			labels = new ArrayList<String>();
+			labels.add("Liturgical");
+			domain.setLabels(labels);
+			addDomain(wsAdmin, domain.toJsonString());
+
 			// add domain for Fr. Seraphim Dedes
 			domain = new DomainCreateForm();
 			domain.setLanguageCode("en");

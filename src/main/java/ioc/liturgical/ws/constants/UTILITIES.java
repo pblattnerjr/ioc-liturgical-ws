@@ -34,6 +34,12 @@ public enum UTILITIES {
 			, new ArrayList<UTILITIES>(asList(UTILITIES.Tokenize))
 			, new ArrayList<UTILITIES>()
 			) 
+	, FetchPerseusTreebank(
+			"FetchPerseusTreebank"
+			, "Reads Perseus Greek Treebank data from github and loads it into the database"
+			, new ArrayList<UTILITIES>()
+			, new ArrayList<UTILITIES>()
+			) 
 	;
 
 	public String keyname = "";

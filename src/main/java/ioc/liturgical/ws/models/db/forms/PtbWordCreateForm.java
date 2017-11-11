@@ -4,7 +4,6 @@ import com.google.gson.annotations.Expose;
 
 import ioc.liturgical.ws.constants.db.external.LIBRARIES;
 import ioc.liturgical.ws.constants.db.external.TOPICS;
-import ioc.liturgical.ws.models.db.supers.LTK;
 import ioc.liturgical.ws.models.db.supers.LTKTokenAnalysisCreateForm;
 
 import com.github.reinert.jjschema.Attributes;
@@ -22,13 +21,15 @@ import com.github.reinert.jjschema.Attributes;
  *
  */
 @Attributes(title = "Tree Node", description = "Information to render a node of a depenency diagram")
-public class TokenAnalysisCreateForm extends LTKTokenAnalysisCreateForm {
+public class PtbWordCreateForm extends LTKTokenAnalysisCreateForm {
 	
-	private static String schema = TokenAnalysisCreateForm.class.getSimpleName();
+	private static String schema = PtbWordCreateForm.class.getSimpleName();
 	private static double version = 1.1;
-	private static TOPICS ontoTopic = TOPICS.TOKEN_GRAMMAR;
+	private static TOPICS ontoTopic = TOPICS.PERSEUS_TREEBANK_WORD;
 
-	public TokenAnalysisCreateForm(
+    @Expose String postag = "";
+
+	public PtbWordCreateForm(
 			String topic
 			, String key
 			) {
@@ -40,6 +41,15 @@ public class TokenAnalysisCreateForm extends LTKTokenAnalysisCreateForm {
 				,  version
 				, ontoTopic
 				);
+	}
+
+
+	public String getPostag() {
+		return postag;
+	}
+
+	public void setPostag(String postag) {
+		this.postag = postag;
 	}
 
 }
