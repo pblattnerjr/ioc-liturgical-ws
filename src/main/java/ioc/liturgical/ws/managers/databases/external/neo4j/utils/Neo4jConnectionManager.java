@@ -230,8 +230,6 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		String query = "create constraint on (p:" + label + ") assert p.id is unique"; 
 		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			neoResult = session.run(query);
-			// TODO: this causes a loop.  Figure out what to do about it.
-//	    	this.insert(new Transaction(query, hostName));
 		} catch (Exception e) {
 			ErrorUtils.report(logger, e);
 		}
