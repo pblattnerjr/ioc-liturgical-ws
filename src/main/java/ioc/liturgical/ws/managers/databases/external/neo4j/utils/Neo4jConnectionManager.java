@@ -1,15 +1,19 @@
 package ioc.liturgical.ws.managers.databases.external.neo4j.utils;
 
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.http.protocol.HTTP;
 import org.neo4j.driver.v1.AuthTokens;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.GraphDatabase;
 import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.Values;
+import org.neo4j.driver.v1.summary.ResultSummary;
+import org.neo4j.driver.v1.summary.SummaryCounters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,16 +26,19 @@ import com.google.gson.JsonParser;
 
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
+import ioc.liturgical.ws.constants.db.external.SCHEMA_CLASSES;
 import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.managers.exceptions.DbException;
 import ioc.liturgical.ws.managers.interfaces.LowLevelDataStoreInterface;
+import ioc.liturgical.ws.managers.synch.SynchManager;
 import net.ages.alwb.utils.core.datastores.json.models.ModelHelpers;
 import ioc.liturgical.ws.models.RequestStatus;
 import ioc.liturgical.ws.models.ResultJsonObjectArray;
 import ioc.liturgical.ws.models.db.stats.QueryStatistics;
+import ioc.liturgical.ws.models.db.stats.SynchLog;
 import ioc.liturgical.ws.models.db.supers.LTKDb;
+import ioc.liturgical.ws.models.db.synch.Transaction;
 import net.ages.alwb.utils.core.datastores.db.neo4j.models.NodePairParameters;
-import net.ages.alwb.utils.core.datastores.db.neo4j.models.NodePairs;
 import net.ages.alwb.utils.core.datastores.json.models.LTKVJsonObject;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 import net.ages.alwb.utils.core.misc.Constants;
@@ -45,18 +52,24 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 	private static final Logger logger = LoggerFactory
 			.getLogger(Neo4jConnectionManager.class);
 
-	  private Gson gson = new GsonBuilder().disableHtmlEscaping().create();
+	private static final String synchLogGetQuery = "match (doc:SynchLog) where doc.id = '" + SynchLog.singletonId + "' return properties(doc)";
+	private static final String synchLogCreateQuery = "create (doc:SynchLog) set doc = {props} return doc";
+	private static final String synchLogUpdateQuery = "match (doc:SynchLog) where doc.id = '" + SynchLog.singletonId + "' set doc = {props} return doc";
+	 private static String macAddress = "unknown";
+	 private static String hostName = "unknown";
+	 private Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 	  private JsonParser parser = new JsonParser();
 	  private String boltUrl = "bolt://127.0.0.1";
 	  private String username = "";
 	  private String password = "";
-	  private Driver driver = null;
+	  private Driver dbDriver = null;
 	  private boolean connectionOK = false;
 	  private boolean recordQueries = false;
 	  private boolean readOnly = false;
 	  private static String doc = "doc.";
 	  private static String id = "id";
-
+	  private static SynchManager synchManager = null;
+	  
 	  public Neo4jConnectionManager(
 			  String username
 			  ,String password
@@ -66,6 +79,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		  this.password = password;
 		  this.readOnly  = readOnly;
 		  initializeDriver();
+		  getMacAddress();
 		  }
 
 	  public Neo4jConnectionManager(
@@ -79,15 +93,33 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		  this.password = password;
 		  this.readOnly  = readOnly;
 		  initializeDriver();
+		  getMacAddress();
 	  }
 	  
+	  public Neo4jConnectionManager(
+			  String boltUrl
+			  , String boltPort
+			  , String username
+			  , String password
+			  , boolean readOnly
+			  ) {
+		  this.boltUrl = "bolt://"+boltUrl+":" + boltPort;
+		  this.username = username;
+		  this.password = password;
+		  this.readOnly  = readOnly;
+		  initializeDriver();
+		  getMacAddress();
+	  }
 	  private void initializeDriver() {
-		  logger.info("Using " + boltUrl + " for external database...");
-		  driver = GraphDatabase.driver(boltUrl, AuthTokens.basic(username, password));
-		  testConnection();
+		  try {
+			  logger.info("Using " + boltUrl + " for external database...");
+			  dbDriver = GraphDatabase.driver(boltUrl, AuthTokens.basic(username, password));
+			  testConnection();
+		  } catch (Exception e) {
+			  logger.error(e.getMessage());
+		  }
 	  }
 	  
-
 	  private ResultJsonObjectArray testConnection() {
 		  ResultJsonObjectArray result = getResultObjectForQuery("match (n) return count(n) limit 10");
 		  if (result.getValueCount() > 0) {
@@ -100,8 +132,8 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		  }
 		  return result;
 	  }
-	  
 
+	  
 	public ResultJsonObjectArray getForQuery(String query) {
 			return getResultObjectForQuery(query);
 	}
@@ -120,7 +152,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			  String query
 			  ) {
 			ResultJsonObjectArray result = new ResultJsonObjectArray(true);
-			try (org.neo4j.driver.v1.Session session = driver.session()) {
+			try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 				StatementResult neoResult = session.run(query);
 				while (neoResult.hasNext()) {
 					org.neo4j.driver.v1.Record record = neoResult.next();
@@ -139,6 +171,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			recordQuery(query, result.getStatus().getCode(), result.getCount());
 			return result;
 	}
+
 
 	  /**
 	   * Record in the database the results of running a query.
@@ -174,14 +207,9 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 	  
 	  protected void finalize() throws Throwable {
 		  super.finalize();
-		  driver.close();
+		  dbDriver.close();
 		}
 	  
-	  public static void main(String [] args) {
-		  Neo4jConnectionManager q = new Neo4jConnectionManager(args[0], args[1], args[2], false);
-		  System.out.println(q.isConnectionOK());
-	  }
-
 	public boolean isConnectionOK() {
 		return connectionOK;
 	}
@@ -200,21 +228,35 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 	private StatementResult setIdConstraint(String label) {
 		StatementResult neoResult = null;
 		String query = "create constraint on (p:" + label + ") assert p.id is unique"; 
-		try (org.neo4j.driver.v1.Session session = driver.session()) {
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			neoResult = session.run(query);
+			// TODO: this causes a loop.  Figure out what to do about it.
+//	    	this.insert(new Transaction(query, hostName));
 		} catch (Exception e) {
 			ErrorUtils.report(logger, e);
 		}
 		return neoResult;
 	}
 	
+	public StatementResult setPropertyConstraint(String label, String property) {
+		StatementResult neoResult = null;
+		String query = "create constraint on (p:" + label + ") assert p." + property + " is unique"; 
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
+			neoResult = session.run(query);
+	    	this.insert(new Transaction(query, hostName));
+		} catch (Exception e) {
+			ErrorUtils.report(logger, e);
+		}
+		return neoResult;
+	}
+
 	@Override
 	public RequestStatus insert(LTKVJsonObject doc) throws DbException {
 		RequestStatus result = new RequestStatus();
 		int count = 0;
 		setIdConstraint(doc.getSchemaAsLabel());
 		String query = "create (n:" + doc.getDelimitedLabels(":") + ") set n = {props} return n";
-		try (org.neo4j.driver.v1.Session session = driver.session()) {
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
 			StatementResult neoResult = session.run(query, props);
 			count = neoResult.consume().counters().nodesCreated();
@@ -239,16 +281,64 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		int count = 0;
 		setIdConstraint(doc.toSchemaAsLabel());
 		String query = "create (n:" + doc.fetchOntologyLabels() + ") set n = {props} return n";
-		try (org.neo4j.driver.v1.Session session = driver.session()) {
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
 			StatementResult neoResult = session.run(query, props);
 			count = neoResult.consume().counters().nodesCreated();
 			if (count > 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.CREATED.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.CREATED.message + ": created " + doc.getId());
+		    	this.insert(new Transaction(query, doc, hostName));
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + "  " + doc.getId());
+			}
+		} catch (Exception e){
+			if (e.getMessage().contains("already exists")) {
+				result.setCode(HTTP_RESPONSE_CODES.CONFLICT.code);
+				result.setDeveloperMessage(HTTP_RESPONSE_CODES.CONFLICT.message);
+			} else {
+				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setDeveloperMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+			}
+			result.setUserMessage(e.getMessage());
+		}
+    	recordQuery(query, result.getCode(), count);
+		return result;
+	}
+
+	private static void getMacAddress() {
+		StringBuilder sb = new StringBuilder();
+		try {
+			InetAddress ip = InetAddress.getLocalHost();
+			NetworkInterface network = NetworkInterface.getByInetAddress(ip);
+			byte[] mac = network.getHardwareAddress();
+			for (int i = 0; i < mac.length; i++) {
+				sb.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? "-" : ""));
+			}
+			macAddress = sb.toString();
+			hostName = ip.getCanonicalHostName();
+		} catch (Exception e) {
+			ErrorUtils.report(logger, e);
+		}
+	}
+	
+	public RequestStatus insert(Transaction doc) throws DbException {
+		RequestStatus result = new RequestStatus();
+		int count = 0;
+		setIdConstraint("Transaction");
+		doc.setRequestingMac(macAddress);
+		String query = "create (n:Transaction) set n = {props} return n";
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
+			Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
+			StatementResult neoResult = session.run(query, props);
+			count = neoResult.consume().counters().nodesCreated();
+			if (count > 0) {
+		    	result.setCode(HTTP_RESPONSE_CODES.CREATED.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.CREATED.message + ": created " + doc.whenTransactionRecordedInThisDatabase);
+			} else {
+		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + "  " + doc.whenTransactionRecordedInThisDatabase );
 			}
 		} catch (Exception e){
 			if (e.getMessage().contains("already exists")) {
@@ -280,7 +370,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 	public void recordQuery(QueryStatistics doc) throws DbException {
 		if (! readOnly) {
 			String query = "create (n:stats) set n = {props} return n";
-			try (org.neo4j.driver.v1.Session session = driver.session()) {
+			try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 				StatementResult neoResult = session.run(
 						query
 						, ModelHelpers.getAsPropertiesMap(doc)
@@ -291,6 +381,29 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		}
 	}
 
+
+	public void recordSynch(SynchLog doc) throws DbException {
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
+			session.run(
+					synchLogUpdateQuery
+					, ModelHelpers.getAsPropertiesMap(doc)
+					);
+		} catch (Exception e){
+			ErrorUtils.report(logger, e, "Could not update SynchLog");
+		}
+	}
+
+	public void createSynch(SynchLog doc) throws DbException {
+		this.setIdConstraint("SynchLog");
+			try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
+				session.run(
+						synchLogCreateQuery
+						, ModelHelpers.getAsPropertiesMap(doc)
+						);
+			} catch (Exception e){
+				ErrorUtils.report(logger, e, "Could not create SynchLog");
+			}
+	}
 
 	/**
 	 * Creates a relationship between two nodes, and adds the LTKDb
@@ -328,13 +441,14 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
         		+ "]->(t) set r = {props} return r";
 		String query = matchFrom + queryCreate;
 		int count = 0;
-		try (org.neo4j.driver.v1.Session session = driver.session()) {
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
 			StatementResult neoResult = session.run(query, props);
 			count = neoResult.consume().counters().relationshipsCreated();
 			if (count == 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + "   " + doc.getId());
+		    	this.insert(new Transaction(query, doc, hostName));
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.CREATED.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.CREATED.message + ": created " + doc.getId());
@@ -357,7 +471,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 	 */
 	public RequestStatus createRelationships(NodePairParameters pairs, String type) {
 		RequestStatus result = new RequestStatus();
-		try (org.neo4j.driver.v1.Session session = driver.session()) {
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			StringBuffer query = new StringBuffer();
 			query.append("UNWIND {pairs} as pair ");
 			query.append(" MATCH (a), (b)");
@@ -442,13 +556,14 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		        + "\" on create set n = {props} "
 		        + "\" on merge set n = {props} "
 		        + "return count(n)";
-		try (org.neo4j.driver.v1.Session session = driver.session()) {
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
 			StatementResult neoResult = session.run(query, props);
 			count = neoResult.consume().counters().propertiesSet();
 			if (count > 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": updated " + doc.getId());
+		    	this.insert(new Transaction(query, doc, hostName));
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + " " + doc.getId());
@@ -495,7 +610,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		RequestStatus result = new RequestStatus();
 		result.setDeveloperMessage(query);
 		int count = 0;
-		try (org.neo4j.driver.v1.Session session = driver.session()) {
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			StatementResult neoResult = session.run(query);
 			count = neoResult.consume().counters().relationshipsCreated();
 			if (count == 0) {
@@ -523,7 +638,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 				"match (n) where n.id = \"" 
 				+ doc.get_id() 
 		        + "\" set n = {props} return count(n)";
-		try (org.neo4j.driver.v1.Session session = driver.session()) {
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
 			StatementResult neoResult = session.run(query, props);
 			count = neoResult.consume().counters().propertiesSet();
@@ -551,13 +666,14 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 				"match (n:" + TOPICS.ROOT.label + ") where n.id = \"" 
 				+ doc.getId() 
 		        + "\" set n = {props} return count(n)";
-		try (org.neo4j.driver.v1.Session session = driver.session()) {
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
 			StatementResult neoResult = session.run(query, props);
 			count = neoResult.consume().counters().propertiesSet();
 			if (count > 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": updated " + doc.getId());
+		    	this.insert(new Transaction(query, doc, hostName));
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + " " + doc.getId());
@@ -579,13 +695,14 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 				"match ()-[r]->() where r.id = \"" 
 				+ doc.getId() 
 		        + "\" set r = {props} return count(r)";
-		try (org.neo4j.driver.v1.Session session = driver.session()) {
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
 			StatementResult neoResult = session.run(query, props);
 			count = neoResult.consume().counters().propertiesSet();
 			if (count > 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": updated " + doc.getId());
+		    	this.insert(new Transaction(query, doc, hostName));
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + " " + doc.getId());
@@ -601,7 +718,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 
 	@Override
 	public void insert(JsonObject doc) throws DbException {
-		try (org.neo4j.driver.v1.Session session = driver.session()) {
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			JsonObject theProps = doc.get("doc").getAsJsonObject().get("properties").getAsJsonObject();
 			JsonArray theLabels = doc.get("doc").getAsJsonObject().get("labels").getAsJsonArray();
 			Map<String,Object> propMap = ModelHelpers.toHashMap(theProps);
@@ -622,7 +739,131 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 				"match (n) where n.id = \"" 
 				+ id 
 		        + "\" delete n";
-		try (org.neo4j.driver.v1.Session session = driver.session()) {
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
+			StatementResult neoResult = session.run(query);
+			count = neoResult.consume().counters().nodesDeleted();
+			if (count > 0) {
+		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": deleted " + id);
+		    	this.insert(new Transaction(query, hostName));
+			} else {
+		    	result.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message + " " + id);
+			}
+		} catch (Exception e){
+			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+			result.setDeveloperMessage(e.getMessage());
+		}
+		recordQuery(query, result.getCode(), count);
+		return result;
+	}
+
+	/**
+	 * SynchLog is a singleton doc that records information about the last successful synchronization.
+	 * If this is the first synchronization and the SynchLog is not in the database, a new
+	 * instance will be created, and the lastUsedSynchTimestamp will be set to the year 2000.
+	 * That way, the first synch will start from the beginning, which is 2018.
+	 * @return
+	 */
+	public SynchLog getSynchLog() {
+		SynchLog log = new SynchLog();
+		try {
+			ResultJsonObjectArray result = getResultObjectForQuery(synchLogGetQuery);
+			if (result.valueCount > 0) {
+				log = gson.fromJson(result.getFirstObjectValueAsObject(), SynchLog.class);
+			} else {
+				log = new SynchLog();
+				this.createSynch(log); // this is the first save of the log to the database
+			}
+		} catch (Exception e){
+			ErrorUtils.report(logger, e, "Can't read synch log");
+		}
+		return log;
+	}
+	
+	/**
+	 * Processes a transaction (typically obtained from the synch server).
+	 * The purpose of processing it is to make this database the same as other servers.
+	 * @param transaction
+	 * @return
+	 */
+	public RequestStatus processTransaction(Transaction transaction) {
+		RequestStatus result = new RequestStatus();
+		// disallow the processing of a transaction that originated from this server
+//		if (transaction.requestingMac.equals(macAddress)) { 
+//			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+//			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + " Transaction originated from this server, so can't be processed.");
+//		} else { // originated from another server, so go ahead and process it...
+			try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
+				StatementResult neoResult = null;
+				if (transaction.getJson() == null || transaction.getJson().length() < 1) {
+					neoResult = session.run(transaction.getCypher());
+				} else {
+					LTKDb ltkDb = gson.fromJson(transaction.getJson(), LTKDb.class);
+					LTKDb doc = 
+								gson.fromJson(
+										transaction.getJson()
+										, SCHEMA_CLASSES
+											.classForSchemaName(
+													ltkDb.get_valueSchemaId())
+											.ltkDb.getClass()
+							);
+					Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
+					neoResult = session.run(transaction.getCypher(), props);
+				}
+				result.recordCounters(neoResult.consume().counters());
+				if (result.wasSuccessful()) {
+			    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
+			    	result.setMessage(HTTP_RESPONSE_CODES.OK.message);
+				} else {
+					result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+					result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+				}
+			} catch (Exception e){
+				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+				result.setDeveloperMessage(e.getMessage());
+			}
+//		}
+		return result;
+	}
+
+	public RequestStatus deleteNodeWhereEqual(String id, String label) throws DbException {
+		RequestStatus result = new RequestStatus();
+		int count = 0;
+		String query = 
+				"match (n:" + label + ") where n.id = \"" 
+				+ id 
+		        + "\" delete n return count(n)";
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
+			StatementResult neoResult = session.run(query);
+			count = neoResult.consume().counters().nodesDeleted();
+			if (count > 0) {
+		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": deleted " + id);
+		    	this.insert(new Transaction(query, hostName));
+			} else {
+		    	result.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message + " " + id);
+			}
+		} catch (Exception e){
+			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+			result.setDeveloperMessage(e.getMessage());
+		}
+		recordQuery(query, result.getCode(), count);
+		return result;
+	}
+
+	public RequestStatus deleteTransaction(String id) throws DbException {
+		RequestStatus result = new RequestStatus();
+		int count = 0;
+		String query = 
+				"match (n:Transaction) where n.id = \"" 
+				+ id 
+		        + "\" delete n return count(n)";
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			StatementResult neoResult = session.run(query);
 			count = neoResult.consume().counters().nodesDeleted();
 			if (count > 0) {
@@ -640,7 +881,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		recordQuery(query, result.getCode(), count);
 		return result;
 	}
-	
+
 	public String createLabels(JsonArray labels) {
 		StringBuffer sb = new StringBuffer();
 		for (JsonElement label : labels) {
@@ -666,12 +907,13 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 				"match ()-[r]->() where r.id = \"" 
 				+ id 
 		        + "\" delete r";
-		try (org.neo4j.driver.v1.Session session = driver.session()) {
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			StatementResult neoResult = session.run(query);
 			count = neoResult.consume().counters().relationshipsDeleted();
 			if (count > 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": deleted " + id);
+		    	this.insert(new Transaction(query, hostName));
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message + " " + id);
@@ -700,12 +942,13 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 				"match ()-[r]->(t) where t.id = \"" 
 				+ id 
 		        + "\" delete t, r";
-		try (org.neo4j.driver.v1.Session session = driver.session()) {
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			StatementResult neoResult = session.run(query);
 			count = neoResult.consume().counters().relationshipsDeleted();
 			if (count > 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": deleted " + id);
+		    	this.insert(new Transaction(query, hostName));
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message + " " + id);
@@ -721,7 +964,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 
 	public RequestStatus processConstraintQuery(String query) {
 		RequestStatus result = new RequestStatus();
-		try (org.neo4j.driver.v1.Session session = driver.session()) {
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			StatementResult neoResult = session.run(query);
 			int count = 0;
 			if (query.toLowerCase().contains("create constraint")) {
@@ -732,6 +975,8 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			if (count < 1) {
 		    	result.setCode(HTTP_RESPONSE_CODES.CONFLICT.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.CONFLICT.message);
+			} else {
+		    	this.insert(new Transaction(query, hostName));
 			}
 		} catch (Exception e){
 			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
@@ -754,7 +999,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		RequestStatus result = new RequestStatus();
 		String query = "call db.constraints()";
 		int count = 0;
-		try (org.neo4j.driver.v1.Session session = driver.session()) {
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			ResultJsonObjectArray s = getForQuery(query);
 			for (JsonObject o : s.getValues()) {
 				String c = o.get("description").getAsString();
@@ -776,7 +1021,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		RequestStatus result = new RequestStatus();
 		this.dropConstraintOnId(TOPICS.ROOT.label);
 		String query = "match (n) where 'id' in keys(n) set n:" + TOPICS.ROOT.label + " return count(n)";
-		try (org.neo4j.driver.v1.Session session = driver.session()) {
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			ResultJsonObjectArray s = getForQuery(query);
 			StatementResult sResult = this.setIdConstraint(TOPICS.ROOT.label);
 			result.setMessage(TOPICS.ROOT.label + " added to " + s.getValueCount() + " nodes");
@@ -792,7 +1037,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 	public RequestStatus renameLabel(String from, String to) {
 		RequestStatus result = new RequestStatus();
 		String query = "match (n:" + from + ") remove n:" + from + " set n:" + to + " return count(n)";
-		try (org.neo4j.driver.v1.Session session = driver.session()) {
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			ResultJsonObjectArray s = getForQuery(query);
 			this.dropConstraintOnId(from);
 			this.setIdConstraint(to);
@@ -840,7 +1085,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 	public RequestStatus removeLabel(String label) {
 		RequestStatus result = new RequestStatus();
 		String query = "match (n:" + label + ") remove n:" + label + " return count(n)";
-		try (org.neo4j.driver.v1.Session session = driver.session()) {
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			ResultJsonObjectArray s = getForQuery(query);
 			this.dropConstraintOnId(label);
 			result.setMessage("Removed label " + label + " and constraint on id if existed");
@@ -860,7 +1105,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		RequestStatus result = new RequestStatus();
 		String query = "DROP CONSTRAINT ON ( n:" + label + " ) ASSERT n." + property + " IS UNIQUE";
 		int count = 0;
-		try (org.neo4j.driver.v1.Session session = driver.session()) {
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			ResultJsonObjectArray s = getForQuery(query);
 			result.setMessage("Dropped constraint on " + label + " for property " + property);
 		} catch (Exception e){
@@ -871,4 +1116,42 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		logger.info(result.getCode() + " " + result.getDeveloperMessage());
 		return result;
 	}
+	
+
+	public static SynchManager getSynchManager() {
+		return synchManager;
+	}
+
+	public static void setSynchManager(SynchManager synchManager) {
+		Neo4jConnectionManager.synchManager = synchManager;
+	}
+	
+	public ResultJsonObjectArray getTransactions(boolean printpretty) {
+		ResultJsonObjectArray result = new ResultJsonObjectArray(printpretty); // true means PrettyPrint the json
+		try {
+			String query = ("match (doc:Transaction) return properties(doc) order by doc.key ascending");
+			try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
+				StatementResult neoResult = session.run(query);
+				while (neoResult.hasNext()) {
+					org.neo4j.driver.v1.Record record = neoResult.next();
+					JsonObject o = parser.parse(gson.toJson(record.asMap())).getAsJsonObject();
+					if (o.has("properties(doc)")) {
+						o = parser.parse(gson.toJson(record.get("properties(doc)").asMap())).getAsJsonObject();
+					}
+					result.addValue(o);
+				}
+				result.setQuery(query);
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+		} catch (Exception e) {
+			result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setStatusMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+			ErrorUtils.report(logger, e);
+		}
+		return result;
+	}
+
+
 }

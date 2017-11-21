@@ -41,6 +41,7 @@ public class CreateABunchOfReferences {
 
 		externalManager = new ExternalDbManager(
 				"localhost"
+				, ""
 				, true
 				, true
 				, TestUsers.WS_ADMIN.id

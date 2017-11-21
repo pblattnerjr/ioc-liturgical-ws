@@ -11,6 +11,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import spark.QueryParamsMap;
 import spark.Request;
@@ -37,9 +40,13 @@ import ioc.liturgical.ws.controllers.ldp.LdpController;
 import ioc.liturgical.ws.managers.auth.AuthDecoder;
 import ioc.liturgical.ws.managers.auth.UserStatus;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
+import ioc.liturgical.ws.managers.databases.external.neo4j.utils.Neo4jConnectionManager;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.managers.ldp.LdpManager;
+import ioc.liturgical.ws.managers.synch.SynchManager;
 import ioc.liturgical.ws.models.ResultJsonObjectArray;
+import net.ages.alwb.tasks.SynchPullTask;
+import net.ages.alwb.tasks.SynchPushTask;
 import net.ages.alwb.utils.core.datastores.json.manager.JsonObjectStoreManager;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 
@@ -106,10 +113,11 @@ public class ServiceProvider {
 	private static int maxInactiveMinutes = 10 * 60; // default to 10 minutes
 
 	public static InternalDbManager storeManager;
-	
 	public static ExternalDbManager docService;
-	
 	public static LdpManager ldpManager;
+	public static SynchManager synchManager = null;
+	
+	private static ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 	
 	public static boolean enableCors = false;
 	static boolean externalDbIsReadOnly = false;
@@ -122,6 +130,11 @@ public class ServiceProvider {
 	static boolean runningJUnitTests = false; // can be overridden by serviceProvider.config
 	static boolean useExternalStaticFiles = true; // can be overridden by serviceProvider.config
 	static String staticExternalFileLocation = null;
+	
+	public static boolean synchEnabled = false; // can be overridden by serviceProvider.config
+	public static String synchDomain = "";  // can be overridden by serviceProvider.config
+	public static String synchBoltPort = "";  // can be overridden by serviceProvider.config
+	public static String synchDomainWithPort = "";
 	
 	/**
 	 * If the property is null, the method returns
@@ -246,6 +259,27 @@ public class ServiceProvider {
 			} catch (Exception e) {
 				logger.error("Property maxInactiveInterval missing or not a number.");
 			}
+			
+			synchEnabled = toBoolean(synchEnabled, prop.getProperty("synch_enabled"));
+			logger.info("synch_enabled: " + synchEnabled);
+
+			if (synchEnabled) {
+				synchDomain = prop.getProperty("synch_domain");
+				logger.info("synch_domain: " + synchDomain );
+
+				synchBoltPort = prop.getProperty("synch_bolt_port");
+				logger.info("synch_bolt_port: " + synchBoltPort );
+				synchDomainWithPort = "bolt://" + synchDomain + ":" + synchBoltPort;
+				
+				synchManager = new SynchManager(
+						synchDomain
+						, synchBoltPort
+						, ws_usr
+						, ws_pwd
+						);
+			} else {
+				synchDomainWithPort = "";
+			}
 
 		} catch (Exception e) {
 			ErrorUtils.report(logger, e);
@@ -302,6 +336,36 @@ public class ServiceProvider {
 						, storeManager
 						);
 				docService.setPrettyPrint(debug);
+				if (synchEnabled && synchManager != null) {
+					docService.setSynchManager(synchManager);
+					executorService.scheduleAtFixedRate(
+							new SynchPushTask(
+									ExternalDbManager.neo4jManager
+									, synchManager
+									)
+							, 10
+							, 10
+							, TimeUnit.SECONDS
+							);
+					
+					  Neo4jConnectionManager testNeo4jManager = new Neo4jConnectionManager(
+							  "localhost"
+							  , "8687"
+								, ws_usr
+								, ws_pwd
+							  , false
+							  );
+
+					executorService.scheduleAtFixedRate(
+							new SynchPullTask(
+									testNeo4jManager
+									, synchManager
+									)
+							, 10
+							, 10
+							, TimeUnit.SECONDS
+							);
+				}
 			} else {
 				docService = null;
 			}
@@ -369,7 +433,7 @@ public class ServiceProvider {
 						if (
 								request.pathInfo().startsWith(Constants.INTERNAL_DATASTORE_API_PATH +"/login/form")
 								|| request.pathInfo().startsWith(Constants.INTERNAL_DATASTORE_API_PATH +"/info")
-								|| request.pathInfo().startsWith(Constants.INTERNAL_LITURGICAL_DAY_PROPERTIES_API_PATH)
+								|| request.pathInfo().startsWith(Constants.EXTERNAL_LITURGICAL_DAY_PROPERTIES_API_PATH)
 								) {
 							// pass through to handler
 						} else {
@@ -474,10 +538,16 @@ public class ServiceProvider {
 			get(Constants.INTERNAL_DATASTORE_API_PATH  + "/info", (request, response) -> {
 				response.type(Constants.UTF_JSON);
 				JsonObject json = new JsonObject();
+				boolean synchConnectionOk = false;
+				if (synchEnabled && synchManager != null) {
+					synchConnectionOk = synchManager.synchConnectionOK();
+				}
 				json.addProperty("wsVersion", Constants.VERSION);
 				json.addProperty("dbServerDomain", externalDbDomain);
 				json.addProperty("databaseReadOnly", externalDbIsReadOnly);
 				json.addProperty("databaseProtected", externalDbAccessIsProtected);
+				json.addProperty("synchEnabled", synchEnabled);
+				json.addProperty("synchDbConnectionOk", synchConnectionOk);
 				return json.toString();
 			});
 

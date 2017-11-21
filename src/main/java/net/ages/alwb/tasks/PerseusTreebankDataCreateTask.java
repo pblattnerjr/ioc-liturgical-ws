@@ -268,7 +268,7 @@ public class PerseusTreebankDataCreateTask implements Runnable {
 				    		
 				    		// create the JsonObject
 				    		PtbWord word = new PtbWord(
-			    					sentence.getTopicKey()
+			    					sentence.toTopicKey()
 			    					, id
 				    		);
 				    		word.setToken(form);
@@ -320,7 +320,7 @@ public class PerseusTreebankDataCreateTask implements Runnable {
 			) {
 		try {
 			// create the root of the dependency diagram
-	    	PtbWord root = new PtbWord(sentence.getTopicKey(), "root");
+	    	PtbWord root = new PtbWord(sentence.toTopicKey(), "root");
 	    	root.setToken("Root");
 	    	// save it to the database
 	    	if (deleteFirst) {

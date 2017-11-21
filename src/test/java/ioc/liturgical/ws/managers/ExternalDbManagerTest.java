@@ -65,6 +65,7 @@ public class ExternalDbManagerTest {
 
 		externalManager = new ExternalDbManager(
 				"localhost"
+				, ""
 				, true
 				, true
 				, TestUsers.WS_ADMIN.id

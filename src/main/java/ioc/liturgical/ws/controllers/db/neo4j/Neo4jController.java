@@ -24,7 +24,6 @@ import com.google.gson.JsonObject;
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.constants.ENDPOINTS_DB_API;
-import ioc.liturgical.ws.constants.ENDPOINT_TYPES;
 import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.constants.db.external.SINGLETON_KEYS;
 import ioc.liturgical.ws.constants.db.external.TOPICS;

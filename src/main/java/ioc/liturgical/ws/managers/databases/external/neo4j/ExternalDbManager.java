@@ -3,7 +3,6 @@ package ioc.liturgical.ws.managers.databases.external.neo4j;
 import java.text.Normalizer;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +27,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 
 import ioc.liturgical.ws.managers.interfaces.HighLevelDataStoreInterface;
+import ioc.liturgical.ws.managers.synch.SynchManager;
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.BIBLICAL_BOOKS;
 import ioc.liturgical.ws.constants.Constants;
@@ -59,8 +59,6 @@ import ioc.liturgical.ws.models.RequestStatus;
 import ioc.liturgical.ws.models.ResultJsonObjectArray;
 import ioc.liturgical.ws.models.db.docs.nlp.ConcordanceLine;
 import ioc.liturgical.ws.models.db.docs.nlp.DependencyTree;
-import ioc.liturgical.ws.models.db.docs.nlp.PtbSentence;
-import ioc.liturgical.ws.models.db.docs.nlp.PtbWord;
 import ioc.liturgical.ws.models.db.docs.nlp.WordAnalyses;
 import ioc.liturgical.ws.models.db.docs.nlp.WordAnalysis;
 import ioc.liturgical.ws.models.db.docs.nlp.TokenAnalysis;
@@ -155,6 +153,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  List<DropdownItem> biblicalVerseSubVersesDropdown = new ArrayList<DropdownItem>();
 	  public static Neo4jConnectionManager neo4jManager = null;
 	  InternalDbManager internalManager = null;
+	  SynchManager synchManager = null;
 	  
 	  public ExternalDbManager(
 			  String neo4jDomain
@@ -179,6 +178,9 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					  , readOnly
 					  );
 			  if (neo4jManager.isConnectionOK()) {
+				  if (synchManager != null) {
+					  Neo4jConnectionManager.setSynchManager(synchManager);
+				  }
 				  break;
 			  } else {
 				  try {
@@ -268,6 +270,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 
 	  public ExternalDbManager(
 			  String neo4jDomain
+			  , String synchDomain
 			  , boolean logQueries
 			  , boolean logQueriesWithNoMatches
 			  , String adminUserId
@@ -2393,7 +2396,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			String result = "";
 			ResultJsonObjectArray queryResult = this.getForId(id, TOPICS.TEXT_LITURGICAL.label);
 			if (queryResult.valueCount > 0) {
-				TextLiturgical text = gson.fromJson(queryResult.getFirstObject().toString(), TextLiturgical.class);
+				TextLiturgical text = gson.fromJson(
+						queryResult.getFirstObject().toString()
+						, TextLiturgical.class
+						);
 				result = text.getValue();
 			}
 			return result;
@@ -4061,6 +4067,14 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				status.setMessage(e.getMessage());
 			}
 			return status;
+		}
+
+		public SynchManager getSynchManager() {
+			return synchManager;
+		}
+
+		public void setSynchManager(SynchManager synchManager) {
+			this.synchManager = synchManager;
 		}
 
 }

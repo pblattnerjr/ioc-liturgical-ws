@@ -130,7 +130,7 @@ public class LTK extends AbstractModel {
 		return topic;
 	}
 	
-	public String getTopicKey() {
+	public String toTopicKey() {
 		return this.topic + Constants.ID_DELIMITER + this.key;
 	}
 

@@ -11,15 +11,10 @@ import ioc.liturgical.ws.models.db.docs.nlp.WordAnalyses;
 
 
 /**
- * Provides a means to retrieve data from Tufts Perseus Morphology gateway
+ * Provides a means to retrieve data from Lexigram Morphology gateway
  * 
- * Problems:
- * 1. The default Unicode we have for the database is using the Greek Extended block.
- * 2. Perseus is using the Greek and Coptic Unicode block.
  * 
- * Example: ί is code 8055 for our database, but 943 for Perseus
- * 
- * http://www.perseus.tufts.edu/hopper/help/quickstart.jsp
+ * http://www.lexigram.gr/lex/arch/
  * 
  * @author mac002
  *
@@ -37,7 +32,7 @@ public class Lexigram {
 	}
 	
 	/**
-	 * Get the Perseus analyses for the Greek word.
+	 * Get the analyses for the Greek word.
 	 * @param token
 	 */
 	private void fetchAnalyses() {
