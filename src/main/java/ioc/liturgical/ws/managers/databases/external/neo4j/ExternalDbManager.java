@@ -1308,45 +1308,54 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			RequestStatus result = new RequestStatus();
 			LTK form = gson.fromJson(json, LTK.class);
 			if (internalManager.authorized(requestor, VERBS.POST, form.getLibrary())) {
-				String validation = SCHEMA_CLASSES.validate(json);
-				if (validation.length() == 0) {
-				try {
-						LTKDb record = 
-								 gson.fromJson(
-										json
-										, SCHEMA_CLASSES
-											.classForSchemaName(
-													form.get_valueSchemaId())
-											.ltkDb.getClass()
-							);
-						record.setSubClassProperties(json);
-						record.setActive(true);
-						record.setCreatedBy(requestor);
-						record.setModifiedBy(requestor);
-						record.setCreatedWhen(getTimestamp());
-						record.setModifiedWhen(record.getCreatedWhen());
-					    RequestStatus insertStatus = neo4jManager.insert(record);		
-					    result.setCode(insertStatus.getCode());
-					    result.setDeveloperMessage(insertStatus.getDeveloperMessage());
-					    result.setUserMessage(insertStatus.getUserMessage());
-					    this.createRelationship(
-					    		requestor
-					    		, record.getTopic()
-					    		, type
-					    		, record.getId()
-					    		);
-					} catch (Exception e) {
+				if (this.existsUnique(form.getTopic())) {
+					String validation = SCHEMA_CLASSES.validate(json);
+					if (validation.length() == 0) {
+					try {
+							LTKDb record = 
+									 gson.fromJson(
+											json
+											, SCHEMA_CLASSES
+												.classForSchemaName(
+														form.get_valueSchemaId())
+												.ltkDb.getClass()
+								);
+							record.setSubClassProperties(json);
+							record.setActive(true);
+							record.setCreatedBy(requestor);
+							record.setModifiedBy(requestor);
+							record.setCreatedWhen(getTimestamp());
+							record.setModifiedWhen(record.getCreatedWhen());
+						    RequestStatus insertStatus = neo4jManager.insert(record);		
+						    result.setCode(insertStatus.getCode());
+						    result.setDeveloperMessage(insertStatus.getDeveloperMessage());
+						    result.setUserMessage(insertStatus.getUserMessage());
+						    RequestStatus linkStatus = this.createRelationship(
+						    		requestor
+						    		, record.getTopic()
+						    		, type
+						    		, record.getId()
+						    		);
+						    if (! linkStatus.wasSuccessful()) {
+						    	result.setCode(linkStatus.code);
+						    	result.setMessage(linkStatus.developerMessage);
+						    }
+						} catch (Exception e) {
+							result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+							result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+						}
+					} else {
 						result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-						result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+						JsonObject message = stringToJson(validation);
+						if (message == null) {
+							result.setMessage(validation);
+						} else {
+							result.setMessage(message.get("message").getAsString());
+						}
 					}
 				} else {
-					result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-					JsonObject message = stringToJson(validation);
-					if (message == null) {
-						result.setMessage(validation);
-					} else {
-						result.setMessage(message.get("message").getAsString());
-					}
+					result.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
+					result.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message + " " + form.getTopic());
 				}
 			} else {
 				result.setCode(HTTP_RESPONSE_CODES.UNAUTHORIZED.code);
@@ -4053,14 +4062,21 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			try {
 				sb.append("MATCH (s:Root {id: \"");
 				sb.append(idOfStartNode);
-				sb.append("\"}), (e:Root {id: \"");
+				sb.append("\"}) with s ");
+				sb.append("MATCH (e:Root {id: \"");
 				sb.append(idOfEndNode);
-				sb.append("\"}) merge (s)-[:");
+				sb.append("\"}) ");
+				sb.append("MERGE (s)-[:");
 				sb.append(relationshipType.typename);
 				sb.append("]->(e)");
 				ResultJsonObjectArray queryResult = this.getForQuery(sb.toString(),false, false);
-				status.setCode(queryResult.getStatus().getCode());
-				status.setMessage(queryResult.getStatus().getUserMessage());
+				if (queryResult.status.getCounterTotal() > 0) {
+					status.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
+					status.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message);
+				} else {
+					status.setCode(queryResult.getStatus().getCode());
+					status.setMessage(queryResult.getStatus().getUserMessage());
+				}
 			} catch (Exception e) {
 				ErrorUtils.report(logger, e);
 				status.setCode(HTTP_RESPONSE_CODES.SERVER_ERROR.code);
