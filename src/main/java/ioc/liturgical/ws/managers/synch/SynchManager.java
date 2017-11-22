@@ -69,7 +69,10 @@ public class SynchManager {
 		  try {
 			  // getting periodic TLS connection closed errors.  Setting connectionTimeout to see if solves problem.
 			  ConfigBuilder cb = Config.build();
-			  cb.withConnectionTimeout(30, TimeUnit.SECONDS);
+			  cb.withConnectionTimeout(
+					  Constants.boltDriverConnectionTimeout
+					  , Constants.boltDriverConnectionTimeoutUnits
+					  );
 			  Config config = cb.toConfig();
 			  synchDriver = GraphDatabase.driver(synchBoltUrl, AuthTokens.basic(username, password), config);
 			  testSynchConnection();
