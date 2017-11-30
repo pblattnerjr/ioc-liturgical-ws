@@ -22,7 +22,7 @@ import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
 import ioc.liturgical.ws.models.db.docs.nlp.ConcordanceLine;
 import ioc.liturgical.ws.models.db.docs.nlp.WordInflected;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
-import net.ages.alwb.utils.core.file.AlwbFileUtils;
+import org.ocmc.ioc.liturgical.utils.FileUtils;
 import net.ages.alwb.utils.nlp.constants.BETA_CODES;
 import net.ages.alwb.utils.nlp.models.CharacterInfo;
 

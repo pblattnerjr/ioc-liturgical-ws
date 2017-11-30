@@ -26,6 +26,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 
+import org.ocmc.ioc.liturgical.utils.FileUtils;
 import ioc.liturgical.ws.managers.interfaces.HighLevelDataStoreInterface;
 import ioc.liturgical.ws.managers.synch.SynchManager;
 import ioc.liturgical.ws.app.ServiceProvider;
@@ -89,7 +90,6 @@ import net.ages.alwb.utils.core.datastores.json.models.DropdownArray;
 import net.ages.alwb.utils.core.datastores.json.models.DropdownItem;
 import net.ages.alwb.utils.core.datastores.json.models.LTKVJsonObject;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
-import net.ages.alwb.utils.core.file.AlwbFileUtils;
 import net.ages.alwb.utils.core.generics.MultiMapWithList;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
@@ -3206,7 +3206,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				result.setResult(list);
 				result.setQuery("get AGES template metadata for " + url);
 				// TODO: remove for production
-				AlwbFileUtils.writeFile("/volumes/ssd2/templates/editor.json", template.toJsonString());
+				FileUtils.writeFile("/volumes/ssd2/templates/editor.json", template.toJsonString());
 			} catch (Exception e) {
 				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 				result.setStatusMessage(e.getMessage());

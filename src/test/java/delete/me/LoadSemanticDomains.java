@@ -4,7 +4,7 @@ import java.io.File;
 
 import org.apache.commons.lang3.StringUtils;
 
-import net.ages.alwb.utils.core.file.AlwbFileUtils;
+import org.ocmc.ioc.liturgical.utils.FileUtils;
 
 public class LoadSemanticDomains {
 
@@ -28,7 +28,7 @@ public class LoadSemanticDomains {
 		String level1 = "";
 		String level2 = "";
 		String text = "";
-		for (String line : AlwbFileUtils.linesFromFile(new File(pathIn))) {
+		for (String line : FileUtils.linesFromFile(new File(pathIn))) {
 			String id = line.split(" ")[0].trim();
 			if (StringUtils.isNumeric(id)) {
 				parent = "SEMANTIC_DOMAINS.ROOT";
@@ -88,9 +88,9 @@ public class LoadSemanticDomains {
 				sbLatexPrint.append("\\\\ \n");
 			}
 		}
-		AlwbFileUtils.writeFile(pathOutEnums, sbEnums.toString());
-		AlwbFileUtils.writeFile(pathOutLatex, sbLatex.toString());
-		AlwbFileUtils.writeFile(pathOutLatexPrint, sbLatexPrint.toString());
+		FileUtils.writeFile(pathOutEnums, sbEnums.toString());
+		FileUtils.writeFile(pathOutLatex, sbLatex.toString());
+		FileUtils.writeFile(pathOutLatexPrint, sbLatexPrint.toString());
 	}
 
 }

@@ -9,7 +9,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import net.ages.alwb.utils.core.file.AlwbFileUtils;
+import org.ocmc.ioc.liturgical.utils.FileUtils;
 //import ioc.liturgical.ws.models.db.docs.nlp.WordSenseGev;
 import net.ages.alwb.utils.nlp.models.WordSenseGev;
 
@@ -56,7 +56,7 @@ public class Ox3kWordSenses {
 			result.add(doc);
 			System.out.println(baseHref);
 			if (this.entryDocsSource == Ox3kUtils.DOC_SOURCE.NET_THEN_SAVE) {
-				AlwbFileUtils.writeFile(Ox3kUtils.urlToHtmlFilePath(path, baseHref + Ox3kUtils.entriesDir), doc.html());
+				FileUtils.writeFile(Ox3kUtils.urlToHtmlFilePath(path, baseHref + Ox3kUtils.entriesDir), doc.html());
 			}
 		}
 		List<String> hrefs = this.getLemmaHrefs(doc.getElementsByClass("arl1"));
@@ -67,7 +67,7 @@ public class Ox3kWordSenses {
 					result.add(doc);
 					System.out.println(href);
 					if (this.entryDocsSource == Ox3kUtils.DOC_SOURCE.NET_THEN_SAVE) {
-						AlwbFileUtils.writeFile(Ox3kUtils.urlToHtmlFilePath(this.path+Ox3kUtils.entriesDir, href), doc.html());
+						FileUtils.writeFile(Ox3kUtils.urlToHtmlFilePath(this.path+Ox3kUtils.entriesDir, href), doc.html());
 					}
 				}
 			}
@@ -78,7 +78,7 @@ public class Ox3kWordSenses {
 	private List<WordSenseGev> processEntriesFromDirectory() {
 		List<WordSenseGev> lemmaSenses = new ArrayList<WordSenseGev>();
 		try {
-			List<Document> docs = AlwbFileUtils.getJsoupDocsFromDirectory(this.path + Ox3kUtils.entriesDir);
+			List<Document> docs = FileUtils.getJsoupDocsFromDirectory(this.path + Ox3kUtils.entriesDir);
 			for (Document doc : docs) {
 				Element webtop = doc.getElementsByClass("webtop-g").first();
 				String lemma = "";

@@ -8,7 +8,7 @@ import org.apache.commons.lang3.*;
 import ioc.liturgical.ws.managers.databases.external.neo4j.utils.Neo4jConnectionManager;
 import ioc.liturgical.ws.models.ResultJsonObjectArray;
 import net.ages.alwb.utils.core.datastores.json.exceptions.BadIdException;
-import net.ages.alwb.utils.core.file.AlwbFileUtils;
+import org.ocmc.ioc.liturgical.utils.FileUtils;
 import net.ages.alwb.utils.nlp.models.wordnet.WnLexicalEntry;
 import net.ages.alwb.utils.nlp.models.wordnet.WnLexicalSense;
 import net.ages.alwb.utils.nlp.models.wordnet.WnSynset;
@@ -97,7 +97,7 @@ public class Neo4j {
 				e.printStackTrace();
 			}
 		}
-		AlwbFileUtils.writeFile("/Volumes/ssd2/canBeRemoved/wordnet/wn.json", wn.toJsonString());
+		FileUtils.writeFile("/Volumes/ssd2/canBeRemoved/wordnet/wn.json", wn.toJsonString());
 		System.out.println("Done");
 	}
 

@@ -26,7 +26,7 @@ import ioc.liturgical.ws.models.db.docs.nlp.PtbSentence;
 import ioc.liturgical.ws.models.db.docs.nlp.PtbWord;
 import ioc.liturgical.ws.models.db.supers.LTK;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
-import net.ages.alwb.utils.core.file.AlwbFileUtils;
+import org.ocmc.ioc.liturgical.utils.FileUtils;
 import net.ages.alwb.utils.nlp.utils.PerseusPostagMapper;
 
 /**
@@ -168,7 +168,7 @@ public class PerseusTreebankDataCreateTask implements Runnable {
 //					}
 				}
 			   this.initializeRepository();
-			   List<File> files = AlwbFileUtils.getFilesInDirectory(xmlPath, "xml");
+			   List<File> files = FileUtils.getFilesInDirectory(xmlPath, "xml");
 			   int filesFoundCount = files.size();
 			   int currentFileIndex = 0;
 

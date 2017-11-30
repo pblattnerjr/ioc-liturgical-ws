@@ -13,7 +13,7 @@ import com.google.gson.annotations.Expose;
 
 import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
-import net.ages.alwb.utils.core.file.AlwbFileUtils;
+import org.ocmc.ioc.liturgical.utils.FileUtils;
 import net.ages.alwb.utils.nlp.constants.GRAMMAR_ABBREVIATIONS;
 import net.ages.alwb.utils.nlp.models.GevLexicon;
 
@@ -31,7 +31,7 @@ public class LemmaLookup extends AbstractModel {
 		super();
 		super.setPrettyPrint(false);
 		try {
-			String json = 	AlwbFileUtils.getResourceFileContent(
+			String json = 	FileUtils.getResourceFileContent(
 					this
 					, "json/en_senses.json"
 					);

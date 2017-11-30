@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import ioc.liturgical.ws.constants.Constants;
-import net.ages.alwb.utils.core.file.AlwbFileUtils;
+import org.ocmc.ioc.liturgical.utils.FileUtils;
 import net.ages.alwb.utils.transformers.adapters.MetaTemplateToPdf;
 import net.ages.alwb.utils.transformers.adapters.models.MetaTemplate;
 
@@ -38,7 +38,7 @@ public class PdfGenerationTask implements Runnable {
 	public void run() {
 		String command = this.dockerPath + "docker run --rm -v " + Constants.PDF_FOLDER + ":/data macolburn/xelatex:1.0.0 make";
 		MetaTemplateToPdf metaTemplateToPdf = new MetaTemplateToPdf(this.template);
-		AlwbFileUtils.writeFile(Constants.PDF_FOLDER + "/" + this.pdfId + ".tex", metaTemplateToPdf.getTexFileContent().toString());
+		FileUtils.writeFile(Constants.PDF_FOLDER + "/" + this.pdfId + ".tex", metaTemplateToPdf.getTexFileContent().toString());
 		this.createMakeFile(pdfId, Constants.PDF_FOLDER);
 		List<String> commands = new ArrayList<String>();
 		commands.add(command);
@@ -72,10 +72,10 @@ public class PdfGenerationTask implements Runnable {
 		result.append("pdf:\n");
 		result.append("\txelatex ${filename}\n");
 		result.append("\txelatex ${filename}\n");
-		AlwbFileUtils.writeFile(path + "/make", result.toString());
+		FileUtils.writeFile(path + "/make", result.toString());
 		File make = new File(path + "/make");
 		make.setExecutable(true, true);
-		AlwbFileUtils.writeFile(path + "/makefile", result.toString());
+		FileUtils.writeFile(path + "/makefile", result.toString());
 	}
 
 }

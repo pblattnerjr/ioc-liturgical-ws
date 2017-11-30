@@ -10,7 +10,7 @@ import java.util.TreeMap;
 
 import org.junit.Test;
 
-import net.ages.alwb.utils.core.file.AlwbFileUtils;
+import org.ocmc.ioc.liturgical.utils.FileUtils;
 import net.ages.alwb.utils.nlp.models.lemmatizer.LemmaLookup;
 
 public class NlpUtilsTest {
@@ -22,12 +22,12 @@ public class NlpUtilsTest {
 		String d = path + "models/en-lemmatizer.dict";
 		File f = new File(d);
 		LemmaLookup looky = new LemmaLookup();
-		for (String line : AlwbFileUtils.linesFromFile(f)) {
+		for (String line : FileUtils.linesFromFile(f)) {
 			String[] parts = line.split("\\t");
 			looky.addLemma(parts[0], parts[1], parts[2]);
 		}
 
-		AlwbFileUtils.writeFile(path + "json/en_lemmaLookup.json", looky.toJsonString());
+		FileUtils.writeFile(path + "json/en_lemmaLookup.json", looky.toJsonString());
 		String text = "The Lord, who is powerful in wars, uncovered the bottom of the deep sea, and led His people across its dry land, but there He covered their enemies with its waters. For He has gained honour for Himself!";
 		try {
 			for (String token : NlpUtils.getTokens(

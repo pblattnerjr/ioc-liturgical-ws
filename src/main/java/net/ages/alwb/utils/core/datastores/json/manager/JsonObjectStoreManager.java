@@ -26,7 +26,7 @@ import net.ages.alwb.utils.core.datastores.db.factory.DbConnectionFactory;
 import net.ages.alwb.utils.core.datastores.db.h2.manager.H2ConnectionManager;
 import net.ages.alwb.utils.core.datastores.json.models.TKVJsonObject;
 import net.ages.alwb.utils.core.error.handling.ErrorUtils;
-import net.ages.alwb.utils.core.file.AlwbFileUtils;
+import org.ocmc.ioc.liturgical.utils.FileUtils;
 
 /**
  * Manager for a Datastore of objects that extend TK.
@@ -364,7 +364,7 @@ public class JsonObjectStoreManager  {
     
     private void loadFromFile() {
     	try {
-			String json = AlwbFileUtils.getFileContents(new File(datastoreName));
+			String json = FileUtils.getFileContents(new File(datastoreName));
 				load(json);
 		} catch (Exception e) {
 			ErrorUtils.report(logger, e);
@@ -418,7 +418,7 @@ public class JsonObjectStoreManager  {
     private void writeToFile() {
     	if (this.storeType == STORE_TYPE.FILE) {
 	    	try {
-	    		AlwbFileUtils.writeFile(datastoreName, this.getAsJson(prettyPrint));
+	    		FileUtils.writeFile(datastoreName, this.getAsJson(prettyPrint));
 			} catch (Exception e) {
 				ErrorUtils.report(logger, e);
 			}
@@ -464,7 +464,7 @@ public class JsonObjectStoreManager  {
      * @return
      */
     public String getPathToDataStore() {
-    	return AlwbFileUtils.getPathToFile(this.datastoreName);
+    	return FileUtils.getPathToFile(this.datastoreName);
     }
     
     public void setStoreType(STORE_TYPE type

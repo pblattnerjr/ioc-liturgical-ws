@@ -11,11 +11,10 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import net.ages.alwb.utils.core.file.AlwbFileUtils;
+import org.ocmc.ioc.liturgical.utils.ApacheFileUtils;
+import org.ocmc.ioc.liturgical.utils.FileUtils;
 import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
 import net.ages.alwb.gateway.utils.GatewayUtils;
 import net.ages.alwb.gateway.utils.Resource;
@@ -56,7 +55,7 @@ public class LibraryProxyManager {
 
 	public LibraryProxyManager(String path) {
 		this.path = path;
-		aresFileList = AlwbFileUtils.getMapOfFilesInDirectory(
+		aresFileList = FileUtils.getMapOfFilesInDirectory(
 				path
 				, "ares"
 				, true
@@ -86,7 +85,7 @@ public class LibraryProxyManager {
 		try {
 			// get the list of Greek files to use as the model to clone from
 			if (greekFileList == null) {
-				greekFileList = AlwbFileUtils.filter(aresFileList, "gr_GR_cog");
+				greekFileList = FileUtils.filter(aresFileList, "gr_GR_cog");
 			}
 			Set<Entry<String, File>> entrySet = greekFileList.entrySet();
 			File grkFile;
@@ -100,12 +99,12 @@ public class LibraryProxyManager {
 						domain));
 				newFile.getParentFile().mkdirs();
 				newFile.createNewFile();
-				FileUtils.copyFile(grkFile, newFile);
+				ApacheFileUtils.copyFile(grkFile, newFile);
 				// convert the contents of the copied file to the new domain
-				contents = FileUtils.readFileToString(newFile, "UTF-8");
+				contents = ApacheFileUtils.readFileToString(newFile, "UTF-8");
 				contents = contents.replaceAll("gr_GR_cog", domain);
 				contents = contents.replaceAll("\".+\"", "\"\"");
-				FileUtils.writeStringToFile(newFile, contents, "UTF-8");
+				ApacheFileUtils.writeStringToFile(newFile, contents, "UTF-8");
 				// register the new file with the TMS
 				LibraryFileProxy proxy = new LibraryFileProxy(newFile);
 				resource = GatewayUtils
@@ -218,7 +217,7 @@ public class LibraryProxyManager {
 									}
 								}
 								if (! mapDomainPaths.containsKey(parts.getDomain())) {
-									String domainPath = AlwbFileUtils.getParentPath(parts.getDomain(), f.getParent());
+									String domainPath = FileUtils.getParentPath(parts.getDomain(), f.getParent());
 									mapDomainPaths.put(parts.getDomain(), new File(domainPath));
 								}
 							}
@@ -541,7 +540,7 @@ public class LibraryProxyManager {
 							+ LibraryUtils.wrapQuotes(value)
 							+ (comment != null && comment.length() > 0 ? " // " + comment: "")
 					);
-			AlwbFileUtils.writeFile(newPath, content.toString());
+			FileUtils.writeFile(newPath, content.toString());
 			// Load the new file into the proxy manager
 			LibraryFileProxy proxy = new LibraryFileProxy(new File(newPath));
 			mapLoadedAresFiles.put(resource, proxy);
@@ -560,12 +559,12 @@ public class LibraryProxyManager {
 					toDomain));
 			newFile.getParentFile().mkdirs();
 			newFile.createNewFile();
-			FileUtils.copyFile(grkFile, newFile);
+			ApacheFileUtils.copyFile(grkFile, newFile);
 			// convert the contents of the copied file to the new domain
-			contents = FileUtils.readFileToString(newFile, "UTF-8");
+			contents = ApacheFileUtils.readFileToString(newFile, "UTF-8");
 			contents = contents.replaceAll(fromDomain, toDomain);
 			contents = contents.replaceAll("\".+\"", "\"\"");
-			FileUtils.writeStringToFile(newFile, contents, "UTF-8");
+			ApacheFileUtils.writeStringToFile(newFile, contents, "UTF-8");
 			// register the new file with the TMS
 			LibraryFileProxy proxy = new LibraryFileProxy(newFile);
 			resource = GatewayUtils.getAresFileNameParts(newFile.getName())

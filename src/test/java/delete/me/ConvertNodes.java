@@ -12,7 +12,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import net.ages.alwb.utils.core.file.AlwbFileUtils;
+import org.ocmc.ioc.liturgical.utils.FileUtils;
 
 public class ConvertNodes {
 	
@@ -68,7 +68,7 @@ public class ConvertNodes {
 
 	public static void main(String[] args) {
 		String path = "/volumes/ssd2/canBeRemoved/nodes.json";;
-		String json = AlwbFileUtils.fileAsString(new File(path));
+		String json = FileUtils.fileAsString(new File(path));
 		JsonObject jsonObject = (new JsonParser()).parse(json).getAsJsonObject();
 		JsonArray values = jsonObject.get("values").getAsJsonArray();
 		Map<String,List<String>> map = ConvertNodes.toDependencyList(values);

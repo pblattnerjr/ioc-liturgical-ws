@@ -11,7 +11,7 @@ import java.util.TreeMap;
 
 import org.junit.Test;
 
-import net.ages.alwb.utils.core.file.AlwbFileUtils;
+import org.ocmc.ioc.liturgical.utils.FileUtils;
 import net.ages.alwb.utils.transformers.adapters.MetaTemplateToPdf;
 import net.ages.alwb.utils.transformers.adapters.TextToLatexExpexInterlinear;
 import switches.AgesHtmlToOslwSwitch;
@@ -27,8 +27,8 @@ public class MetaTemplateToPdfTest {
 		Map<String, String> x = new TreeMap<String, String>();
 
 		try {
-			for (File f : AlwbFileUtils.getFilesInDirectory(path, "json")) {
-				xform = new MetaTemplateToPdf(AlwbFileUtils.fileAsString(f));
+			for (File f : FileUtils.getFilesInDirectory(path, "json")) {
+				xform = new MetaTemplateToPdf(FileUtils.fileAsString(f));
 				StringBuffer sb = new StringBuffer();
 				sb.append(xform.getTexFileContent().toString());
 				for (Entry<String, String> entry : x.entrySet()) {
@@ -47,7 +47,7 @@ public class MetaTemplateToPdfTest {
 					}
 				}
 			}
-			AlwbFileUtils.writeFile(out, xform.getTexFileContent().toString());
+			FileUtils.writeFile(out, xform.getTexFileContent().toString());
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail(e.getMessage());

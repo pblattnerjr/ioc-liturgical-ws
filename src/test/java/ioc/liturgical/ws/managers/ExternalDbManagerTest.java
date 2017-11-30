@@ -36,7 +36,7 @@ import ioc.liturgical.ws.models.db.forms.EventCreateForm;
 import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
 import ioc.liturgical.ws.models.db.forms.UserNoteCreateForm;
 import ioc.liturgical.ws.models.db.links.LinkRefersToBiblicalText;
-import net.ages.alwb.utils.core.file.AlwbFileUtils;
+import org.ocmc.ioc.liturgical.utils.FileUtils;
 import net.ages.alwb.utils.nlp.fetchers.PerseusMorph;
 
 public class ExternalDbManagerTest {
@@ -376,7 +376,7 @@ public class ExternalDbManagerTest {
 		    		);
 		    JsonArray a = o.get("values").getAsJsonArray();
 		    String contents = a.get(0).getAsJsonObject().get("keys").getAsString();
-		    AlwbFileUtils.writeFile("/Users/mac002/temp/res.me.m01.d06.tex", contents);
+		    FileUtils.writeFile("/Users/mac002/temp/res.me.m01.d06.tex", contents);
 		    assertTrue(contents.length() > 0);
 	    }
 	

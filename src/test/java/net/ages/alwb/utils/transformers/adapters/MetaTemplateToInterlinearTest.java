@@ -8,7 +8,7 @@ import java.util.TreeMap;
 
 import org.junit.Test;
 
-import net.ages.alwb.utils.core.file.AlwbFileUtils;
+import org.ocmc.ioc.liturgical.utils.FileUtils;
 
 public class MetaTemplateToInterlinearTest {
 
@@ -20,12 +20,12 @@ public class MetaTemplateToInterlinearTest {
 		Map<String,String> x = new TreeMap<String,String>();
 		
 		try {
-			for (File f : AlwbFileUtils.getFilesInDirectory(path, "json")) {
+			for (File f : FileUtils.getFilesInDirectory(path, "json")) {
 				xform = new MetaTemplateToInterlinear (
-						AlwbFileUtils.fileAsString(f)
+						FileUtils.fileAsString(f)
 						);
 				System.out.println(xform.getTex().toString());
-				AlwbFileUtils.writeFile(out + f.getName()+".tex", xform.getTex().toString());
+				FileUtils.writeFile(out + f.getName()+".tex", xform.getTex().toString());
 				assertTrue(xform.getMap().size() > 0);
 			}
 		} catch (Exception e) {
