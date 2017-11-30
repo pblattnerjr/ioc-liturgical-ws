@@ -23,9 +23,35 @@
 		    <id>JSONschema4-mapper SNAPSHOTS repository</id>
 		    <url>https://raw.github.com/wodzuu/JSONschema4-mapper/mvn-repo/</url>
 		</repository>
+	    <repository>
+	        <id>ioc-liturgical-schemas</id>
+	        <url>https://raw.github.com/OCMC-Translation-Projects/ioc-liturgical-schemas/mvn-repo/</url>
+	        <snapshots>
+	            <enabled>true</enabled>
+	            <updatePolicy>always</updatePolicy>
+	        </snapshots>
+	    </repository>
+	    <repository>
+	        <id>ioc.liturgical.utils</id>
+	        <url>https://raw.github.com/OCMC-Translation-Projects/ioc-liturgical-utils/mvn-repo/</url>
+	        <snapshots>
+	            <enabled>true</enabled>
+	            <updatePolicy>always</updatePolicy>
+	        </snapshots>
+	    </repository>
 	</repositories>
 
   <dependencies>
+	<dependency>
+	  <groupId>org.ocmc</groupId>
+	  <artifactId>ioc.liturgical.schemas</artifactId>
+	  <version>1.0.0</version>
+	</dependency>
+	<dependency>
+	  <groupId>org.ocmc</groupId>
+	  <artifactId>ioc.liturgical.utils</artifactId>
+	  <version>1.0.0</version>
+	</dependency>
 	<!-- https://mvnrepository.com/artifact/org.json/json -->
 	<dependency>
 	    <groupId>org.json</groupId>

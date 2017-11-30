@@ -77,6 +77,7 @@ import ioc.liturgical.ws.models.ws.db.Utility;
 import ioc.liturgical.ws.models.ws.response.column.editor.KeyArraysCollection;
 import ioc.liturgical.ws.models.ws.response.column.editor.KeyArraysCollectionBuilder;
 import ioc.liturgical.ws.models.ws.response.column.editor.LibraryTopicKeyValue;
+import ioc.liturgical.ws.nlp.Utils;
 import net.ages.alwb.tasks.DependencyNodesCreateTask;
 import net.ages.alwb.tasks.OntologyTagsUpdateTask;
 import net.ages.alwb.tasks.PdfGenerationTask;
@@ -2307,10 +2308,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				if (treeData.getResultCount() == 0) {
 					String value = getValueForLiturgicalText(requestor,id);
 					if (value.length() > 0) {
-						DependencyTree dependencyTree = new DependencyTree(
-								id
-								, value
-								);
+						DependencyTree dependencyTree = new DependencyTree(id);
+						dependencyTree.setNodes(Utils.initializeTokenAnalysisList(id, value));
 						treeData = new ResultJsonObjectArray(this.printPretty);
 						treeData.setValues(dependencyTree.nodesToJsonObjectList());
 						// create a thread that will save the new values to the database

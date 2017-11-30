@@ -4,7 +4,7 @@
   <groupId>ioc</groupId>
   <artifactId>liturgical-ws</artifactId>
   <name>IOC Liturgical Web Services</name>
-  <version>v1.3.0</version>
+  <version>v1.3.2</version>
   <description>Web Services used for International Orthodox Christian Liturgical Texts</description>
   <build>
     <resources>
@@ -91,6 +91,20 @@
     <repository>
       <id>JSONschema4-mapper SNAPSHOTS repository</id>
       <url>https://raw.github.com/wodzuu/JSONschema4-mapper/mvn-repo/</url>
+    </repository>
+    <repository>
+      <snapshots>
+        <updatePolicy>always</updatePolicy>
+      </snapshots>
+      <id>ioc-liturgical-schemas</id>
+      <url>https://raw.github.com/OCMC-Translation-Projects/ioc-liturgical-schemas/mvn-repo/</url>
+    </repository>
+    <repository>
+      <snapshots>
+        <updatePolicy>always</updatePolicy>
+      </snapshots>
+      <id>ioc.liturgical.utils</id>
+      <url>https://raw.github.com/OCMC-Translation-Projects/ioc-liturgical-utils/mvn-repo/</url>
     </repository>
   </repositories>
   <properties>

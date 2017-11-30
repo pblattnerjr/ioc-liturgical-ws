@@ -4,6 +4,8 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import ioc.liturgical.ws.nlp.Utils;
+
 
 public class DependencyTreeTest {
 
@@ -24,7 +26,8 @@ public class DependencyTreeTest {
 	public void test() {
 		String id = "gr_gr_cog~me.m01.d10~meMA.Kathisma11.text";
 		String text = "Ὁ Δεσπότης σήμερον, ἐν Ἰορδάνῃ ἐπέστη, βαπτισθεὶς ἐν ὕδασιν, ὑπὸ τοῦ θείου Προδρόμου, ἄνωθεν ὁ Πατὴρ δὲ προσεμαρτύρει· Οὗτός ἐστιν ὁ Υἱὸς ὁ ἀγαπητός μου, καὶ τὸ Πνεῦμα ἐπεφάνη, ἐν ξένῃ θέᾳ, περιστερᾶς ἐπ' αὐτόν.";
-		DependencyTree tree = new DependencyTree(id, text);
+		DependencyTree tree = new DependencyTree(id);
+		tree.setNodes(Utils.initializeTokenAnalysisList(id, text));
 		tree.setPrettyPrint(true);
 		System.out.println(tree.toJsonString());
 		assertTrue(tree.getNodes().size() == 7);

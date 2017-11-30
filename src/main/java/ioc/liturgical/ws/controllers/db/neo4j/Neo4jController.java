@@ -23,10 +23,10 @@ import com.google.gson.JsonObject;
 
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.constants.ENDPOINTS_DB_API;
-import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.constants.db.external.SINGLETON_KEYS;
 import ioc.liturgical.ws.constants.db.external.TOPICS;
+import ioc.liturgical.ws.constants.ENDPOINTS_DB_API;
+import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.controllers.admin.ControllerUtils;
 import ioc.liturgical.ws.managers.auth.AuthDecoder;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
@@ -36,9 +36,7 @@ import ioc.liturgical.ws.models.ResultJsonObjectArray;
 public class Neo4jController {
 	private static final Logger logger = LoggerFactory.getLogger(Neo4jController.class);
 	
-    private Gson gson = new GsonBuilder().disableHtmlEscaping().create();
-    
-    
+    private Gson gson = new GsonBuilder().disableHtmlEscaping().create(); 
     
 	/**
 	 * returns a login form

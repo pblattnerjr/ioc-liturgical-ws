@@ -247,9 +247,6 @@ public class LibraryLine  {
 		AresEntry result = null;
 		try {
 			if (isSimpleKeyValue || isRedirect()) {
-				if (key.startsWith("meMA.Ode8C22.text")) {
-					key = key;
-				}
 				JsonObject json = new JsonObject();
 				result = new AresEntry(json);
 				result.setId(getCouchDbId());
@@ -268,9 +265,6 @@ public class LibraryLine  {
 			}
 		} catch (Exception e) {
 			result = null;
-		}
-		if (result == null) {
-			result = result;
 		}
 		return result;
 	}
