@@ -2,7 +2,7 @@ package net.ages.alwb.utils.transformers.adapters.models;
 
 import com.google.gson.annotations.Expose;
 
-import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
+import org.ocmc.ioc.liturgical.schemas.models.supers.AbstractModel;
 
 public class AgesIndexTableRowData extends AbstractModel {
 	@Expose String url = ""; // url to the file

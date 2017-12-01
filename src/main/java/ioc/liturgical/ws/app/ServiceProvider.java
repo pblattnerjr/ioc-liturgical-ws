@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.JsonObject;
 
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.controllers.admin.AuthorizationsController;
 import ioc.liturgical.ws.controllers.admin.DomainsController;
 import ioc.liturgical.ws.controllers.admin.LabelsController;
@@ -44,11 +43,13 @@ import ioc.liturgical.ws.managers.databases.external.neo4j.utils.Neo4jConnection
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.managers.ldp.LdpManager;
 import ioc.liturgical.ws.managers.synch.SynchManager;
-import ioc.liturgical.ws.models.ResultJsonObjectArray;
 import net.ages.alwb.tasks.SynchPullTask;
 import net.ages.alwb.tasks.SynchPushTask;
 import net.ages.alwb.utils.core.datastores.json.manager.JsonObjectStoreManager;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+
+import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 
 /**
  * Main Class for the IOC Liturgical Web Services. Provides the basic service.
@@ -160,7 +161,7 @@ public class ServiceProvider {
 		
 		boolean allOk = true;
 		
-		int maxThreads = 8;
+		int maxThreads = 15;
 		int minThreads = 2;
 		int timeOutMillis = 30000;
 		

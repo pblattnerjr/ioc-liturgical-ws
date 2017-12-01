@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
-import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
+import org.ocmc.ioc.liturgical.utils.GeneralUtils;
 
 public class BETA_CODES {
     private static Map<String, String> map = new TreeMap<String,String>();
@@ -72,7 +72,7 @@ public class BETA_CODES {
      */
     public static String toBetaCode(String word) {
     	StringBuffer sb = new StringBuffer();
-    	String normalized = AlwbGeneralUtils.normalize(word.trim()).toLowerCase();
+    	String normalized = GeneralUtils.normalize(word.trim()).toLowerCase();
     	int l = normalized.length();
     	for (int i = 0; i < l; i++) {
     		String c = String.valueOf(normalized.charAt(i));

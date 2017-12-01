@@ -1,12 +1,13 @@
 package net.ages.alwb.utils.nlp.models;
 
+import org.ocmc.ioc.liturgical.schemas.constants.LIBRARIES;
+import org.ocmc.ioc.liturgical.schemas.constants.TOPICS;
+import org.ocmc.ioc.liturgical.schemas.exceptions.BadIdException;
+import org.ocmc.ioc.liturgical.schemas.models.db.internal.LTK;
+
 import com.google.gson.annotations.Expose;
 
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.constants.db.external.LIBRARIES;
-import ioc.liturgical.ws.constants.db.external.TOPICS;
-import net.ages.alwb.utils.core.datastores.json.exceptions.BadIdException;
-import net.ages.alwb.utils.core.datastores.json.models.LTK;
 
 /**
  * Word sense used by the Global English Version translations of the liturgical texts

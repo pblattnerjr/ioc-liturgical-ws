@@ -16,7 +16,7 @@ import edu.mit.jwi.item.ISenseEntry;
 import edu.mit.jwi.item.IWord;
 import edu.mit.jwi.item.IWordID;
 import edu.mit.jwi.item.POS;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import net.ages.alwb.utils.nlp.wordnet.models.Synset;
 import net.ages.alwb.utils.nlp.wordnet.models.Synsets;
 
@@ -28,7 +28,7 @@ public class MitJwi {
 	public MitJwi(boolean printPretty) {
 		try {
 			this.printPretty = printPretty;
-			dict = new Dictionary(MitJwiTest.class.getResource("/dict"));
+			dict = new Dictionary(MitJwi.class.getResource("/dict"));
 			dict.open();
 		} catch (IOException e) {
 			ErrorUtils.report(logger, e);

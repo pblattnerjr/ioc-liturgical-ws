@@ -6,7 +6,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import ioc.liturgical.ws.app.ServiceProvider;
-import ioc.liturgical.ws.models.RequestStatus;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
 
 public class TestNeo4jConnection {
 	

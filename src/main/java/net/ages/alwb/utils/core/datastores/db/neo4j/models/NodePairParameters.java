@@ -2,7 +2,7 @@ package net.ages.alwb.utils.core.datastores.db.neo4j.models;
 
 import com.google.gson.annotations.Expose;
 
-import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
+import org.ocmc.ioc.liturgical.schemas.models.supers.AbstractModel;
 
 public class NodePairParameters extends AbstractModel {
 	@Expose NodePairs parameters = new NodePairs();

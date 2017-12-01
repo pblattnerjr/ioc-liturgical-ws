@@ -1,7 +1,7 @@
 package net.ages.alwb.utils.core.datastores.db.neo4j.utilities;
 
 import ioc.liturgical.ws.managers.databases.external.neo4j.utils.Neo4jConnectionManager;
-import ioc.liturgical.ws.models.RequestStatus;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
 
 public class Neo4jRenameLabel {
 	public static void main(String[] args) {

@@ -11,7 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 import net.ages.alwb.utils.nlp.constants.DEPENDENCY_LABEL_MAPPER;
 import net.ages.alwb.utils.nlp.fetchers.PerseusXmlMorph;

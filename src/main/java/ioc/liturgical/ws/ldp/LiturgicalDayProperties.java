@@ -17,8 +17,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ioc.liturgical.ws.constants.LITURGICAL_CALENDAR_TYPE;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import org.ocmc.ioc.liturgical.schemas.constants.LITURGICAL_CALENDAR_TYPE;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 
 public class LiturgicalDayProperties {
 	private static final Logger logger = LoggerFactory.getLogger(LiturgicalDayProperties.class);

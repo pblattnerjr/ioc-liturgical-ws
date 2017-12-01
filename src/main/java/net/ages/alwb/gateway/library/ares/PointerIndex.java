@@ -10,7 +10,7 @@ import java.util.TreeMap;
 
 import org.ocmc.ioc.liturgical.utils.ApacheFileUtils;
 import org.ocmc.ioc.liturgical.utils.FileUtils;
-import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
+import org.ocmc.ioc.liturgical.utils.GeneralUtils;
 
 /**
  * ares files are key-value pairs.  There are two kinds of values:
@@ -120,7 +120,7 @@ public class PointerIndex {
 			String value = null;
 			for (String line : lines) {
 				if (! line.contains("A_Resource_Whose_Name")) {
-					value = AlwbGeneralUtils.valueAsKeyFromPair(line,domain);
+					value = GeneralUtils.valueAsKeyFromPair(line,domain);
 					if (value != null) {
 						if (! result.contains(value)) {
 							result.add(value); 

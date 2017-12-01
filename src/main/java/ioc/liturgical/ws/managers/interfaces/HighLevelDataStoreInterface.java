@@ -1,14 +1,13 @@
 package ioc.liturgical.ws.managers.interfaces;
 
-import java.sql.SQLException;
-
 import com.google.gson.JsonObject;
 
 import ioc.liturgical.ws.managers.exceptions.DbException;
-import ioc.liturgical.ws.models.RequestStatus;
-import ioc.liturgical.ws.models.ResultJsonObjectArray;
-import net.ages.alwb.utils.core.datastores.json.exceptions.BadIdException;
 import net.ages.alwb.utils.core.datastores.json.exceptions.MissingSchemaIdException;
+
+import org.ocmc.ioc.liturgical.schemas.exceptions.BadIdException;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
 
 public interface HighLevelDataStoreInterface {
 

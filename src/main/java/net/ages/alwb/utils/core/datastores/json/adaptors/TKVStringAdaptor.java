@@ -2,11 +2,11 @@ package net.ages.alwb.utils.core.datastores.json.adaptors;
 
 import java.io.IOException;
 
+import org.ocmc.ioc.liturgical.schemas.models.db.internal.TKVString;
+
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-
-import net.ages.alwb.utils.core.datastores.json.models.TKVString;
 
 public class TKVStringAdaptor  extends TypeAdapter<TKVString> {
 

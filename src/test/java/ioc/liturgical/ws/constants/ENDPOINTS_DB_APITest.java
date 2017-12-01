@@ -1,6 +1,7 @@
 package ioc.liturgical.ws.constants;
 
 import org.junit.Test;
+import org.ocmc.ioc.liturgical.schemas.constants.ENDPOINTS_DB_API;
 
 public class ENDPOINTS_DB_APITest {
 

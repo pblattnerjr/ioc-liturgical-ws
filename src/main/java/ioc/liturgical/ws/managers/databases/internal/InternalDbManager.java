@@ -24,49 +24,49 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import ioc.liturgical.ws.managers.interfaces.HighLevelDataStoreInterface;
-import ioc.liturgical.ws.models.RequestStatus;
-import ioc.liturgical.ws.models.ResultJsonObjectArray;
-import ioc.liturgical.ws.models.ws.db.Domain;
-import ioc.liturgical.ws.models.ws.db.Label;
-import ioc.liturgical.ws.models.ws.db.User;
-import ioc.liturgical.ws.models.ws.db.UserAuth;
-import ioc.liturgical.ws.models.ws.db.UserContact;
-import ioc.liturgical.ws.models.ws.db.UserHash;
-import ioc.liturgical.ws.models.ws.db.UserStatistics;
-import ioc.liturgical.ws.models.ws.db.Utility;
-import ioc.liturgical.ws.models.ws.db.ValueSchema;
-import ioc.liturgical.ws.models.ws.forms.AuthorizationCreateForm;
-import ioc.liturgical.ws.models.ws.forms.DomainCreateForm;
-import ioc.liturgical.ws.models.ws.forms.LabelCreateForm;
-import ioc.liturgical.ws.models.ws.forms.SelectionWidgetSchema;
-import ioc.liturgical.ws.models.ws.forms.UserCreateForm;
-import ioc.liturgical.ws.models.ws.forms.UserPasswordChangeForm;
-import ioc.liturgical.ws.models.ws.response.DomainWorkflowInfo;
-import ioc.liturgical.ws.constants.ENDPOINTS_ADMIN_API;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
+import org.ocmc.ioc.liturgical.schemas.models.ws.db.Domain;
+import org.ocmc.ioc.liturgical.schemas.models.ws.db.Label;
+import org.ocmc.ioc.liturgical.schemas.models.ws.db.User;
+import org.ocmc.ioc.liturgical.schemas.models.ws.db.UserAuth;
+import org.ocmc.ioc.liturgical.schemas.models.ws.db.UserContact;
+import org.ocmc.ioc.liturgical.schemas.models.ws.db.UserHash;
+import org.ocmc.ioc.liturgical.schemas.models.ws.db.UserStatistics;
+import org.ocmc.ioc.liturgical.schemas.models.ws.db.Utility;
+import org.ocmc.ioc.liturgical.schemas.models.ws.db.ValueSchema;
+import org.ocmc.ioc.liturgical.schemas.models.ws.forms.AuthorizationCreateForm;
+import org.ocmc.ioc.liturgical.schemas.models.ws.forms.DomainCreateForm;
+import org.ocmc.ioc.liturgical.schemas.models.ws.forms.LabelCreateForm;
+import org.ocmc.ioc.liturgical.schemas.models.ws.forms.SelectionWidgetSchema;
+import org.ocmc.ioc.liturgical.schemas.models.ws.forms.UserCreateForm;
+import org.ocmc.ioc.liturgical.schemas.models.ws.forms.UserPasswordChangeForm;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.DomainWorkflowInfo;
+import org.ocmc.ioc.liturgical.schemas.constants.ENDPOINTS_ADMIN_API;
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.constants.DOMAIN_TYPES;
-import ioc.liturgical.ws.constants.SYSTEM_MISC_LIBRARY_TOPICS;
-import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
-import ioc.liturgical.ws.constants.NEW_FORM_CLASSES_ADMIN_API;
-import ioc.liturgical.ws.constants.RESTRICTION_FILTERS;
-import ioc.liturgical.ws.constants.ROLES;
-import ioc.liturgical.ws.constants.INTERNAL_DB_SCHEMA_CLASSES;
-import ioc.liturgical.ws.constants.STATUS;
-import ioc.liturgical.ws.constants.USER_TOPICS;
-import ioc.liturgical.ws.constants.UTILITIES;
-import ioc.liturgical.ws.constants.VERBS;
-import ioc.liturgical.ws.constants.db.external.SCHEMA_CLASSES;
+import org.ocmc.ioc.liturgical.schemas.constants.DOMAIN_TYPES;
+import org.ocmc.ioc.liturgical.schemas.constants.SYSTEM_MISC_LIBRARY_TOPICS;
+import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
+import org.ocmc.ioc.liturgical.schemas.constants.NEW_FORM_CLASSES_ADMIN_API;
+import org.ocmc.ioc.liturgical.schemas.constants.RESTRICTION_FILTERS;
+import org.ocmc.ioc.liturgical.schemas.constants.ROLES;
+import org.ocmc.ioc.liturgical.schemas.constants.INTERNAL_DB_SCHEMA_CLASSES;
+import org.ocmc.ioc.liturgical.schemas.constants.STATUS;
+import org.ocmc.ioc.liturgical.schemas.constants.USER_TOPICS;
+import org.ocmc.ioc.liturgical.schemas.constants.UTILITIES;
+import org.ocmc.ioc.liturgical.schemas.constants.VERBS;
+import org.ocmc.ioc.liturgical.schemas.exceptions.BadIdException;
+import org.ocmc.ioc.liturgical.schemas.constants.SCHEMA_CLASSES;
 import ioc.liturgical.ws.managers.auth.UserStatus;
 import ioc.liturgical.ws.managers.exceptions.DbException;
 import net.ages.alwb.utils.core.auth.PasswordHasher;
 import net.ages.alwb.utils.core.datastores.db.factory.DbConnectionFactory;
 import net.ages.alwb.utils.core.datastores.db.h2.manager.H2ConnectionManager;
-import net.ages.alwb.utils.core.datastores.json.exceptions.BadIdException;
 import net.ages.alwb.utils.core.datastores.json.exceptions.MissingSchemaIdException;
-import net.ages.alwb.utils.core.datastores.json.models.DropdownItem;
-import net.ages.alwb.utils.core.datastores.json.models.LTKVJsonObject;
-import net.ages.alwb.utils.core.datastores.json.models.LTKVString;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import org.ocmc.ioc.liturgical.schemas.models.DropdownItem;
+import org.ocmc.ioc.liturgical.schemas.models.db.internal.LTKVJsonObject;
+import org.ocmc.ioc.liturgical.schemas.models.db.internal.LTKVString;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 
 /**
@@ -2000,15 +2000,20 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			result.setMessage(HTTP_RESPONSE_CODES.CONFLICT.message + ": " + id);
 		} else {
 			LTKVString tkv;
-			tkv = new LTKVString(
-					library
-					, topic
-					, key
-					, value
-					);
-	    	manager.insert(tkv.toJsonObject());		
-	    	result.setCode(HTTP_RESPONSE_CODES.CREATED.code);
-	    	result.setMessage(HTTP_RESPONSE_CODES.CREATED.message + ": " + id);
+			try {
+				tkv = new LTKVString(
+						library
+						, topic
+						, key
+						, value
+						);
+		    	manager.insert(tkv.toJsonObject());		
+		    	result.setCode(HTTP_RESPONSE_CODES.CREATED.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.CREATED.message + ": " + id);
+			} catch (org.ocmc.ioc.liturgical.schemas.exceptions.BadIdException e) {
+				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setMessage(e.getMessage());
+			}
 		}
 		return result;
 	}

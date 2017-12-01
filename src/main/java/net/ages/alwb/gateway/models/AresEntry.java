@@ -11,7 +11,7 @@ import com.google.gson.JsonObject;
 
 import net.ages.alwb.gateway.utils.enums.Action;
 import net.ages.alwb.gateway.utils.enums.DataStore;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 
 /**
  * Wraps JsonObject and provides methods

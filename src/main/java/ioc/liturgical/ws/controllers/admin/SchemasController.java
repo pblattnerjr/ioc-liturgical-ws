@@ -2,10 +2,11 @@ package ioc.liturgical.ws.controllers.admin;
 
 import static spark.Spark.get;
 
+import org.ocmc.ioc.liturgical.schemas.models.ws.forms.UserCreateForm;
+import org.ocmc.ioc.liturgical.schemas.models.ws.forms.UserPasswordForm;
+import org.ocmc.ioc.liturgical.schemas.models.ws.forms.UserUpdateForm;
+
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.models.ws.forms.UserCreateForm;
-import ioc.liturgical.ws.models.ws.forms.UserPasswordForm;
-import ioc.liturgical.ws.models.ws.forms.UserUpdateForm;
 
 public class SchemasController {
 	

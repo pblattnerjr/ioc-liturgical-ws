@@ -7,7 +7,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import ioc.liturgical.ws.models.db.docs.nlp.WordAnalyses;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.WordAnalyses;
 
 
 /**

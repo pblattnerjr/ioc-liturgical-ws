@@ -4,9 +4,10 @@ import com.google.gson.JsonObject;
 
 import ioc.liturgical.ws.managers.databases.external.neo4j.utils.Neo4jConnectionManager;
 import ioc.liturgical.ws.managers.exceptions.DbException;
-import ioc.liturgical.ws.models.ResultJsonObjectArray;
-import ioc.liturgical.ws.models.db.docs.ontology.TextBiblical;
-import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
+
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.ontology.TextBiblical;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
+import org.ocmc.ioc.liturgical.utils.GeneralUtils;
 
 /**
  * Converts the original Biblical text schema to the new one
@@ -50,7 +51,7 @@ public class Neo4jConvertBiblicalText {
 				  blockCounter++;
 				  processed++;
 				  if (blockCounter == block) {
-					  System.out.println(AlwbGeneralUtils.done(processed, toProcess));
+					  System.out.println(GeneralUtils.done(processed, toProcess));
 					  blockCounter = 0;
 				  }
 //				  System.out.println(t.toJsonString());

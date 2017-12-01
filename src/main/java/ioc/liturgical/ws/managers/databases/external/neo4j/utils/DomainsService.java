@@ -3,16 +3,17 @@ package ioc.liturgical.ws.managers.databases.external.neo4j.utils;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.ocmc.ioc.liturgical.schemas.models.DropdownArray;
+import org.ocmc.ioc.liturgical.schemas.models.DropdownItem;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import ioc.liturgical.ws.constants.DOMAINS_BIBLICAL;
-import ioc.liturgical.ws.constants.DOMAINS_LITURGICAL;
-import ioc.liturgical.ws.constants.DOMAIN_QUERIES;
+import org.ocmc.ioc.liturgical.schemas.constants.DOMAINS_BIBLICAL;
+import org.ocmc.ioc.liturgical.schemas.constants.DOMAINS_LITURGICAL;
+import org.ocmc.ioc.liturgical.schemas.constants.DOMAIN_QUERIES;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
-import net.ages.alwb.utils.core.datastores.json.models.DropdownArray;
-import net.ages.alwb.utils.core.datastores.json.models.DropdownItem;
 
 public class DomainsService {
 	String splitter = "split(n.id,'~')[0]";

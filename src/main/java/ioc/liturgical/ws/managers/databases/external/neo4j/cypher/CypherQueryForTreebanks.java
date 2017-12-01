@@ -3,7 +3,7 @@ package ioc.liturgical.ws.managers.databases.external.neo4j.cypher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 
 /**
  *  Provides a means to build a query for searching treebanks.

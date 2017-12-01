@@ -3,13 +3,14 @@ package net.ages.alwb.utils.core.datastores.db.h2.examples;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.ocmc.ioc.liturgical.schemas.models.db.internal.TKVString;
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 import net.ages.alwb.utils.core.datastores.db.factory.DbConnectionFactory;
 import net.ages.alwb.utils.core.datastores.db.h2.manager.H2ConnectionManager;
 import net.ages.alwb.utils.core.datastores.db.h2.queries.QueryForJson;
-import net.ages.alwb.utils.core.datastores.json.models.TKVString;
 
 
 // H2 Database Example

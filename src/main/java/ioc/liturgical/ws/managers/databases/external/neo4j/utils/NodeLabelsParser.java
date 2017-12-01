@@ -2,12 +2,12 @@ package ioc.liturgical.ws.managers.databases.external.neo4j.utils;
 
 import com.google.gson.annotations.Expose;
 
-import ioc.liturgical.ws.constants.BIBLICAL_BOOKS;
-import ioc.liturgical.ws.constants.DOMAINS_BIBLICAL;
-import ioc.liturgical.ws.constants.DOMAINS_LITURGICAL;
-import ioc.liturgical.ws.constants.LITURGICAL_BOOKS;
-import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
-import net.ages.alwb.utils.core.datastores.json.models.DropdownItem;
+import org.ocmc.ioc.liturgical.schemas.constants.BIBLICAL_BOOKS;
+import org.ocmc.ioc.liturgical.schemas.constants.DOMAINS_BIBLICAL;
+import org.ocmc.ioc.liturgical.schemas.constants.DOMAINS_LITURGICAL;
+import org.ocmc.ioc.liturgical.schemas.constants.LITURGICAL_BOOKS;
+import org.ocmc.ioc.liturgical.schemas.models.supers.AbstractModel;
+import org.ocmc.ioc.liturgical.schemas.models.DropdownItem;
 
 /**
  * TODO: needs more work or to be deleted.

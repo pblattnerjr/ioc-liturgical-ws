@@ -1,17 +1,13 @@
 package ioc.liturgical.ws.managers.interfaces;
 
-import java.sql.SQLException;
 import java.util.List;
 
-import org.neo4j.driver.v1.StatementResult;
+import org.ocmc.ioc.liturgical.schemas.models.db.internal.LTKVJsonObject;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
 
 import com.google.gson.JsonObject;
 
-import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.managers.exceptions.DbException;
-import ioc.liturgical.ws.models.RequestStatus;
-import ioc.liturgical.ws.models.ResultJsonObjectArray;
-import net.ages.alwb.utils.core.datastores.json.models.LTKVJsonObject;
 
 public interface LowLevelDataStoreInterface {
 

@@ -21,11 +21,11 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
-import ioc.liturgical.ws.models.ResultJsonObjectArray;
-import ioc.liturgical.ws.models.db.docs.nlp.PtbSentence;
-import ioc.liturgical.ws.models.db.docs.nlp.PtbWord;
-import ioc.liturgical.ws.models.db.supers.LTK;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.PtbSentence;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.PtbWord;
+import org.ocmc.ioc.liturgical.schemas.models.supers.LTK;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import org.ocmc.ioc.liturgical.utils.FileUtils;
 import net.ages.alwb.utils.nlp.utils.PerseusPostagMapper;
 
@@ -101,10 +101,7 @@ public class PerseusTreebankDataCreateTask implements Runnable {
 				boolean foundStartingFile = false;
 				
 				PtbSentence lastSentence = null;
-				PtbWord lastRoot = null;
-				PtbWord lastWord = null;
 				boolean foundLastSentenceInXml = true;
-				boolean foundLastWordInXml = true;
 				ResultJsonObjectArray result = null;
 				
 				if (deleteFirst) {

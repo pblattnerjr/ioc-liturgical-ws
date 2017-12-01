@@ -6,7 +6,7 @@ import java.util.List;
 import com.google.gson.annotations.Expose;
 
 import ioc.liturgical.ws.constants.Constants;
-import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
+import org.ocmc.ioc.liturgical.schemas.models.supers.AbstractModel;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 import switches.AgesHtmlToOslwSwitch;
 

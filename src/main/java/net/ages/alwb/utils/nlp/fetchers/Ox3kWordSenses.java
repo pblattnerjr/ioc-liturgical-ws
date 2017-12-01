@@ -10,7 +10,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import org.ocmc.ioc.liturgical.utils.FileUtils;
-//import ioc.liturgical.ws.models.db.docs.nlp.WordSenseGev;
 import net.ages.alwb.utils.nlp.models.WordSenseGev;
 
 /**

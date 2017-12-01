@@ -6,7 +6,7 @@ import java.util.List;
 import com.google.gson.annotations.Expose;
 
 import edu.mit.jwi.item.ISynset;
-import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
+import org.ocmc.ioc.liturgical.schemas.models.supers.AbstractModel;
 
 public class Synset extends AbstractModel {
 	@Expose String id = ""; // id

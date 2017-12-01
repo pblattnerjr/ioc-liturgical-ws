@@ -9,7 +9,7 @@ import com.google.gson.JsonObject;
 
 import net.ages.alwb.gateway.utils.enums.DataStore;
 import net.ages.alwb.gateway.models.AresEntry;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 
 /**
  * Represents a line read from an ares file.

@@ -19,10 +19,11 @@ import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
 import ioc.liturgical.ws.constants.Constants;
+import org.ocmc.ioc.liturgical.schemas.models.db.internal.TK;
+
 import net.ages.alwb.utils.core.datastores.db.factory.DbConnectionFactory;
 import net.ages.alwb.utils.core.datastores.db.h2.manager.H2ConnectionManager;
-import net.ages.alwb.utils.core.datastores.json.models.TK;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import org.ocmc.ioc.liturgical.utils.FileUtils;
 
 

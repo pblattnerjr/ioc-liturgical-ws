@@ -2,7 +2,7 @@ package delete.me;
 
 import com.github.reinert.jjschema.Attributes;
 
-import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
+import org.ocmc.ioc.liturgical.schemas.models.supers.AbstractModel;
 
 public class UserSelfView extends AbstractModel {
 	@Attributes(

@@ -2,13 +2,14 @@ package ioc.liturgical.ws.controllers.admin;
 
 import static spark.Spark.get;
 
+import org.ocmc.ioc.liturgical.schemas.constants.ENDPOINTS_ADMIN_API;
+import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
+import org.ocmc.ioc.liturgical.schemas.constants.SYSTEM_LIBS;
+
 import com.google.gson.JsonObject;
 
 import ioc.liturgical.ws.app.ServiceProvider;
-import ioc.liturgical.ws.constants.ENDPOINTS_ADMIN_API;
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
-import ioc.liturgical.ws.constants.SYSTEM_LIBS;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 
 public class AuthorsController {

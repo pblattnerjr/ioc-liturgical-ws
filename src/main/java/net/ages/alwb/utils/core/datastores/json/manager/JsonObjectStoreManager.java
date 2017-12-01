@@ -24,8 +24,9 @@ import com.google.gson.reflect.TypeToken;
 import ioc.liturgical.ws.constants.Constants;
 import net.ages.alwb.utils.core.datastores.db.factory.DbConnectionFactory;
 import net.ages.alwb.utils.core.datastores.db.h2.manager.H2ConnectionManager;
-import net.ages.alwb.utils.core.datastores.json.models.TKVJsonObject;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+
+import org.ocmc.ioc.liturgical.schemas.models.db.internal.TKVJsonObject;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import org.ocmc.ioc.liturgical.utils.FileUtils;
 
 /**

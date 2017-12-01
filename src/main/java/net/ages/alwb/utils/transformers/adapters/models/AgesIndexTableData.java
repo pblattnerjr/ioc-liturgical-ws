@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.google.gson.annotations.Expose;
 
-import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
+import org.ocmc.ioc.liturgical.schemas.models.supers.AbstractModel;
 import net.ages.alwb.utils.transformers.adapters.models.AgesIndexTableRowData;
 
 public class AgesIndexTableData extends AbstractModel {

@@ -1,6 +1,6 @@
 package net.ages.alwb.utils.core.datastores.json.converters;
 
-import net.ages.alwb.utils.core.datastores.json.models.TKVString;
+import org.ocmc.ioc.liturgical.schemas.models.db.internal.TKVString;
 
 /**
  * Use this to get subclasses of TKVString

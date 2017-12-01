@@ -15,10 +15,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ocmc.ioc.liturgical.utils.ApacheFileUtils;
 import org.ocmc.ioc.liturgical.utils.FileUtils;
-import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
+import org.ocmc.ioc.liturgical.utils.GeneralUtils;
 import net.ages.alwb.gateway.utils.GatewayUtils;
 import net.ages.alwb.gateway.utils.Resource;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 
 /**
  * Manages all occurrences of proxies for ares files. Each ares file that has a
@@ -391,7 +391,7 @@ public class LibraryProxyManager {
 	 */
 	public String[] getDomainsAsArray() {
 		Set<String> set = mapDomainToTopics.keySet();
-		return AlwbGeneralUtils.setToStringArray(set);
+		return GeneralUtils.setToStringArray(set);
 	}
 	
 	public Set<String> getDomainsAsSet() {
@@ -457,7 +457,7 @@ public class LibraryProxyManager {
 	public void setValue(String resource, String key, String value) {
 		try {
 			if (!mapLoadedAresFiles.containsKey(resource)) {
-				String toDomain = AlwbGeneralUtils.domainFromResource(resource);
+				String toDomain = GeneralUtils.domainFromResource(resource);
 				String fromDomain = "gr_GR_cog";
 				String greekResource = resource.replace(toDomain, fromDomain);
 				cloneFile(greekResource, fromDomain, toDomain);
@@ -493,7 +493,7 @@ public class LibraryProxyManager {
 		if (resource.startsWith("labels")) {
 			modelDomain = "en_US_tms";
 		}
-		modelResource = AlwbGeneralUtils.changeResourceDomain(resource,
+		modelResource = GeneralUtils.changeResourceDomain(resource,
 				modelDomain);
 		
 		// set newPath based on various conditionValues
@@ -501,7 +501,7 @@ public class LibraryProxyManager {
 			// if there is a corresponding resource in gr_GR_cog, create newPath based on its folder structure
 			modelPath = mapLoadedAresFiles.get(modelResource).getResourcePath();
 			newPath = GatewayUtils.replaceDomain(modelPath, modelDomain,
-					AlwbGeneralUtils.domainFromResource(resource));
+					GeneralUtils.domainFromResource(resource));
 		} else {
 			// We have no corresponding resource in gr_GR_cog to this one.
 			// So, we will set the path to the root folder for this domain

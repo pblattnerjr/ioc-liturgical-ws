@@ -6,8 +6,9 @@ import com.google.gson.JsonObject;
 
 import org.apache.commons.lang3.*;
 import ioc.liturgical.ws.managers.databases.external.neo4j.utils.Neo4jConnectionManager;
-import ioc.liturgical.ws.models.ResultJsonObjectArray;
-import net.ages.alwb.utils.core.datastores.json.exceptions.BadIdException;
+
+import org.ocmc.ioc.liturgical.schemas.exceptions.BadIdException;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
 import org.ocmc.ioc.liturgical.utils.FileUtils;
 import net.ages.alwb.utils.nlp.models.wordnet.WnLexicalEntry;
 import net.ages.alwb.utils.nlp.models.wordnet.WnLexicalSense;

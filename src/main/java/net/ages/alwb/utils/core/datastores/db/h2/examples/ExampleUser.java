@@ -2,7 +2,7 @@ package net.ages.alwb.utils.core.datastores.db.h2.examples;
 
 import com.google.gson.annotations.Expose;
 
-import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
+import org.ocmc.ioc.liturgical.schemas.models.supers.AbstractModel;
 
 public class ExampleUser extends AbstractModel {
 	@Expose String firstname = "";

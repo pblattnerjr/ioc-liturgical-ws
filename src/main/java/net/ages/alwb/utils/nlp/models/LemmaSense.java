@@ -1,6 +1,6 @@
 package net.ages.alwb.utils.nlp.models;
 
-import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
+import org.ocmc.ioc.liturgical.schemas.models.supers.AbstractModel;
 
 import com.google.gson.annotations.Expose;
 

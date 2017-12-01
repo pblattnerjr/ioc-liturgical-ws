@@ -3,7 +3,7 @@ package ioc.liturgical.ws.nlp;
 import java.util.ArrayList;
 import java.util.List;
 
-import ioc.liturgical.ws.models.db.docs.nlp.TokenAnalysis;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.TokenAnalysis;
 import net.ages.alwb.gateway.utils.Tuple;
 import net.ages.alwb.utils.nlp.constants.DEPENDENCY_LABELS;
 import net.ages.alwb.utils.nlp.constants.DEPENDENCY_LABEL_MAPPER;

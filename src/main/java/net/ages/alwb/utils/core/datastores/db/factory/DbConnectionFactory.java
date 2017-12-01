@@ -4,13 +4,14 @@ import java.lang.reflect.Type;
 import java.sql.SQLException;
 import java.util.List;
 
+import org.ocmc.ioc.liturgical.schemas.models.db.internal.TK;
+
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
 import net.ages.alwb.utils.core.datastores.db.h2.manager.H2ConnectionManager;
 import net.ages.alwb.utils.core.datastores.db.h2.queries.QueryForJson;
 import net.ages.alwb.utils.core.datastores.json.manager.JsonStoreManager;
-import net.ages.alwb.utils.core.datastores.json.models.TK;
 
 public class DbConnectionFactory {
 	/**

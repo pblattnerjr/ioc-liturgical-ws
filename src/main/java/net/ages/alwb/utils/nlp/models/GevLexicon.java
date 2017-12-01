@@ -8,7 +8,7 @@ import java.util.TreeMap;
 import com.google.gson.annotations.Expose;
 
 import  net.ages.alwb.utils.nlp.models.WordSenseGev;
-import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
+import org.ocmc.ioc.liturgical.schemas.models.supers.AbstractModel;
 import org.ocmc.ioc.liturgical.utils.FileUtils;
 import net.ages.alwb.utils.nlp.fetchers.Ox3kUtils;
 import net.ages.alwb.utils.nlp.fetchers.Ox3kWordSenses;

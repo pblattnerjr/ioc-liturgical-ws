@@ -4,16 +4,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
-import ioc.liturgical.ws.constants.db.external.LIBRARIES;
-import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
-import ioc.liturgical.ws.models.RequestStatus;
-import ioc.liturgical.ws.models.ResultJsonObjectArray;
-import ioc.liturgical.ws.models.db.docs.nlp.TokenAnalysis;
-import ioc.liturgical.ws.models.db.docs.nlp.WordAnalysis;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
-import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
+
+import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
+import org.ocmc.ioc.liturgical.schemas.constants.LIBRARIES;
+import org.ocmc.ioc.liturgical.schemas.constants.TOPICS;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.TokenAnalysis;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.WordAnalysis;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
+import org.ocmc.ioc.liturgical.utils.GeneralUtils;
 
 /**
  * Runs a task (separate thread) to create a new WordAnalysis
@@ -43,8 +44,8 @@ public class WordAnalysisCreateTask implements Runnable {
 	@Override
 	public void run() {
 		synchronized(this) {
-			String lowerToken = AlwbGeneralUtils.toNfc(token.getToken()).toLowerCase();
-			String lowerLemma = AlwbGeneralUtils.toNfc(token.getLemma()).toLowerCase();
+			String lowerToken = GeneralUtils.toNfc(token.getToken()).toLowerCase();
+			String lowerLemma = GeneralUtils.toNfc(token.getLemma()).toLowerCase();
 			String topic = lowerToken;
 			String key = lowerLemma 
 					+ "/"

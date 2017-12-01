@@ -10,12 +10,12 @@ import ioc.liturgical.test.framework.LinkRefersToBiblicalTextTextFactory;
 import ioc.liturgical.test.framework.TestUsers;
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.constants.ENDPOINTS_DB_API;
-import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
-import ioc.liturgical.ws.constants.NEW_FORM_CLASSES_ADMIN_API;
-import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
-import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
-import ioc.liturgical.ws.models.ws.forms.DomainCreateForm;
+import org.ocmc.ioc.liturgical.schemas.constants.ENDPOINTS_DB_API;
+import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
+import org.ocmc.ioc.liturgical.schemas.constants.NEW_FORM_CLASSES_ADMIN_API;
+import org.ocmc.ioc.liturgical.schemas.constants.RELATIONSHIP_TYPES;
+import org.ocmc.ioc.liturgical.schemas.models.forms.ontology.LinkRefersToBiblicalTextCreateForm;
+import org.ocmc.ioc.liturgical.schemas.models.ws.forms.DomainCreateForm;
 
 public class ServiceProviderTest {
 	

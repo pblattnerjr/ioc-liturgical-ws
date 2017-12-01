@@ -5,8 +5,7 @@ import static org.junit.Assert.*;
 import java.util.List;
 
 import org.junit.Test;
-
-import ioc.liturgical.ws.constants.db.external.TOPICS;
+import org.ocmc.ioc.liturgical.schemas.constants.TOPICS;
 
 public class ONTOLOGY_TOPICSTest {
 

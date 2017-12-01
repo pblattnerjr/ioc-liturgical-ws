@@ -14,9 +14,9 @@ import org.hamcrest.Matchers;
 import ioc.liturgical.test.framework.TestConstants;
 import ioc.liturgical.test.framework.TestUsers;
 import ioc.liturgical.ws.app.ServiceProvider;
-import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
-import ioc.liturgical.ws.constants.NEW_FORM_CLASSES_ADMIN_API;
-import ioc.liturgical.ws.models.ws.forms.DomainCreateForm;
+import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
+import org.ocmc.ioc.liturgical.schemas.constants.NEW_FORM_CLASSES_ADMIN_API;
+import org.ocmc.ioc.liturgical.schemas.models.ws.forms.DomainCreateForm;
 
 public class TestPathDomains {
 	

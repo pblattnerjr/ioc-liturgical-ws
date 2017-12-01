@@ -17,18 +17,19 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.managers.databases.external.neo4j.utils.Neo4jConnectionManager;
 import ioc.liturgical.ws.managers.exceptions.DbException;
-import ioc.liturgical.ws.models.RequestStatus;
-import ioc.liturgical.ws.models.ResultJsonObjectArray;
 import net.ages.alwb.utils.core.datastores.db.neo4j.models.NodePairParameters;
 import net.ages.alwb.utils.core.datastores.db.neo4j.models.NodePairs;
 import net.ages.alwb.utils.core.datastores.db.neo4j.models.NodePairsList;
-import net.ages.alwb.utils.core.datastores.json.models.ModelHelpers;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+
+import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
+import org.ocmc.ioc.liturgical.schemas.models.ModelHelpers;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.ontology.Animal;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import net.ages.alwb.utils.core.misc.ListMap;
-import ioc.liturgical.ws.models.db.docs.ontology.Animal;;
 
 public class Db2Db {
 	private static final Logger logger = LoggerFactory.getLogger(Db2Db.class);

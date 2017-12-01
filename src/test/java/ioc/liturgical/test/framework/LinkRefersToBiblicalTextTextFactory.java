@@ -3,7 +3,7 @@ package ioc.liturgical.test.framework;
 import java.util.ArrayList;
 import java.util.List;
 
-import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
+import org.ocmc.ioc.liturgical.schemas.models.forms.ontology.LinkRefersToBiblicalTextCreateForm;
 
 /**
  * Provides instances of Reference and ReferenceCreateForm
