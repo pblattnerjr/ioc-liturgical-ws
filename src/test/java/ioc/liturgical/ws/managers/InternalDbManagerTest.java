@@ -1,12 +1,13 @@
 package ioc.liturgical.ws.managers;
 
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.constants.ROLES;
-import ioc.liturgical.ws.constants.VERBS;
+import org.ocmc.ioc.liturgical.schemas.constants.ROLES;
+import org.ocmc.ioc.liturgical.schemas.constants.VERBS;
+import org.ocmc.ioc.liturgical.schemas.models.ws.db.UserContact;
+import org.ocmc.ioc.liturgical.schemas.models.ws.db.UserHash;
+
 import ioc.liturgical.ws.managers.auth.UserStatus;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
-import ioc.liturgical.ws.models.ws.db.UserContact;
-import ioc.liturgical.ws.models.ws.db.UserHash;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;

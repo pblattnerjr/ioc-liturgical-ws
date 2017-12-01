@@ -10,14 +10,15 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonObject;
 
-import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
-import ioc.liturgical.ws.constants.LITURGICAL_CALENDAR_TYPE;
-import ioc.liturgical.ws.ldp.LiturgicalDayProperties;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
-import ioc.liturgical.ws.models.ResultJsonObjectArray;
-import ioc.liturgical.ws.models.ws.response.LiturgicalDayPropertiesForm;
-import net.ages.alwb.utils.core.datastores.json.models.LTKVJsonObject;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+
+import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
+import org.ocmc.ioc.liturgical.schemas.models.db.internal.LTKVJsonObject;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.LiturgicalDayPropertiesForm;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
+import org.ocmc.ioc.liturgical.utils.LITURGICAL_CALENDAR_TYPE;
+import org.ocmc.ioc.liturgical.utils.LiturgicalDayProperties;
 
 public class LdpManager {
 	private static final Logger logger = LoggerFactory.getLogger(LdpManager.class);

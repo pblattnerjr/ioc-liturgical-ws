@@ -13,7 +13,7 @@ import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.ages.alwb.utils.core.file.AlwbFileUtils;
+import org.ocmc.ioc.liturgical.utils.FileUtils;
 
 public class Ox3kUtils {
 	private static final Logger logger = LoggerFactory.getLogger(Ox3kUtils.class);
@@ -110,7 +110,7 @@ public class Ox3kUtils {
 			) {
 		List<Document> result = new ArrayList<Document>();
 		if (source == DOC_SOURCE.DISK) {
-			result = AlwbFileUtils.getJsoupDocsFromDirectory(path + listDir);
+			result = FileUtils.getJsoupDocsFromDirectory(path + listDir);
 		} else {
 			String[] parts = href.split("/");
 			String segment = parts[parts.length-1].split("_")[1];
@@ -122,7 +122,7 @@ public class Ox3kUtils {
 				if (doc.getElementById("entrylist1").getElementsByClass("result-list1").first().childNodeSize() > 0) {
 					result.add(doc);
 					if (source == DOC_SOURCE.NET_THEN_SAVE) {
-						AlwbFileUtils.writeFile(filename + i + ".html", doc.html());
+						FileUtils.writeFile(filename + i + ".html", doc.html());
 					}
 				}
 				Elements pagingLinks = doc.getElementsByClass("paging_links").first().getElementsByTag("a");

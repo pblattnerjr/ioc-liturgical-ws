@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.google.gson.annotations.Expose;
 
-import net.ages.alwb.utils.core.datastores.json.models.AbstractModel;
+import org.ocmc.ioc.liturgical.schemas.models.supers.AbstractModel;
 
 public class OslwRowElement  extends AbstractModel {
 	@Expose private List<OslwCellElement> cells = new ArrayList<OslwCellElement>();

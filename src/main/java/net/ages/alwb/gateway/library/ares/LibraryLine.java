@@ -9,7 +9,7 @@ import com.google.gson.JsonObject;
 
 import net.ages.alwb.gateway.utils.enums.DataStore;
 import net.ages.alwb.gateway.models.AresEntry;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 
 /**
  * Represents a line read from an ares file.
@@ -247,9 +247,6 @@ public class LibraryLine  {
 		AresEntry result = null;
 		try {
 			if (isSimpleKeyValue || isRedirect()) {
-				if (key.startsWith("meMA.Ode8C22.text")) {
-					key = key;
-				}
 				JsonObject json = new JsonObject();
 				result = new AresEntry(json);
 				result.setId(getCouchDbId());
@@ -268,9 +265,6 @@ public class LibraryLine  {
 			}
 		} catch (Exception e) {
 			result = null;
-		}
-		if (result == null) {
-			result = result;
 		}
 		return result;
 	}

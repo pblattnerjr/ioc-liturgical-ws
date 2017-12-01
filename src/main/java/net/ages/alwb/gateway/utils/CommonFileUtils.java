@@ -17,9 +17,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.ocmc.ioc.liturgical.utils.ApacheFileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,9 +57,9 @@ public class CommonFileUtils {
 				File fromDir = new File(from);
 				File toDir = new File(to);
 				if (startWithEmptyTarget) {
-					org.apache.commons.io.FileUtils.deleteDirectory(toDir);
+					ApacheFileUtils.deleteDirectory(toDir);
 				}
-				org.apache.commons.io.FileUtils.copyDirectory(fromDir,toDir);
+				ApacheFileUtils.copyDirectory(fromDir,toDir);
 			} catch (IOException e) {
 				LOGGER.error(e.getMessage());
 			}
@@ -170,7 +170,7 @@ public class CommonFileUtils {
 		String [] extensions = {extension};
 		List<File> files = null;
 		try {
-			files = (List<File>) FileUtils.listFiles(dir, extensions, true);
+			files = (List<File>) ApacheFileUtils.listFiles(dir, extensions, true);
 		} catch (Exception e) {
 			files = null;
 		}
@@ -362,7 +362,7 @@ public class CommonFileUtils {
 					parts = line.split(delimiter);
 					if (parts.length > 0)  {
 						if (printDupes && map.containsKey(parts[0])) {
-							System.out.println("AlwbFileUtils.mapFromDelimitedFile - duplicate ");
+							System.out.println("FileUtils.mapFromDelimitedFile - duplicate ");
 							System.out.println(map.get(parts[0]));
 							System.out.println(line + "\n");
 						}
@@ -448,9 +448,9 @@ public class CommonFileUtils {
 				String newFilename = filename.replaceFirst(fromFileNamePattern, toFileNamePattern);
 				LOGGER.info("From: " + filename);
 				LOGGER.info("To: " + newFilename);
-				org.apache.commons.io.FileUtils.moveFile(
-						org.apache.commons.io.FileUtils.getFile(filename), 
-						org.apache.commons.io.FileUtils.getFile(newFilename));
+				ApacheFileUtils.moveFile(
+						ApacheFileUtils.getFile(filename), 
+						ApacheFileUtils.getFile(newFilename));
 			}
 		} catch (IOException e) {
 			LOGGER.error(e.getMessage());

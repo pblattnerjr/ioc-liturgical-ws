@@ -7,7 +7,7 @@ import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
 
-import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
+import org.ocmc.ioc.liturgical.utils.GeneralUtils;
 
 
 /**
@@ -62,7 +62,7 @@ public class GRAMMAR_ABBREVIATIONS_MAPPER {
      * @return
      */
     public static GRAMMAR_ABBREVIATIONS getLabel(String s) {
-    	String n = AlwbGeneralUtils.normalize(s);
+    	String n = GeneralUtils.normalize(s);
     	if (map.containsKey(n)) {
     		return map.get(n);
     	} else {

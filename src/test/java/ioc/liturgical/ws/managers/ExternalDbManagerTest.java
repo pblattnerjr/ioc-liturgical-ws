@@ -16,27 +16,27 @@ import com.google.gson.JsonObject;
 
 import ioc.liturgical.test.framework.LinkRefersToBiblicalTextTextFactory;
 import ioc.liturgical.test.framework.TestUsers;
-import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
-import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
-import ioc.liturgical.ws.constants.db.external.TOPICS;
+import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
+import org.ocmc.ioc.liturgical.schemas.constants.RELATIONSHIP_TYPES;
+import org.ocmc.ioc.liturgical.schemas.constants.TOPICS;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
-import ioc.liturgical.ws.models.RequestStatus;
-import ioc.liturgical.ws.models.ResultJsonObjectArray;
-import ioc.liturgical.ws.models.db.docs.nlp.WordAnalyses;
-import ioc.liturgical.ws.models.db.docs.nlp.WordAnalysis;
-import ioc.liturgical.ws.models.db.docs.ontology.Animal;
-import ioc.liturgical.ws.models.db.docs.ontology.Being;
-import ioc.liturgical.ws.models.db.docs.ontology.Concept;
-import ioc.liturgical.ws.models.db.docs.ontology.Event;
-import ioc.liturgical.ws.models.db.docs.personal.UserNote;
-import ioc.liturgical.ws.models.db.forms.AnimalCreateForm;
-import ioc.liturgical.ws.models.db.forms.ConceptCreateForm;
-import ioc.liturgical.ws.models.db.forms.EventCreateForm;
-import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
-import ioc.liturgical.ws.models.db.forms.UserNoteCreateForm;
-import ioc.liturgical.ws.models.db.links.LinkRefersToBiblicalText;
-import net.ages.alwb.utils.core.file.AlwbFileUtils;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.WordAnalyses;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.WordAnalysis;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.ontology.Animal;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.ontology.Being;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.ontology.Concept;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.ontology.Event;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.personal.UserNote;
+import org.ocmc.ioc.liturgical.schemas.models.forms.ontology.AnimalCreateForm;
+import org.ocmc.ioc.liturgical.schemas.models.forms.ontology.ConceptCreateForm;
+import org.ocmc.ioc.liturgical.schemas.models.forms.ontology.EventCreateForm;
+import org.ocmc.ioc.liturgical.schemas.models.forms.ontology.LinkRefersToBiblicalTextCreateForm;
+import org.ocmc.ioc.liturgical.schemas.models.forms.ontology.UserNoteCreateForm;
+import org.ocmc.ioc.liturgical.schemas.models.db.links.LinkRefersToBiblicalText;
+import org.ocmc.ioc.liturgical.utils.FileUtils;
 import net.ages.alwb.utils.nlp.fetchers.PerseusMorph;
 
 public class ExternalDbManagerTest {
@@ -376,7 +376,7 @@ public class ExternalDbManagerTest {
 		    		);
 		    JsonArray a = o.get("values").getAsJsonArray();
 		    String contents = a.get(0).getAsJsonObject().get("keys").getAsString();
-		    AlwbFileUtils.writeFile("/Users/mac002/temp/res.me.m01.d06.tex", contents);
+		    FileUtils.writeFile("/Users/mac002/temp/res.me.m01.d06.tex", contents);
 		    assertTrue(contents.length() > 0);
 	    }
 	

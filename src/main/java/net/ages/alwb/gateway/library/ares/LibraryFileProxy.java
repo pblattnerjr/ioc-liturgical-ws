@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 import net.ages.alwb.gateway.utils.GatewayUtils;
 import net.ages.alwb.gateway.utils.AresEntryId;
 import net.ages.alwb.gateway.utils.Constants;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 
 /**
  * Acts as a proxy to the ares file.

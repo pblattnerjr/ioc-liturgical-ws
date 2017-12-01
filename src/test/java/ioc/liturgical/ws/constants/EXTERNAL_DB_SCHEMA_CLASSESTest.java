@@ -6,11 +6,11 @@ import org.junit.Test;
 
 import com.google.gson.Gson;
 
-import ioc.liturgical.ws.constants.db.external.SCHEMA_CLASSES;
-import ioc.liturgical.ws.models.db.forms.AnimalCreateForm;
-import ioc.liturgical.ws.models.db.forms.LinkRefersToAnimalCreateForm;
-import ioc.liturgical.ws.models.db.supers.LTK;
-import ioc.liturgical.ws.models.db.supers.LTKDb;
+import org.ocmc.ioc.liturgical.schemas.constants.SCHEMA_CLASSES;
+import org.ocmc.ioc.liturgical.schemas.models.forms.ontology.AnimalCreateForm;
+import org.ocmc.ioc.liturgical.schemas.models.forms.ontology.LinkRefersToAnimalCreateForm;
+import org.ocmc.ioc.liturgical.schemas.models.supers.LTK;
+import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDb;
 
 public class EXTERNAL_DB_SCHEMA_CLASSESTest {
 

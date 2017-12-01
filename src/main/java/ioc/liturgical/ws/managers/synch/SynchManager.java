@@ -1,8 +1,11 @@
 package ioc.liturgical.ws.managers.synch;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.neo4j.driver.v1.AuthTokens;
+import org.neo4j.driver.v1.Config;
+import org.neo4j.driver.v1.Config.ConfigBuilder;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.GraphDatabase;
 import org.neo4j.driver.v1.StatementResult;
@@ -15,15 +18,14 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
-import ioc.liturgical.ws.constants.STATUS;
-import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
+import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
+import org.ocmc.ioc.liturgical.schemas.constants.STATUS;
 import ioc.liturgical.ws.managers.exceptions.DbException;
-import ioc.liturgical.ws.models.RequestStatus;
-import ioc.liturgical.ws.models.ResultJsonObjectArray;
-import ioc.liturgical.ws.models.db.synch.Transaction;
-import net.ages.alwb.utils.core.datastores.json.models.ModelHelpers;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
+import org.ocmc.ioc.liturgical.schemas.models.ModelHelpers;
+import org.ocmc.ioc.liturgical.schemas.models.synch.Transaction;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 
 /**
  * Provides methods to query the database for transactions,
@@ -65,7 +67,14 @@ public class SynchManager {
 		  String synchBoltUrl = "bolt://" + this.synchDomain + ":" + this.synchPort;
 		  logger.info("Using " + synchBoltUrl + " for external synch database...");
 		  try {
-			  synchDriver = GraphDatabase.driver(synchBoltUrl, AuthTokens.basic(username, password));
+			  // getting periodic TLS connection closed errors.  Setting connectionTimeout to see if solves problem.
+			  ConfigBuilder cb = Config.build();
+			  cb.withConnectionTimeout(
+					  Constants.boltDriverConnectionTimeout
+					  , Constants.boltDriverConnectionTimeoutUnits
+					  );
+			  Config config = cb.toConfig();
+			  synchDriver = GraphDatabase.driver(synchBoltUrl, AuthTokens.basic(username, password), config);
 			  testSynchConnection();
 		  } catch (org.neo4j.driver.v1.exceptions.ServiceUnavailableException u) {
 			  this.synchConnectionOK = false;
@@ -80,8 +89,13 @@ public class SynchManager {
 	  private ResultJsonObjectArray testSynchConnection() {
 		  ResultJsonObjectArray result = getResultObjectForQuery("match (n) return count(n) limit 1");
 		  if (result.getValueCount() > 0) {
-			  logger.info("Connection to Neo4j SYNCH database is OK.");
-			  this.synchConnectionOK = true;
+			  logger.info("Connection to Neo4j SYNCH database is OK and encrypted.");
+			  if (! this.synchDriver.isEncrypted()) {
+				  logger.error("Connection to Neo4j SYNCH database is NOT encrypted!");
+				  this.synchConnectionOK = false;
+			  } else {
+				  this.synchConnectionOK = true;
+			  }
 		  } else {
 			  this.synchConnectionOK = false;
 			  logger.error("Can't connect to the Neo4j SYNCH database.");

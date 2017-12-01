@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import net.ages.alwb.utils.core.file.AlwbFileUtils;
+import org.ocmc.ioc.liturgical.utils.FileUtils;
 
 public class PentecostarionLoader {
 
@@ -14,7 +14,7 @@ public class PentecostarionLoader {
 		Map<String, String> mapEnglish = new TreeMap<String, String>();
 
 		File f = new File("/Users/mac002/Git/mcolburn/ioc-liturgical-ws/src/test/resources/pentecostarionTitles.txt");
-		for (String line : AlwbFileUtils.linesFromFile(f)) {
+		for (String line : FileUtils.linesFromFile(f)) {
 			String[] parts = line.split(",");
 			String id = parts[0];
 			String value = parts[1];

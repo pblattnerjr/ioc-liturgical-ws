@@ -1,14 +1,14 @@
 package net.ages.alwb.tasks;
 import java.util.List;
 
+import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.TokenAnalysis;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
-import ioc.liturgical.ws.models.RequestStatus;
-import ioc.liturgical.ws.models.db.docs.nlp.TokenAnalysis;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
 
 /**
  * Runs a task (separate thread) to generate save newly created

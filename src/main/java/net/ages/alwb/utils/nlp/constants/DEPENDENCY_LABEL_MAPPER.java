@@ -3,7 +3,7 @@ package net.ages.alwb.utils.nlp.constants;
 import java.util.Map;
 import java.util.TreeMap;
 
-import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
+import org.ocmc.ioc.liturgical.utils.GeneralUtils;
 
 
 /**
@@ -81,7 +81,7 @@ public class DEPENDENCY_LABEL_MAPPER {
      * @return
      */
     public static DEPENDENCY_LABELS getLabel(String s) {
-    	String n = AlwbGeneralUtils.normalize(s);
+    	String n = GeneralUtils.normalize(s);
     	if (map.containsKey(n)) {
     		return map.get(n);
     	} else {
@@ -98,7 +98,7 @@ public class DEPENDENCY_LABEL_MAPPER {
     	if (s.equals("·")) {
     		System.out.print("");
     	}
-    	String n = AlwbGeneralUtils.normalize(s);
+    	String n = GeneralUtils.normalize(s);
     	DEPENDENCY_LABELS label = getLabel(n);
     	result = n.length() == 1
     			&& (

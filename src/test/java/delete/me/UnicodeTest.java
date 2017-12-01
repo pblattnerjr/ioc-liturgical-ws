@@ -2,8 +2,7 @@ package delete.me;
 
 import java.text.Normalizer;
 
-import ioc.liturgical.ws.models.db.docs.ontology.TextLiturgical;
-import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
+import org.ocmc.ioc.liturgical.utils.GeneralUtils;
 
 public class UnicodeTest {
 	
@@ -41,7 +40,7 @@ public class UnicodeTest {
 		System.out.println(Normalizer.isNormalized(nfc, Normalizer.Form.NFC));
 		
 		String spanish = "Diácono";
-		System.out.println(AlwbGeneralUtils.normalize(spanish));
+		System.out.println(GeneralUtils.normalize(spanish));
 }
 
 }

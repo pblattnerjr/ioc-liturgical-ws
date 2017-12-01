@@ -12,6 +12,13 @@ import java.nio.file.Paths;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.ocmc.ioc.liturgical.schemas.constants.SINGLETON_KEYS;
+import org.ocmc.ioc.liturgical.schemas.constants.TOPICS;
+import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
+import org.ocmc.ioc.liturgical.schemas.constants.ENDPOINTS_DB_API;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,22 +30,14 @@ import com.google.gson.JsonObject;
 
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.constants.ENDPOINTS_DB_API;
-import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
-import ioc.liturgical.ws.constants.db.external.SINGLETON_KEYS;
-import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.controllers.admin.ControllerUtils;
 import ioc.liturgical.ws.managers.auth.AuthDecoder;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
-import ioc.liturgical.ws.models.RequestStatus;
-import ioc.liturgical.ws.models.ResultJsonObjectArray;
 
 public class Neo4jController {
 	private static final Logger logger = LoggerFactory.getLogger(Neo4jController.class);
 	
-    private Gson gson = new GsonBuilder().disableHtmlEscaping().create();
-    
-    
+    private Gson gson = new GsonBuilder().disableHtmlEscaping().create(); 
     
 	/**
 	 * returns a login form

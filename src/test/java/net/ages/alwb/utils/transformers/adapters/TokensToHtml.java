@@ -2,7 +2,7 @@ package net.ages.alwb.utils.transformers.adapters;
 
 import org.junit.Test;
 
-import net.ages.alwb.utils.core.file.AlwbFileUtils;
+import org.ocmc.ioc.liturgical.utils.FileUtils;
 import net.ages.alwb.utils.core.misc.HtmlUtils;
 
 public class TokensToHtml {
@@ -41,7 +41,7 @@ public class TokensToHtml {
 		sb.append("\n}");
 		sb.append("\n</script>");
 		sb.append("</html>");
-		AlwbFileUtils.writeFile("/Users/mac002/temp/greek.html", sb.toString());
+		FileUtils.writeFile("/Users/mac002/temp/greek.html", sb.toString());
 	}
 	
 	private String getPanel(String id) {

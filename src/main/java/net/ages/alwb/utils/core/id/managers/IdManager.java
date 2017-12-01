@@ -14,8 +14,8 @@ import com.google.common.base.Joiner;
 
 import ioc.liturgical.ws.constants.Constants;
 import iso.IsoLangThreeToTwo;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
-import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
+import org.ocmc.ioc.liturgical.utils.GeneralUtils;
 
 /**
  * Manages multipart IDs, where parts are delimited by the pipe character |
@@ -342,7 +342,7 @@ public class IdManager {
 				) {
 			sb.append(this.keyParts.get(0));
 			sb.append(" = ");
-			sb.append(AlwbGeneralUtils.wrapQuotes(value.trim()));
+			sb.append(GeneralUtils.wrapQuotes(value.trim()));
 			sb.append("\n");
 		}
 		return sb.toString();
@@ -605,7 +605,7 @@ public String getOslwSetDomain(COLUMNS column) {
 	 * @return
 	 */
 	public static String createSeqNbr(String library, String topic, int value) {
-		return library + "~" + topic + "~" + AlwbGeneralUtils.padNumber("L", 5, value);
+		return library + "~" + topic + "~" + GeneralUtils.padNumber("L", 5, value);
 	}
 	
 	/**

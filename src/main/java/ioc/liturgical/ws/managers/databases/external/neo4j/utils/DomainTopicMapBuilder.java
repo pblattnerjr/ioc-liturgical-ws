@@ -6,18 +6,18 @@ import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.math.NumberUtils;
+import org.ocmc.ioc.liturgical.schemas.constants.BIBLICAL_BOOKS;
+import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
+import org.ocmc.ioc.liturgical.schemas.models.DropdownArray;
+import org.ocmc.ioc.liturgical.schemas.models.DropdownItem;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
-import ioc.liturgical.ws.constants.BIBLICAL_BOOKS;
-import ioc.liturgical.ws.constants.DROPDOWN_VALUES;
-import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
-import ioc.liturgical.ws.constants.LITURGICAL_BOOKS;
-import ioc.liturgical.ws.models.ResultJsonObjectArray;
-import net.ages.alwb.utils.core.datastores.json.models.DropdownArray;
-import net.ages.alwb.utils.core.datastores.json.models.DropdownItem;
+import org.ocmc.ioc.liturgical.schemas.constants.DROPDOWN_VALUES;
+import org.ocmc.ioc.liturgical.schemas.constants.LITURGICAL_BOOKS;
 
 public class DomainTopicMapBuilder {
 

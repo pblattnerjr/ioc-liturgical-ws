@@ -12,8 +12,8 @@ import ioc.liturgical.test.framework.LinkRefersToBiblicalTextTextFactory;
 import ioc.liturgical.test.framework.TestUsers;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
-import ioc.liturgical.ws.models.RequestStatus;
-import ioc.liturgical.ws.models.db.forms.LinkRefersToBiblicalTextCreateForm;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
+import org.ocmc.ioc.liturgical.schemas.models.forms.ontology.LinkRefersToBiblicalTextCreateForm;
 
 public class CreateABunchOfReferences {
 

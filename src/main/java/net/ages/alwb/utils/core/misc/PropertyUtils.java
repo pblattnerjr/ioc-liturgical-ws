@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import org.ocmc.ioc.liturgical.utils.GeneralUtils;
+
 public class PropertyUtils {
 	Properties props =  null;
 	
@@ -18,14 +20,14 @@ public class PropertyUtils {
 	 * @return the List
 	 */
 	public List<String> getListFromDelimitedString(String key) {
-		return AlwbGeneralUtils.stringToList(getPropString(key));
+		return GeneralUtils.stringToList(getPropString(key));
 	}
 	
 	public static Properties getProperties(Class c, String path) {
 		Properties prop = new Properties();
 		try {
 			InputStream input = null;
-				input = AlwbGeneralUtils.getResource(c,path);
+				input = GeneralUtils.getResource(c,path);
 				prop.load(input);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -93,5 +95,6 @@ public class PropertyUtils {
 		}
 		return result;
 	}
+	
 	
 }

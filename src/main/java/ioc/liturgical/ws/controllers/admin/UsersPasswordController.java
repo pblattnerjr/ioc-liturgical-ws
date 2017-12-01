@@ -3,6 +3,9 @@ package ioc.liturgical.ws.controllers.admin;
 import static spark.Spark.get;
 import static spark.Spark.put;
 
+import org.ocmc.ioc.liturgical.schemas.constants.ENDPOINTS_ADMIN_API;
+import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,11 +13,8 @@ import com.google.gson.JsonObject;
 
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
-import ioc.liturgical.ws.constants.ENDPOINTS_ADMIN_API;
 import ioc.liturgical.ws.managers.auth.AuthDecoder;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
-import ioc.liturgical.ws.models.RequestStatus;
 
 public class UsersPasswordController {
 	private static final Logger logger = LoggerFactory.getLogger(UsersPasswordController.class);

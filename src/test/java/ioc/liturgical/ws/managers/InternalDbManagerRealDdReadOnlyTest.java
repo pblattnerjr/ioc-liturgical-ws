@@ -5,7 +5,7 @@ import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import ioc.liturgical.ws.constants.VERBS;
+import org.ocmc.ioc.liturgical.schemas.constants.VERBS;
 import ioc.liturgical.ws.managers.auth.UserStatus;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 

@@ -4,8 +4,8 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import ioc.liturgical.ws.models.db.docs.nlp.WordAnalyses;
-import ioc.liturgical.ws.models.db.docs.nlp.WordAnalysis;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.WordAnalyses;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.WordAnalysis;
 import opennlp.tools.tokenize.SimpleTokenizer;
 import opennlp.tools.tokenize.Tokenizer;
 

@@ -2,15 +2,15 @@ package ioc.liturgical.ws.controllers.admin;
 
 import static spark.Spark.put;
 
+import org.ocmc.ioc.liturgical.schemas.constants.ENDPOINTS_ADMIN_API;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.constants.ENDPOINTS_ADMIN_API;
 import ioc.liturgical.ws.managers.auth.AuthDecoder;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
-import ioc.liturgical.ws.models.RequestStatus;
 
 /**
  * Handles post for calling a utility

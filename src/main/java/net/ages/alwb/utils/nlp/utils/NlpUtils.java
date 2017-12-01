@@ -18,11 +18,11 @@ import opennlp.tools.tokenize.SimpleTokenizer;
 import opennlp.tools.tokenize.Tokenizer;
 
 import net.ages.alwb.utils.core.generics.MultiMapWithList;
-import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
-import ioc.liturgical.ws.models.db.docs.nlp.ConcordanceLine;
-import ioc.liturgical.ws.models.db.docs.nlp.WordInflected;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
-import net.ages.alwb.utils.core.file.AlwbFileUtils;
+import org.ocmc.ioc.liturgical.utils.GeneralUtils;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.ConcordanceLine;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.WordInflected;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
+import org.ocmc.ioc.liturgical.utils.FileUtils;
 import net.ages.alwb.utils.nlp.constants.BETA_CODES;
 import net.ages.alwb.utils.nlp.models.CharacterInfo;
 
@@ -313,7 +313,7 @@ public class NlpUtils {
 		boolean include = true;
 		Tokenizer tokenizer = SimpleTokenizer.INSTANCE;
 
-	        for (String token : tokenizer.tokenize(AlwbGeneralUtils.toNfc(text))) {
+	        for (String token : tokenizer.tokenize(GeneralUtils.toNfc(text))) {
 	        	String a = token;
 	           	if (convertToLowerCase) {
 	        		token = token.toLowerCase();

@@ -8,16 +8,17 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
-import ioc.liturgical.ws.constants.db.external.SCHEMA_CLASSES;
 import ioc.liturgical.ws.managers.databases.external.neo4j.utils.Neo4jConnectionManager;
 import ioc.liturgical.ws.managers.synch.SynchManager;
-import ioc.liturgical.ws.models.RequestStatus;
-import ioc.liturgical.ws.models.ResultJsonObjectArray;
-import ioc.liturgical.ws.models.db.stats.SynchLog;
-import ioc.liturgical.ws.models.db.supers.LTKDb;
-import ioc.liturgical.ws.models.db.synch.Transaction;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+
+import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
+import org.ocmc.ioc.liturgical.schemas.constants.SCHEMA_CLASSES;
+import org.ocmc.ioc.liturgical.schemas.models.db.stats.SynchLog;
+import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDb;
+import org.ocmc.ioc.liturgical.schemas.models.synch.Transaction;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 
 /**
  * Runs a task (separate thread) to push database transaction to the synch server

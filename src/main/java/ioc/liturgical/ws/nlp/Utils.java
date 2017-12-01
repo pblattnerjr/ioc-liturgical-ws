@@ -1,50 +1,18 @@
-package ioc.liturgical.ws.models.db.docs.nlp;
+package ioc.liturgical.ws.nlp;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.annotations.Expose;
+import java.util.ArrayList;
+import java.util.List;
 
-import ioc.liturgical.ws.constants.db.external.LIBRARIES;
-import ioc.liturgical.ws.constants.db.external.TOPICS;
-import ioc.liturgical.ws.models.db.supers.LTKDb;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.TokenAnalysis;
 import net.ages.alwb.gateway.utils.Tuple;
 import net.ages.alwb.utils.nlp.constants.DEPENDENCY_LABELS;
 import net.ages.alwb.utils.nlp.constants.DEPENDENCY_LABEL_MAPPER;
 import net.ages.alwb.utils.nlp.parsers.TextParser;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.github.reinert.jjschema.Attributes;
-
-/**
- * @author mac002
- *
- */
-@Attributes(title = "DependencyTree", description = "Data for a Dependency Tree")
-public class DependencyTree extends LTKDb {
-	
-	private static String schema = DependencyTree.class.getSimpleName();
-	private static double serialVersion = 1.1;
-	private static TOPICS ontologyTopic = TOPICS.DEPENDENCY_TREE;
-	
-	@Expose List<TokenAnalysis> nodes = new ArrayList<TokenAnalysis>();
-
-	public DependencyTree(
-			String key
-			) {
-		super(
-				LIBRARIES.LINGUISTICS.toSystemDomain()
-				, ontologyTopic.label
-				, key
-				, schema
-				, serialVersion
-				, ontologyTopic
-				);
-	}
+public class Utils {
 
 	/**
-	 * This constructor will convert the text into a 
+	 * 	Converts the text into a 
 	 * dependency tree, such that each word token 
 	 * is dependent on the punctuation token that 
 	 * is immediately to its right.  The punctuation
@@ -52,21 +20,13 @@ public class DependencyTree extends LTKDb {
 	 * 
 	 * This is useful for when the dependency
 	 * information has not yet been determined.
-	 * @param key
-	 * @param text
+
+	 * @param key the key that is the ID for the text
+	 * @param text the words of the text
+	 * @return
 	 */
-	public DependencyTree(
-			String key
-			, String text
-			) {
-		super(
-				LIBRARIES.LINGUISTICS.toSystemDomain()
-				, ontologyTopic.label
-				, key
-				, schema
-				, serialVersion
-				, ontologyTopic
-				);
+	public static List<TokenAnalysis> initializeTokenAnalysisList(String key, String text) {
+		List<TokenAnalysis> nodes = new ArrayList<TokenAnalysis>();
 		TextParser p = new TextParser(text);
 		List<Tuple> punctuationLabels = new ArrayList<Tuple>();
 		int i = 0;
@@ -127,7 +87,7 @@ public class DependencyTree extends LTKDb {
 					}
 				}
 				TokenAnalysis treeNode = new TokenAnalysis(
-						this.key
+						key
 						, Integer.toString(i)
 						);
 				treeNode.setToken(token);
@@ -136,27 +96,10 @@ public class DependencyTree extends LTKDb {
 				treeNode.setGloss(gloss);
 				treeNode.setLabel(label);
 				treeNode.setGrammar(parse);
-				this.nodes.add(treeNode);
+				nodes.add(treeNode);
 			}
 			i++;
 		}
-
-	}
-
-	public List<TokenAnalysis> getNodes() {
 		return nodes;
 	}
-
-	public void setNodes(List<TokenAnalysis> nodes) {
-		this.nodes = nodes;
-	}
-	
-	public List<JsonObject> nodesToJsonObjectList() {
-		List<JsonObject> result = new ArrayList<JsonObject>();
-		for (TokenAnalysis tokenAnalysis : this.nodes) {
-			result.add(tokenAnalysis.toJsonObject());
-		}
-		return result;
-	}
-		
 }

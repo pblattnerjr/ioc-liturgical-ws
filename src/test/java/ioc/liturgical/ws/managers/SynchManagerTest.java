@@ -11,13 +11,13 @@ import com.google.gson.JsonObject;
 
 import ioc.liturgical.test.framework.LinkRefersToBiblicalTextTextFactory;
 import ioc.liturgical.test.framework.TestUsers;
-import ioc.liturgical.ws.constants.db.external.TOPICS;
+import org.ocmc.ioc.liturgical.schemas.constants.TOPICS;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.managers.synch.SynchManager;
-import ioc.liturgical.ws.models.RequestStatus;
-import ioc.liturgical.ws.models.ResultJsonObjectArray;
-import ioc.liturgical.ws.models.db.docs.ontology.Being;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.ontology.Being;
 
 public class SynchManagerTest {
 

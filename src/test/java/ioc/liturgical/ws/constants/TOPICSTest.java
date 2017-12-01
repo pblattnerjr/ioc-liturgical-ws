@@ -3,8 +3,7 @@ package ioc.liturgical.ws.constants;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
-
-import ioc.liturgical.ws.constants.db.external.TOPICS;
+import org.ocmc.ioc.liturgical.schemas.constants.TOPICS;
 
 public class TOPICSTest {
 

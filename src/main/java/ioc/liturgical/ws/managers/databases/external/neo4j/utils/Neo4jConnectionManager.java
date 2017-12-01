@@ -2,8 +2,6 @@ package ioc.liturgical.ws.managers.databases.external.neo4j.utils;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -12,7 +10,6 @@ import org.neo4j.driver.v1.AuthTokens;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.GraphDatabase;
 import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.summary.ResultSummary;
 import org.neo4j.driver.v1.summary.SummaryCounters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,23 +21,25 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
-import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
-import ioc.liturgical.ws.constants.db.external.SCHEMA_CLASSES;
-import ioc.liturgical.ws.constants.db.external.TOPICS;
 import ioc.liturgical.ws.managers.exceptions.DbException;
 import ioc.liturgical.ws.managers.interfaces.LowLevelDataStoreInterface;
 import ioc.liturgical.ws.managers.synch.SynchManager;
-import net.ages.alwb.utils.core.datastores.json.models.ModelHelpers;
-import ioc.liturgical.ws.models.RequestStatus;
-import ioc.liturgical.ws.models.ResultJsonObjectArray;
-import ioc.liturgical.ws.models.db.stats.QueryStatistics;
-import ioc.liturgical.ws.models.db.stats.SynchLog;
-import ioc.liturgical.ws.models.db.supers.LTKDb;
-import ioc.liturgical.ws.models.db.synch.Transaction;
+
+import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
+import org.ocmc.ioc.liturgical.schemas.constants.RELATIONSHIP_TYPES;
+import org.ocmc.ioc.liturgical.schemas.constants.SCHEMA_CLASSES;
+import org.ocmc.ioc.liturgical.schemas.constants.TOPICS;
+import org.ocmc.ioc.liturgical.schemas.models.ModelHelpers;
+import org.ocmc.ioc.liturgical.schemas.models.db.internal.LTKVJsonObject;
+import org.ocmc.ioc.liturgical.schemas.models.db.stats.QueryStatistics;
+import org.ocmc.ioc.liturgical.schemas.models.db.stats.SynchLog;
+import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDb;
+import org.ocmc.ioc.liturgical.schemas.models.synch.Transaction;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
+
 import net.ages.alwb.utils.core.datastores.db.neo4j.models.NodePairParameters;
-import net.ages.alwb.utils.core.datastores.json.models.LTKVJsonObject;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import net.ages.alwb.utils.core.misc.Constants;
 
 /**
@@ -230,8 +229,6 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		String query = "create constraint on (p:" + label + ") assert p.id is unique"; 
 		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			neoResult = session.run(query);
-			// TODO: this causes a loop.  Figure out what to do about it.
-//	    	this.insert(new Transaction(query, hostName));
 		} catch (Exception e) {
 			ErrorUtils.report(logger, e);
 		}
@@ -812,7 +809,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 					Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
 					neoResult = session.run(transaction.getCypher(), props);
 				}
-				result.recordCounters(neoResult.consume().counters());
+				result = recordCounters(neoResult.consume().counters(), result);
 				if (result.wasSuccessful()) {
 			    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
 			    	result.setMessage(HTTP_RESPONSE_CODES.OK.message);
@@ -828,6 +825,34 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 //		}
 		return result;
 	}
+	
+	public RequestStatus recordCounters(SummaryCounters summary, RequestStatus status) {
+		status.constraintsAdded = summary.constraintsAdded();
+		status.counterTotal = status.counterTotal + status.constraintsAdded;
+		status.constraintsRemoved = summary.constraintsRemoved();
+		status.counterTotal = status.counterTotal + status.constraintsRemoved;
+		status.indexesAdded = summary.indexesAdded();
+		status.counterTotal = status.counterTotal + status.indexesAdded;
+		status.indexesRemoved = summary.indexesRemoved();
+		status.counterTotal = status.counterTotal + status.indexesRemoved;
+		status.labelsAdded = summary.labelsAdded();
+		status.counterTotal = status.counterTotal + status.labelsAdded;
+		status.labelsRemoved = summary.labelsRemoved();
+		status.counterTotal = status.counterTotal + status.labelsRemoved;
+		status.nodesCreated = summary.nodesCreated();
+		status.counterTotal = status.counterTotal + status.nodesCreated;
+		status.nodesDeleted = summary.nodesDeleted();
+		status.counterTotal = status.counterTotal + status.nodesDeleted;
+		status.propertiesSet = summary.propertiesSet();
+		status.counterTotal = status.counterTotal + status.propertiesSet;
+		status.relationshipsCreated = summary.relationshipsCreated();
+		status.counterTotal = status.counterTotal + status.relationshipsCreated;
+		status.relationshipsDeleted = summary.relationshipsDeleted();
+		status.counterTotal = status.counterTotal + status.relationshipsDeleted;
+		status.containsUpdates = summary.containsUpdates();
+		return status;
+	}
+
 
 	public RequestStatus deleteNodeWhereEqual(String id, String label) throws DbException {
 		RequestStatus result = new RequestStatus();

@@ -3,7 +3,7 @@ package ioc.liturgical.test.framework;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 
-import ioc.liturgical.ws.models.ws.forms.UserUpdateForm;
+import org.ocmc.ioc.liturgical.schemas.models.ws.forms.UserUpdateForm;
 
 public class DeleteMe {
 

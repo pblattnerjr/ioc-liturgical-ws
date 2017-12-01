@@ -26,20 +26,25 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
+import org.ocmc.ioc.liturgical.utils.FileUtils;
 import ioc.liturgical.ws.managers.interfaces.HighLevelDataStoreInterface;
 import ioc.liturgical.ws.managers.synch.SynchManager;
 import ioc.liturgical.ws.app.ServiceProvider;
-import ioc.liturgical.ws.constants.BIBLICAL_BOOKS;
+
+import org.ocmc.ioc.liturgical.schemas.constants.BIBLICAL_BOOKS;
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.constants.HTTP_RESPONSE_CODES;
-import ioc.liturgical.ws.constants.NEW_FORM_CLASSES_DB_API;
-import ioc.liturgical.ws.constants.RELATIONSHIP_TYPES;
-import ioc.liturgical.ws.constants.UTILITIES;
-import ioc.liturgical.ws.constants.VERBS;
-import ioc.liturgical.ws.constants.db.external.LIBRARIES;
-import ioc.liturgical.ws.constants.db.external.SCHEMA_CLASSES;
-import ioc.liturgical.ws.constants.db.external.SINGLETON_KEYS;
-import ioc.liturgical.ws.constants.db.external.TOPICS;
+import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
+import org.ocmc.ioc.liturgical.schemas.constants.LIBRARIES;
+import org.ocmc.ioc.liturgical.schemas.constants.NEW_FORM_CLASSES_DB_API;
+import org.ocmc.ioc.liturgical.schemas.constants.RELATIONSHIP_TYPES;
+import org.ocmc.ioc.liturgical.schemas.constants.SCHEMA_CLASSES;
+import org.ocmc.ioc.liturgical.schemas.constants.SINGLETON_KEYS;
+import org.ocmc.ioc.liturgical.schemas.constants.TOPICS;
+import org.ocmc.ioc.liturgical.schemas.constants.UTILITIES;
+import org.ocmc.ioc.liturgical.schemas.constants.VERBS;
+import org.ocmc.ioc.liturgical.schemas.exceptions.BadIdException;
+
 import ioc.liturgical.ws.managers.databases.external.neo4j.constants.MATCHERS;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryBuilderForDocs;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryBuilderForLinks;
@@ -55,43 +60,43 @@ import ioc.liturgical.ws.managers.databases.external.neo4j.utils.OntologyGenerat
 import ioc.liturgical.ws.managers.databases.external.neo4j.utils.ReturnPropertyList;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.managers.exceptions.DbException;
-import ioc.liturgical.ws.models.RequestStatus;
-import ioc.liturgical.ws.models.ResultJsonObjectArray;
-import ioc.liturgical.ws.models.db.docs.nlp.ConcordanceLine;
-import ioc.liturgical.ws.models.db.docs.nlp.DependencyTree;
-import ioc.liturgical.ws.models.db.docs.nlp.WordAnalyses;
-import ioc.liturgical.ws.models.db.docs.nlp.WordAnalysis;
-import ioc.liturgical.ws.models.db.docs.nlp.TokenAnalysis;
-import ioc.liturgical.ws.models.db.docs.nlp.WordInflected;
-import ioc.liturgical.ws.models.db.docs.ontology.TextLiturgical;
-import ioc.liturgical.ws.models.db.docs.tables.ReactBootstrapTableData;
-import ioc.liturgical.ws.models.db.forms.TextLiturgicalTranslationCreateForm;
-import ioc.liturgical.ws.models.db.links.LinkRefersToBiblicalText;
-import ioc.liturgical.ws.models.db.returns.LinkRefersToTextToTextTableRow;
-import ioc.liturgical.ws.models.db.returns.ResultNewForms;
-import ioc.liturgical.ws.models.db.supers.LTK;
-import ioc.liturgical.ws.models.db.supers.LTKDb;
-import ioc.liturgical.ws.models.db.supers.LTKDbOntologyEntry;
-import ioc.liturgical.ws.models.db.supers.LTKLink;
-import ioc.liturgical.ws.models.ws.db.Utility;
-import ioc.liturgical.ws.models.ws.response.column.editor.KeyArraysCollection;
-import ioc.liturgical.ws.models.ws.response.column.editor.KeyArraysCollectionBuilder;
-import ioc.liturgical.ws.models.ws.response.column.editor.LibraryTopicKeyValue;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.ConcordanceLine;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.DependencyTree;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.WordAnalyses;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.WordAnalysis;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.TokenAnalysis;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.WordInflected;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.ontology.TextLiturgical;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.tables.ReactBootstrapTableData;
+import org.ocmc.ioc.liturgical.schemas.models.db.internal.LTKVJsonObject;
+import org.ocmc.ioc.liturgical.schemas.models.forms.ontology.TextLiturgicalTranslationCreateForm;
+import org.ocmc.ioc.liturgical.schemas.models.supers.LTK;
+import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDb;
+import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDbOntologyEntry;
+import org.ocmc.ioc.liturgical.schemas.models.supers.LTKLink;
+import org.ocmc.ioc.liturgical.schemas.models.ws.db.Utility;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.column.editor.KeyArraysCollection;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.column.editor.KeyArraysCollectionBuilder;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.column.editor.LibraryTopicKeyValue;
+import org.ocmc.ioc.liturgical.schemas.models.db.links.LinkRefersToBiblicalText;
+import org.ocmc.ioc.liturgical.schemas.models.db.returns.LinkRefersToTextToTextTableRow;
+import org.ocmc.ioc.liturgical.schemas.models.db.returns.ResultNewForms;
+
+import ioc.liturgical.ws.nlp.Utils;
 import net.ages.alwb.tasks.DependencyNodesCreateTask;
 import net.ages.alwb.tasks.OntologyTagsUpdateTask;
 import net.ages.alwb.tasks.PdfGenerationTask;
 import net.ages.alwb.tasks.PerseusTreebankDataCreateTask;
 import net.ages.alwb.tasks.WordAnalysisCreateTask;
-import net.ages.alwb.utils.core.datastores.json.exceptions.BadIdException;
+import org.ocmc.ioc.liturgical.schemas.models.DropdownArray;
+import org.ocmc.ioc.liturgical.schemas.models.DropdownItem;
+
 import net.ages.alwb.utils.core.datastores.json.exceptions.MissingSchemaIdException;
-import net.ages.alwb.utils.core.datastores.json.models.DropdownArray;
-import net.ages.alwb.utils.core.datastores.json.models.DropdownItem;
-import net.ages.alwb.utils.core.datastores.json.models.LTKVJsonObject;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
-import net.ages.alwb.utils.core.file.AlwbFileUtils;
 import net.ages.alwb.utils.core.generics.MultiMapWithList;
 import net.ages.alwb.utils.core.id.managers.IdManager;
-import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
+import org.ocmc.ioc.liturgical.utils.GeneralUtils;
 import net.ages.alwb.utils.core.misc.AlwbUrl;
 import net.ages.alwb.utils.nlp.fetchers.Ox3kUtils;
 import net.ages.alwb.utils.nlp.fetchers.PerseusMorph;
@@ -249,7 +254,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	   */
 	  public ResultJsonObjectArray getWordAnalyses(String word) {
 		  String query = "match (n:" + TOPICS.WORD_GRAMMAR.label + ") where n.id starts with \"en_sys_linguistics~"
-				+  AlwbGeneralUtils.toNfc(word).toLowerCase() + "~\" return properties(n)"
+				+  GeneralUtils.toNfc(word).toLowerCase() + "~\" return properties(n)"
 				 ;
 		  ResultJsonObjectArray queryResult = this.getForQuery(
 				  query
@@ -617,7 +622,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 							, domain
 							, book
 							, chapter
-							, AlwbGeneralUtils.toNfc(query) // we stored the text using Normalizer.Form.NFC, so search using it
+							, GeneralUtils.toNfc(query) // we stored the text using Normalizer.Form.NFC, so search using it
 							, property
 							, matcher
 							)
@@ -655,7 +660,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					getCypherQueryForNotesSearch(
 							requestor
 							, type
-							, AlwbGeneralUtils.toNfc(query)
+							, GeneralUtils.toNfc(query)
 							, property
 							, matcher
 							, tags 
@@ -682,7 +687,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					getCypherQueryForTreebanksSearch(
 							requestor
 							, type
-							, AlwbGeneralUtils.toNfc(query)
+							, GeneralUtils.toNfc(query)
 							, property
 							, matcher
 							, tags 
@@ -709,7 +714,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					getCypherQueryForOntologySearch(
 							type
 							, genericType
-							, AlwbGeneralUtils.toNfc(query)
+							, GeneralUtils.toNfc(query)
 							, property
 							, matcher
 							, tags 
@@ -761,7 +766,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					getCypherQueryForLinkSearch(
 							type
 							, library
-							, AlwbGeneralUtils.toNfc(query)
+							, GeneralUtils.toNfc(query)
 							, property
 							, matcher
 							, tags 
@@ -810,7 +815,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					getCypherQueryForLinkSearch(
 							type
 							, library
-							, AlwbGeneralUtils.toNfc(query)
+							, GeneralUtils.toNfc(query)
 							, property
 							, matcher
 							, tags 
@@ -849,7 +854,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, String matcher
 				) {
 			boolean prefixProps = false;
-			String theQuery = AlwbGeneralUtils.toNfc(query);
+			String theQuery = GeneralUtils.toNfc(query);
 			if (matcher.startsWith("rx")) {
 				// ignore
 			} else {
@@ -925,7 +930,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			if (theProperty.startsWith("*")) {
 				theProperty = "value";
 			}
-			String theQuery = AlwbGeneralUtils.toNfc(query);
+			String theQuery = GeneralUtils.toNfc(query);
 			CypherQueryBuilderForNotes builder = null;
 			
 			if (type.equals(TOPICS.NOTE_USER.label)) {
@@ -987,7 +992,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			if (theProperty.startsWith("*")) {
 				theProperty = "token";
 			}
-			String theQuery = AlwbGeneralUtils.toNfc(query);
+			String theQuery = GeneralUtils.toNfc(query);
 			CypherQueryBuilderForTreebanks builder = null;
 			
 				builder = new CypherQueryBuilderForTreebanks(prefixProps)
@@ -1054,7 +1059,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			if (theProperty.startsWith("*")) {
 				theProperty = "name";
 			}
-			String theQuery = AlwbGeneralUtils.toNfc(query);
+			String theQuery = GeneralUtils.toNfc(query);
 			CypherQueryBuilderForDocs builder = new CypherQueryBuilderForDocs(prefixProps)
 					.MATCH()
 					.TOPIC(type)
@@ -1113,7 +1118,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				) {
 			
 			boolean prefixProps = false;
-			String theQuery = AlwbGeneralUtils.toNfc(query);
+			String theQuery = GeneralUtils.toNfc(query);
 			CypherQueryBuilderForLinks builder = new CypherQueryBuilderForLinks(prefixProps)
 					.MATCH()
 					.TYPE(type)
@@ -1308,45 +1313,54 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			RequestStatus result = new RequestStatus();
 			LTK form = gson.fromJson(json, LTK.class);
 			if (internalManager.authorized(requestor, VERBS.POST, form.getLibrary())) {
-				String validation = SCHEMA_CLASSES.validate(json);
-				if (validation.length() == 0) {
-				try {
-						LTKDb record = 
-								 gson.fromJson(
-										json
-										, SCHEMA_CLASSES
-											.classForSchemaName(
-													form.get_valueSchemaId())
-											.ltkDb.getClass()
-							);
-						record.setSubClassProperties(json);
-						record.setActive(true);
-						record.setCreatedBy(requestor);
-						record.setModifiedBy(requestor);
-						record.setCreatedWhen(getTimestamp());
-						record.setModifiedWhen(record.getCreatedWhen());
-					    RequestStatus insertStatus = neo4jManager.insert(record);		
-					    result.setCode(insertStatus.getCode());
-					    result.setDeveloperMessage(insertStatus.getDeveloperMessage());
-					    result.setUserMessage(insertStatus.getUserMessage());
-					    this.createRelationship(
-					    		requestor
-					    		, record.getTopic()
-					    		, type
-					    		, record.getId()
-					    		);
-					} catch (Exception e) {
+				if (this.existsUnique(form.getTopic())) {
+					String validation = SCHEMA_CLASSES.validate(json);
+					if (validation.length() == 0) {
+					try {
+							LTKDb record = 
+									 gson.fromJson(
+											json
+											, SCHEMA_CLASSES
+												.classForSchemaName(
+														form.get_valueSchemaId())
+												.ltkDb.getClass()
+								);
+							record.setSubClassProperties(json);
+							record.setActive(true);
+							record.setCreatedBy(requestor);
+							record.setModifiedBy(requestor);
+							record.setCreatedWhen(getTimestamp());
+							record.setModifiedWhen(record.getCreatedWhen());
+						    RequestStatus insertStatus = neo4jManager.insert(record);		
+						    result.setCode(insertStatus.getCode());
+						    result.setDeveloperMessage(insertStatus.getDeveloperMessage());
+						    result.setUserMessage(insertStatus.getUserMessage());
+						    RequestStatus linkStatus = this.createRelationship(
+						    		requestor
+						    		, record.getTopic()
+						    		, type
+						    		, record.getId()
+						    		);
+						    if (! linkStatus.wasSuccessful()) {
+						    	result.setCode(linkStatus.code);
+						    	result.setMessage(linkStatus.developerMessage);
+						    }
+						} catch (Exception e) {
+							result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+							result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+						}
+					} else {
 						result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-						result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+						JsonObject message = stringToJson(validation);
+						if (message == null) {
+							result.setMessage(validation);
+						} else {
+							result.setMessage(message.get("message").getAsString());
+						}
 					}
 				} else {
-					result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-					JsonObject message = stringToJson(validation);
-					if (message == null) {
-						result.setMessage(validation);
-					} else {
-						result.setMessage(message.get("message").getAsString());
-					}
+					result.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
+					result.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message + " " + form.getTopic());
 				}
 			} else {
 				result.setCode(HTTP_RESPONSE_CODES.UNAUTHORIZED.code);
@@ -2298,10 +2312,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				if (treeData.getResultCount() == 0) {
 					String value = getValueForLiturgicalText(requestor,id);
 					if (value.length() > 0) {
-						DependencyTree dependencyTree = new DependencyTree(
-								id
-								, value
-								);
+						DependencyTree dependencyTree = new DependencyTree(id);
+						dependencyTree.setNodes(Utils.initializeTokenAnalysisList(id, value));
 						treeData = new ResultJsonObjectArray(this.printPretty);
 						treeData.setValues(dependencyTree.nodesToJsonObjectList());
 						// create a thread that will save the new values to the database
@@ -3198,7 +3210,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				result.setResult(list);
 				result.setQuery("get AGES template metadata for " + url);
 				// TODO: remove for production
-				AlwbFileUtils.writeFile("/volumes/ssd2/templates/editor.json", template.toJsonString());
+				FileUtils.writeFile("/volumes/ssd2/templates/editor.json", template.toJsonString());
 			} catch (Exception e) {
 				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 				result.setStatusMessage(e.getMessage());
@@ -3938,7 +3950,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				) {
 			RequestStatus status = new RequestStatus();
 			String startWith = ""; // "Βασιλεία"; // startWith can be used for debugging purposes
-			startWith = AlwbGeneralUtils.toNfc(startWith).toLowerCase();
+			startWith = GeneralUtils.toNfc(startWith).toLowerCase();
 			try {
 				List<String> noAnalysisFound = new ArrayList<String>();
 				
@@ -4053,14 +4065,21 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			try {
 				sb.append("MATCH (s:Root {id: \"");
 				sb.append(idOfStartNode);
-				sb.append("\"}), (e:Root {id: \"");
+				sb.append("\"}) with s ");
+				sb.append("MATCH (e:Root {id: \"");
 				sb.append(idOfEndNode);
-				sb.append("\"}) merge (s)-[:");
+				sb.append("\"}) ");
+				sb.append("MERGE (s)-[:");
 				sb.append(relationshipType.typename);
 				sb.append("]->(e)");
 				ResultJsonObjectArray queryResult = this.getForQuery(sb.toString(),false, false);
-				status.setCode(queryResult.getStatus().getCode());
-				status.setMessage(queryResult.getStatus().getUserMessage());
+				if (queryResult.status.getCounterTotal() > 0) {
+					status.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
+					status.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message);
+				} else {
+					status.setCode(queryResult.getStatus().getCode());
+					status.setMessage(queryResult.getStatus().getUserMessage());
+				}
 			} catch (Exception e) {
 				ErrorUtils.report(logger, e);
 				status.setCode(HTTP_RESPONSE_CODES.SERVER_ERROR.code);

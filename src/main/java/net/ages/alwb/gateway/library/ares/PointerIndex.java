@@ -8,10 +8,9 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.apache.commons.io.FileUtils;
-
-import net.ages.alwb.utils.core.file.AlwbFileUtils;
-import net.ages.alwb.utils.core.misc.AlwbGeneralUtils;
+import org.ocmc.ioc.liturgical.utils.ApacheFileUtils;
+import org.ocmc.ioc.liturgical.utils.FileUtils;
+import org.ocmc.ioc.liturgical.utils.GeneralUtils;
 
 /**
  * ares files are key-value pairs.  There are two kinds of values:
@@ -41,7 +40,7 @@ public class PointerIndex {
 	
 	public PointerIndex(TreeMap<String,File> fullFileList, String domain) {
 		this.domain = domain;
-		fileList = AlwbFileUtils.filter(fullFileList, "gr_GR_cog");
+		fileList = FileUtils.filter(fullFileList, "gr_GR_cog");
 		buildIndexes();
 	}
 	
@@ -117,11 +116,11 @@ public class PointerIndex {
 		List<String> result = new ArrayList<String>();
 		String [] parts;
 		try {
-			List<String> lines = FileUtils.readLines(file, "UTF-8");
+			List<String> lines = ApacheFileUtils.readLines(file, "UTF-8");
 			String value = null;
 			for (String line : lines) {
 				if (! line.contains("A_Resource_Whose_Name")) {
-					value = AlwbGeneralUtils.valueAsKeyFromPair(line,domain);
+					value = GeneralUtils.valueAsKeyFromPair(line,domain);
 					if (value != null) {
 						if (! result.contains(value)) {
 							result.add(value); 
@@ -137,7 +136,7 @@ public class PointerIndex {
 	
 	public static void main(String[] args) {
 		String path = "/Users/mac002/tms/libraries";
-		TreeMap<String,File> aresFileList = AlwbFileUtils.getMapOfFilesInDirectory(path, "ares",true);
+		TreeMap<String,File> aresFileList = FileUtils.getMapOfFilesInDirectory(path, "ares",true);
 		PointerIndex index = new PointerIndex(aresFileList,"gr_GR_cog");
 		index.reportPointers();
 	}

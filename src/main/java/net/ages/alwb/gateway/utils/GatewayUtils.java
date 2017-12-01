@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.ages.alwb.gateway.library.ares.FileNameParts;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 
 public class GatewayUtils {
 	final static Logger logger = LoggerFactory.getLogger(GatewayUtils.class);

@@ -18,8 +18,8 @@ import com.google.gson.JsonParser;
 
 import ioc.liturgical.ws.constants.Constants;
 import net.ages.alwb.utils.core.datastores.db.h2.queries.Query;
-import net.ages.alwb.utils.core.error.handling.ErrorUtils;
-import net.ages.alwb.utils.core.file.AlwbFileUtils;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
+import org.ocmc.ioc.liturgical.utils.FileUtils;
 
 
 /**
@@ -505,7 +505,7 @@ public class H2ConnectionManager {
 
 
     public void deleteDatabase() {
-    	String path = AlwbFileUtils.getPathToFile(DB_NAME);
+    	String path = FileUtils.getPathToFile(DB_NAME);
         DeleteDbFiles.execute("./" + path, DB_NAME, true);
     }
 

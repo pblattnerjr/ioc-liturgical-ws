@@ -2,18 +2,17 @@ package ioc.liturgical.ws.controllers.ldp;
 
 import static spark.Spark.get;
 
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-//import ioc.liturgical.ws.constants.ADMIN_ENDPOINTS;
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.controllers.admin.ControllerUtils;
 import ioc.liturgical.ws.controllers.admin.LabelsController;
 import ioc.liturgical.ws.managers.ldp.LdpManager;
-import ioc.liturgical.ws.models.ResultJsonObjectArray;
 
 public class LdpController {
 	private static final Logger logger = LoggerFactory.getLogger(LdpController.class);
