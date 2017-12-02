@@ -45,12 +45,12 @@
 	<dependency>
 	  <groupId>org.ocmc</groupId>
 	  <artifactId>ioc.liturgical.schemas</artifactId>
-	  <version>1.0.0</version>
+	  <version>1.0-SNAPSHOT</version>
 	</dependency>
 	<dependency>
 	  <groupId>org.ocmc</groupId>
 	  <artifactId>ioc.liturgical.utils</artifactId>
-	  <version>1.0.0</version>
+	  <version>1.0-SNAPSHOT</version>
 	</dependency>
 	<!-- https://mvnrepository.com/artifact/org.json/json -->
 	<dependency>
