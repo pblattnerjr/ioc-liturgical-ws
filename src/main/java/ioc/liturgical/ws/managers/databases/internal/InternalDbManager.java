@@ -46,6 +46,7 @@ import org.ocmc.ioc.liturgical.schemas.constants.ENDPOINTS_ADMIN_API;
 import ioc.liturgical.ws.constants.Constants;
 import org.ocmc.ioc.liturgical.schemas.constants.DOMAIN_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.SYSTEM_MISC_LIBRARY_TOPICS;
+import org.ocmc.ioc.liturgical.schemas.constants.TEMPLATE_CONFIG_MODELS;
 import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
 import org.ocmc.ioc.liturgical.schemas.constants.NEW_FORM_CLASSES_ADMIN_API;
 import org.ocmc.ioc.liturgical.schemas.constants.RESTRICTION_FILTERS;
@@ -218,6 +219,9 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			String id = null;
 			if (json.has(Constants.VALUE_SCHEMA_ID)) {
 				id = json.get(Constants.VALUE_SCHEMA_ID).getAsString();
+				if (id.contains("Config")) {
+					System.out.print("");
+				}
 			} else if (json.has("doc." + Constants.VALUE_SCHEMA_ID)) {
 				id = json.get("doc." + Constants.VALUE_SCHEMA_ID).getAsString();
 			} else if (json.has("link")) {
@@ -1966,6 +1970,23 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 						updateSchema(s.ltkDb.schemaIdAsString(), schema.toJsonObject());
 					} else {
 						addSchema(s.ltkDb.schemaIdAsString(), schema.toJsonObject());
+					}
+				} catch (Exception e) {
+					ErrorUtils.report(logger, e);
+				}
+			}
+			for (TEMPLATE_CONFIG_MODELS s : TEMPLATE_CONFIG_MODELS.values()) {
+				try {
+					ValueSchema schema = new ValueSchema(s.model);
+					String id = new IdManager(
+							SYSTEM_MISC_LIBRARY_TOPICS.SCHEMAS.lib
+							, SYSTEM_MISC_LIBRARY_TOPICS.SCHEMAS.topic
+							, s.model.schemaIdAsString()
+							).getId();
+					if (existsUnique(id)) {
+						updateSchema(s.model.schemaIdAsString(), schema.toJsonObject());
+					} else {
+						addSchema(s.model.schemaIdAsString(), schema.toJsonObject());
 					}
 				} catch (Exception e) {
 					ErrorUtils.report(logger, e);

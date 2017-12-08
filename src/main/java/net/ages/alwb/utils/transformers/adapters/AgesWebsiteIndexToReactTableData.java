@@ -107,10 +107,17 @@ public class AgesWebsiteIndexToReactTableData {
 
 	public AgesIndexTableData  toReactTableDataFromJson() throws Exception {
 		AgesIndexTableData result = new AgesIndexTableData(printPretty);
+		Connection serviceIndexConnection = null;
 		Connection booksIndexConnection = null;
 		Document booksIndexDoc = null;
 		try {
-			String s  = Jsoup.connect(this.jsonservicesIndex).ignoreContentType(true).execute().body();
+			serviceIndexConnection = Jsoup.connect(this.jsonservicesIndex);
+			String s  = serviceIndexConnection
+					.timeout(60*1000)
+					.maxBodySize(0)
+					.ignoreContentType(true)
+					.execute()
+					.body();
 			JsonParser p = new JsonParser();
 			JsonObject o = p.parse(s).getAsJsonObject();
 			// years
@@ -163,7 +170,7 @@ public class AgesWebsiteIndexToReactTableData {
 				}
 			}
 			booksIndexConnection = Jsoup.connect(booksIndex);
-			booksIndexDoc = booksIndexConnection.timeout(60*1000).get();
+			booksIndexDoc = booksIndexConnection.timeout(60*1000).maxBodySize(0).get();
 			Element menu = booksIndexDoc.getElementById("dcs_tree");
 			Elements anchors = menu.select("li > ul > li > ul > li");
 			for (Element anchor : anchors) {
@@ -188,15 +195,5 @@ public class AgesWebsiteIndexToReactTableData {
 			throw e;
 		}
 		return result;
-	}
-	
-	public static void main(String [] args) {
-		AgesWebsiteIndexToReactTableData it = new AgesWebsiteIndexToReactTableData(true);
-		try {
-			it.toReactTableDataFromJson();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
 	}
 }

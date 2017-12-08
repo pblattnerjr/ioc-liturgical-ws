@@ -59,6 +59,21 @@ public class Neo4jController {
         			));
 		});
 
+		// GET template by ID
+		path = ENDPOINTS_DB_API.TEMPLATES.toLibraryTopicKeyPath();
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			String id = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
+			ResultJsonObjectArray json = externalManager.getTemplateForId(requestor, id);
+			if (json.valueCount > 0) {
+				response.status(HTTP_RESPONSE_CODES.OK.code);
+			} else {
+				response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
+			}
+			return json.toJsonString();
+		});
 
 		path = ENDPOINTS_DB_API.DOCS.toLibraryTopicKeyPath();
 		ControllerUtils.reportPath(logger, "GET", path);
@@ -116,7 +131,7 @@ public class Neo4jController {
 			return externalManager.getWordGrammarAnalyses(requestor, id).toJsonString();
 		});
 
-		// GET user note for specified ID
+		// GET all notes for a user
 		path = ENDPOINTS_DB_API.NOTES.toLibraryPath();
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
@@ -140,6 +155,23 @@ public class Neo4jController {
         	return gson.toJson(externalManager.searchNotes(
         			requestor
         			, request.queryParams("t")  // note type (e.g. NoteUser)
+        			, request.queryParams("q")   // query
+        			, request.queryParams("p") // property of the doc (e.g. the ID, the value)
+        			, request.queryParams("m") // matcher (e.g. contains, starts with, regex)
+        			, request.queryParams("l") // tags (~labels)
+        			, request.queryParams("o") // operator
+        			));
+		});
+
+		// GET template or template sections matching specified parameters
+		path = ENDPOINTS_DB_API.TEMPLATES.pathname;
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+        	return gson.toJson(externalManager.searchTemplates(
+        			requestor
+        			, request.queryParams("t")  // type (Template or Section)
         			, request.queryParams("q")   // query
         			, request.queryParams("p") // property of the doc (e.g. the ID, the value)
         			, request.queryParams("m") // matcher (e.g. contains, starts with, regex)
@@ -250,6 +282,14 @@ public class Neo4jController {
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
         	return externalManager.getNotesSearchDropdown().toJsonString();
+		});
+
+		// GET dropdowns for searching templates
+		path = ENDPOINTS_DB_API.DROPDOWNS_TEMPLATES.pathname;
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+        	return externalManager.getTemplatesSearchDropdown().toJsonString();
 		});
 
 		// GET dropdowns for searching treebank
@@ -438,6 +478,20 @@ public class Neo4jController {
 			return requestStatus.toJsonString();
 		});
 		
+		// post a template
+		path = ENDPOINTS_DB_API.TEMPLATES.pathname;
+		ControllerUtils.reportPath(logger, "POST", path);
+		post(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			RequestStatus requestStatus = externalManager.addTemplate(
+					requestor
+					, request.body()
+					);
+			response.status(requestStatus.getCode());
+			return requestStatus.toJsonString();
+		});
+		
 		// post a note
 		path = ENDPOINTS_DB_API.NOTES.pathname;
 		ControllerUtils.reportPath(logger, "POST", path);
@@ -525,6 +579,20 @@ public class Neo4jController {
 			RequestStatus requestStatus = externalManager.updateReference(
 					requestor
 					, id
+					, request.body()
+					);
+			response.status(requestStatus.getCode());
+			return requestStatus.toJsonString();
+		});
+
+		// put (update) a template 
+		path = ENDPOINTS_DB_API.TEMPLATES.toLibraryTopicKeyPath();
+		ControllerUtils.reportPath(logger, "PUT", path);
+		put(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			RequestStatus requestStatus = externalManager.updateTemplate(
+					requestor
 					, request.body()
 					);
 			response.status(requestStatus.getCode());

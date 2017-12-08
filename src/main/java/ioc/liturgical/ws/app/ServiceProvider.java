@@ -349,7 +349,8 @@ public class ServiceProvider {
 							, TimeUnit.SECONDS
 							);
 					
-					  Neo4jConnectionManager testNeo4jManager = new Neo4jConnectionManager(
+					// TODO: the pull should use a host and port specified in the config file.
+					  Neo4jConnectionManager synchPullNeo4jManager = new Neo4jConnectionManager(
 							  "localhost"
 							  , "8687"
 								, ws_usr
@@ -359,7 +360,7 @@ public class ServiceProvider {
 
 					executorService.scheduleAtFixedRate(
 							new SynchPullTask(
-									testNeo4jManager
+									synchPullNeo4jManager
 									, synchManager
 									)
 							, 10

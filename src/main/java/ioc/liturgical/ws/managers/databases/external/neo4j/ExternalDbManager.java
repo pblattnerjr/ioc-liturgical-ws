@@ -40,6 +40,8 @@ import org.ocmc.ioc.liturgical.schemas.constants.NEW_FORM_CLASSES_DB_API;
 import org.ocmc.ioc.liturgical.schemas.constants.RELATIONSHIP_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.SCHEMA_CLASSES;
 import org.ocmc.ioc.liturgical.schemas.constants.SINGLETON_KEYS;
+import org.ocmc.ioc.liturgical.schemas.constants.TEMPLATE_CONFIG_MODELS;
+import org.ocmc.ioc.liturgical.schemas.constants.TEMPLATE_NODE_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.TOPICS;
 import org.ocmc.ioc.liturgical.schemas.constants.UTILITIES;
 import org.ocmc.ioc.liturgical.schemas.constants.VERBS;
@@ -49,10 +51,12 @@ import ioc.liturgical.ws.managers.databases.external.neo4j.constants.MATCHERS;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryBuilderForDocs;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryBuilderForLinks;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryBuilderForNotes;
+import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryBuilderForTemplates;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryBuilderForTreebanks;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryForDocs;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryForLinks;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryForNotes;
+import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryForTemplates;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryForTreebanks;
 import ioc.liturgical.ws.managers.databases.external.neo4j.utils.DomainTopicMapBuilder;
 import ioc.liturgical.ws.managers.databases.external.neo4j.utils.Neo4jConnectionManager;
@@ -68,6 +72,8 @@ import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.TokenAnalysis;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.WordInflected;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.ontology.TextLiturgical;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.tables.ReactBootstrapTableData;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.templates.Section;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.templates.Template;
 import org.ocmc.ioc.liturgical.schemas.models.db.internal.LTKVJsonObject;
 import org.ocmc.ioc.liturgical.schemas.models.forms.ontology.TextLiturgicalTranslationCreateForm;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTK;
@@ -149,6 +155,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  JsonObject ontologyTags = new JsonObject();
 	  JsonArray relationshipTypesArray = new JsonArray();
 	  JsonObject relationshipTypesProperties = new JsonObject();
+	  JsonArray templateTypesArray = new JsonArray();
+	  JsonObject templateTypesProperties = new JsonObject();
 	  JsonArray treebankTypesArray = new JsonArray();
 	  JsonObject treebankTypesProperties = new JsonObject();
 	  JsonArray tagOperatorsDropdown = new JsonArray();
@@ -156,6 +164,13 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  List<DropdownItem> biblicalChapterNumbersDropdown = new ArrayList<DropdownItem>();
 	  List<DropdownItem> biblicalVerseNumbersDropdown = new ArrayList<DropdownItem>();
 	  List<DropdownItem> biblicalVerseSubVersesDropdown = new ArrayList<DropdownItem>();
+	  JsonArray templateNewTemplateDropdown = TEMPLATE_NODE_TYPES.toNewTemplateDropdownJsonArray();
+	  JsonArray templatePartsDropdown = TEMPLATE_NODE_TYPES.toDropdownJsonArray();
+	  JsonArray templateWhenDayNameCasesDropdown = TEMPLATE_NODE_TYPES.toDaysOfWeekDropdownJsonArray();
+	  JsonArray templateWhenDayOfMonthCasesDropdown = TEMPLATE_NODE_TYPES.toDaysOfMonthDropdownJsonArray();
+	  JsonArray templateWhenDayOfSeasonCasesDropdown = TEMPLATE_NODE_TYPES.toDaysOfSeasonDropdownJsonArray();
+	  JsonArray templateWhenModeOfWeekCasesDropdown = TEMPLATE_NODE_TYPES.toModesDropdownJsonArray();
+	  JsonArray templateWhenMonthNameCasesDropdown = TEMPLATE_NODE_TYPES.toMonthsDropdownJsonArray();
 	  public static Neo4jConnectionManager neo4jManager = null;
 	  InternalDbManager internalManager = null;
 	  SynchManager synchManager = null;
@@ -202,11 +217,12 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  buildDomainTopicMap();
 		  buildRelationshipDropdownMaps();
 		  buildBiblicalDropdowns();
-		  this.fixWordAnalysis();
+		  // this.fixWordAnalysis(); // I think this was a one-off fix.
 
 		  if (neo4jManager.isConnectionOK()) {
 			  buildNotesDropdownMaps();
 			  buildOntologyDropdownMaps();
+			  buildTemplatesDropdownMaps();
 			  buildTreebanksDropdownMaps(); 
 			  initializeOntology();
 			  if (! this.existsWordAnalyses("ἀβλαβεῖς")) {
@@ -299,6 +315,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			  buildDomainTopicMap();
 			  buildNotesDropdownMaps();
 			  buildOntologyDropdownMaps();
+			  buildTemplatesDropdownMaps();
 			  buildTreebanksDropdownMaps(); 
 			  buildBiblicalDropdowns();
 			  buildRelationshipDropdownMaps();
@@ -422,6 +439,11 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  public void buildNotesDropdownMaps() {
 		  noteTypesProperties = SCHEMA_CLASSES.notePropertyJson();
 		  noteTypesArray = SCHEMA_CLASSES.noteTypesJson();
+	  }
+
+	  public void buildTemplatesDropdownMaps() {
+		  templateTypesProperties = SCHEMA_CLASSES.templatePropertyJson();
+		  templateTypesArray = SCHEMA_CLASSES.templateTypesJson();
 	  }
 
 	  public void buildOntologyDropdownMaps() {
@@ -672,6 +694,46 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
+		/**
+		 * Search the database for notes that match the supplied parameters.
+		 * At this time, only known to work for type NoteUser.
+		 * TODO: test for other note types when added.
+		 * @param requestor
+		 * @param type
+		 * @param query
+		 * @param property
+		 * @param matcher
+		 * @param tags
+		 * @param operator
+		 * @return
+		 */
+		public ResultJsonObjectArray searchTemplates(
+				String requestor
+				, String type
+				, String query
+				, String property
+				, String matcher
+				, String tags // tags to match
+				, String operator // for tags, e.g. AND, OR
+				) {
+			ResultJsonObjectArray result = null;
+
+			result = getForQuery(
+					getCypherQueryForTemplatesSearch(
+							requestor
+							, type
+							, GeneralUtils.toNfc(query)
+							, property
+							, matcher
+							, tags 
+							, operator
+							)
+					, true
+					, true
+					);
+			return result;
+		}
+
 		public ResultJsonObjectArray searchTreebanks(
 				String requestor
 				, String type
@@ -904,7 +966,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		}
 		
 		/**
-		 * Build Cypher query for searching notes.  Currently only known to work for NoteUser.
+		 * Build Cypher query for searching notes.  Currently only set to work for NoteUser.
 		 * TODO: test for other types of notes when they are added.
 		 * @param requestor - used when the note type is NoteUser.  In such cases, the library is the user's personal domain.
 		 * @param type
@@ -976,6 +1038,70 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			CypherQueryForNotes q = builder.build();
 			return q.toString();
 		}
+		
+		/**
+		 * Build Cypher query for searching notes.  Currently only set to work for NoteUser.
+		 * TODO: test for other types of notes when they are added.
+		 * @param requestor - used when the note type is NoteUser.  In such cases, the library is the user's personal domain.
+		 * @param type
+		 * @param query
+		 * @param property
+		 * @param matcher
+		 * @param tags
+		 * @param operator
+		 * @return
+		 */
+		private String getCypherQueryForTemplatesSearch(
+				String requestor
+				, String type
+				, String query
+				, String property
+				, String matcher
+				, String tags // tags to match
+				, String operator // for tags, e.g. AND, OR
+				) {
+			boolean prefixProps = false;
+			String theLabel = type;
+			String theProperty = property;
+			if (theProperty.startsWith("*")) {
+				theProperty = "description";
+			}
+			String theQuery = GeneralUtils.toNfc(query);
+			CypherQueryBuilderForTemplates builder = 
+					new CypherQueryBuilderForTemplates(prefixProps)
+					.MATCH()
+					.LABEL(theLabel)
+					.WHERE(theProperty)
+					;
+			MATCHERS matcherEnum = MATCHERS.forLabel(matcher);
+			
+			switch (matcherEnum) {
+			case STARTS_WITH: {
+				builder.STARTS_WITH(theQuery);
+				break;
+			}
+			case ENDS_WITH: {
+				builder.ENDS_WITH(theQuery);
+				break;
+			}
+			case REG_EX: {
+				builder.MATCHES_PATTERN(theQuery);
+				break;
+			} 
+			default: {
+				builder.CONTAINS(theQuery);
+				break;
+			}
+			}
+			builder.TAGS(tags);
+			builder.TAG_OPERATOR(operator);
+			builder.RETURN("doc.id as id,  doc.library as library, doc.topic as topic, doc.key as key, doc.description as description, doc.tags as tags, doc._valueSchemaId as _valueSchemaId");
+			builder.ORDER_BY("doc.id"); // 
+
+			CypherQueryForTemplates q = builder.build();
+			return q.toString();
+		}
+
 
 		private String getCypherQueryForTreebanksSearch(
 				String requestor
@@ -1208,11 +1334,11 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 
 		/**
 		 * @param requestor
-		 * @param entry
-		 * @return
-		 * @throws BadIdException
-		 * @throws DbException
-		 * @throws MissingSchemaIdException
+		 * @param json string of the Json Object
+		 * @return the status of the request
+		 * @throws BadIdException if ID malformed
+		 * @throws DbException if a db error occurs
+		 * @throws MissingSchemaIdException is the schema is missing
 		 */
 		public RequestStatus addLTKDbObject(
 				String requestor
@@ -1233,6 +1359,55 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 											.ltkDb.getClass()
 							);
 						record.setSubClassProperties(json);
+						record.setActive(true);
+						record.setCreatedBy(requestor);
+						record.setModifiedBy(requestor);
+						record.setCreatedWhen(getTimestamp());
+						record.setModifiedWhen(record.getCreatedWhen());
+					    RequestStatus insertStatus = neo4jManager.insert(record);		
+					    result.setCode(insertStatus.getCode());
+					    result.setDeveloperMessage(insertStatus.getDeveloperMessage());
+					    result.setUserMessage(insertStatus.getUserMessage());
+					    this.updateObjects(record.ontologyTopic);
+					} catch (Exception e) {
+						result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+						result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+					}
+				} else {
+					result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+					JsonObject message = stringToJson(validation);
+					if (message == null) {
+						result.setMessage(validation);
+					} else {
+						result.setMessage(message.get("message").getAsString());
+					}
+				}
+			} else {
+				result.setCode(HTTP_RESPONSE_CODES.UNAUTHORIZED.code);
+				result.setMessage(HTTP_RESPONSE_CODES.UNAUTHORIZED.message);
+			}
+			return result;
+		}
+
+		/**
+		 * TODO: for each Section in the template, create a Section doc
+		 * @param requestor
+		 * @param json string of the Json Object
+		 * @return the status of the request
+		 * @throws BadIdException if ID malformed
+		 * @throws DbException if a db error occurs
+		 * @throws MissingSchemaIdException is the schema is missing
+		 */
+		public RequestStatus addTemplate(
+				String requestor
+				, String json // must be a subclass of LTKDb
+				)  {
+			RequestStatus result = new RequestStatus();
+			Template record = gson.fromJson(json, Template.class);
+			if (internalManager.authorized(requestor, VERBS.POST, record.getLibrary())) {
+				String validation = SCHEMA_CLASSES.validate(json);
+				if (validation != null && validation.length() == 0) {
+				try {
 						record.setActive(true);
 						record.setCreatedBy(requestor);
 						record.setModifiedBy(requestor);
@@ -1569,6 +1744,55 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
+		/**
+		 * Todo: filter the sections and create a Section doc for each one
+		 */
+		public RequestStatus updateTemplate(
+				String requestor
+				, String json // must be a Template
+				)  {
+			RequestStatus result = new RequestStatus();
+			try {
+				LTKDb record = gson.fromJson(json, LTKDb.class);
+				if (internalManager.authorized(requestor, VERBS.PUT, record.getLibrary())) {
+					// convert it to the proper subclass of LTKDb
+					record = 
+							gson.fromJson(
+									json
+									, SCHEMA_CLASSES
+										.classForSchemaName(
+												record.get_valueSchemaId())
+										.ltkDb.getClass()
+						);
+					String validation = record.validate(json);
+					if (validation.length() == 0) {
+						record.setCreatedBy(requestor);
+						record.setModifiedBy(requestor);
+						record.setCreatedWhen(getTimestamp());
+						record.setModifiedWhen(record.getCreatedWhen());
+						neo4jManager.updateWhereEqual(record);
+						this.updateObjects(record.ontologyTopic);
+					} else {
+						result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+						JsonObject message = stringToJson(validation);
+						if (message == null) {
+							result.setMessage("Failed edits");
+						} else {
+							result.setUserMessage("Failed edits");
+							result.setDeveloperMessage(message.get("message").getAsString());
+						}
+					}
+				} else {
+					result.setCode(HTTP_RESPONSE_CODES.UNAUTHORIZED.code);
+					result.setMessage(HTTP_RESPONSE_CODES.UNAUTHORIZED.message);
+				}
+			} catch (Exception e) {
+				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+			}
+			return result;
+		}
+
 		public RequestStatus mergeLTKDbObject(
 				String requestor
 				, String json // must be a subclass of LTKDbOntologyEntry
@@ -1749,7 +1973,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 
 		public ResultJsonObjectArray getForId(
 				String id
-				, String label) {
+				, String label
+				) {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
 				CypherQueryBuilderForDocs builder = new CypherQueryBuilderForDocs(false)
@@ -1770,6 +1995,65 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
+		/**
+		 * 
+		 * @param id to search for
+		 * @return the matching template 
+		 */
+		public ResultJsonObjectArray getTemplateForId(
+				String requestor
+				, String id
+		) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+
+			IdManager idManager = new IdManager(id);
+			try {
+				if (internalManager.authorized(
+						requestor
+						, VERBS.GET
+						, idManager.getLibrary()
+						)) {
+					result = this.getForId(id, TOPICS.TEMPLATE.label);
+				} else {
+					result.setStatusCode(HTTP_RESPONSE_CODES.UNAUTHORIZED.code);
+					result.setStatusMessage(HTTP_RESPONSE_CODES.UNAUTHORIZED.message);
+				}
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+
+		/**
+		 * 
+		 * @param id to search for
+		 * @return the matching section
+		 */
+		public ResultJsonObjectArray getSectionForId(
+				String requestor
+				, String id
+		) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+
+			IdManager idManager = new IdManager(id);
+			try {
+				if (internalManager.authorized(
+						requestor
+						, VERBS.GET
+						, idManager.getLibrary()
+						)) {
+					result = this.getForId(id, TOPICS.SECTION.label);
+				} else {
+					result.setStatusCode(HTTP_RESPONSE_CODES.UNAUTHORIZED.code);
+					result.setStatusMessage(HTTP_RESPONSE_CODES.UNAUTHORIZED.message);
+				}
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
 
 		/**
 		 * TODO: the query needs to be optimized by using the appropriate node type
@@ -2212,6 +2496,29 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
+		public ResultJsonObjectArray getTemplatesSearchDropdown() {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
+				JsonObject values = new JsonObject();
+				values.add("typeList", this.templateTypesArray);
+				values.add("typeProps", this.templateTypesProperties);
+				values.add("typeTags", getTemplatesTagsForAllTypes());
+				values.add("tagOperators", tagOperatorsDropdown);
+				JsonObject jsonDropdown = new JsonObject();
+				jsonDropdown.add("dropdown", values);
+
+				List<JsonObject> list = new ArrayList<JsonObject>();
+				list.add(jsonDropdown);
+
+				result.setResult(list);
+				result.setQuery("get dropdowns for templates search");
+
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
 		public ResultJsonObjectArray getTreebanksSearchDropdown() {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
@@ -2680,6 +2987,24 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			
 		}
 
+		public JsonObject getTemplatesTagsForAllTypes() {
+			JsonObject result  = new JsonObject();
+			try {
+				for (TOPICS t : TOPICS.values()) {
+					if (
+							t == TOPICS.TEMPLATE
+							|| t == TOPICS.SECTION
+							) {
+						JsonArray value = getTags(t.label);
+						result.add(t.label, value);
+					}
+				}
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+			return result;
+			
+		}
 		public JsonObject getTokenAnalysisTagsForAllTypes() {
 			JsonObject result  = new JsonObject();
 			try {
@@ -3696,6 +4021,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		 * @return
 		 */
 		public JsonObject getNewDocForms(String requestor, String query) {
+			logger.info("Getting forms for new docs and dropdowns");
 			ResultNewForms result = new ResultNewForms(true);
 			result.setQuery(query);
 			result.setDomains(internalManager.getDomainDropdownsForUser(requestor));
@@ -3705,12 +4031,22 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			result.setBiblicalChaptersDropdown(this.biblicalChapterNumbersDropdown);
 			result.setBiblicalVersesDropdown(this.biblicalVerseNumbersDropdown);
 			result.setBiblicalSubversesDropdown(this.biblicalVerseSubVersesDropdown);
+			result.setTemplateNewTemplateDropdown(this.templateNewTemplateDropdown);
+			result.setTemplatePartsDropdown(this.templatePartsDropdown);
+			result.setTemplateWhenDayNameCasesDropdown(this.templateWhenDayNameCasesDropdown);
+			result.setTemplateWhenDayOfMonthCasesDropdown(this.templateWhenDayOfMonthCasesDropdown);
+			result.setTemplateWhenDayOfSeasonCasesDropdown(this.templateWhenDayOfSeasonCasesDropdown);
+			result.setTemplateWhenModeOfWeekCasesDropdown(this.templateWhenModeOfWeekCasesDropdown);
+			result.setTemplateWhenMonthNameCasesDropdown(this.templateWhenMonthNameCasesDropdown);
 			List<JsonObject> dbResults = new ArrayList<JsonObject>();
 			try {
 				for (NEW_FORM_CLASSES_DB_API e : NEW_FORM_CLASSES_DB_API.values()) {
 					if (internalManager.userAuthorizedForThisForm(requestor, e.restriction)) {
 						dbResults.add(e.obj.toJsonObject());
 					}
+				}
+				for (TEMPLATE_CONFIG_MODELS e : TEMPLATE_CONFIG_MODELS.values()) {
+					dbResults.add(e.model.toJsonObject());
 				}
 				result.setValueSchemas(internalManager.getSchemas(dbResults, requestor));
 				Map<String,JsonObject> formsMap = new TreeMap<String,JsonObject>();
@@ -3722,6 +4058,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				result.setStatusCode(HTTP_RESPONSE_CODES.SERVER_ERROR.code);
 				result.setStatusMessage(e.getMessage());
 			}
+			logger.info("Done getting forms for new docs, and dropdowns");
 			return result.toJsonObject();
 		}
 
