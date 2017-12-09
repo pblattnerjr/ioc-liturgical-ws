@@ -18,7 +18,7 @@ import ioc.liturgical.ws.constants.Constants;
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 import net.ages.alwb.utils.core.misc.AlwbUrl;
-import net.ages.alwb.utils.transformers.adapters.models.MetaTemplate;
+import net.ages.alwb.utils.transformers.adapters.models.PopulatedObjectModel;
 import net.ages.alwb.utils.transformers.adapters.models.TemplateElement;
 
 
@@ -30,8 +30,8 @@ import net.ages.alwb.utils.transformers.adapters.models.TemplateElement;
  * @author mac002
  *
  */
-public class AgesHtmlToDynamicHtml {
-	private static final Logger logger = LoggerFactory.getLogger(AgesHtmlToDynamicHtml.class);
+public class AgesHtmlToPOM {
+	private static final Logger logger = LoggerFactory.getLogger(AgesHtmlToPOM.class);
 	private boolean printPretty = false;
 	private String url = "";
 	private String leftLibrary = "";
@@ -44,7 +44,7 @@ public class AgesHtmlToDynamicHtml {
 	private Map<String,String> greekValues = new TreeMap<String,String>();
 	private Map<String,String> englishValues = new TreeMap<String,String>();
 	
-	public AgesHtmlToDynamicHtml(
+	public AgesHtmlToPOM(
 			String url
 			, String leftLibrary
 			, String centerLibrary
@@ -62,7 +62,7 @@ public class AgesHtmlToDynamicHtml {
 		this.rightFallback = rightFallback;
 		this.setLanguageCodes();
 	}
-	public AgesHtmlToDynamicHtml(
+	public AgesHtmlToPOM(
 			String url
 			, String leftLibrary
 			, String centerLibrary
@@ -248,8 +248,8 @@ public class AgesHtmlToDynamicHtml {
 	 * Gets the content for the specified URL
 	 * Builds an array of the ids used in the content.  They are a set (no duplicates).
 	 */
-	public MetaTemplate getValues(Elements valueSpans) throws Exception {
-		MetaTemplate result = new MetaTemplate(url, printPretty);
+	public PopulatedObjectModel getValues(Elements valueSpans) throws Exception {
+		PopulatedObjectModel result = new PopulatedObjectModel(url, printPretty);
 		// first add all the Greek and English values just in case
 		for (Entry<String,String> entry : this.greekValues.entrySet()) {
 			result.addValue(entry.getKey(), entry.getValue());
@@ -467,8 +467,8 @@ public class AgesHtmlToDynamicHtml {
 	 * @return
 	 * @throws Exception
 	 */
-	public MetaTemplate toReactTemplateMetaData() throws Exception {
-		MetaTemplate result = new MetaTemplate(url, printPretty);
+	public PopulatedObjectModel toPOM() throws Exception {
+		PopulatedObjectModel result = new PopulatedObjectModel(url, printPretty);
 		result.setLibraries(leftLibrary, centerLibrary, rightLibrary, leftFallback, centerFallback, rightFallback);
 		Document doc = null;
 		Element content = null;
@@ -498,7 +498,7 @@ public class AgesHtmlToDynamicHtml {
 					keys = content.select("span.key");
 				}
 			}
-			MetaTemplate values = this.getValues(keys);
+			PopulatedObjectModel values = this.getValues(keys);
 			result.setDomains(values.getDomains());
 			result.setTopicKeys(values.getTopicKeys());
 			result.setValues(values.getValues());

@@ -16,7 +16,7 @@ import com.google.gson.JsonParseException;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 import net.ages.alwb.utils.oslw.OslwUtils;
 import net.ages.alwb.utils.transformers.adapters.models.KvpCellElement;
-import net.ages.alwb.utils.transformers.adapters.models.MetaTemplate;
+import net.ages.alwb.utils.transformers.adapters.models.PopulatedObjectModel;
 import net.ages.alwb.utils.transformers.adapters.models.OslwCellElement;
 import net.ages.alwb.utils.transformers.adapters.models.OslwRowElement;
 import net.ages.alwb.utils.transformers.adapters.models.TemplateElement;
@@ -55,7 +55,7 @@ import net.ages.alwb.utils.transformers.adapters.models.TemplateElement;
 
 public class MetaTemplateToPdf {
 	private static final Logger logger = LoggerFactory.getLogger(MetaTemplateToPdf.class);
-	private 	MetaTemplate template  = null;
+	private 	PopulatedObjectModel template  = null;
 	private 	String metaTemplateJsonString = "";
 	private 	String basePath = "";
 	private 	String pathToPdf = "";
@@ -63,7 +63,7 @@ public class MetaTemplateToPdf {
 	private StringBuffer texFileSb = new StringBuffer(); // latex tex file content
 	
 	public MetaTemplateToPdf (
-			MetaTemplate metaTemplate
+			PopulatedObjectModel metaTemplate
 			)   throws JsonParseException {
 		this.template = metaTemplate;
 		this.process();
@@ -80,7 +80,7 @@ public class MetaTemplateToPdf {
 		Gson gson = new Gson();
 		template = gson.fromJson(
 				metaTemplateJsonString
-				, MetaTemplate.class
+				, PopulatedObjectModel.class
 				);
 		this.process();
 	}
@@ -375,11 +375,11 @@ public class MetaTemplateToPdf {
 		this.pathToPdf = pathToPdf;
 	}
 
-	public MetaTemplate getTemplate() {
+	public PopulatedObjectModel getTemplate() {
 		return template;
 	}
 
-	public void setTemplate(MetaTemplate template) {
+	public void setTemplate(PopulatedObjectModel template) {
 		this.template = template;
 	}
 	

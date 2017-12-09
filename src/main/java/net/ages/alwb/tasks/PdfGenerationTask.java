@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 import ioc.liturgical.ws.constants.Constants;
 import org.ocmc.ioc.liturgical.utils.FileUtils;
 import net.ages.alwb.utils.transformers.adapters.MetaTemplateToPdf;
-import net.ages.alwb.utils.transformers.adapters.models.MetaTemplate;
+import net.ages.alwb.utils.transformers.adapters.models.PopulatedObjectModel;
 
 /**
  * Runs a task (separate thread) to generate the Xelatex content for
@@ -17,7 +17,7 @@ import net.ages.alwb.utils.transformers.adapters.models.MetaTemplate;
  *
  */
 public class PdfGenerationTask implements Runnable {
-	MetaTemplate template = null;
+	PopulatedObjectModel template = null;
 	String pdfId = "";
 	String dockerPath = "/usr/local/bin/";
 	
@@ -27,7 +27,7 @@ public class PdfGenerationTask implements Runnable {
 	 * @param pathOut - path and filename to write the tex file
 	 */
 	public PdfGenerationTask (
-			MetaTemplate template
+			PopulatedObjectModel template
 			, String pdfId
 			) {
 		this.template = template;

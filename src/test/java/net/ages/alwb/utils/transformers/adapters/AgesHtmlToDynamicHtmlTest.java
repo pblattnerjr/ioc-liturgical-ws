@@ -7,13 +7,13 @@ import java.util.Map.Entry;
 
 import org.junit.Test;
 
-import net.ages.alwb.utils.transformers.adapters.models.MetaTemplate;
+import net.ages.alwb.utils.transformers.adapters.models.PopulatedObjectModel;
 
 public class AgesHtmlToDynamicHtmlTest {
 
 	@Test
 	public void test() {
-		AgesHtmlToDynamicHtml ages = new AgesHtmlToDynamicHtml(
+		AgesHtmlToPOM ages = new AgesHtmlToPOM(
 				"http://www.agesinitiatives.com/dcs/public/dcs/h/b/greatwaterblessing/gr-en/index.html"
 				, "swa_ke_aok"
 				, "en_us_ages" // en_us_ages
@@ -24,7 +24,7 @@ public class AgesHtmlToDynamicHtmlTest {
 				, true // print pretty
 				);
 		try {
-			MetaTemplate template = ages.toReactTemplateMetaData();
+			PopulatedObjectModel template = ages.toPOM();
 		System.out.println(template.getTopElement().toJsonString());
 			Map<String,String> values = template.getValues();
 			for ( Entry<String,String> entry: values.entrySet()) {

@@ -18,7 +18,7 @@ import org.ocmc.ioc.liturgical.schemas.models.supers.AbstractModel;
  * @author mac002
  *
  */
-public class MetaTemplate extends AbstractModel {
+public class PopulatedObjectModel extends AbstractModel {
 	@Expose public String url = "";
 	@Expose public String html = "";
 	@Expose public String leftLibrary = "";
@@ -44,12 +44,12 @@ public class MetaTemplate extends AbstractModel {
 	@Expose public Map<String,String> values = new TreeMap<String,String>();
 	@Expose public TemplateElement topElement = new TemplateElement(true);
 	
-	public MetaTemplate(String url) {
+	public PopulatedObjectModel(String url) {
 		super();
 		this.url = url;
 	}
 
-	public MetaTemplate(String url, boolean printPretty) {
+	public PopulatedObjectModel(String url, boolean printPretty) {
 		super();
 		super.setPrettyPrint(printPretty);
 		this.url = url;

@@ -108,11 +108,11 @@ import net.ages.alwb.utils.nlp.fetchers.Ox3kUtils;
 import net.ages.alwb.utils.nlp.fetchers.PerseusMorph;
 import net.ages.alwb.utils.nlp.models.GevLexicon;
 import net.ages.alwb.utils.nlp.utils.NlpUtils;
-import net.ages.alwb.utils.transformers.adapters.AgesHtmlToDynamicHtml;
-import net.ages.alwb.utils.transformers.adapters.AgesHtmlToTemplateHtml;
+import net.ages.alwb.utils.transformers.adapters.AgesHtmlToPOM;
+import net.ages.alwb.utils.transformers.adapters.AgesHtmlToEditablePOM;
 import net.ages.alwb.utils.transformers.adapters.AgesWebsiteIndexToReactTableData;
 import net.ages.alwb.utils.transformers.adapters.models.AgesIndexTableData;
-import net.ages.alwb.utils.transformers.adapters.models.MetaTemplate;
+import net.ages.alwb.utils.transformers.adapters.models.PopulatedObjectModel;
 import opennlp.tools.tokenize.SimpleTokenizer;
 import opennlp.tools.tokenize.Tokenizer;
 
@@ -3303,7 +3303,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				) {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
-				AgesHtmlToDynamicHtml ages = new AgesHtmlToDynamicHtml(
+				AgesHtmlToPOM ages = new AgesHtmlToPOM(
 						url
 						, leftLibrary
 						, centerLibrary
@@ -3313,7 +3313,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						, rightFallback
 						, this.printPretty // print pretty
 						);
-				MetaTemplate template = ages.toReactTemplateMetaData();
+				PopulatedObjectModel template = ages.toPOM();
 				String title = template.getPdfFilename();
 				Map<String,String> values = template.getValues();
 				
@@ -3505,12 +3505,12 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				) {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
-				AgesHtmlToTemplateHtml ages = new AgesHtmlToTemplateHtml(
+				AgesHtmlToEditablePOM ages = new AgesHtmlToEditablePOM(
 						url
 						, translationLibrary
 						, this.printPretty // print pretty
 						);
-				MetaTemplate template = ages.toReactTemplateMetaData();
+				PopulatedObjectModel template = ages.toPOM();
 				
 				/**
 				 * If there is a translation library, 

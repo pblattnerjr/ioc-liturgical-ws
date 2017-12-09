@@ -541,6 +541,20 @@ public class Neo4jController {
 			return requestStatus.toJsonString();
 		});
 
+		// put (update) a template 
+		path = ENDPOINTS_DB_API.TEMPLATES.toLibraryTopicKeyPath();
+		ControllerUtils.reportPath(logger, "PUT", path);
+		put(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			RequestStatus requestStatus = externalManager.updateTemplate(
+					requestor
+					, request.body()
+					);
+			response.status(requestStatus.getCode());
+			return requestStatus.toJsonString();
+		});
+
 		// put (update) a doc 
 		path = ENDPOINTS_DB_API.DOCS.toLibraryTopicKeyPath();
 		ControllerUtils.reportPath(logger, "PUT", path);
@@ -579,20 +593,6 @@ public class Neo4jController {
 			RequestStatus requestStatus = externalManager.updateReference(
 					requestor
 					, id
-					, request.body()
-					);
-			response.status(requestStatus.getCode());
-			return requestStatus.toJsonString();
-		});
-
-		// put (update) a template 
-		path = ENDPOINTS_DB_API.TEMPLATES.toLibraryTopicKeyPath();
-		ControllerUtils.reportPath(logger, "PUT", path);
-		put(path, (request, response) -> {
-			response.type(Constants.UTF_JSON);
-			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
-			RequestStatus requestStatus = externalManager.updateTemplate(
-					requestor
 					, request.body()
 					);
 			response.status(requestStatus.getCode());

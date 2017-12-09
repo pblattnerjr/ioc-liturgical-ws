@@ -12,30 +12,30 @@ import org.slf4j.LoggerFactory;
 
 import ioc.liturgical.ws.constants.Constants;
 import net.ages.alwb.utils.core.id.managers.IdManager;
-import net.ages.alwb.utils.transformers.adapters.models.MetaTemplate;
+import net.ages.alwb.utils.transformers.adapters.models.PopulatedObjectModel;
 import net.ages.alwb.utils.transformers.adapters.models.TemplateElement;
 
 import org.jsoup.nodes.Element;
 
-public class AgesHtmlToTemplateHtml {
-	private static final Logger logger = LoggerFactory.getLogger(AgesHtmlToTemplateHtml.class);
+public class AgesHtmlToEditablePOM {
+	private static final Logger logger = LoggerFactory.getLogger(AgesHtmlToEditablePOM.class);
 	private boolean printPretty = false;
 	private String url = "";
 	private String centerLibrary = "";
 	
-	public AgesHtmlToTemplateHtml(String url) {
+	public AgesHtmlToEditablePOM(String url) {
 		this.url = url;
 	}
-	public AgesHtmlToTemplateHtml(String url, boolean printPretty) {
+	public AgesHtmlToEditablePOM(String url, boolean printPretty) {
 		this.url = url;
 		this.printPretty = printPretty;
 	}
 
-	public AgesHtmlToTemplateHtml(String url, String centerLibrary) {
+	public AgesHtmlToEditablePOM(String url, String centerLibrary) {
 		this.url = url;
 		this.centerLibrary = centerLibrary;
 	}
-	public AgesHtmlToTemplateHtml(String url, String centerLibrary, boolean printPretty) {
+	public AgesHtmlToEditablePOM(String url, String centerLibrary, boolean printPretty) {
 		this.url = url;
 		this.centerLibrary = centerLibrary;
 		this.printPretty = printPretty;
@@ -62,11 +62,11 @@ public class AgesHtmlToTemplateHtml {
 	 * Gets the content for the specified URL
 	 * Builds an array of the ids used in the content.  They are a set (no duplicates).
 	 */
-	public MetaTemplate getValues(
+	public PopulatedObjectModel getValues(
 			Elements valueSpans
 			, Elements versionDesignations
 			) throws Exception {
-		MetaTemplate result = new MetaTemplate(url, printPretty);
+		PopulatedObjectModel result = new PopulatedObjectModel(url, printPretty);
 		try {
 	        for (Element valueSpan : valueSpans) {
 	        	String tdClass = this.getClassOfTd(valueSpan);
@@ -216,8 +216,8 @@ public class AgesHtmlToTemplateHtml {
 	 * @return
 	 * @throws Exception
 	 */
-	public MetaTemplate toReactTemplateMetaData() throws Exception {
-		MetaTemplate result = new MetaTemplate(url, printPretty);
+	public PopulatedObjectModel toPOM() throws Exception {
+		PopulatedObjectModel result = new PopulatedObjectModel(url, printPretty);
 		Document doc = null;
 		Element content = null;
 		try {
@@ -236,7 +236,7 @@ public class AgesHtmlToTemplateHtml {
 				keys = content.select("span.key");
 			}
 			Elements versionDesignations = content.select("span.versiondesignation");
-			MetaTemplate values = this.getValues(keys, versionDesignations);
+			PopulatedObjectModel values = this.getValues(keys, versionDesignations);
 			result.setDomains(values.getDomains());
 			result.setTopicKeys(values.getTopicKeys());
 			result.setValues(values.getValues());
