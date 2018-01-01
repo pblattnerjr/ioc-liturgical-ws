@@ -8,12 +8,12 @@ import com.google.gson.annotations.Expose;
 import org.ocmc.ioc.liturgical.schemas.models.supers.AbstractModel;
 
 /**
- * Represents an element found in a MetaTemplate.
+ * Represents an element found in a Populated Liturgical Document Model.
  * 
  * @author mac002
  *
  */
-public class TemplateElement extends AbstractModel {
+public class LDOM_Element extends AbstractModel {
 	@Expose public String key = ""; // required when iterating a Javascript array of HtmlElement
 	@Expose public String tag = "";
 	@Expose public String className = "";
@@ -22,13 +22,13 @@ public class TemplateElement extends AbstractModel {
 	@Expose public String dataKey = ""; // the key we will use to retrieve values.  It might not be the original
 	@Expose public String dataOriginal = ""; // the original key in case we need to use it instead
 	@Expose public String topicKey = "";
-	@Expose public List<TemplateElement> children = new ArrayList<TemplateElement>();
+	@Expose public List<LDOM_Element> children = new ArrayList<LDOM_Element>();
 	
 
-	public TemplateElement() {
+	public LDOM_Element() {
 		super();
 	}
-	public TemplateElement(boolean printPretty) {
+	public LDOM_Element(boolean printPretty) {
 		super();
 		super.setPrettyPrint(printPretty);
 	}
@@ -44,13 +44,13 @@ public class TemplateElement extends AbstractModel {
 	public void setClassName(String className) {
 		this.className = className;
 	}
-	public List<TemplateElement> getChildren() {
+	public List<LDOM_Element> getChildren() {
 		return children;
 	}
-	public void setChildren(List<TemplateElement> children) {
+	public void setChildren(List<LDOM_Element> children) {
 		this.children = children;
 	}
-	public void addChild(TemplateElement child) {
+	public void addChild(LDOM_Element child) {
 		this.children.add(child);
 	}
 	public String getDataKey() {

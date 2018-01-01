@@ -16,10 +16,10 @@ import com.google.gson.JsonParseException;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 import net.ages.alwb.utils.oslw.OslwUtils;
 import net.ages.alwb.utils.transformers.adapters.models.KvpCellElement;
-import net.ages.alwb.utils.transformers.adapters.models.PopulatedObjectModel;
+import net.ages.alwb.utils.transformers.adapters.models.LDOM;
 import net.ages.alwb.utils.transformers.adapters.models.OslwCellElement;
 import net.ages.alwb.utils.transformers.adapters.models.OslwRowElement;
-import net.ages.alwb.utils.transformers.adapters.models.TemplateElement;
+import net.ages.alwb.utils.transformers.adapters.models.LDOM_Element;
 
 /**
  * Liturgical books and services are provided by AGES Initiatives as
@@ -55,7 +55,7 @@ import net.ages.alwb.utils.transformers.adapters.models.TemplateElement;
 
 public class MetaTemplateToPdf {
 	private static final Logger logger = LoggerFactory.getLogger(MetaTemplateToPdf.class);
-	private 	PopulatedObjectModel template  = null;
+	private 	LDOM template  = null;
 	private 	String metaTemplateJsonString = "";
 	private 	String basePath = "";
 	private 	String pathToPdf = "";
@@ -63,7 +63,7 @@ public class MetaTemplateToPdf {
 	private StringBuffer texFileSb = new StringBuffer(); // latex tex file content
 	
 	public MetaTemplateToPdf (
-			PopulatedObjectModel metaTemplate
+			LDOM metaTemplate
 			)   throws JsonParseException {
 		this.template = metaTemplate;
 		this.process();
@@ -80,7 +80,7 @@ public class MetaTemplateToPdf {
 		Gson gson = new Gson();
 		template = gson.fromJson(
 				metaTemplateJsonString
-				, PopulatedObjectModel.class
+				, LDOM.class
 				);
 		this.process();
 	}
@@ -244,10 +244,10 @@ public class MetaTemplateToPdf {
 	 * Process the json element to extract the information
 	 * and create the latex template file data
 	 */
-	private void process(TemplateElement e) {
+	private void process(LDOM_Element e) {
 		if (e.getTag().equals("tr")) {
 			OslwRowElement oslwRow = new OslwRowElement();
-			for (TemplateElement child : e.getChildren()) {
+			for (LDOM_Element child : e.getChildren()) {
 				oslwRow.addCellElement(this.processRowCell(child));
 			}
 			OslwCellElement firstCell = oslwRow.getCells().get(0);
@@ -263,16 +263,16 @@ public class MetaTemplateToPdf {
 				this.list.add(oslwRow);
 			}
 		} else {
-			for (TemplateElement child : e.children) {
+			for (LDOM_Element child : e.children) {
 				this.process(child);
 			}
 		}
 	}
 	
-	private OslwCellElement processRowCell(TemplateElement cell) {
+	private OslwCellElement processRowCell(LDOM_Element cell) {
 		OslwCellElement result  = new OslwCellElement();
 		result.setCellClassName(cell.getClassName());
-		for (TemplateElement s : cell.getChildren()) {
+		for (LDOM_Element s : cell.getChildren()) {
 			// the current class name for an ALWB HTML data-key is kvp.  We used to use just key 
 			// as the classname.  Some html files on the AGES site still have the old class name.
 			if (s.getClassName().startsWith("kvp") || s.getClassName().startsWith("key")) {
@@ -281,14 +281,14 @@ public class MetaTemplateToPdf {
 			} else {
 				result.addCommand(parseElement(s));
 			}
-			for (TemplateElement t : s.getChildren()) {
+			for (LDOM_Element t : s.getChildren()) {
 				result.appendAll(processRowElement(t));
 			}
 		}
 		return result;
 	}
 
-	private OslwCellElement processRowElement(TemplateElement e) {
+	private OslwCellElement processRowElement(LDOM_Element e) {
 		OslwCellElement result  = new OslwCellElement();
 		// the current class name for an ALWB HTML data-key is kvp.  We used to use just key 
 		// as the classname.  Some html files on the AGES site still have the old class name.
@@ -298,7 +298,7 @@ public class MetaTemplateToPdf {
 		} else {
 			result.addCommand(parseElement(e));
 		}
-		for (TemplateElement c : e.getChildren()) {
+		for (LDOM_Element c : e.getChildren()) {
 			if (c.getClassName().startsWith("kvp") || c.getClassName().startsWith("key")) {
 				result.addKey(parseElement(c));
 				result.addKvpCellElement(new KvpCellElement(c));
@@ -319,7 +319,7 @@ public class MetaTemplateToPdf {
 	 * @param e
 	 * @return
 	 */
-	private String parseElement(TemplateElement e) {
+	private String parseElement(LDOM_Element e) {
 		StringBuffer sb = new StringBuffer();
 		// the current class name for an ALWB HTML data-key is kvp.  We used to use just key 
 		// as the classname.  Some html files on the AGES site still have the old class name.
@@ -375,11 +375,11 @@ public class MetaTemplateToPdf {
 		this.pathToPdf = pathToPdf;
 	}
 
-	public PopulatedObjectModel getTemplate() {
+	public LDOM getTemplate() {
 		return template;
 	}
 
-	public void setTemplate(PopulatedObjectModel template) {
+	public void setTemplate(LDOM template) {
 		this.template = template;
 	}
 	

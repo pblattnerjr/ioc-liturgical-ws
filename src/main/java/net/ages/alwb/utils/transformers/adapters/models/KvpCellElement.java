@@ -26,7 +26,7 @@ public class KvpCellElement extends AbstractModel {
 		super();
 	}
 	
-	public KvpCellElement(TemplateElement template) {
+	public KvpCellElement(LDOM_Element template) {
 		super();
 		this.tag = template.getTag();
 		this.parentClassName = template.getParentClassName();
@@ -41,7 +41,7 @@ public class KvpCellElement extends AbstractModel {
 		super.setPrettyPrint(printPretty);
 	}
 
-	public KvpCellElement(TemplateElement template, boolean printPretty) {
+	public KvpCellElement(LDOM_Element template, boolean printPretty) {
 		super();
 		super.setPrettyPrint(printPretty);
 		this.tag = template.getTag();

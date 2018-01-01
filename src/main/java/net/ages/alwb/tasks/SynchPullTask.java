@@ -80,7 +80,7 @@ public class SynchPullTask implements Runnable {
 								log.recordSynchTime();
 								dbManager.recordSynch(log);
 							} else {
-								logger.error("Could not push " + trans.getId() + " to Synch Server");
+								logger.error("Could not run transaction " + trans.getId() + " against local database");
 							}
 						} catch (Exception e) {
 							ErrorUtils.report(logger, e);

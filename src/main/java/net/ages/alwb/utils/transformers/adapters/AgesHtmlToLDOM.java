@@ -18,8 +18,8 @@ import ioc.liturgical.ws.constants.Constants;
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 import net.ages.alwb.utils.core.misc.AlwbUrl;
-import net.ages.alwb.utils.transformers.adapters.models.PopulatedObjectModel;
-import net.ages.alwb.utils.transformers.adapters.models.TemplateElement;
+import net.ages.alwb.utils.transformers.adapters.models.LDOM;
+import net.ages.alwb.utils.transformers.adapters.models.LDOM_Element;
 
 
 /**
@@ -30,8 +30,8 @@ import net.ages.alwb.utils.transformers.adapters.models.TemplateElement;
  * @author mac002
  *
  */
-public class AgesHtmlToPOM {
-	private static final Logger logger = LoggerFactory.getLogger(AgesHtmlToPOM.class);
+public class AgesHtmlToLDOM {
+	private static final Logger logger = LoggerFactory.getLogger(AgesHtmlToLDOM.class);
 	private boolean printPretty = false;
 	private String url = "";
 	private String leftLibrary = "";
@@ -44,7 +44,7 @@ public class AgesHtmlToPOM {
 	private Map<String,String> greekValues = new TreeMap<String,String>();
 	private Map<String,String> englishValues = new TreeMap<String,String>();
 	
-	public AgesHtmlToPOM(
+	public AgesHtmlToLDOM(
 			String url
 			, String leftLibrary
 			, String centerLibrary
@@ -62,7 +62,7 @@ public class AgesHtmlToPOM {
 		this.rightFallback = rightFallback;
 		this.setLanguageCodes();
 	}
-	public AgesHtmlToPOM(
+	public AgesHtmlToLDOM(
 			String url
 			, String leftLibrary
 			, String centerLibrary
@@ -248,8 +248,8 @@ public class AgesHtmlToPOM {
 	 * Gets the content for the specified URL
 	 * Builds an array of the ids used in the content.  They are a set (no duplicates).
 	 */
-	public PopulatedObjectModel getValues(Elements valueSpans) throws Exception {
-		PopulatedObjectModel result = new PopulatedObjectModel(url, printPretty);
+	public LDOM getValues(Elements valueSpans) throws Exception {
+		LDOM result = new LDOM(url, printPretty);
 		// first add all the Greek and English values just in case
 		for (Entry<String,String> entry : this.greekValues.entrySet()) {
 			result.addValue(entry.getKey(), entry.getValue());
@@ -391,12 +391,12 @@ public class AgesHtmlToPOM {
 	 * @return
 	 * @throws Exception
 	 */
-	private List<TemplateElement> getChildren(Elements children, int seq) throws Exception {
-		List<TemplateElement> result = new ArrayList<TemplateElement>();
+	private List<LDOM_Element> getChildren(Elements children, int seq) throws Exception {
+		List<LDOM_Element> result = new ArrayList<LDOM_Element>();
 		try {
 			for (Element child : children) {
 				try {
-					TemplateElement eChild = new TemplateElement(true);
+					LDOM_Element eChild = new LDOM_Element(true);
 					eChild.setTag(child.tagName());
 					if (child.hasAttr("class")) {
 						eChild.setClassName(child.attr("class"));
@@ -467,8 +467,8 @@ public class AgesHtmlToPOM {
 	 * @return
 	 * @throws Exception
 	 */
-	public PopulatedObjectModel toPOM() throws Exception {
-		PopulatedObjectModel result = new PopulatedObjectModel(url, printPretty);
+	public LDOM toLDOM() throws Exception {
+		LDOM result = new LDOM(url, printPretty);
 		result.setLibraries(leftLibrary, centerLibrary, rightLibrary, leftFallback, centerFallback, rightFallback);
 		Document doc = null;
 		Element content = null;
@@ -498,7 +498,7 @@ public class AgesHtmlToPOM {
 					keys = content.select("span.key");
 				}
 			}
-			PopulatedObjectModel values = this.getValues(keys);
+			LDOM values = this.getValues(keys);
 			result.setDomains(values.getDomains());
 			result.setTopicKeys(values.getTopicKeys());
 			result.setValues(values.getValues());
@@ -522,7 +522,7 @@ public class AgesHtmlToPOM {
 				content.select("td.leftCell").forEach(e -> e.attr("class", "cellOneOfOne"));
 			}
 			content.select("span.kvp").forEach(e -> e.attr("class", "kvp readonly"));
-			TemplateElement eContent = new TemplateElement(printPretty);
+			LDOM_Element eContent = new LDOM_Element(printPretty);
 			eContent.setTag(content.tagName());
 			eContent.setClassName(content.attr("class"));
 			if (content.parent().hasAttr("class")) {

@@ -337,30 +337,24 @@ public class ServiceProvider {
 						, storeManager
 						);
 				docService.setPrettyPrint(debug);
-				if (synchEnabled && synchManager != null) {
-					docService.setSynchManager(synchManager);
-					executorService.scheduleAtFixedRate(
-							new SynchPushTask(
-									ExternalDbManager.neo4jManager
-									, synchManager
-									)
-							, 10
-							, 10
-							, TimeUnit.SECONDS
-							);
-					
-					// TODO: the pull should use a host and port specified in the config file.
-					  Neo4jConnectionManager synchPullNeo4jManager = new Neo4jConnectionManager(
-							  "localhost"
-							  , "8687"
-								, ws_usr
-								, ws_pwd
-							  , false
-							  );
 
+				if (synchEnabled && synchManager != null) {
+					
+					docService.setSynchManager(synchManager);
+
+//					executorService.scheduleAtFixedRate(
+//							new SynchPushTask(
+//									ExternalDbManager.neo4jManager
+//									, synchManager
+//									)
+//							, 10
+//							, 10
+//							, TimeUnit.SECONDS
+//							);
+					
 					executorService.scheduleAtFixedRate(
 							new SynchPullTask(
-									synchPullNeo4jManager
+									ExternalDbManager.neo4jManager
 									, synchManager
 									)
 							, 10

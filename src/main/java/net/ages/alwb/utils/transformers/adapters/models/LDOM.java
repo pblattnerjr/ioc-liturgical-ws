@@ -14,11 +14,15 @@ import org.ocmc.ioc.liturgical.schemas.models.supers.AbstractModel;
  * make use of templates to define the order and formatting of data for services and books.
  * 
  * This class is used to hold the meta data of a template from either source.
+ * When returned from a REST call, it is populated with values read by
+ * binding user specified libraries to the topic-keys in the template.
+ * 
+ * LDOM = Liturgical Document Object Model
  * 
  * @author mac002
  *
  */
-public class PopulatedObjectModel extends AbstractModel {
+public class LDOM extends AbstractLDOM {
 	@Expose public String url = "";
 	@Expose public String html = "";
 	@Expose public String leftLibrary = "";
@@ -33,26 +37,21 @@ public class PopulatedObjectModel extends AbstractModel {
 	@Expose public String leftHeaderTitle = "";
 	@Expose public String centerHeaderTitle = "";
 	@Expose public String rightHeaderTitle = "";
-	@Expose public String serviceDate = "";
 	@Expose public String leftTitleDate = "";
 	@Expose public String centerTitleDate = "";
 	@Expose public String rightTitleDate = "";
-	@Expose public String pdfId = ""; 
-	@Expose public String pdfFilename = ""; 
 	@Expose public List<String> domains = new ArrayList<String>();
-	@Expose public List<String> topicKeys = new ArrayList<String>();
 	@Expose public Map<String,String> values = new TreeMap<String,String>();
-	@Expose public TemplateElement topElement = new TemplateElement(true);
 	
-	public PopulatedObjectModel(String url) {
-		super();
-		this.url = url;
+	public LDOM(String source) {
+		super(source);
+		this.url = source;
 	}
 
-	public PopulatedObjectModel(String url, boolean printPretty) {
-		super();
+	public LDOM(String source, boolean printPretty) {
+		super(source);
 		super.setPrettyPrint(printPretty);
-		this.url = url;
+		this.url = source;
 	}
 
 	public String getHtml() {
@@ -118,11 +117,11 @@ public class PopulatedObjectModel extends AbstractModel {
 		return this.values.keySet();
 	}
 
-	public TemplateElement getTopElement() {
+	public LDOM_Element getTopElement() {
 		return topElement;
 	}
 
-	public void setTopElement(TemplateElement topElement) {
+	public void setTopElement(LDOM_Element topElement) {
 		this.topElement = topElement;
 	}
 

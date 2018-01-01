@@ -2,6 +2,7 @@ package ioc.liturgical.ws.managers;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -18,6 +19,8 @@ import ioc.liturgical.test.framework.LinkRefersToBiblicalTextTextFactory;
 import ioc.liturgical.test.framework.TestUsers;
 import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
 import org.ocmc.ioc.liturgical.schemas.constants.RELATIONSHIP_TYPES;
+import org.ocmc.ioc.liturgical.schemas.constants.TEMPLATE_NODE_TYPES;
+import org.ocmc.ioc.liturgical.schemas.constants.TEMPLATE_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.TOPICS;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
@@ -30,14 +33,19 @@ import org.ocmc.ioc.liturgical.schemas.models.db.docs.ontology.Being;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.ontology.Concept;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.ontology.Event;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.personal.UserNote;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.templates.Template;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.templates.TemplateNode;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.templates.TemplateNodeFactory;
 import org.ocmc.ioc.liturgical.schemas.models.forms.ontology.AnimalCreateForm;
 import org.ocmc.ioc.liturgical.schemas.models.forms.ontology.ConceptCreateForm;
 import org.ocmc.ioc.liturgical.schemas.models.forms.ontology.EventCreateForm;
 import org.ocmc.ioc.liturgical.schemas.models.forms.ontology.LinkRefersToBiblicalTextCreateForm;
 import org.ocmc.ioc.liturgical.schemas.models.forms.ontology.UserNoteCreateForm;
 import org.ocmc.ioc.liturgical.schemas.models.db.links.LinkRefersToBiblicalText;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import org.ocmc.ioc.liturgical.utils.FileUtils;
 import net.ages.alwb.utils.nlp.fetchers.PerseusMorph;
+import net.ages.alwb.utils.transformers.adapters.TemplateNodeCompiler;
 
 public class ExternalDbManagerTest {
 
@@ -102,6 +110,41 @@ public class ExternalDbManagerTest {
 			assertTrue(dedes.getCount() > 0);
 	    }
 	
+	@Test
+	   public void testCompileTemplateRootNode() {
+			Template template = new Template(
+				"en_us_ages"
+				, "se.m01.d01.ma"
+				);
+			TemplateNode root = template.fetchNode();
+			TemplateNode rootSection = root.children.get(0);
+			TemplateNode actor = new TemplateNode();
+			actor.setTitle(TEMPLATE_NODE_TYPES.ACTOR);
+			TemplateNode sid = new TemplateNode();
+			sid.setTitle(TEMPLATE_NODE_TYPES.SID);
+			sid.setSubtitle("gr_gr_cog~actors~Priest");
+			actor.appendNode(sid);
+			rootSection.appendNode(actor);
+			TemplateNode dialog = new TemplateNode();
+			dialog.setTitle(TEMPLATE_NODE_TYPES.DIALOG);
+			sid.setSubtitle("gr_gr_cog~eu.lichrysbasil~euLI.Key0109.text");
+			dialog.appendNode(sid);
+			rootSection.appendNode(dialog);
+			List<TemplateNode> children = new ArrayList<TemplateNode>();
+			children.add(rootSection);
+			root.setChildren(children);
+			template.setNode(root.toJsonString());
+			template.setPrettyPrint(true);
+			System.out.println(template.fetchNode().toJsonString());
+			TemplateNodeCompiler compiler = new TemplateNodeCompiler(
+					template
+					, externalManager
+					);
+			TemplateNode compiledNodes = compiler.getCompiledNodes();
+			compiledNodes.setPrettyPrint(true);
+			System.out.println(compiledNodes.toJsonString());
+	    }
+
 	@Test
 	   public void testGetAnalysesForText() {
 			ResultJsonObjectArray result = externalManager.getWordGrammarAnalyses(
@@ -175,6 +218,9 @@ public class ExternalDbManagerTest {
 		
 		String user = "mcolburn";
 		String domain = externalManager.getUserDomain(user);
+		RequestStatus status = null;
+		String firstNoteId = null;
+		String secondNoteId = null;
 		
 		// create
 		UserNoteCreateForm form = new UserNoteCreateForm(
@@ -182,26 +228,38 @@ public class ExternalDbManagerTest {
 					, "gr_gr_cog~actors~Priest"
 					, externalManager.getTimestamp()
 				   );
-		form.setValue("create a note");
-		   RequestStatus status = externalManager.addNote(
-	    			user
-	    			, form.toJsonString()
-	    			);
-	    	assertTrue(status.getCode() == 201); // created
-	    	
-	    	String firstNoteId = form.getId();
-	    	
+		try {
+			form.setValue("create a note");
+			   status = externalManager.addNote(
+		    			user
+		    			, form.toJsonString()
+		    			);
+		    	assertTrue(status.getCode() == 201); // created = 201
+		    	firstNoteId = form.getId();
+		    	
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		UserNote ref = null;
+		ResultJsonObjectArray result = null;
+		
+		try {
 	    	// read
-	    	ResultJsonObjectArray result = externalManager.getForId(
+	    	result = externalManager.getForId(
 	    			form.getId()
 	    			);
-	    	UserNote ref = (UserNote) gson.fromJson(
+	    	ref = (UserNote) gson.fromJson(
 					result.getValues().get(0)
 					, UserNote.class
 			);	
  	       assertTrue(ref.getId().equals(form.getId()));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	    	
 	    	// update
+		try {
 	    	String update = "updated note";
 	    	ref.setValue(update);
 			externalManager.updateLTKDbObject(
@@ -216,7 +274,10 @@ public class ExternalDbManagerTest {
 					, UserNote.class
 			);	
 	    	assertTrue(ref.getValue().equals(update));
-	    	
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		try {
 			// create a second instance
 			form = new UserNoteCreateForm(
 						domain
@@ -228,23 +289,34 @@ public class ExternalDbManagerTest {
 		    			user
 		    			, form.toJsonString()
 		    			);
-		    	assertTrue(status.getCode() == 201); // created
+		    	assertTrue(status.getCode() == 201); // created 201
 		    	
-		    	String secondNoteId = form.getId();
-
-		    	// get all notes for the user
-		    	result = externalManager.getUsersNotes(user);
-		    	assertTrue(result.valueCount == 2);
-
-		    	// delete first note
-	    	status = externalManager.deleteNoteAndRelationshipsForId(user, firstNoteId);
-	    	assertTrue(status.getCode() == 200);
-
+		    	secondNoteId = form.getId();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		try {
+	    	// get all notes for the user
+	    	result = externalManager.getUsersNotes(user);
+	    	assertTrue(result.valueCount > 2);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		try {
+	    	// delete first note
+    	status = externalManager.deleteNoteAndRelationshipsForId(user, firstNoteId);
+    	assertTrue(status.getCode() == 200);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		try {
 	    	// delete second note
     	status = externalManager.deleteNoteAndRelationshipsForId(user, secondNoteId);
     	assertTrue(status.getCode() == 200);
-
-	    }
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
 	@Test
 	   public void testReferenceSearch() {
@@ -684,4 +756,6 @@ public class ExternalDbManagerTest {
 			result = externalManager.deleteForId(form.getId());
 			assertTrue(result.getCode() == HTTP_RESPONSE_CODES.OK.code);
 	}
+	
+	
 }

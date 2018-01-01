@@ -13,11 +13,11 @@ import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 
 import net.ages.alwb.utils.core.id.managers.IdManager;
-import net.ages.alwb.utils.transformers.adapters.models.PopulatedObjectModel;
+import net.ages.alwb.utils.transformers.adapters.models.LDOM;
 
 public class MetaTemplateToInterlinear {
 	private static final Logger logger = LoggerFactory.getLogger(MetaTemplateToInterlinear.class);
-	private 	PopulatedObjectModel template  = null;
+	private 	LDOM template  = null;
 	Map<String,Map<String,String>> map = new TreeMap<String,Map<String,String>>();
 	StringBuffer tex = new StringBuffer();
 	
@@ -27,7 +27,7 @@ public class MetaTemplateToInterlinear {
 		Gson gson = new Gson();
 		template = gson.fromJson(
 				metaTemplateJsonString
-				, PopulatedObjectModel.class
+				, LDOM.class
 		);
 		this.loadMap();
 		this.generateTex();

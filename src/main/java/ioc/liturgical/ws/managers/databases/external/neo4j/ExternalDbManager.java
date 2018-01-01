@@ -74,10 +74,12 @@ import org.ocmc.ioc.liturgical.schemas.models.db.docs.ontology.TextLiturgical;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.tables.ReactBootstrapTableData;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.templates.Section;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.templates.Template;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.templates.TemplateNode;
 import org.ocmc.ioc.liturgical.schemas.models.db.internal.LTKVJsonObject;
 import org.ocmc.ioc.liturgical.schemas.models.forms.ontology.TextLiturgicalTranslationCreateForm;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTK;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDb;
+import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDbGenerationUnit;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDbOntologyEntry;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTKLink;
 import org.ocmc.ioc.liturgical.schemas.models.ws.db.Utility;
@@ -103,16 +105,20 @@ import net.ages.alwb.utils.core.datastores.json.exceptions.MissingSchemaIdExcept
 import net.ages.alwb.utils.core.generics.MultiMapWithList;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 import org.ocmc.ioc.liturgical.utils.GeneralUtils;
+import org.ocmc.ioc.liturgical.utils.LiturgicalDayProperties;
+
 import net.ages.alwb.utils.core.misc.AlwbUrl;
 import net.ages.alwb.utils.nlp.fetchers.Ox3kUtils;
 import net.ages.alwb.utils.nlp.fetchers.PerseusMorph;
 import net.ages.alwb.utils.nlp.models.GevLexicon;
 import net.ages.alwb.utils.nlp.utils.NlpUtils;
-import net.ages.alwb.utils.transformers.adapters.AgesHtmlToPOM;
-import net.ages.alwb.utils.transformers.adapters.AgesHtmlToEditablePOM;
+import net.ages.alwb.utils.transformers.adapters.AgesHtmlToLDOM;
+import net.ages.alwb.utils.transformers.adapters.AgesHtmlToEditableLDOM;
 import net.ages.alwb.utils.transformers.adapters.AgesWebsiteIndexToReactTableData;
+import net.ages.alwb.utils.transformers.adapters.TemplateNodeCompiler;
+import net.ages.alwb.utils.transformers.adapters.models.AbstractLDOM;
 import net.ages.alwb.utils.transformers.adapters.models.AgesIndexTableData;
-import net.ages.alwb.utils.transformers.adapters.models.PopulatedObjectModel;
+import net.ages.alwb.utils.transformers.adapters.models.LDOM;
 import opennlp.tools.tokenize.SimpleTokenizer;
 import opennlp.tools.tokenize.Tokenizer;
 
@@ -907,7 +913,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	   }
 	   
 		private String getCypherQueryForDocSearch(
-				String type
+				String type 
 				, String domain
 				, String book
 				, String chapter
@@ -3303,7 +3309,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				) {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
-				AgesHtmlToPOM ages = new AgesHtmlToPOM(
+				AgesHtmlToLDOM ages = new AgesHtmlToLDOM(
 						url
 						, leftLibrary
 						, centerLibrary
@@ -3313,7 +3319,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						, rightFallback
 						, this.printPretty // print pretty
 						);
-				PopulatedObjectModel template = ages.toPOM();
+				LDOM template = ages.toLDOM();
 				String title = template.getPdfFilename();
 				Map<String,String> values = template.getValues();
 				
@@ -3409,7 +3415,87 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			}
 			return result;
 		}
-
+		
+		/**
+		 * Gets the specified template from the database,
+		 * compiles it, then populates it with the values
+		 * found by binding the requested libraries and 
+		 * topic-keys.
+		 * 
+		 * @param templateId of template to use
+		*   @param year
+		 * @param leftLibrary
+		 * @param centerLibrary
+		 * @param rightLibrary
+		 * @param leftFallback
+		 * @param centerFallback
+		 * @param rightFallback
+		 * @return
+		 */
+		public ResultJsonObjectArray getLdomForTemplate(
+				String templateId
+				, String year
+				, String leftLibrary
+				, String centerLibrary
+				, String rightLibrary
+				, String leftFallback
+				, String centerFallback
+				, String rightFallback
+				, String requestor // username
+				) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
+				ResultJsonObjectArray compileResult = this.compileTemplate(templateId, "gr_gr_cog", year);
+				if (compileResult.getStatus().wasSuccessful()) {
+				} else {
+					result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+					result.setStatusMessage(compileResult.getStatus().getDeveloperMessage());
+				}
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+				ErrorUtils.report(logger, e);
+			}
+			return result;
+		}
+		
+		public ResultJsonObjectArray compileTemplate(
+				String templateId
+				, String library
+				, String year
+				) {
+			ResultJsonObjectArray result = new ResultJsonObjectArray(this.printPretty);
+			AbstractLDOM ldom = new AbstractLDOM(templateId);
+			try {
+				// get the template
+				ResultJsonObjectArray queryResult = this.getForId(templateId, TOPICS.TEMPLATE.label);
+				if (queryResult.valueCount == 1) {
+					Template template = gson.fromJson(
+							queryResult.getFirstObjectValueAsString()
+							, Template.class
+					);
+					TemplateNodeCompiler compiler;
+					if (year != null && year.length() > 0) { // service template
+						compiler = new TemplateNodeCompiler(template, this, year);
+					} else { // book template
+						compiler = new TemplateNodeCompiler(template, this);
+					}
+					TemplateNode compiledRootNode = compiler.getCompiledNodes();
+					result.addValue(ldom.toJsonObject());
+				}  else {
+					result.setStatusCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
+					result.setStatusMessage("Could not find " + templateId);
+				}
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+				ErrorUtils.report(logger, e);
+			}
+			List<JsonObject> values = new ArrayList<JsonObject>();
+			values.add(ldom.toJsonObject());
+			return result;
+		}
+		
 		/**
 		 * Creates a thread that will update objects such as tag dropdowns
 		 * that are database intensive reads.  This provides a faster way
@@ -3499,18 +3585,18 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		 * @param url
 		 * @return
 		 */
-		public ResultJsonObjectArray getAgesTemplateMetadata(
+		public ResultJsonObjectArray getAgesLDOM(
 				String url
 				, String translationLibrary
 				) {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
-				AgesHtmlToEditablePOM ages = new AgesHtmlToEditablePOM(
+				AgesHtmlToEditableLDOM ages = new AgesHtmlToEditableLDOM(
 						url
 						, translationLibrary
 						, this.printPretty // print pretty
 						);
-				PopulatedObjectModel template = ages.toPOM();
+				LDOM template = ages.toLDOM();
 				
 				/**
 				 * If there is a translation library, 

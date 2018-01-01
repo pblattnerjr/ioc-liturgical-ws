@@ -114,6 +114,11 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			  logger.info("Using " + boltUrl + " for external database...");
 			  dbDriver = GraphDatabase.driver(boltUrl, AuthTokens.basic(username, password));
 			  testConnection();
+			  if (this.connectionOK) {
+				  this.createIndex("Root", "library");
+				  this.createIndex("Root", "topic");
+				  this.createIndex("Root", "key");
+			  }
 		  } catch (Exception e) {
 			  logger.error(e.getMessage());
 		  }
@@ -235,6 +240,33 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		return neoResult;
 	}
 	
+	private StatementResult createIndex(String label, String prop) {
+		StatementResult neoResult = null;
+		StringBuffer sb = new StringBuffer();
+		sb.append("create index on :");
+		sb.append(label);
+		sb.append("(");
+		sb.append(prop);
+		sb.append(")");
+		String query = sb.toString(); 
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
+			neoResult = session.run(query);
+		} catch (Exception e) {
+			ErrorUtils.report(logger, e);
+		}
+		return neoResult;
+	}
+
+	private void setIdConstraints(List<String> labels) {
+		try {
+			for (String label : labels) {
+				setIdConstraint(label); 
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public StatementResult setPropertyConstraint(String label, String property) {
 		StatementResult neoResult = null;
 		String query = "create constraint on (p:" + label + ") assert p." + property + " is unique"; 
@@ -276,7 +308,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 	public RequestStatus insert(LTKDb doc) throws DbException {
 		RequestStatus result = new RequestStatus();
 		int count = 0;
-		setIdConstraint(doc.toSchemaAsLabel());
+		setIdConstraints(doc.fetchOntologyLabelsList());
 		String query = "create (n:" + doc.fetchOntologyLabels() + ") set n = {props} return n";
 		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
@@ -788,10 +820,10 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 	public RequestStatus processTransaction(Transaction transaction) {
 		RequestStatus result = new RequestStatus();
 		// disallow the processing of a transaction that originated from this server
-//		if (transaction.requestingMac.equals(macAddress)) { 
-//			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-//			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + " Transaction originated from this server, so can't be processed.");
-//		} else { // originated from another server, so go ahead and process it...
+		if (transaction.requestingMac.equals(macAddress)) { 
+			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + " Transaction originated from this server, so can't be processed.");
+		} else { // originated from another server, so go ahead and process it...
 			try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 				StatementResult neoResult = null;
 				if (transaction.getJson() == null || transaction.getJson().length() < 1) {
@@ -806,8 +838,10 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 													ltkDb.get_valueSchemaId())
 											.ltkDb.getClass()
 							);
+					String testQuery = "MERGE (n:Root:OntologyRoot:Text:Liturgical:en_us_holycross:TextLiturgical {id: 'en_us_holycross~pe.d085~peMA.Lauds1.melody'}) ON CREATE SET n = {props} ON MATCH SET n.value = $props.value, n.comment = $props.comment, n.modifiedBy = $props.modifiedBy, n.modifiedWhen = $props.modifiedWhen, n.dataSource = $props.dataSource return n";
 					Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
-					neoResult = session.run(transaction.getCypher(), props);
+					neoResult = session.run(testQuery, props);
+//					neoResult = session.run(transaction.getCypher(), props);
 				}
 				result = recordCounters(neoResult.consume().counters(), result);
 				if (result.wasSuccessful()) {
@@ -822,7 +856,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 				result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
 				result.setDeveloperMessage(e.getMessage());
 			}
-//		}
+		}
 		return result;
 	}
 	

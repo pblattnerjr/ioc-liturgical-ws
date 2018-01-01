@@ -239,6 +239,7 @@
                     <include>META-INF/**</include>
                     <include>public/**</include>
                     <include>**/*.properties</include>
+                    <include>**/*.config</include>
                 </includes>
             </resource>
         </resources>

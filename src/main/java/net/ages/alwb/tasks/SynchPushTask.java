@@ -1,5 +1,4 @@
 package net.ages.alwb.tasks;
-import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +12,6 @@ import ioc.liturgical.ws.managers.databases.external.neo4j.utils.Neo4jConnection
 import ioc.liturgical.ws.managers.synch.SynchManager;
 
 import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
-import org.ocmc.ioc.liturgical.schemas.models.db.links.LinkRefersToBiblicalText;
 import org.ocmc.ioc.liturgical.schemas.models.synch.Transaction;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;

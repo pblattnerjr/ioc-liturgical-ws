@@ -364,7 +364,7 @@ public class Neo4jController {
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
-        	return externalManager.getAgesTemplateMetadata(
+        	return externalManager.getAgesLDOM(
         			request.queryParams("u")  // url
         			, request.queryParams("t")  // translation library
         			).toJsonString();
@@ -416,6 +416,25 @@ public class Neo4jController {
 			    }
 			 
 			    return "";
+		});
+
+		// GET LDOM
+		path = ENDPOINTS_DB_API.LITURGICAL_DOCUMENT_OBJECT_MODEL.toLibraryPath();
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+        	return externalManager.getLdomForTemplate(
+        			request.queryParams("id")  // template ID
+        			, request.queryParams("y")  // year (if a dated service)
+        			, request.queryParams("l")  // left library
+        			, request.queryParams("c")  // center library
+        			, request.queryParams("r")  // right library
+        			, request.queryParams("lf")  // left fallback library
+        			, request.queryParams("cf")  // center fallback library
+        			, request.queryParams("rf")  // right fallback library
+        			, requestor
+        			).toJsonString();
 		});
 
 		// Get forms for creating new instances of nodes and relationships

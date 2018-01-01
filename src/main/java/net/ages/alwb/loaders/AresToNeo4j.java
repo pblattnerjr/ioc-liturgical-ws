@@ -40,6 +40,10 @@ import net.ages.alwb.gateway.library.ares.LibraryUtils;
  *   the node will not have a value property.  Instead,
  *   it will have a relationship of type VALUE_FROM that points to the
  *   value to use for that node.
+ *   
+ *   TODO: study these and consider batching the transactions:
+ *   https://github.com/neo4j/neo4j/issues/7228
+ *   https://gist.github.com/nandosola/ebe2ced123e05a79e238edd6ec81fee5
  * 
  * @author mac002
  *
@@ -48,6 +52,7 @@ public class AresToNeo4j {
 	private static final Logger logger = LoggerFactory
 			.getLogger(AresToNeo4j.class);
 
+	private static List<String> constraints = new ArrayList<String>();
 
 	/**
 	 * Program to load a neo4j database from ares files.
@@ -62,14 +67,13 @@ public class AresToNeo4j {
 
 		boolean updateDatabaseNodes = true; 
 		boolean updateDatabaseRelationships = true; 
-		boolean useResolvedValues = true; // if true, will be used as read-only database
+		boolean useResolvedValues = false; // if true, will be used as read-only database
 		// and, if true, there won't be any relationships between nodes
 		
 		boolean includeComment = true;
 		boolean inspectLine = true; // if true, you can set a breakpoint for
 										// when it matches idOfLineToInspect
 		String idOfLineToInspect = "en_uk_lash~me.m01.d01~meHO.note1";
-		String primaryLabel = "Text";
 		String idSeparator = "~";
 		Pattern punctPattern = Pattern.compile("[˙·,.;!?(){}\\[\\]<>%]"); // punctuation 
 		
@@ -81,18 +85,34 @@ public class AresToNeo4j {
 		/**
 		 * Add each domain that you want to process
 		 */
-		domainsToProcess.add("en_US_dedes");
-		domainsToProcess.add("gr_GR_cog");
-		domainsToProcess.add("en_US_repass");
-		domainsToProcess.add("en_US_goa");
-		domainsToProcess.add("en_US_oca");
+//		domainsToProcess.add("en_US_andronache");
+//		domainsToProcess.add("en_US_barrett");
+//		domainsToProcess.add("en_US_boyer");
+//		domainsToProcess.add("en_US_constantinides");
+//		domainsToProcess.add("en_US_dedes");
+//		domainsToProcess.add("en_US_goa");
+//		domainsToProcess.add("en_US_holycross");
 		domainsToProcess.add("en_UK_lash");
-		domainsToProcess.add("en_US_constantinides");
-		domainsToProcess.add("en_US_boyer");
+//		domainsToProcess.add("en_US_oca");
+//		domainsToProcess.add("en_US_public");
+//		domainsToProcess.add("en_US_repass");
+//		domainsToProcess.add("en_US_unknown");
+//		domainsToProcess.add("gr_GR_cog");
+		
+		// ages scripture
+//		domainsToProcess.add("en_UK_kjv");
+//		domainsToProcess.add("en_US_eob");
+//		domainsToProcess.add("en_US_kjv");
+//		domainsToProcess.add("en_US_net");
+//		domainsToProcess.add("en_US_nkjv");
+//		domainsToProcess.add("en_US_rsv");
+//		domainsToProcess.add("en_US_saas");
+		
+
 		
 		// Kenya
-//		domainsToProcess.add("kik_KE_oak");
-//		domainsToProcess.add("swh_KE_oak");
+		domainsToProcess.add("kik_KE_oak");
+		domainsToProcess.add("swh_KE_oak");
 		
 		// added by Meg
 //		domainsToProcess.add("fra_FR_oaf");
@@ -154,11 +174,6 @@ public class AresToNeo4j {
 									+ idSeparator 
 									+ line.getLineNbr()
 									);
-							if (inspectLine) {
-								if (theNode.getId().startsWith(idOfLineToInspect)) {
-									System.out.print("");
-								}
-							}
 							if (line.isSimpleKeyValue()) {
 								String value = Normalizer.normalize(LibraryUtils.escapeQuotes(line.getValue()),Normalizer.Form.NFC);
 								theNode.setValue(value);
@@ -217,7 +232,7 @@ public class AresToNeo4j {
 
 								String nodeRedirect = getRedirectCypherTo(
 										theNode.getId()
-										, theNode.getLibrary()
+										, theNode.getOntologyTopic().label
 										, redirectId
 										);
 								if (useResolvedValues) {
@@ -274,12 +289,6 @@ public class AresToNeo4j {
 					}
 				}
 
-				try {
-					setIdConstraint(session, primaryLabel);
-				} catch (Exception e) {
-					System.out.println(e.getStackTrace());
-				}
-
 				System.out.println("Done. Created " + count + " nodes and " + relCount + " relationships...");
 			} // try session
 		} // try driver
@@ -301,13 +310,11 @@ public class AresToNeo4j {
 	
 	public static RequestStatus insert(Session session, LTKDb doc) throws DbException {
 		RequestStatus result = new RequestStatus();
-//		doc.setLibrary("gr_gr_delete");
 		int count = 0;
-		setIdConstraint(session, doc.toSchemaAsLabel());
+		setIdConstraints(session, doc.fetchOntologyLabelsList());
 		String query = "create (n:" + doc.fetchOntologyLabels() + ") set n = {props} return n";
 		try {
 			Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
-			//if (doc.getTopic().equals("yodude") && doc.getKey().equals("enarxis02")) {
 				StatementResult neoResult = session.run(query, props);
 				count = neoResult.consume().counters().nodesCreated();
 				if (count > 0) {
@@ -317,7 +324,6 @@ public class AresToNeo4j {
 			    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 			    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + "  " + doc.getId());
 				}
-			//}
 		} catch (Exception e){
 			if (e.getMessage().contains("already exists")) {
 				result.setCode(HTTP_RESPONSE_CODES.CONFLICT.code);
@@ -331,6 +337,17 @@ public class AresToNeo4j {
 		return result;
 	}
 
+	public static void setIdConstraints(Session session, List<String> labels) {
+		try {
+			for (String label : labels) {
+				if (! AresToNeo4j.constraints.contains(label)) {
+					setIdConstraint(session, label); 
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 	/**
 	 * The purpose of this method is to ensure that any node with 
 	 * an id property has a unique constraint so that duplicate IDs 
@@ -340,12 +357,13 @@ public class AresToNeo4j {
 	 */
 	private static StatementResult setIdConstraint(Session session, String label) {
 		StatementResult neoResult = null;
-		String query = "create constraint on (p:" + label + ") assert p.id is unique"; 
-		try  {
-			neoResult = session.run(query);
-		} catch (Exception e) {
-			ErrorUtils.report(logger, e);
-		}
+			String query = "create constraint on (p:" + label + ") assert p.id is unique"; 
+			try  {
+				neoResult = session.run(query);
+				AresToNeo4j.constraints.add(label);
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
 		return neoResult;
 	}
 

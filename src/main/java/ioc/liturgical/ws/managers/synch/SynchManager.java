@@ -1,7 +1,6 @@
 package ioc.liturgical.ws.managers.synch;
 
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.neo4j.driver.v1.AuthTokens;
 import org.neo4j.driver.v1.Config;
@@ -18,9 +17,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import ioc.liturgical.ws.constants.Constants;
+import ioc.liturgical.ws.managers.exceptions.DbException;
 import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
 import org.ocmc.ioc.liturgical.schemas.constants.STATUS;
-import ioc.liturgical.ws.managers.exceptions.DbException;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
 import org.ocmc.ioc.liturgical.schemas.models.ModelHelpers;

@@ -12,30 +12,39 @@ import org.slf4j.LoggerFactory;
 
 import ioc.liturgical.ws.constants.Constants;
 import net.ages.alwb.utils.core.id.managers.IdManager;
-import net.ages.alwb.utils.transformers.adapters.models.PopulatedObjectModel;
-import net.ages.alwb.utils.transformers.adapters.models.TemplateElement;
+import net.ages.alwb.utils.transformers.adapters.models.LDOM;
+import net.ages.alwb.utils.transformers.adapters.models.LDOM_Element;
 
 import org.jsoup.nodes.Element;
 
-public class AgesHtmlToEditablePOM {
-	private static final Logger logger = LoggerFactory.getLogger(AgesHtmlToEditablePOM.class);
+/**
+ * Reads an AGES HTML file and converts it to
+ * a populated Template that has AGES Greek 
+ * on the left and AGES English on the right.
+ * The center column will be used for the translation
+ * the user is editing.
+ * @author mac002
+ *
+ */
+public class AgesHtmlToEditableLDOM {
+	private static final Logger logger = LoggerFactory.getLogger(AgesHtmlToEditableLDOM.class);
 	private boolean printPretty = false;
 	private String url = "";
 	private String centerLibrary = "";
 	
-	public AgesHtmlToEditablePOM(String url) {
+	public AgesHtmlToEditableLDOM(String url) {
 		this.url = url;
 	}
-	public AgesHtmlToEditablePOM(String url, boolean printPretty) {
+	public AgesHtmlToEditableLDOM(String url, boolean printPretty) {
 		this.url = url;
 		this.printPretty = printPretty;
 	}
 
-	public AgesHtmlToEditablePOM(String url, String centerLibrary) {
+	public AgesHtmlToEditableLDOM(String url, String centerLibrary) {
 		this.url = url;
 		this.centerLibrary = centerLibrary;
 	}
-	public AgesHtmlToEditablePOM(String url, String centerLibrary, boolean printPretty) {
+	public AgesHtmlToEditableLDOM(String url, String centerLibrary, boolean printPretty) {
 		this.url = url;
 		this.centerLibrary = centerLibrary;
 		this.printPretty = printPretty;
@@ -62,11 +71,11 @@ public class AgesHtmlToEditablePOM {
 	 * Gets the content for the specified URL
 	 * Builds an array of the ids used in the content.  They are a set (no duplicates).
 	 */
-	public PopulatedObjectModel getValues(
+	public LDOM getValues(
 			Elements valueSpans
 			, Elements versionDesignations
 			) throws Exception {
-		PopulatedObjectModel result = new PopulatedObjectModel(url, printPretty);
+		LDOM result = new LDOM(url, printPretty);
 		try {
 	        for (Element valueSpan : valueSpans) {
 	        	String tdClass = this.getClassOfTd(valueSpan);
@@ -156,12 +165,12 @@ public class AgesHtmlToEditablePOM {
 		return result;
 	}
 
-	private List<TemplateElement> getChildren(Elements children, int seq) throws Exception {
-		List<TemplateElement> result = new ArrayList<TemplateElement>();
+	private List<LDOM_Element> getChildren(Elements children, int seq) throws Exception {
+		List<LDOM_Element> result = new ArrayList<LDOM_Element>();
 		try {
 			for (Element child : children) {
 				try {
-					TemplateElement eChild = new TemplateElement(true);
+					LDOM_Element eChild = new LDOM_Element(true);
 					eChild.setTag(child.tagName());
 					if (child.hasAttr("class")) {
 						eChild.setClassName(child.attr("class"));
@@ -216,8 +225,8 @@ public class AgesHtmlToEditablePOM {
 	 * @return
 	 * @throws Exception
 	 */
-	public PopulatedObjectModel toPOM() throws Exception {
-		PopulatedObjectModel result = new PopulatedObjectModel(url, printPretty);
+	public LDOM toLDOM() throws Exception {
+		LDOM result = new LDOM(url, printPretty);
 		Document doc = null;
 		Element content = null;
 		try {
@@ -236,11 +245,11 @@ public class AgesHtmlToEditablePOM {
 				keys = content.select("span.key");
 			}
 			Elements versionDesignations = content.select("span.versiondesignation");
-			PopulatedObjectModel values = this.getValues(keys, versionDesignations);
+			LDOM values = this.getValues(keys, versionDesignations);
 			result.setDomains(values.getDomains());
 			result.setTopicKeys(values.getTopicKeys());
 			result.setValues(values.getValues());
-			TemplateElement eContent = new TemplateElement(printPretty);
+			LDOM_Element eContent = new LDOM_Element(printPretty);
 			eContent.setTag(content.tagName());
 			eContent.setClassName(content.attr("class"));
 			if (content.parent().hasAttr("class")) {
