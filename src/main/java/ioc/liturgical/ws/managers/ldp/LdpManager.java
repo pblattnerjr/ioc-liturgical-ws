@@ -2,15 +2,11 @@ package ioc.liturgical.ws.managers.ldp;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonObject;
-
-import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 
 import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
 import org.ocmc.ioc.liturgical.schemas.models.db.internal.LTKVJsonObject;
@@ -19,6 +15,8 @@ import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import org.ocmc.ioc.liturgical.utils.LITURGICAL_CALENDAR_TYPE;
 import org.ocmc.ioc.liturgical.utils.LiturgicalDayProperties;
+
+import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 
 public class LdpManager {
 	private static final Logger logger = LoggerFactory.getLogger(LdpManager.class);

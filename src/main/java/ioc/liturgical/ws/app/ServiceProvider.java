@@ -5,8 +5,10 @@ import static spark.Spark.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -50,6 +52,7 @@ import net.ages.alwb.utils.core.datastores.json.manager.JsonObjectStoreManager;
 import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
+import org.ocmc.ioc.liturgical.utils.MessageUtils;
 
 /**
  * Main Class for the IOC Liturgical Web Services. Provides the basic service.
@@ -137,6 +140,12 @@ public class ServiceProvider {
 	public static String synchBoltPort = "";  // can be overridden by serviceProvider.config
 	public static String synchDomainWithPort = "";
 	
+	public static boolean messagingEnabled = true; // can be overridden by serviceProvider.config
+	private static String messagingToken = null;
+	
+	private static String hostname = "unknown server";
+
+	
 	/**
 	 * If the property is null, the method returns
 	 * back the value of var, otherwise it checks
@@ -165,6 +174,13 @@ public class ServiceProvider {
 		int minThreads = 2;
 		int timeOutMillis = 30000;
 		
+		InetAddress ip;
+        try {
+            ip = InetAddress.getLocalHost();
+            hostname = ip.getHostName() + " (" + ip + ")";
+        } catch (UnknownHostException e) {
+        	ErrorUtils.report(logger, e);
+        }		
 		ws_pwd = System.getenv("WS_PWD");
 		if (ws_pwd == null) {
 			ws_pwd = args[0];
@@ -261,6 +277,22 @@ public class ServiceProvider {
 				logger.error("Property maxInactiveInterval missing or not a number.");
 			}
 			
+			
+			messagingEnabled = toBoolean(messagingEnabled, prop.getProperty("messaging_enabled"));
+			logger.info("messaging_enabled: " + messagingEnabled);
+			
+			if (messagingEnabled) {
+				try {
+					messagingToken = System.getenv("MESSAGING_TOKEN");
+    	    		if (messagingToken == null) {
+        	        	messagingToken = args[1];
+    	    		}
+				} catch (Exception e) {
+					logger.info("main args [2] missing parameter for messaging token");
+					throw e;
+				}
+			}
+
 			synchEnabled = toBoolean(synchEnabled, prop.getProperty("synch_enabled"));
 			logger.info("synch_enabled: " + synchEnabled);
 
@@ -341,7 +373,7 @@ public class ServiceProvider {
 				if (synchEnabled && synchManager != null) {
 					
 					docService.setSynchManager(synchManager);
-
+// TODO uncomment the following
 //					executorService.scheduleAtFixedRate(
 //							new SynchPushTask(
 //									ExternalDbManager.neo4jManager
@@ -356,6 +388,7 @@ public class ServiceProvider {
 							new SynchPullTask(
 									ExternalDbManager.neo4jManager
 									, synchManager
+									, messagingToken
 									)
 							, 10
 							, 10
@@ -668,7 +701,9 @@ public class ServiceProvider {
 				}
 				return json.toJsonString();
 			});
-				
+    		ServiceProvider.sendMessage("ServiceManager started.");
+		} else {
+    		ServiceProvider.sendMessage("Could not properly start ServiceManager.");
 		}
 		// this can greatly bog down your workstation, so use only when necessary.
 		after((request, response) -> {
@@ -848,5 +883,15 @@ public class ServiceProvider {
 			return null;
 		}
 	  }
-	  
+
+	  public static String sendMessage(String message) {
+		  String response = "";
+		  if (ServiceProvider.messagingEnabled) {
+			  response = MessageUtils.sendMessage(messagingToken, hostname + " " + message);
+		  } else {
+			  response = "Messaging not enabled";
+		  }
+		  return response;
+	  }
+
 }

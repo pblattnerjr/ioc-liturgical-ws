@@ -19,6 +19,7 @@ import org.ocmc.ioc.liturgical.schemas.models.synch.Transaction;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
+import org.ocmc.ioc.liturgical.utils.MessageUtils;
 
 /**
  * Runs a task (separate thread) to push database transaction to the synch server
@@ -33,24 +34,40 @@ public class SynchPullTask implements Runnable {
 
 	Neo4jConnectionManager dbManager = null;
 	SynchManager synchManager = null;
+	String messagingToken = null;
+	boolean messagingEnabled = false;
 	boolean printpretty = false;
 	
 	public SynchPullTask (
 			Neo4jConnectionManager dbManager
 			, SynchManager synchManager
+			, String messagingToken
 			) {
 		this.dbManager = dbManager;
 		this.synchManager = synchManager;
+		this.messagingToken = messagingToken;
+		this.setMessaging();
 	}
 	
 	public SynchPullTask (
 			Neo4jConnectionManager dbManager
 			, SynchManager synchManager
 			, boolean printpretty
+			, String messagingToken
 			) {
 		this.dbManager = dbManager;
 		this.synchManager = synchManager;
 		this.printpretty = printpretty;
+		this.messagingToken = messagingToken;
+		this.setMessaging();
+	}
+	
+	private void setMessaging() {
+		if (this.messagingToken != null && this.messagingToken.length() > 0) {
+			this.messagingEnabled = true;
+		} else {
+			this.messagingEnabled = false;
+		}
 	}
 	
 	@Override
@@ -75,15 +92,27 @@ public class SynchPullTask implements Runnable {
 									);
 							RequestStatus status = dbManager.processTransaction(trans);
 							if (status.getCode() == HTTP_RESPONSE_CODES.OK.code) {
-								logger.info("Ran transaction " + trans.getId() + " against local database.");
+								if (this.printpretty) {
+									logger.info("Ran transaction " + trans.getId() + " against local database.");
+								}
 								log.setLastUsedSynchTimestamp(trans.getKey());
 								log.recordSynchTime();
 								dbManager.recordSynch(log);
 							} else {
-								logger.error("Could not run transaction " + trans.getId() + " against local database");
+								String message = "Could not run transaction " + trans.getId() 
+									+ " against local database. " 
+										+ status.code 
+										+ ": " 
+										+ status.developerMessage;
+								logger.error(message);
+								if (this.messagingEnabled) {
+									MessageUtils.sendMessage(this.messagingToken, message);
+								}
 							}
 						} catch (Exception e) {
+							String message = "Could not run transaction against local database: " + o.toString();
 							ErrorUtils.report(logger, e);
+							MessageUtils.sendMessage(this.messagingToken, message);
 						}
 					}
 				}

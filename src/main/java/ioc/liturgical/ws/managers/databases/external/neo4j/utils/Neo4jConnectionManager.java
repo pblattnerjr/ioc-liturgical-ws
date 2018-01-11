@@ -838,10 +838,8 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 													ltkDb.get_valueSchemaId())
 											.ltkDb.getClass()
 							);
-					String testQuery = "MERGE (n:Root:OntologyRoot:Text:Liturgical:en_us_holycross:TextLiturgical {id: 'en_us_holycross~pe.d085~peMA.Lauds1.melody'}) ON CREATE SET n = {props} ON MATCH SET n.value = $props.value, n.comment = $props.comment, n.modifiedBy = $props.modifiedBy, n.modifiedWhen = $props.modifiedWhen, n.dataSource = $props.dataSource return n";
 					Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
-					neoResult = session.run(testQuery, props);
-//					neoResult = session.run(transaction.getCypher(), props);
+					neoResult = session.run(transaction.getCypher(), props);
 				}
 				result = recordCounters(neoResult.consume().counters(), result);
 				if (result.wasSuccessful()) {
