@@ -31,4 +31,10 @@ public class AgesIndexTableData extends AbstractModel {
 	public void addRow(AgesIndexTableRowData row) {
 		this.tableData.add(row);
 	}
+	
+	public void addList(AgesIndexTableData list) {
+		for (AgesIndexTableRowData row : list.tableData) {
+			this.tableData.add(row);
+		}
+	}
 }

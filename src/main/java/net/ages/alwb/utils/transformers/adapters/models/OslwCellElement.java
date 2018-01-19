@@ -175,7 +175,6 @@ public class OslwCellElement  extends AbstractModel {
 		return result.toString();
 	}
 
-
 	public String toOslw() {
 		StringBuffer result = new StringBuffer();
 		if (this.commands.size () > 0 && this.keys.length() > 0) {

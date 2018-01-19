@@ -15,7 +15,7 @@ import net.ages.alwb.utils.nlp.models.wordnet.WnLexicalSense;
 import net.ages.alwb.utils.nlp.models.wordnet.WnSynset;
 import net.ages.alwb.utils.nlp.models.wordnet.WordNet;
 
-public class Neo4j {
+public class WordnetNeo4j {
 
 	public static String unescape(String s) {
 		String result = s;

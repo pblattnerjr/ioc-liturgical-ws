@@ -36,6 +36,7 @@ import org.ocmc.ioc.liturgical.schemas.constants.BIBLICAL_BOOKS;
 import ioc.liturgical.ws.constants.Constants;
 import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
 import org.ocmc.ioc.liturgical.schemas.constants.LIBRARIES;
+import org.ocmc.ioc.liturgical.schemas.constants.LITURGICAL_BOOKS;
 import org.ocmc.ioc.liturgical.schemas.constants.NEW_FORM_CLASSES_DB_API;
 import org.ocmc.ioc.liturgical.schemas.constants.RELATIONSHIP_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.SCHEMA_CLASSES;
@@ -170,6 +171,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  List<DropdownItem> biblicalChapterNumbersDropdown = new ArrayList<DropdownItem>();
 	  List<DropdownItem> biblicalVerseNumbersDropdown = new ArrayList<DropdownItem>();
 	  List<DropdownItem> biblicalVerseSubVersesDropdown = new ArrayList<DropdownItem>();
+	  List<DropdownItem> liturgicalBookNamesDropdown = new ArrayList<DropdownItem>();
 	  JsonArray templateNewTemplateDropdown = TEMPLATE_NODE_TYPES.toNewTemplateDropdownJsonArray();
 	  JsonArray templatePartsDropdown = TEMPLATE_NODE_TYPES.toDropdownJsonArray();
 	  JsonArray templateWhenDayNameCasesDropdown = TEMPLATE_NODE_TYPES.toDaysOfWeekDropdownJsonArray();
@@ -223,6 +225,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  buildDomainTopicMap();
 		  buildRelationshipDropdownMaps();
 		  buildBiblicalDropdowns();
+		  this.buildLiturgicalBookNamesDropdown();
 		  // this.fixWordAnalysis(); // I think this was a one-off fix.
 
 		  if (neo4jManager.isConnectionOK()) {
@@ -327,6 +330,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			  buildTreebanksDropdownMaps(); 
 			  buildBiblicalDropdowns();
 			  buildRelationshipDropdownMaps();
+			  this.buildLiturgicalBookNamesDropdown();
 		  }
 		  if (neo4jManager.isConnectionOK()) {
 			  buildOntologyDropdownMaps();
@@ -354,6 +358,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  biblicalVerseNumbersDropdown = getNumbersDropdown("", 180);
 	  }
 
+	  private void buildLiturgicalBookNamesDropdown() {
+		  this.liturgicalBookNamesDropdown = LITURGICAL_BOOKS.toDropdownList();
+	  }
+	  
 	  private List<DropdownItem> getNumbersDropdown(String prefix, int max) {
 		  List<DropdownItem> result = new ArrayList<DropdownItem>();
 			 for (int i = 1; i < max+1; i++) {
@@ -3156,6 +3164,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			try {
 				AgesWebsiteIndexToReactTableData ages = new AgesWebsiteIndexToReactTableData(this.printPretty);
 				AgesIndexTableData data = ages.toReactTableDataFromJson();
+				AgesIndexTableData readingData = ages.toReactTableDataFromDailyReadingHtml();
+				data.addList(readingData);
 				List<JsonObject> list = new ArrayList<JsonObject>();
 				list.add(data.toJsonObject());
 				result.setResult(list);
@@ -4119,6 +4129,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			result.setBiblicalChaptersDropdown(this.biblicalChapterNumbersDropdown);
 			result.setBiblicalVersesDropdown(this.biblicalVerseNumbersDropdown);
 			result.setBiblicalSubversesDropdown(this.biblicalVerseSubVersesDropdown);
+			result.setLiturgicalBooksDropdown(this.liturgicalBookNamesDropdown);
 			result.setTemplateNewTemplateDropdown(this.templateNewTemplateDropdown);
 			result.setTemplatePartsDropdown(this.templatePartsDropdown);
 			result.setTemplateWhenDayNameCasesDropdown(this.templateWhenDayNameCasesDropdown);

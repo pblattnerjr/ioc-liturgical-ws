@@ -7,12 +7,16 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 import net.ages.alwb.utils.transformers.adapters.models.AgesIndexTableData;
 import net.ages.alwb.utils.transformers.adapters.models.AgesIndexTableRowData;
 
@@ -24,11 +28,15 @@ import net.ages.alwb.utils.transformers.adapters.models.AgesIndexTableRowData;
  *
  */
 public class AgesWebsiteIndexToReactTableData {
+	private static final Logger logger = LoggerFactory.getLogger(AgesWebsiteIndexToReactTableData.class);
 	
 	private String baseUrl = "http://www.agesinitiatives.com/dcs/public/dcs/";
 	private String servicesIndex = baseUrl + "servicesindex.html";
 	private String booksIndex = baseUrl + "booksindex.html";
 	private String jsonservicesIndex = baseUrl + "servicesindex.json";
+	private String agesOcmcBaseUrl = "http://www.agesinitiatives.com/dcs/ocmc/dcs/";
+	private String agesOcmcIndex = "customindex.html";
+	private String readingsIndex = agesOcmcBaseUrl + agesOcmcIndex;
 
 	private boolean printPretty = false;
 
@@ -38,14 +46,52 @@ public class AgesWebsiteIndexToReactTableData {
 	public AgesWebsiteIndexToReactTableData(boolean printPretty) {
 		this.printPretty = printPretty;
 	}
+	
+	public AgesIndexTableData  toReactTableDataFromDailyReadingHtml() throws Exception {
+		AgesIndexTableData result = new AgesIndexTableData(printPretty);
+		Document readingsIndexDoc = null;
+		Connection readingsIndexConnection = null;
+		try {
+			readingsIndexConnection = Jsoup.connect(readingsIndex);
+			readingsIndexDoc = readingsIndexConnection.timeout(60*1000).get();
+			Elements months = readingsIndexDoc.select("a.index-custom-file-link");
+			for (Element monthAnchor : months) {
+				String href = monthAnchor.attr("href");
+				String[] hrefParts = href.split("/");
+				if (hrefParts.length == 5) {
+					if (hrefParts[0].equals("h")) {
+						if (hrefParts[3].equals("gr-en")) {
+							String [] dateParts = hrefParts[2].split("_");
+							// TODO: we need to compute the year or it needs to be included in the html
+							String year = dateParts[2];
+							String month = dateParts[3];
+							String date = year + "/"  + month;
+							AgesIndexTableRowData row = new AgesIndexTableRowData(printPretty);
+							row.setDate(date);
+							row.setDayOfWeek("all");
+							row.setType("daily readings");
+							row.setUrl(agesOcmcBaseUrl + href);
+							result.addRow(row);
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			ErrorUtils.report(logger, e);
+		}
+		return result;
+	}	
+	
 	public AgesIndexTableData  toReactTableDataFromHtml() throws Exception {
 		AgesIndexTableData result = new AgesIndexTableData(printPretty);
 		Document booksIndexDoc = null;
 		Document servicesIndexDoc = null;
 		Document dayIndexDoc = null;
+		Document readingsIndexDoc = null;
 		Connection datesIndexConnection = null;
 		Connection servicesIndexConnection = null;
 		Connection booksIndexConnection = null;
+		Connection readingsIndexConnection = null;
 		try {
 			datesIndexConnection = Jsoup.connect(servicesIndex);
 			servicesIndexDoc = datesIndexConnection.timeout(60*1000).get();
@@ -100,7 +146,7 @@ public class AgesWebsiteIndexToReactTableData {
 				}
 			}
 		} catch (Exception e) {
-			throw e;
+			ErrorUtils.report(logger, e);
 		}
 		return result;
 	}

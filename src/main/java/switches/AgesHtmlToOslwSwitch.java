@@ -3,13 +3,22 @@ package switches;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ioc.liturgical.ws.app.ServiceProvider;
+
 
 public class AgesHtmlToOslwSwitch {
 	private static final Logger logger = LoggerFactory.getLogger(AgesHtmlToOslwSwitch.class);
 
 	/**
 	 * Maps AGES HTML class names and tag names to the
-	 * corresponding OSLW command
+	 * corresponding OSLW command.
+	 * 
+	 * If you add an OSLW command here, make sure it exists in the
+	 * oslw-liturgical-text.sty file.  Update it in the git
+	 * oslw-system-tex project and push it to Github.
+	 * 
+	 * Any servers using it will then need to be updated from Github.
+	 * 
 	 * @param command
 	 * @return
 	 */
@@ -651,6 +660,10 @@ public class AgesHtmlToOslwSwitch {
 			result = "Heirmos";
 			break;
 		}
+		case "p-heirmos-designation": {
+			result = "HeirmosDesignation";
+			break;
+		}
 		case "p-heirmos-red": {
 		// {he.h.m6}{IToChaireDiAngelou.text}{rubrical}{Twice} (http://www.agesinitiatives.com/dcs/public/dcs/h/b/smallwaterblessing/gr-en/index.html)
 			result = "HiermosRubric";
@@ -777,12 +790,12 @@ public class AgesHtmlToOslwSwitch {
 		}
 		case "p-mixed-mode": {
 		// {prayers}{Doxa}{misc}{Mode8} (http://www.agesinitiatives.com/dcs/public/dcs/h/b/funeral/gr-en/index.html)
-			result = "Undefined";
+			result = "MixedMode";
 			break;
 		}
 		case "p-mixed-mode-designation": {
 		//  (http://www.agesinitiatives.com/dcs/public/dcs/h/b/funeral_brightweek/gr-en/index.html)
-			result = "Undefined";
+			result = "MixedModeDesignation";
 			break;
 		}
 		case "p-mixed-mode-designation-melody": {
@@ -964,6 +977,7 @@ public class AgesHtmlToOslwSwitch {
 		|| command.contains("emc_")) {
 			// ignore it
 		} else { // report the problem
+			ServiceProvider.sendMessage("switches.AgesHtmlToOslw: " + result + " command  - "  + command );
 			logger.error(result + " command: " + command);
 		}
 

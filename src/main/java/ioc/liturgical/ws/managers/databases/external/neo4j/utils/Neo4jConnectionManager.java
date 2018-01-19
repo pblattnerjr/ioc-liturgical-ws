@@ -10,6 +10,8 @@ import org.neo4j.driver.v1.AuthTokens;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.GraphDatabase;
 import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.v1.summary.Notification;
+import org.neo4j.driver.v1.summary.ResultSummary;
 import org.neo4j.driver.v1.summary.SummaryCounters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -158,6 +160,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			ResultJsonObjectArray result = new ResultJsonObjectArray(true);
 			try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 				StatementResult neoResult = session.run(query);
+				
 				while (neoResult.hasNext()) {
 					org.neo4j.driver.v1.Record record = neoResult.next();
 						JsonObject o = parser.parse(gson.toJson(record.asMap())).getAsJsonObject();
@@ -168,6 +171,9 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 						}
 						result.addValue(o);
 				}
+				RequestStatus resultStatus = result.getStatus();
+				resultStatus = this.recordSummary(neoResult.summary(), resultStatus);
+				result.setStatus(resultStatus);
 			} catch (Exception e) {
 				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 				result.setStatusMessage(e.getMessage());
@@ -841,47 +847,56 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 					Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
 					neoResult = session.run(transaction.getCypher(), props);
 				}
-				result = recordCounters(neoResult.consume().counters(), result);
+				ResultSummary summary = neoResult.consume();
+				result = recordSummary(summary, result);
 				if (result.wasSuccessful()) {
 			    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
 			    	result.setMessage(HTTP_RESPONSE_CODES.OK.message);
 				} else {
-					result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-					result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+					result.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
+					result.setMessage("No matching docs for " + transaction.getCypher());
 				}
 			} catch (Exception e){
 				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-				result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
-				result.setDeveloperMessage(e.getMessage());
+				result.setMessage(e.getMessage());
 			}
 		}
 		return result;
 	}
 	
-	public RequestStatus recordCounters(SummaryCounters summary, RequestStatus status) {
-		status.constraintsAdded = summary.constraintsAdded();
-		status.counterTotal = status.counterTotal + status.constraintsAdded;
-		status.constraintsRemoved = summary.constraintsRemoved();
-		status.counterTotal = status.counterTotal + status.constraintsRemoved;
-		status.indexesAdded = summary.indexesAdded();
-		status.counterTotal = status.counterTotal + status.indexesAdded;
-		status.indexesRemoved = summary.indexesRemoved();
-		status.counterTotal = status.counterTotal + status.indexesRemoved;
-		status.labelsAdded = summary.labelsAdded();
-		status.counterTotal = status.counterTotal + status.labelsAdded;
-		status.labelsRemoved = summary.labelsRemoved();
-		status.counterTotal = status.counterTotal + status.labelsRemoved;
-		status.nodesCreated = summary.nodesCreated();
-		status.counterTotal = status.counterTotal + status.nodesCreated;
-		status.nodesDeleted = summary.nodesDeleted();
-		status.counterTotal = status.counterTotal + status.nodesDeleted;
-		status.propertiesSet = summary.propertiesSet();
-		status.counterTotal = status.counterTotal + status.propertiesSet;
-		status.relationshipsCreated = summary.relationshipsCreated();
-		status.counterTotal = status.counterTotal + status.relationshipsCreated;
-		status.relationshipsDeleted = summary.relationshipsDeleted();
-		status.counterTotal = status.counterTotal + status.relationshipsDeleted;
-		status.containsUpdates = summary.containsUpdates();
+	public RequestStatus recordSummary(ResultSummary summary, RequestStatus status) {
+		try {
+			SummaryCounters countersSummary = summary.counters();
+			status.constraintsAdded = countersSummary.constraintsAdded();
+			status.counterTotal = status.counterTotal + status.constraintsAdded;
+			status.constraintsRemoved = countersSummary.constraintsRemoved();
+			status.counterTotal = status.counterTotal + status.constraintsRemoved;
+			status.indexesAdded = countersSummary.indexesAdded();
+			status.counterTotal = status.counterTotal + status.indexesAdded;
+			status.indexesRemoved = countersSummary.indexesRemoved();
+			status.counterTotal = status.counterTotal + status.indexesRemoved;
+			status.labelsAdded = countersSummary.labelsAdded();
+			status.counterTotal = status.counterTotal + status.labelsAdded;
+			status.labelsRemoved = countersSummary.labelsRemoved();
+			status.counterTotal = status.counterTotal + status.labelsRemoved;
+			status.nodesCreated = countersSummary.nodesCreated();
+			status.counterTotal = status.counterTotal + status.nodesCreated;
+			status.nodesDeleted = countersSummary.nodesDeleted();
+			status.counterTotal = status.counterTotal + status.nodesDeleted;
+			status.propertiesSet = countersSummary.propertiesSet();
+			status.counterTotal = status.counterTotal + status.propertiesSet;
+			status.relationshipsCreated = countersSummary.relationshipsCreated();
+			status.counterTotal = status.counterTotal + status.relationshipsCreated;
+			status.relationshipsDeleted = countersSummary.relationshipsDeleted();
+			status.counterTotal = status.counterTotal + status.relationshipsDeleted;
+			status.containsUpdates = countersSummary.containsUpdates();
+			List<Notification> notices = summary.notifications();
+			for (Notification n : notices) {
+				status.notifications.add(n.code() + ": " + n.title() + " - " + n.description() + " | ");
+			}
+		} catch (Exception e) {
+			ErrorUtils.report(logger, e);
+		}
 		return status;
 	}
 

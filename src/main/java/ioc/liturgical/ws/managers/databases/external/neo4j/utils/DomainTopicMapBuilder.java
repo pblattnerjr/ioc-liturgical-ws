@@ -187,34 +187,35 @@ public class DomainTopicMapBuilder {
 	public JsonObject getGenericLiturgicalBooksDropdownItems() {
 		ResultJsonObjectArray result = new ResultJsonObjectArray(true);
 		try  {
-			LabelsService labelsService = new LabelsService();
+//			LabelsService labelsService = new LabelsService();
 			List<JsonObject> list = new ArrayList<JsonObject>();
-			List<String> topics = labelsService.getLabelsFor("Liturgical");
-			Map<String, DropdownItem> bookMap = new TreeMap<String,DropdownItem>();
+//			List<String> topics = labelsService.getLabelsFor("Liturgical");
+//			Map<String, DropdownItem> bookMap = new TreeMap<String,DropdownItem>();
 	    	JsonObject json = new JsonObject();
-	    	for (String topic : topics) {
-	    		String[] parts = topic.split(",");
-	    		for (int i=0; i < parts.length; i++) {
-	    			String key = parts[i].trim();
-	    			if (key.equals("le")) {
-	    				String leKey = "le.ep";
-    					bookMap.put(leKey, new DropdownItem(LITURGICAL_BOOKS.getLabel(leKey), leKey));
-    					leKey = "le.go";
-    					bookMap.put(leKey, new DropdownItem(LITURGICAL_BOOKS.getLabel(leKey), leKey));
-    					leKey = "le.pr";
-    					bookMap.put(leKey, new DropdownItem(LITURGICAL_BOOKS.getLabel(leKey), leKey));
-	    			} else {
-		    			if (LITURGICAL_BOOKS.containsKey(key)) {
-		    				if (! bookMap.containsKey(key)) {
-		    					bookMap.put(key, new DropdownItem(LITURGICAL_BOOKS.getLabel(key), key));
-		    				}
-		    			}
-	    			}
-	    		}
-	        }
+//	    	for (String topic : topics) {
+//	    		String[] parts = topic.split(",");
+//	    		for (int i=0; i < parts.length; i++) {
+//	    			String key = parts[i].trim();
+//	    			if (key.equals("le")) {
+//	    				String leKey = "le.ep";
+//    					bookMap.put(leKey, new DropdownItem(LITURGICAL_BOOKS.getLabel(leKey), leKey));
+//    					leKey = "le.go";
+//    					bookMap.put(leKey, new DropdownItem(LITURGICAL_BOOKS.getLabel(leKey), leKey));
+//    					leKey = "le.pr";
+//    					bookMap.put(leKey, new DropdownItem(LITURGICAL_BOOKS.getLabel(leKey), leKey));
+//	    			} else {
+//		    			if (LITURGICAL_BOOKS.containsKey(key)) {
+//		    				if (! bookMap.containsKey(key)) {
+//		    					bookMap.put(key, new DropdownItem(LITURGICAL_BOOKS.getLabel(key), key));
+//		    				}
+//		    			}
+//	    			}
+//	    		}
+//	        }
 	    	DropdownArray booksArray = new DropdownArray();
-	    	booksArray.add(new DropdownItem("Any", "*"));
-	    	booksArray.setItems(bookMap);
+	    	booksArray.setItems(LITURGICAL_BOOKS.toDropdownList());
+//	    	booksArray.add(new DropdownItem("Any", "*"));
+//	    	booksArray.setItems(bookMap);
 	    	json.add("books", booksArray.toJsonObject().get("items").getAsJsonArray());
 	    	list.add(json);
 	    	result.setResult(list);
