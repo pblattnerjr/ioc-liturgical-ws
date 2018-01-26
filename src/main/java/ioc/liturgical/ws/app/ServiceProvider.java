@@ -187,9 +187,9 @@ public class ServiceProvider {
 		}
 		ws_usr = "wsadmin";
 		boolean initializeExternalDb = true;
-		if (args.length > 1) {
-			initializeExternalDb =  !(args[1].equals("noexdb"));
-			logger.info("External Db disabled by parameter passed to main: " + args[1]);
+		if (args.length > 2) {
+			initializeExternalDb =  !(args[2].equals("noexdb"));
+			logger.info("External Db disabled by parameter passed to main: " + args[2]);
 		}
 		
 		/**
