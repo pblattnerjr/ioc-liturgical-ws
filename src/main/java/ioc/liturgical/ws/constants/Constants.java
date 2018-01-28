@@ -3,7 +3,7 @@ package ioc.liturgical.ws.constants;
 import java.util.concurrent.TimeUnit;
 
 public class Constants {
-		public static final String VERSION = "1.3.3"; // should match most recent jar
+		public static final String VERSION = "1.4.1"; // should match most recent jar
 		public static final String ID_DELIMITER = "~";
 		public static final String ID_SPLITTER = "~";
 		public static final String PIPE_SPLITTER = "\\|";
@@ -53,8 +53,8 @@ public class Constants {
 		public static final String UI_WIDGET_SELECT = "select";
 		public static final String DEFAULT_URL = "bolt://localhost:7687";// "bolt://neo4j:1234@localhost";
 //		public static final String PDF_FOLDER  = "/Users/mac002/git/ocmc-translation-projects/ioc-liturgical-docker/pdf/data";  
-		//public static final String PDF_FOLDER  = "/private/var/lib/pdf/data";  
-		public static final String PDF_FOLDER = "/usr/local/ocmc/docker/pdf/data";
+		public static final String PDF_FOLDER  = "/private/var/lib/pdf/data";  
+//		public static final String PDF_FOLDER = "/usr/local/ocmc/docker/pdf/data";
 		//		public static final String PDF_FOLDER  = "data";  
 		public static final int boltDriverConnectionTimeout = 30;
 		public static final TimeUnit boltDriverConnectionTimeoutUnits = TimeUnit.SECONDS;

@@ -418,6 +418,36 @@ public class Neo4jController {
 			    return "";
 		});
 
+		// GET TEX generated from an AGES HTML file using the specified url parameter
+		path = ENDPOINTS_DB_API.AGES_TEX.pathname;
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			  try {
+      				String id = request.queryParams("id");
+			        Path filePath = Paths.get(Constants.PDF_FOLDER + "/" + id + ".tex");
+			        File file = new File(Constants.PDF_FOLDER + "/" + id + ".tex");
+			        if (! file.exists()) { // wait because the pdf still might be generating
+			        	long millis =  15000; // 60000 = 1 minute
+			        	for (int i = 0; i < 5; i++) {
+			        		Thread.sleep(millis);
+			        		if (file.exists()) {
+			        			break;
+			        		}
+			        	}
+			        }
+			        byte[] data = Files.readAllBytes(filePath);
+			        HttpServletResponse httpServletResponse = response.raw();
+			        httpServletResponse.setContentType("application/x-latex");
+			        httpServletResponse.addHeader("Content-Disposition", "inline; filename=" + id + ".tex");
+			        httpServletResponse.getOutputStream().write(data);
+			        httpServletResponse.getOutputStream().close();
+			    } catch (IOException e) {
+			        e.printStackTrace();
+			    }
+			 
+			    return "";
+		});
+
 		// GET LDOM
 		path = ENDPOINTS_DB_API.LITURGICAL_DOCUMENT_OBJECT_MODEL.toLibraryPath();
 		ControllerUtils.reportPath(logger, "GET", path);

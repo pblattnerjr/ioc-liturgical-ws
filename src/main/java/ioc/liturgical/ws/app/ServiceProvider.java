@@ -220,9 +220,17 @@ public class ServiceProvider {
 			prop.load(input);
 			
 			debug = toBoolean(debug, prop.getProperty("debug"));
+			String envDebug  = System.getenv("WS_DEBUG");
+			if (envDebug != null && envDebug.startsWith("true")) {
+				debug = true;
+			}
 			logger.info("debug: " + debug);
 
 			logAllQueries = toBoolean(logAllQueries, prop.getProperty("logQueries"));
+			String envLogAllQueries  = System.getenv("WS_LOG_ALL_QUERIES");
+			if (envLogAllQueries != null && envLogAllQueries.startsWith("true")) {
+				logAllQueries = true;
+			}
 			logger.info("logQueries: " + logAllQueries);
 
 			logQueriesWithNoMatches = toBoolean(logQueriesWithNoMatches, prop.getProperty("logQueriesWithNoMatches"));
@@ -253,6 +261,10 @@ public class ServiceProvider {
 			logger.info("external_db_access_is_protected: " + externalDbAccessIsProtected);
 
 			externalDbDomain = prop.getProperty("external_db_domain");
+			String envExternalDbDomain  = System.getenv("EXTERNAL_DB_DOMAIN");
+			if (envExternalDbDomain != null && envExternalDbDomain.length() > 0) {
+				externalDbDomain = envExternalDbDomain;
+			}
 			logger.info("external_db_domain: " + externalDbDomain);
 
 			useExternalStaticFiles = toBoolean(debug, prop.getProperty("useExternalStaticFiles"));
@@ -373,16 +385,15 @@ public class ServiceProvider {
 				if (synchEnabled && synchManager != null) {
 					
 					docService.setSynchManager(synchManager);
-// TODO uncomment the following
-//					executorService.scheduleAtFixedRate(
-//							new SynchPushTask(
-//									ExternalDbManager.neo4jManager
-//									, synchManager
-//									)
-//							, 10
-//							, 10
-//							, TimeUnit.SECONDS
-//							);
+					executorService.scheduleAtFixedRate(
+							new SynchPushTask(
+									ExternalDbManager.neo4jManager
+									, synchManager
+									)
+							, 10
+							, 10
+							, TimeUnit.SECONDS
+							);
 					
 					executorService.scheduleAtFixedRate(
 							new SynchPullTask(

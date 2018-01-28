@@ -923,6 +923,12 @@ public class AgesHtmlToOslwSwitch {
 			result = "SmallTitle";
 			break;
 		}
+		case "p-smallcenter": {
+		// {eu.lichrysbasil}{euLI.Key0201.title} (http://www.agesinitiatives.com/dcs/public/dcs/h/s/2017/08/01/li/gr-en/index.html)
+			// result = "Designation";
+			result = "SmallTitle";
+			break;
+		}
 		case "p-source": {
 		// {titles}{sourceMenaion} (http://www.agesinitiatives.com/dcs/public/dcs/h/s/2017/08/01/li/gr-en/index.html)
 			result = "Source";

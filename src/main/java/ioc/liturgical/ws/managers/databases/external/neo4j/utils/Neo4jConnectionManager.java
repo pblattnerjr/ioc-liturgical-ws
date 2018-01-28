@@ -827,8 +827,9 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		RequestStatus result = new RequestStatus();
 		// disallow the processing of a transaction that originated from this server
 		if (transaction.requestingMac.equals(macAddress)) { 
-			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + " Transaction originated from this server, so can't be processed.");
+			// ignore
+//			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+//			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + " Transaction originated from this server, so can't be processed.");
 		} else { // originated from another server, so go ahead and process it...
 			try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 				StatementResult neoResult = null;
