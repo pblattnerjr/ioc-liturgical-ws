@@ -209,8 +209,6 @@ public class ServiceProvider {
 			ServiceProvider.class.getClassLoader();
 			String location = getLocation();
 			logger.info("Jar is executing from: " + location);
-			URL keystore = ServiceProvider.class.getClassLoader().getResource("clientkeystore");
-			keystorePath = keystore.getPath();
 			try {
 				input = new FileInputStream(new File(location+"/resources/serviceProvider.config"));
 			} catch (Exception e) {
@@ -245,6 +243,11 @@ public class ServiceProvider {
 			String ssl = prop.getProperty("use_ssl");
 			logger.info("use_ssl: " + ssl);
 			useSsl = ssl.toLowerCase().startsWith("true");
+			URL keystore = null;
+			if (useSsl) {
+				keystore = ServiceProvider.class.getClassLoader().getResource("clientkeystore");
+				keystorePath = keystore.getPath();
+			}
 			deleteExistingDataStoreFile = toBoolean(deleteExistingDataStoreFile, prop.getProperty("datastore_delete_existing"));
 			logger.info("datastore_delete_existing: " + deleteExistingDataStoreFile );
 

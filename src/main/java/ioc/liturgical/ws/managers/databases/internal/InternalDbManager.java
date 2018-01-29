@@ -751,7 +751,25 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			case ALL_DOMAINS_ADMIN:
 				result = isDbAdmin(requestor);
 				break;
+			case ALL_DOMAINS_AUTHOR:
+				result = isDbAdmin(requestor);
+				break;
+			case ALL_DOMAINS_READER:
+				result = isDbAdmin(requestor);
+				break;
+			case ALL_DOMAINS_REVIEWER:
+				result = isDbAdmin(requestor);
+				break;
 			case DOMAIN_ADMIN:
+				result = isAdminForAnyLib(requestor);
+				break;
+			case DOMAIN_AUTHOR:
+				result = isAdminForAnyLib(requestor);
+				break;
+			case DOMAIN_READER:
+				result = isAdminForAnyLib(requestor);
+				break;
+			case DOMAIN_REVIEWER:
 				result = isAdminForAnyLib(requestor);
 				break;
 			case NONE:
