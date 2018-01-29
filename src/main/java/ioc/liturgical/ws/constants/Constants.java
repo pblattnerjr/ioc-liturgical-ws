@@ -3,7 +3,7 @@ package ioc.liturgical.ws.constants;
 import java.util.concurrent.TimeUnit;
 
 public class Constants {
-		public static final String VERSION = "1.4.1"; // should match most recent jar
+		public static final String VERSION = "1.4.2"; // should match most recent jar
 		public static final String ID_DELIMITER = "~";
 		public static final String ID_SPLITTER = "~";
 		public static final String PIPE_SPLITTER = "\\|";

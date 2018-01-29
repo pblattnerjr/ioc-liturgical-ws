@@ -918,6 +918,17 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			domain.setLabels(labels);
 			addDomain(wsAdmin, domain.toJsonString());
 
+			// add public domain for Fr. Eugen Pentiuc
+			domain = new DomainCreateForm();
+			domain.setLanguageCode("en");
+			domain.setCountryCode("us");
+			domain.setRealm("pentiucpublic");
+			domain.setDescription("Notes and Translations by the Rev. Dr. Eugen Pentiuc");
+			labels = new ArrayList<String>();
+			labels.add("Liturgical");
+			domain.setLabels(labels);
+			addDomain(wsAdmin, domain.toJsonString());
+
 			// add domain for Archdiocese of Guatemala
 			domain = new DomainCreateForm();
 			domain.setLanguageCode("spa");
@@ -1070,6 +1081,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 				user.setCountryCode("us");
 				addUser("wsadmin", user.toJsonString());
 				this.grantRole("wsadmin", ROLES.ADMIN, ontologyDomain, username);
+				this.grantRole("wsadmin", ROLES.ADMIN, "en_us_pentiucpublic", username);
 				logger.info("user Fr. Pentiuc added");
 				stats = new UserStatistics();
 				addUserStats(user.getUsername(),stats);
