@@ -120,6 +120,8 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 				  this.createIndex("Root", "library");
 				  this.createIndex("Root", "topic");
 				  this.createIndex("Root", "key");
+				  this.createIndex("Root", "visibility");
+				  this.createIndex("Root", "status");
 			  }
 		  } catch (Exception e) {
 			  logger.error(e.getMessage());

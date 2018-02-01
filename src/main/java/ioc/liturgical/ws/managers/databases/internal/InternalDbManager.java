@@ -98,6 +98,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	private boolean createTestUsers = false;
 	private String customerNumber = null;
 	private int maxInactiveMinutes = 10;
+	private List<String> agesDomains = new ArrayList<String>();
 	
 	public H2ConnectionManager manager;
 	
@@ -421,6 +422,66 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			result.setStatusMessage(e.getMessage());
 		}
 		return result.toJsonObject();
+	}
+	
+	private void initializeAgesDomains() {
+		for (String d : agesDomains) {
+			String library = d.toLowerCase();
+			if (! this.existsLibrary(library)) {
+				String [] parts = library.split("_");
+				DomainCreateForm domain = new DomainCreateForm();
+				domain.setLanguageCode(parts[0]);
+				domain.setCountryCode(parts[1]);
+				domain.setRealm(parts[2]);
+				domain.setDescription(library);
+				List<String> labels = new ArrayList<String>();
+				labels.add("Liturgical");
+				domain.setLabels(labels);
+				addDomain(wsAdmin, domain.toJsonString());
+			}
+		}
+	}
+
+	private void addAgesRoles(String user, ROLES role) {
+		for (String d : agesDomains) {
+			if (! this.hasRole(role, d, user)) {
+				this.grantRole("wsadmin", role, d.toLowerCase(), user);
+			}
+		}
+	}
+
+	private void initializeAgesDomainsMap() {
+		agesDomains.add("en_US_andronache");
+		agesDomains.add("en_US_barrett");
+		agesDomains.add("en_US_boyer");
+		agesDomains.add("en_US_constantinides");
+		agesDomains.add("en_US_dedes");
+		agesDomains.add("en_US_goa");
+		agesDomains.add("en_US_holycross");
+		agesDomains.add("en_UK_lash");
+		agesDomains.add("en_US_oca");
+		agesDomains.add("en_US_public");
+		agesDomains.add("en_US_repass");
+		agesDomains.add("en_US_unknown");
+		agesDomains.add("gr_GR_cog");
+		
+		// ages scripture
+		agesDomains.add("en_UK_kjv");
+		agesDomains.add("en_US_eob");
+		agesDomains.add("en_US_kjv");
+		agesDomains.add("en_US_net");
+		agesDomains.add("en_US_nkjv");
+		agesDomains.add("en_US_rsv");
+		agesDomains.add("en_US_saas");
+		
+		// Kenya
+		agesDomains.add("kik_KE_oak");
+		agesDomains.add("swh_KE_oak");
+		
+		// added by Meg
+		agesDomains.add("fra_FR_oaf");
+		agesDomains.add("spa_GT_odg");
+
 	}
 	
 	/**
@@ -821,6 +882,8 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
             	manager.truncateTable();
         	}
         	
+        	this.initializeAgesDomainsMap();
+        	
         	// check to see if table has values
            	List<JsonObject> jsonList = manager.queryForJson();  
            	if (jsonList.isEmpty()) {
@@ -1064,6 +1127,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			
 			String ontologyDomain = "en_sys_ontology";
 			String ocmcDomain = "en_us_ocmc";
+			String greekDomain = "gr_gr_cog";
 			
 			// add Fr. Pentiuc if he is not in the database
 			String username = "frepentiuc";
@@ -1087,7 +1151,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 				addUserStats(user.getUsername(),stats);
 			}
 			
-			username = "frsdedes";
+			username = "sdedes";
 			if (! this.existsUser(username)) {
 				user = new UserCreateForm();
 				user.setFirstname("Seraphim");
@@ -1102,6 +1166,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 				user.setCountryCode("us");
 				addUser("wsadmin", user.toJsonString());
 				this.grantRole("wsadmin", ROLES.ADMIN, ontologyDomain, username);
+				this.addAgesRoles(username, ROLES.ADMIN);
 				logger.info("user Fr. Dedes added");
 				stats = new UserStatistics();
 				addUserStats(user.getUsername(),stats);
@@ -1123,9 +1188,20 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 				addUser("wsadmin", user.toJsonString());
 				this.grantRole("wsadmin", ROLES.ADMIN, ontologyDomain, username);
 				this.grantRole("wsadmin", ROLES.ADMIN, ocmcDomain, username);
+				this.grantRole("wsadmin", ROLES.ADMIN, "en_uk_gev", username);
+				this.grantRole("wsadmin", ROLES.ADMIN, "en_uk_gesot", username);
+				this.grantRole("wsadmin", ROLES.ADMIN, "en_uk_gemot", username);
 				logger.info("user Colburn added");
 				stats = new UserStatistics();
 				addUserStats(user.getUsername(),stats);
+			}
+			
+			this.initializeAgesDomains();
+			for (String id : this.getUserIds()) {
+				String parts [] = id.split("~");
+				if (parts.length == 3) {
+					this.addAgesRoles(parts[2], ROLES.READER);
+				}
 			}
 			
 			if (createTestUsers) {
@@ -2448,18 +2524,24 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		    		break;
 		    	}
 		    	case POST: {
-					if (isLibAuthor(library, username) ) {
+					if (isLibAuthor(library, username) 
+							|| (isAuthorForAnyLib(username) && isGenericLibrary(library))
+							) {
 						isAuthorized = true;
 					}
 		    		break;
 		    	}
 			case PUT:
-				if (isLibAuthor(library, username) ) {
+				if (isLibAuthor(library, username) 
+						|| (isAuthorForAnyLib(username) && isGenericLibrary(library))
+						) {
 					isAuthorized = true;
 				}
 				break;
 			case DELETE:
-				if (isLibAuthor(library, username) ) {
+				if (isLibAuthor(library, username) 
+						|| (isAuthorForAnyLib(username) && isGenericLibrary(library))
+						) {
 					isAuthorized = true;
 				}
 				break;
@@ -2497,6 +2579,18 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		}
 		return false;
 	}
+	private boolean isGenericLibrary(String library) {
+		boolean result = false;
+		if (
+				library.equals("docs")
+				|| library.equals("login")
+				|| library.equals("links")
+				|| library.equals("nlp")
+			) {
+			result = true;
+		}
+		return result;
+	}
 	/**
 	 * Is this person an administrator of the Web Service?
 	 * 
@@ -2523,6 +2617,20 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 				;
 	}
 	
+	public boolean isAuthorForAnyLib(String username) {
+		return isDbAdmin(username) 
+				|| isAdminForAnyLib(username) 
+				|| getWhereLike(ROLES.AUTHOR.keyname + "%" + username).get("valueCount").getAsInt() > 0
+				;
+	}
+
+	public boolean isReaderForAnyLib(String username) {
+		return isDbAdmin(username) 
+				|| isAuthorForAnyLib(username) 
+				|| getWhereLike(ROLES.READER.keyname + "%" + username).get("valueCount").getAsInt() > 0
+				;
+	}
+
 	public List<String> getDomainsTheUserAdministers(String username) {
 		List<String> result = new ArrayList<String>();
 		if (isDbAdmin(username)) {

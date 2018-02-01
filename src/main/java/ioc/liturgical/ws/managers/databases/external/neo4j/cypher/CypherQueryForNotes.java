@@ -36,6 +36,8 @@ public class CypherQueryForNotes {
 	private String TAG_OPERATOR = "";
 	private String RETURN = "";
 	private String ORDER_BY = "";
+	private String REQUESTOR = "";
+	private boolean addWherePublic = false;
 	
 	public CypherQueryForNotes(
 			String MATCH
@@ -53,6 +55,8 @@ public class CypherQueryForNotes {
 			, String TAG_OPERATOR
 			, String RETURN
 			, String ORDER_BY
+			, String REQUESTOR
+			, boolean addWherePublic
 			) {
 		this.MATCH = MATCH; // empty string--just used to make builder look like cypher.
 		this.TYPE = TYPE;
@@ -67,8 +71,10 @@ public class CypherQueryForNotes {
 		this.MATCHES_PATTERN = MATCHES_PATTERN;
 		this.RETURN = RETURN;
 		this.ORDER_BY = ORDER_BY;
+		this.REQUESTOR = REQUESTOR;
 		this.TAG_OPERATOR = TAG_OPERATOR;
 		this.TAGS = TAGS;
+		this.addWherePublic = addWherePublic;
 	};
 	
 
@@ -110,6 +116,24 @@ public class CypherQueryForNotes {
 			}
 			whereClause.append(tagMatcher("to.tags", TAGS, TAG_OPERATOR));
 		}
+		
+		if (addWherePublic) {
+			if (whereClause.length() > 0) {
+				sb.append(" AND ");
+			} else {
+				sb.append(" WHERE");
+			}
+			if (this.REQUESTOR.length() > 0 && (! this.REQUESTOR.startsWith("*"))) {
+				sb.append(" (to.visibility = 'PUBLIC' or to.createdBy = '");
+				sb.append(this.REQUESTOR);
+				sb.append("' or to.assignedTo = '");
+				sb.append(this.REQUESTOR);
+				sb.append("') ");
+			} else {
+				sb.append(" doc.visibility = 'PUBLIC' ");
+			}
+		}
+
 		if (EXCLUDE_TYPE != null && EXCLUDE_TYPE.length() > 0) {
 			if (whereClause.length() > 0) {
 				sb.append(" AND NOT ");
@@ -221,6 +245,15 @@ public class CypherQueryForNotes {
 
 	public void setLIBRARY(String lIBRARY) {
 		LIBRARY = lIBRARY;
+	}
+
+	public String getREQUESTOR() {
+		return REQUESTOR;
+	}
+
+
+	public void setREQUESTOR(String requestor) {
+		REQUESTOR = requestor;
 	}
 
 	/**

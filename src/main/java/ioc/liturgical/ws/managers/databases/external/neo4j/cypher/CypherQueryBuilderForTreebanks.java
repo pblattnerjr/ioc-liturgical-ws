@@ -29,12 +29,18 @@ public class CypherQueryBuilderForTreebanks {
 	private String RETURN = "";
 	private String ORDER_BY = "";
 	private String LABEL = "";
+	private String REQUESTOR = "";
     private boolean prefixProperties = true;
+    private boolean addWherePublic = true;
     
 	public CypherQueryBuilderForTreebanks(){};
 	
-	public CypherQueryBuilderForTreebanks(boolean prefixProperties) { 
+	public CypherQueryBuilderForTreebanks(
+			boolean prefixProperties
+			, boolean addWherePublic
+			) { 
 		this.prefixProperties = prefixProperties;
+		this.addWherePublic = addWherePublic;
 	}
 
 	public CypherQueryBuilderForTreebanks MATCH() {
@@ -148,6 +154,11 @@ public class CypherQueryBuilderForTreebanks {
         return this;
     }
     
+    public CypherQueryBuilderForTreebanks REQUESTOR(String REQUESTOR) {
+        this.REQUESTOR = REQUESTOR;
+        return this;
+    }
+    
     public CypherQueryBuilderForTreebanks ORDER_BY(String ORDER_BY) {
         this.ORDER_BY = ORDER_BY;
         return this;
@@ -170,6 +181,8 @@ public class CypherQueryBuilderForTreebanks {
         		, TAG_OPERATOR
         		, RETURN
         		, ORDER_BY
+        		, REQUESTOR
+        		, this.addWherePublic
         		);
     }
 }

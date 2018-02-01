@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -46,6 +47,7 @@ import org.ocmc.ioc.liturgical.schemas.constants.TEMPLATE_NODE_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.TOPICS;
 import org.ocmc.ioc.liturgical.schemas.constants.UTILITIES;
 import org.ocmc.ioc.liturgical.schemas.constants.VERBS;
+import org.ocmc.ioc.liturgical.schemas.constants.VISIBILITY;
 import org.ocmc.ioc.liturgical.schemas.exceptions.BadIdException;
 
 import ioc.liturgical.ws.managers.databases.external.neo4j.constants.MATCHERS;
@@ -413,6 +415,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					  }
 				  }
 				  for (LTKLink link : generator.getLinks()) {
+					  link.setVisibility(VISIBILITY.PUBLIC);
 					  try {
 						  RequestStatus status = this.addLTKVDbObjectAsRelationship(
 								  link
@@ -522,6 +525,13 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				if (internalManager.authorized(requestor, VERBS.POST, form.getLibrary())) {
 					String validation = form.validate(json);
 					if (validation.length() == 0) {
+						if (ref.getVisibility() != VISIBILITY.PUBLIC) {
+							if (ref.getLibrary().equals(this.getUserDomain(requestor))) {
+								ref.setVisibility(VISIBILITY.PERSONAL);
+							} else {
+									ref.setVisibility(VISIBILITY.PRIVATE);
+							}
+						}
 						ref.setCreatedBy(requestor);
 						ref.setModifiedBy(requestor);
 						ref.setCreatedWhen(Instant.now().toString());
@@ -632,8 +642,41 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  return this.getForQuery(query, false, false);
 	  }
 	  
+	  /**
+	   * 
+	   * @param domain the domain to check.  If it is a wildcard (*) will return true
+	   * @param requestor the username of the requestor If it is a wildcard (*) will return true
+	   * @return true if we need to add 'and where doc.visibility = "PUBLIC"' to query
+	   */
+	  private boolean addWherePublic(
+			  String domain
+			  , String requestor
+			  ) {
+		  boolean addWherePublic = true;
+		  if (internalManager.isDbAdmin(requestor)) {
+			  addWherePublic = false;
+		  } else {
+				if (domain.startsWith("*")) {
+					addWherePublic = true;
+				} else {
+					if (requestor.startsWith("*")) {
+						addWherePublic = true;
+					} else {
+						if (internalManager.isLibAdmin(domain, requestor)) {
+							addWherePublic = false;
+						} else if (internalManager.isLibAuthor(domain, requestor)) {
+							addWherePublic = false;
+						} else if (internalManager.isLibReader(domain, requestor)) {
+							addWherePublic = false;
+						}
+					}
+				}
+		  }
+		  return addWherePublic;
+	  }
 		public ResultJsonObjectArray search(
-				String type
+				String requestor
+				, String type
 				, String domain
 				, String book
 				, String chapter
@@ -654,15 +697,20 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			if (chapter.startsWith("his")) {
 				chapter = chapter.replaceFirst("hi", "");
 			}
+			
+			boolean addWherePublic = this.addWherePublic(domain, requestor);
+
 			result = getForQuery(
 					getCypherQueryForDocSearch(
-							type
+							requestor
+							, type
 							, domain
 							, book
 							, chapter
 							, GeneralUtils.toNfc(query) // we stored the text using Normalizer.Form.NFC, so search using it
 							, property
 							, matcher
+							, addWherePublic
 							)
 					, true
 					, true
@@ -778,7 +826,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		}
 		
 		public ResultJsonObjectArray searchOntology(
-				String type // to match
+				String requestor
+				, String type // to match
 				, String genericType // generic type to match
 				, String query
 				, String property
@@ -790,7 +839,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 
 			result = getForQuery(
 					getCypherQueryForOntologySearch(
-							type
+							requestor
+							, type
 							, genericType
 							, GeneralUtils.toNfc(query)
 							, property
@@ -805,7 +855,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		}
 
 		public ResultJsonObjectArray searchRelationships(
-				String type // to match
+				String requestor
+				, String type // to match
 				, String library // library to match
 				, String query
 				, String property
@@ -835,14 +886,37 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			if (type.equals(RELATIONSHIP_TYPES.REFERS_TO_BIBLICAL_TEXT.typename)) {
 				propsToReturn.add(toHandle, "value", "toValue");
 				propsToReturn.add(toHandle, "seq");
+				propsToReturn.add(toHandle, "referredByPhrase", "referredByPhrase");
+				propsToReturn.add(toHandle, "referredToPhrase", "referredToPhrase");
+				propsToReturn.add(toHandle, "text", "text");
+				propsToReturn.add(toHandle, "voc", "voc");
+				propsToReturn.add(toHandle, "dev", "dev");
+				propsToReturn.add(toHandle, "gen", "gen");
+				propsToReturn.add(toHandle, "hge", "hge");
+				propsToReturn.add(toHandle, "anc", "anc");
+				propsToReturn.add(toHandle, "cul", "cul");
+				propsToReturn.add(toHandle, "bib", "bib");
+				propsToReturn.add(toHandle, "syn", "syn");
+				propsToReturn.add(toHandle, "ptes", "ptes");
+				propsToReturn.add(toHandle, "jew", "jew");
+				propsToReturn.add(toHandle, "chr", "chr");
+				propsToReturn.add(toHandle, "lit", "lit");
+				propsToReturn.add(toHandle, "theo", "theo");
+				propsToReturn.add(toHandle, "isl", "isl");
+				propsToReturn.add(toHandle, "litt", "litt");
+				propsToReturn.add(toHandle, "vis", "vis");
+				propsToReturn.add(toHandle, "mus", "mus");
+				propsToReturn.add(toHandle, "tdf", "tdf");
 				orderBy = "seq";
 			} else {
 				propsToReturn.add(toHandle, "name", "toValue");
 				orderBy = "toId";
 			}
+			boolean addWherePublic = this.addWherePublic(library, requestor);
 			result = getForQuery(
 					getCypherQueryForLinkSearch(
-							type
+							requestor
+							, type
 							, library
 							, GeneralUtils.toNfc(query)
 							, property
@@ -852,6 +926,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 							, propsToReturn.toString()
 							, orderBy
 							, excludeType
+							, addWherePublic
 							)
 					, true
 					, true
@@ -860,7 +935,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		}
 
 		public ResultJsonObjectArray getRelationshipsByFromId(
-				String type // to match
+				String requestor
+				, String type // to match
 				, String library // library to match
 				, String query
 				, String property
@@ -889,9 +965,11 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				propsToReturn.add(toHandle, "name", "toName");
 				orderBy = "toId";
 			}
+			boolean addWherePublic = false;
 			result = getForQuery(
 					getCypherQueryForLinkSearch(
-							type
+							requestor
+							, type
 							, library
 							, GeneralUtils.toNfc(query)
 							, property
@@ -901,6 +979,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 							, propsToReturn.toString()
 							, orderBy
 							, ""
+							, addWherePublic
 							)
 					, true
 					, true
@@ -923,13 +1002,15 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	   }
 	   
 		private String getCypherQueryForDocSearch(
-				String type 
+				String requestor
+				, String type 
 				, String domain
 				, String book
 				, String chapter
 				, String query
 				, String property
 				, String matcher
+				, boolean addWherePublic
 				) {
 			boolean prefixProps = false;
 			String theQuery = GeneralUtils.toNfc(query);
@@ -944,7 +1025,11 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					}
 				}
 			}
-			CypherQueryBuilderForDocs builder = new CypherQueryBuilderForDocs(prefixProps)
+			CypherQueryBuilderForDocs builder = new CypherQueryBuilderForDocs(
+					prefixProps
+					, addWherePublic
+					)
+					.REQUESTOR(requestor)
 					.MATCH()
 					.LABEL(type)
 					.LABEL(domain)
@@ -952,6 +1037,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					.LABEL(chapter)
 					.WHERE(property)
 					;
+			
 			
 			MATCHERS matcherEnum = MATCHERS.forLabel(matcher);
 			
@@ -1008,18 +1094,28 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			if (theProperty.startsWith("*")) {
 				theProperty = "value";
 			}
+			String library = this.getUserDomain(requestor);
 			String theQuery = GeneralUtils.toNfc(query);
 			CypherQueryBuilderForNotes builder = null;
+			boolean addWherePublic = false;  //this.addWherePublic(library, requestor);
 			
 			if (type.equals(TOPICS.NOTE_USER.label)) {
-				builder = new CypherQueryBuilderForNotes(prefixProps)
+				builder = new CypherQueryBuilderForNotes(
+						prefixProps
+						, addWherePublic
+						)
+						.REQUESTOR(requestor)
 						.MATCH()
-						.LIBRARY(this.getUserDomain(requestor))
+						.LIBRARY(library)
 						.LABEL(theLabel)
 						.WHERE(theProperty)
 						;
 			} else {
-				builder = new CypherQueryBuilderForNotes(prefixProps)
+				addWherePublic = this.addWherePublic(library, requestor);
+				builder = new CypherQueryBuilderForNotes(
+						prefixProps
+						, addWherePublic
+						)
 						.MATCH()
 						.LABEL(theLabel)
 						.WHERE(theProperty)
@@ -1082,9 +1178,14 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			if (theProperty.startsWith("*")) {
 				theProperty = "description";
 			}
+			boolean addWherePublic = false;
 			String theQuery = GeneralUtils.toNfc(query);
 			CypherQueryBuilderForTemplates builder = 
-					new CypherQueryBuilderForTemplates(prefixProps)
+					new CypherQueryBuilderForTemplates(
+							prefixProps
+							, addWherePublic
+							)
+					.REQUESTOR(requestor)
 					.MATCH()
 					.LABEL(theLabel)
 					.WHERE(theProperty)
@@ -1134,10 +1235,15 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			if (theProperty.startsWith("*")) {
 				theProperty = "token";
 			}
+			boolean addWherePublic = false; // this.addWherePublic(domain, requestor); // we don't know the domain
 			String theQuery = GeneralUtils.toNfc(query);
 			CypherQueryBuilderForTreebanks builder = null;
 			
-				builder = new CypherQueryBuilderForTreebanks(prefixProps)
+				builder = new CypherQueryBuilderForTreebanks(
+						prefixProps
+						, addWherePublic
+						)
+						.REQUESTOR(requestor)
 						.MATCH()
 						.LABEL(theLabel)
 						.WHERE(theProperty)
@@ -1178,7 +1284,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		}
 		
 		private String getCypherQueryForOntologySearch(
-				String type
+				String requestor
+				, String type
 				, String genericType
 				, String query
 				, String property
@@ -1201,8 +1308,13 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			if (theProperty.startsWith("*")) {
 				theProperty = "name";
 			}
+			boolean addWherePublic = this.addWherePublic("en_sys_ontology", requestor);
 			String theQuery = GeneralUtils.toNfc(query);
-			CypherQueryBuilderForDocs builder = new CypherQueryBuilderForDocs(prefixProps)
+			CypherQueryBuilderForDocs builder = new CypherQueryBuilderForDocs(
+					prefixProps
+					, addWherePublic
+					)
+					.REQUESTOR(requestor)
 					.MATCH()
 					.TOPIC(type)
 					.LABEL(theLabel)
@@ -1247,7 +1359,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		}
 
 		private String getCypherQueryForLinkSearch(
-				String type
+				String requestor
+				, String type
 				, String library
 				, String query
 				, String property
@@ -1257,11 +1370,16 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, String propsToReturn
 				, String orderBy
 				, String excludeType
+				, boolean addWherePublic
 				) {
 			
 			boolean prefixProps = false;
 			String theQuery = GeneralUtils.toNfc(query);
-			CypherQueryBuilderForLinks builder = new CypherQueryBuilderForLinks(prefixProps)
+			CypherQueryBuilderForLinks builder = new CypherQueryBuilderForLinks(
+					prefixProps
+					, addWherePublic
+					)
+					.REQUESTOR(requestor)
 					.MATCH()
 					.TYPE(type)
 					.LIBRARY(library)
@@ -1374,6 +1492,13 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 													form.get_valueSchemaId())
 											.ltkDb.getClass()
 							);
+						if (record.getVisibility() != VISIBILITY.PUBLIC) {
+							if (record.getLibrary().equals(this.getUserDomain(requestor))) {
+								record.setVisibility(VISIBILITY.PERSONAL);
+							} else {
+									record.setVisibility(VISIBILITY.PRIVATE);
+							}
+						}
 						record.setSubClassProperties(json);
 						record.setActive(true);
 						record.setCreatedBy(requestor);
@@ -1516,6 +1641,13 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 														form.get_valueSchemaId())
 												.ltkDb.getClass()
 								);
+							if (record.getVisibility() != VISIBILITY.PUBLIC) {
+								if (record.getLibrary().equals(this.getUserDomain(requestor))) {
+									record.setVisibility(VISIBILITY.PERSONAL);
+								} else {
+										record.setVisibility(VISIBILITY.PRIVATE);
+								}
+							}
 							record.setSubClassProperties(json);
 							record.setActive(true);
 							record.setCreatedBy(requestor);
@@ -1969,7 +2101,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public ResultJsonObjectArray getForId(String id) {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
-				CypherQueryBuilderForDocs builder = new CypherQueryBuilderForDocs(false)
+				CypherQueryBuilderForDocs builder = new CypherQueryBuilderForDocs(
+						false
+						, false
+						)
 						.MATCH()
 						.LABEL(TOPICS.ROOT.label)
 						.WHERE("id")
@@ -1993,7 +2128,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				) {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
-				CypherQueryBuilderForDocs builder = new CypherQueryBuilderForDocs(false)
+				CypherQueryBuilderForDocs builder = new CypherQueryBuilderForDocs(
+						false
+						, false
+						)
 						.MATCH()
 						.LABEL(label)
 						.WHERE("id")
@@ -2209,7 +2347,48 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
-		public ResultJsonObjectArray getUsersNotes(String requestor) {
+ 		/**
+ 		 * 
+ 		 * @param requestor the username of the user making the request
+ 		 * @return the records (docs) stored in the user's personal library in the database
+ 		 */
+ 		public String getUserPersonalDocs(String requestor) {
+ 			try {
+ 	 			String userLibrary = this.getUserDomain(requestor);
+ 				CypherQueryBuilderForDocs builder = new CypherQueryBuilderForDocs(
+ 						true
+ 						, false)
+ 						.MATCH()
+ 						.LABEL("Root")
+ 						.WHERE("id")
+ 						.STARTS_WITH(userLibrary)
+ 						.RETURN("*")
+ 						.ORDER_BY("doc.seq");
+ 						;
+ 				CypherQueryForDocs q = builder.build();
+ 				ResultJsonObjectArray result = getForQuery(q.toString(), true, true);
+ 				// now we need to see if the user has any references he/she owns
+ 				StringBuffer sb = new StringBuffer();
+ 				sb.append("match (:Root)-[r]->(:Root) where r.id starts with '");
+ 				sb.append(this.getUserDomain(requestor));
+ 				sb.append("~");
+ 				sb.append("' return properties(r)");
+ 				ResultJsonObjectArray links = getForQuery(sb.toString(), true, true);
+ 				for (JsonObject r : links.getValues()) {
+ 					result.addValue(r.get("properties(r)").getAsJsonObject());
+ 				}
+ 				if (result.getValueCount() > 0) {
+ 	 				Gson myGson = new GsonBuilder().setPrettyPrinting().create();
+ 	 				return myGson.toJson(result.getValues()).toString();
+ 				} else {
+ 					return "You have no personal records in the database.";
+ 				}
+ 			} catch (Exception e) {
+ 				return "Could not retrieve your data";
+ 			}
+		}
+
+ 		public ResultJsonObjectArray getUsersNotes(String requestor) {
 			return getForIdStartsWith(this.internalManager.getUserDomain(requestor), TOPICS.NOTE_USER);
 		}
 

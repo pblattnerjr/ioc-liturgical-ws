@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.ocmc.ioc.liturgical.schemas.constants.SINGLETON_KEYS;
 import org.ocmc.ioc.liturgical.schemas.constants.TOPICS;
 import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
+import org.joda.time.Instant;
 import org.ocmc.ioc.liturgical.schemas.constants.ENDPOINTS_DB_API;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
@@ -94,12 +95,20 @@ public class Neo4jController {
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
+			String requestor = "*";
+			try {
+				requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			} catch (Exception e) {
+				requestor = "*";
+			}
+
         	return gson.toJson(externalManager.search(
-        			request.queryParams("t")  // doc type (e.g. Liturgical, Biblical)
+        			requestor
+        			, request.queryParams("t")  // doc type (e.g. Liturgical, Biblical)
         			, request.queryParams("d")  // domain
         			, request.queryParams("b") // book
         			, request.queryParams("c") // chapter or other major part of book
-        			, request.queryParams("q")   // query
+        			, request.queryParams("q")  // query
         			, request.queryParams("p") // property of the doc (e.g. the ID, the value)
         			, request.queryParams("m") // matcher (e.g. contains, starts with, regex)
         			));
@@ -110,8 +119,15 @@ public class Neo4jController {
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
+			String requestor = "*";
+			try {
+				requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			} catch (Exception e) {
+				requestor = "*";
+			}
         	return gson.toJson(externalManager.searchOntology(
-        			request.queryParams("t")  // ontology type (e.g. Animal)
+        			requestor
+        			, request.queryParams("t")  // ontology type (e.g. Animal)
         			, request.queryParams("g")  // generic type
         			, request.queryParams("q")   // query
         			, request.queryParams("p") // property of the doc (e.g. the ID, the value)
@@ -338,8 +354,15 @@ public class Neo4jController {
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
+			String requestor = "*";
+			try {
+				requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			} catch (Exception e) {
+				requestor = "*";
+			}
         	return gson.toJson(externalManager.searchRelationships(
-        			request.queryParams("t")  // link type (e.g. REFERS_TO_BIBLICAL_TEXT)
+        			requestor
+        			, request.queryParams("t")  // link type (e.g. REFERS_TO_BIBLICAL_TEXT)
         			, request.queryParams("d")  // domain
         			, request.queryParams("q")   // query
         			, request.queryParams("p") // property of the doc (e.g. the ID, the value)
@@ -446,6 +469,15 @@ public class Neo4jController {
 			    }
 			 
 			    return "";
+		});
+
+		// GET the user's personal library as a json string
+		path = ENDPOINTS_DB_API.USER_DOCS.pathname;
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			return externalManager.getUserPersonalDocs(requestor);
 		});
 
 		// GET LDOM

@@ -32,12 +32,18 @@ public class CypherQueryBuilderForDocs {
 	private String TOPIC = "";
 	private String RETURN = "";
 	private String ORDER_BY = "";
+	private String REQUESTOR = "";
     private boolean prefixProperties = true;
+    private boolean addWherePublic = true;
     
 	public CypherQueryBuilderForDocs(){};
 	
-	public CypherQueryBuilderForDocs(boolean prefixProperties) { 
+	public CypherQueryBuilderForDocs(
+			boolean prefixProperties
+			, boolean addWherePublic
+			) { 
 		this.prefixProperties = prefixProperties;
+		this.addWherePublic = addWherePublic;
 	}
 
 	public CypherQueryBuilderForDocs MATCH() {
@@ -161,6 +167,11 @@ public class CypherQueryBuilderForDocs {
         return this;
     }
     
+    public CypherQueryBuilderForDocs REQUESTOR(String REQUESTOR) {
+        this.REQUESTOR = REQUESTOR;
+        return this;
+    }
+
     public CypherQueryForDocs build() {
         return new CypherQueryForDocs(
         		MATCH
@@ -182,7 +193,9 @@ public class CypherQueryBuilderForDocs {
         		, TOPIC
         		, RETURN
         		, ORDER_BY
+        		, REQUESTOR
         		, prefixProperties
+        		, addWherePublic
         		);
     }
 }

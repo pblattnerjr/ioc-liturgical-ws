@@ -30,12 +30,18 @@ public class CypherQueryBuilderForTemplates {
 	private String RETURN = "";
 	private String ORDER_BY = "";
 	private String LABEL = "";
+	private String REQUESTOR = "";
     private boolean prefixProperties = true;
+    private boolean addWherePublic = true;
     
 	public CypherQueryBuilderForTemplates(){};
 	
-	public CypherQueryBuilderForTemplates(boolean prefixProperties) { 
+	public CypherQueryBuilderForTemplates(
+			boolean prefixProperties
+			, boolean addWherePublic
+			) { 
 		this.prefixProperties = prefixProperties;
+		this.addWherePublic = addWherePublic;
 	}
 
 	public CypherQueryBuilderForTemplates MATCH() {
@@ -149,6 +155,11 @@ public class CypherQueryBuilderForTemplates {
         return this;
     }
     
+    public CypherQueryBuilderForTemplates REQUESTOR(String REQUESTOR) {
+        this.REQUESTOR = REQUESTOR;
+        return this;
+    }
+    
     public CypherQueryBuilderForTemplates ORDER_BY(String ORDER_BY) {
         this.ORDER_BY = ORDER_BY;
         return this;
@@ -171,6 +182,8 @@ public class CypherQueryBuilderForTemplates {
         		, TAG_OPERATOR
         		, RETURN
         		, ORDER_BY
+        		, REQUESTOR
+        		, this.addWherePublic
         		);
     }
 }

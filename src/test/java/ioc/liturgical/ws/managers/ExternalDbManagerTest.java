@@ -323,7 +323,8 @@ public class ExternalDbManagerTest {
 		// if this fails, make sure you have run the CreateABunchOfReferences unit test first
 	    	ResultJsonObjectArray result = 
 	    			externalManager.searchRelationships(
-	    					RELATIONSHIP_TYPES.REFERS_TO_BIBLICAL_TEXT.typename
+	    					"wsadmin"
+	    					, RELATIONSHIP_TYPES.REFERS_TO_BIBLICAL_TEXT.typename
 	    					, "en_us_pentiuc"
 	    					, "syn"  // query
 	    					, "syn" // property
@@ -340,7 +341,8 @@ public class ExternalDbManagerTest {
 		// if this fails, make sure there are Ontology entries in the database
 	    	ResultJsonObjectArray result = 
 	    			externalManager.searchOntology(
-	    					""
+	    					"wsadmin"
+	    					, ""
 	    					, "Being"
 	    					, ""  // query
 	    					, "" // property

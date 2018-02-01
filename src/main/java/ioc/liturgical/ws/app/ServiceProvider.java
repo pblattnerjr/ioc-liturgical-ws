@@ -252,6 +252,14 @@ public class ServiceProvider {
 			logger.info("datastore_delete_existing: " + deleteExistingDataStoreFile );
 
 			deleteExistingDataStoreRecords = toBoolean(deleteExistingDataStoreRecords, prop.getProperty("datastore_truncate_existing"));
+			String envDeleteExistingDataStoreRecords  = System.getenv("deleteExistingDataStoreRecords");
+			if (envDeleteExistingDataStoreRecords != null && envDeleteExistingDataStoreRecords.length() > 0) {
+				if (envDeleteExistingDataStoreRecords.equals("true") || envDeleteExistingDataStoreRecords.equals("yes"))  {
+					deleteExistingDataStoreRecords = true;
+				} else {
+					deleteExistingDataStoreRecords = false;
+				}
+			}
 			logger.info("datastore_truncate_existing: " + deleteExistingDataStoreRecords );
 
 			enableCors = toBoolean(enableCors, prop.getProperty("enable_cors"));

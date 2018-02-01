@@ -37,7 +37,9 @@ public class CypherQueryForDocs {
 	private String TOPIC = "";
 	private String RETURN = "";
 	private String ORDER_BY = "";
+	private String REQUESTOR = "";
 	private boolean prefixProperties = true;
+	private boolean addWherePublic = true;
 	
 	public CypherQueryForDocs(
 			String MATCH
@@ -59,7 +61,9 @@ public class CypherQueryForDocs {
 			, String TOPIC
 			, String RETURN
 			, String ORDER_BY
+			, String REQUESTOR
 			, boolean prefixProperties
+			, boolean addWherePublic
 			) {
 		this.MATCH = MATCH; // empty string--just used to make builder look like cypher.
 		this.LABEL = LABEL;
@@ -76,7 +80,9 @@ public class CypherQueryForDocs {
 		this.MATCHES_PATTERN = MATCHES_PATTERN;
 		this.RETURN = RETURN;
 		this.ORDER_BY = ORDER_BY;
+		this.REQUESTOR = REQUESTOR;
 		this.prefixProperties = prefixProperties;
+		this.addWherePublic = addWherePublic;
 		this.TAG_OPERATOR = TAG_OPERATOR;
 		this.TAGS = TAGS;
 		this.TOPIC = TOPIC;
@@ -158,6 +164,22 @@ public class CypherQueryForDocs {
 			sb.append(tagMatcher("doc.tags", TAGS, TAG_OPERATOR));
 		}
 
+		if (addWherePublic) {
+			if (whereClause.length() > 0) {
+				sb.append(" AND ");
+			} else {
+				sb.append(" WHERE");
+			}
+			if (this.REQUESTOR.length() > 0 && (! this.REQUESTOR.startsWith("*"))) {
+				sb.append(" (doc.visibility = 'PUBLIC' or doc.createdBy = '");
+				sb.append(this.REQUESTOR);
+				sb.append("' or doc.assignedTo = '");
+				sb.append(this.REQUESTOR);
+				sb.append("') ");
+			} else {
+				sb.append(" doc.visibility = 'PUBLIC' ");
+			}
+		}
 		if (EXCLUDE_LABEL.length() > 0) {
 			if (whereClause.length() > 0) {
 				sb.append(" AND NOT ");
@@ -270,6 +292,15 @@ public class CypherQueryForDocs {
 		ORDER_BY = oRDER_BY;
 	}
 
+
+	public String getREQUESTOR() {
+		return REQUESTOR;
+	}
+
+
+	public void setREQUESTOR(String requestor) {
+		REQUESTOR = requestor;
+	}
 
 	public String getEQUALS() {
 		return EQUALS;

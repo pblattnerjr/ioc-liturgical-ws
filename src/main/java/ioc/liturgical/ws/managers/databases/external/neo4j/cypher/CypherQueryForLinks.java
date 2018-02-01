@@ -35,6 +35,8 @@ public class CypherQueryForLinks {
 	private String TAG_OPERATOR = "";
 	private String RETURN = "";
 	private String ORDER_BY = "";
+	private String REQUESTOR = "";
+	private boolean addWherePublic = false;
 	
 	public CypherQueryForLinks(
 			String MATCH
@@ -51,6 +53,8 @@ public class CypherQueryForLinks {
 			, String TAG_OPERATOR
 			, String RETURN
 			, String ORDER_BY
+			, String REQUESTOR
+			, boolean addWherePublic
 			) {
 		this.MATCH = MATCH; // empty string--just used to make builder look like cypher.
 		this.TYPE = TYPE;
@@ -64,8 +68,10 @@ public class CypherQueryForLinks {
 		this.MATCHES_PATTERN = MATCHES_PATTERN;
 		this.RETURN = RETURN;
 		this.ORDER_BY = ORDER_BY;
+		this.REQUESTOR = REQUESTOR;
 		this.TAG_OPERATOR = TAG_OPERATOR;
 		this.TAGS = TAGS;
+		this.addWherePublic = addWherePublic;
 	};
 	
 
@@ -108,6 +114,24 @@ public class CypherQueryForLinks {
 			}
 			sb.append(tagMatcher("link.tags", TAGS, TAG_OPERATOR));
 		}
+		
+		if (addWherePublic) {
+			if (whereClause.length() > 0) {
+				sb.append(" AND ");
+			} else {
+				sb.append(" WHERE");
+			}
+			if (this.REQUESTOR.length() > 0 && (! this.REQUESTOR.startsWith("*"))) {
+				sb.append(" (link.visibility = 'PUBLIC' or link.createdBy = '");
+				sb.append(this.REQUESTOR);
+				sb.append("' or link.assignedTo = '");
+				sb.append(this.REQUESTOR);
+				sb.append("') ");
+			} else {
+				sb.append(" doc.visibility = 'PUBLIC' ");
+			}
+		}
+
 		
 		if (EXCLUDE_TYPE != null && EXCLUDE_TYPE.length() > 0) {
 			if (whereClause.length() > 0) {
@@ -199,6 +223,15 @@ public class CypherQueryForLinks {
 		ORDER_BY = oRDER_BY;
 	}
 
+
+	public String getREQUESTOR() {
+		return REQUESTOR;
+	}
+
+
+	public void setREQUESTOR(String requestor) {
+		REQUESTOR = requestor;
+	}
 
 	public String getEQUALS() {
 		return EQUALS;

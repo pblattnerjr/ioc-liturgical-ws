@@ -28,12 +28,18 @@ public class CypherQueryBuilderForLinks {
 	private String TAG_OPERATOR = "or";
 	private String RETURN = "";
 	private String ORDER_BY = "";
+	private String REQUESTOR = "";
     private boolean prefixProperties = true;
+    private boolean addWherePublic = true;
     
 	public CypherQueryBuilderForLinks(){};
 	
-	public CypherQueryBuilderForLinks(boolean prefixProperties) { 
+	public CypherQueryBuilderForLinks(
+			boolean prefixProperties
+			, boolean addWherePublic
+			) { 
 		this.prefixProperties = prefixProperties;
+		this.addWherePublic = addWherePublic;
 	}
 
 	public CypherQueryBuilderForLinks MATCH() {
@@ -135,6 +141,11 @@ public class CypherQueryBuilderForLinks {
         return this;
     }
     
+    public CypherQueryBuilderForLinks REQUESTOR(String REQUESTOR) {
+        this.REQUESTOR = REQUESTOR;
+        return this;
+    }
+
     public CypherQueryForLinks build() {
         return new CypherQueryForLinks(
         		MATCH
@@ -151,6 +162,8 @@ public class CypherQueryBuilderForLinks {
         		, TAG_OPERATOR
         		, RETURN
         		, ORDER_BY
+        		, REQUESTOR
+        		, this.addWherePublic
         		);
     }
 }
