@@ -350,8 +350,12 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			InetAddress ip = InetAddress.getLocalHost();
 			NetworkInterface network = NetworkInterface.getByInetAddress(ip);
 			byte[] mac = network.getHardwareAddress();
-			for (int i = 0; i < mac.length; i++) {
-				sb.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? "-" : ""));
+			if (mac != null) {
+				for (int i = 0; i < mac.length; i++) {
+					sb.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? "-" : ""));
+				}
+			} else {
+				sb.append("unknown mac address");
 			}
 			macAddress = sb.toString();
 			hostName = ip.getCanonicalHostName();

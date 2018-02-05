@@ -35,6 +35,9 @@ import ioc.liturgical.ws.app.ServiceProvider;
 
 import org.ocmc.ioc.liturgical.schemas.constants.BIBLICAL_BOOKS;
 import ioc.liturgical.ws.constants.Constants;
+import ioc.liturgical.ws.constants.NOTE_TYPES;
+import ioc.liturgical.ws.constants.ResultNewForms;
+
 import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
 import org.ocmc.ioc.liturgical.schemas.constants.LIBRARIES;
 import org.ocmc.ioc.liturgical.schemas.constants.LITURGICAL_BOOKS;
@@ -75,14 +78,12 @@ import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.TokenAnalysis;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.WordInflected;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.ontology.TextLiturgical;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.tables.ReactBootstrapTableData;
-import org.ocmc.ioc.liturgical.schemas.models.db.docs.templates.Section;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.templates.Template;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.templates.TemplateNode;
 import org.ocmc.ioc.liturgical.schemas.models.db.internal.LTKVJsonObject;
 import org.ocmc.ioc.liturgical.schemas.models.forms.ontology.TextLiturgicalTranslationCreateForm;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTK;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDb;
-import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDbGenerationUnit;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDbOntologyEntry;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTKLink;
 import org.ocmc.ioc.liturgical.schemas.models.ws.db.Utility;
@@ -93,7 +94,7 @@ import org.ocmc.ioc.liturgical.schemas.models.ws.response.column.editor.KeyArray
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.column.editor.LibraryTopicKeyValue;
 import org.ocmc.ioc.liturgical.schemas.models.db.links.LinkRefersToBiblicalText;
 import org.ocmc.ioc.liturgical.schemas.models.db.returns.LinkRefersToTextToTextTableRow;
-import org.ocmc.ioc.liturgical.schemas.models.db.returns.ResultNewForms;
+//import org.ocmc.ioc.liturgical.schemas.models.db.returns.ResultNewForms;
 
 import ioc.liturgical.ws.nlp.Utils;
 import net.ages.alwb.tasks.DependencyNodesCreateTask;
@@ -169,6 +170,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  JsonArray treebankTypesArray = new JsonArray();
 	  JsonObject treebankTypesProperties = new JsonObject();
 	  JsonArray tagOperatorsDropdown = new JsonArray();
+	  List<DropdownItem> noteTypesDropdown = new ArrayList<DropdownItem>();
 	  List<DropdownItem> biblicalBookNamesDropdown = new ArrayList<DropdownItem>();
 	  List<DropdownItem> biblicalChapterNumbersDropdown = new ArrayList<DropdownItem>();
 	  List<DropdownItem> biblicalVerseNumbersDropdown = new ArrayList<DropdownItem>();
@@ -226,6 +228,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  this.logQueriesWithNoMatches = logQueriesWithNoMatches;
 		  buildDomainTopicMap();
 		  buildRelationshipDropdownMaps();
+		  buildNoteTypesDropdown();
 		  buildBiblicalDropdowns();
 		  this.buildLiturgicalBookNamesDropdown();
 		  // this.fixWordAnalysis(); // I think this was a one-off fix.
@@ -330,6 +333,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			  buildOntologyDropdownMaps();
 			  buildTemplatesDropdownMaps();
 			  buildTreebanksDropdownMaps(); 
+			  buildNoteTypesDropdown();
 			  buildBiblicalDropdowns();
 			  buildRelationshipDropdownMaps();
 			  this.buildLiturgicalBookNamesDropdown();
@@ -348,6 +352,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  buildBiblicalVerseSubVersesDropdown();
 	  }
 
+	  private void buildNoteTypesDropdown() {
+		  this.noteTypesDropdown = NOTE_TYPES.toDropdownList();
+	  }
+	  
 	  private void buildBiblicalBookNamesDropdown() {
 		  this.biblicalBookNamesDropdown = BIBLICAL_BOOKS.toDropdownList();
 	  }
@@ -4304,10 +4312,12 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			result.setDomains(internalManager.getDomainDropdownsForUser(requestor));
 			result.setOntologyTypesDropdown(TOPICS.keyNamesToDropdown());
 			result.setOntologyDropdowns(getDropdownsForOntologyInstances());
+			
 			result.setBiblicalBooksDropdown(this.biblicalBookNamesDropdown);
 			result.setBiblicalChaptersDropdown(this.biblicalChapterNumbersDropdown);
 			result.setBiblicalVersesDropdown(this.biblicalVerseNumbersDropdown);
 			result.setBiblicalSubversesDropdown(this.biblicalVerseSubVersesDropdown);
+			result.setNoteTypesDropdown(this.noteTypesDropdown);
 			result.setLiturgicalBooksDropdown(this.liturgicalBookNamesDropdown);
 			result.setTemplateNewTemplateDropdown(this.templateNewTemplateDropdown);
 			result.setTemplatePartsDropdown(this.templatePartsDropdown);
@@ -4318,7 +4328,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			result.setTemplateWhenMonthNameCasesDropdown(this.templateWhenMonthNameCasesDropdown);
 			List<JsonObject> dbResults = new ArrayList<JsonObject>();
 			try {
-				for (NEW_FORM_CLASSES_DB_API e : NEW_FORM_CLASSES_DB_API.values()) {
+				for (org.ocmc.ioc.liturgical.schemas.constants.NEW_FORM_CLASSES_DB_API e : NEW_FORM_CLASSES_DB_API.values()) {
+					
 					if (internalManager.userAuthorizedForThisForm(requestor, e.restriction)) {
 						dbResults.add(e.obj.toJsonObject());
 					}

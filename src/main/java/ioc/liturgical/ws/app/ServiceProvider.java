@@ -909,7 +909,11 @@ public class ServiceProvider {
 	  public static String sendMessage(String message) {
 		  String response = "";
 		  if (ServiceProvider.messagingEnabled) {
-			  response = MessageUtils.sendMessage(messagingToken, hostname + " " + message);
+			  try {
+				  response = MessageUtils.sendMessage(messagingToken, hostname + " " + message);
+			  } catch (Exception e) {
+				  ServiceProvider.messagingEnabled = false;
+			  }
 		  } else {
 			  response = "Messaging not enabled";
 		  }
