@@ -58,7 +58,10 @@ public class SynchPushTask implements Runnable {
 				for (JsonObject o : transactions.values) {
 					Transaction trans = gson.fromJson(o, Transaction.class);
 					RequestStatus requestStatus = synchManager.recordTransaction(trans);
-					if (requestStatus.getCode() == HTTP_RESPONSE_CODES.CREATED.code) {
+					if (
+							requestStatus.getCode() == HTTP_RESPONSE_CODES.CREATED.code
+							|| requestStatus.getCode() == HTTP_RESPONSE_CODES.CONFLICT.code
+							) {
 						logger.info("Pushed " + trans.getId() + " to Synch Server and deleted from local database");
 						RequestStatus deleteStatus = dbManager.deleteTransaction(trans.getId());
 						if (deleteStatus.getCode() != HTTP_RESPONSE_CODES.OK.code) {

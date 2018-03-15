@@ -7,6 +7,8 @@ import java.util.TreeMap;
 
 import com.google.gson.annotations.Expose;
 
+import ioc.liturgical.ws.constants.Constants;
+
 import org.ocmc.ioc.liturgical.schemas.models.supers.AbstractModel;
 
 /**
@@ -90,9 +92,23 @@ public class LDOM extends AbstractLDOM {
 	 * Add a value to the value map
 	 * @param key
 	 * @param value
+	 * @param useKeyAsValue if the value is empty, use the key as the value
 	 */
-	public void addValue(String key, String value) {
+	public void addValue(String key, String value, boolean useKeyAsValue) {
 		if (! this.values.containsKey(key)) {
+			if (useKeyAsValue) {
+				if (value.trim().length() == 0) {
+					String [] parts = key.split(Constants.ID_SPLITTER);
+					if (parts.length == 3) {
+						value = parts[1] + Constants.ID_DELIMITER + parts[2];
+					} else {
+						value = key;
+					}
+				}
+				if (value.contains("~")) {
+					value = value.replaceAll("~", " ~ ");
+				}
+			}
 			this.values.put(key, value);
 		}
 	}

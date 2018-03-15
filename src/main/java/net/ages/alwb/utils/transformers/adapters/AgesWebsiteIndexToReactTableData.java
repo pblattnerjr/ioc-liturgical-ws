@@ -34,6 +34,8 @@ public class AgesWebsiteIndexToReactTableData {
 	private String servicesIndex = baseUrl + "servicesindex.html";
 	private String booksIndex = baseUrl + "booksindex.html";
 	private String jsonservicesIndex = baseUrl + "servicesindex.json";
+	private String olwBaseUrl = "http://www.agesinitiatives.com/dcs/books/dcs/";
+	private String olwBooksUrl = olwBaseUrl + "booksindex.html";
 	private String agesOcmcBaseUrl = "http://www.agesinitiatives.com/dcs/ocmc/dcs/";
 	private String agesOcmcIndex = "customindex.html";
 	private String readingsIndex = agesOcmcBaseUrl + agesOcmcIndex;
@@ -46,6 +48,72 @@ public class AgesWebsiteIndexToReactTableData {
 	public AgesWebsiteIndexToReactTableData(boolean printPretty) {
 		this.printPretty = printPretty;
 	}
+	
+	public AgesIndexTableData  toReactTableDataFromOlwBooksHtml() throws Exception {
+		AgesIndexTableData result = new AgesIndexTableData(printPretty);
+		Document readingsIndexDoc = null;
+		Connection readingsIndexConnection = null;
+		try {
+			readingsIndexConnection = Jsoup.connect(olwBooksUrl);
+			readingsIndexDoc = readingsIndexConnection.timeout(60*1000).get();
+			Elements books = readingsIndexDoc.select("a.index-books-file-link");
+			for (Element bookAnchor : books) {
+				String href = bookAnchor.attr("href");
+				// 0  1  2    3       4
+				// h/b/me/m01/d01/gr-en/index.html = menaion
+				// h/b/pe/d00p/gr-en/index.html = Pentecostarion
+				// h/b/sy/m01/d03_olw/gr-en/index.html = Synaxarion
+				// h/b/tr/d046/gr-en/index.html = Triodion
+				String[] hrefParts = href.split("/");
+				if (href.startsWith("h/b/")) {
+					String bookType = hrefParts[2];
+					AgesIndexTableRowData row = new AgesIndexTableRowData(printPretty);
+					row.setDayOfWeek("any");
+					row.setUrl(olwBaseUrl + href);
+					switch (bookType) {
+					case ("me"): {
+						String [] dateParts = hrefParts[4].split("_");
+						String date = hrefParts[3] + "/" + dateParts[0];
+						row.setDate(date);
+						row.setType("Menaion (τά Μηναῖα)");
+						result.addRow(row);
+						break;
+					}
+					case ("pe"): {
+						String [] dateParts = hrefParts[3].split("_");
+						String date = dateParts[0];
+						if (date.equals("d00p")) {
+							date = "d000 Pascha (Το Πάσχα)";
+						}
+						row.setDate(date);
+						row.setType("Pentecostarion (τό Πεντηκοστάριον)");
+						result.addRow(row);
+						break;
+					}
+					case ("sy"): {
+						String [] dateParts = hrefParts[4].split("_");
+						String date = hrefParts[3] + "/" + dateParts[0];
+						row.setDate(date);
+						row.setType("Synaxarion (τό Συναξάριον)");
+						result.addRow(row);
+						break;
+					}
+					case ("tr"): {
+						String [] dateParts = hrefParts[3].split("_");
+						String date = dateParts[0];
+						row.setDate(date);
+						row.setType("Triodion (τό Τριῴδιον)");
+						result.addRow(row);
+						break;
+					}
+					}
+				}
+			}
+		} catch (Exception e) {
+			ErrorUtils.report(logger, e);
+		}
+		return result;
+	}	
 	
 	public AgesIndexTableData  toReactTableDataFromDailyReadingHtml() throws Exception {
 		AgesIndexTableData result = new AgesIndexTableData(printPretty);
@@ -60,7 +128,7 @@ public class AgesWebsiteIndexToReactTableData {
 				String[] hrefParts = href.split("/");
 				if (hrefParts.length == 5) {
 					if (hrefParts[0].equals("h")) {
-						if (hrefParts[3].equals("gr-en")) {
+						if (hrefParts[3].equals("gr-en") || hrefParts[3].equals("gr-spa")) {
 							String [] dateParts = hrefParts[2].split("_");
 							// TODO: we need to compute the year or it needs to be included in the html
 							String year = dateParts[2];
@@ -81,7 +149,6 @@ public class AgesWebsiteIndexToReactTableData {
 		}
 		return result;
 	}	
-	
 	public AgesIndexTableData  toReactTableDataFromHtml() throws Exception {
 		AgesIndexTableData result = new AgesIndexTableData(printPretty);
 		Document booksIndexDoc = null;

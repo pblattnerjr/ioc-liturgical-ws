@@ -35,13 +35,12 @@ import ioc.liturgical.ws.app.ServiceProvider;
 
 import org.ocmc.ioc.liturgical.schemas.constants.BIBLICAL_BOOKS;
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.constants.NOTE_TYPES;
-import ioc.liturgical.ws.constants.ResultNewForms;
 
 import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
 import org.ocmc.ioc.liturgical.schemas.constants.LIBRARIES;
 import org.ocmc.ioc.liturgical.schemas.constants.LITURGICAL_BOOKS;
 import org.ocmc.ioc.liturgical.schemas.constants.NEW_FORM_CLASSES_DB_API;
+import org.ocmc.ioc.liturgical.schemas.constants.NOTE_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.RELATIONSHIP_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.SCHEMA_CLASSES;
 import org.ocmc.ioc.liturgical.schemas.constants.SINGLETON_KEYS;
@@ -76,6 +75,7 @@ import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.WordAnalyses;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.WordAnalysis;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.TokenAnalysis;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.WordInflected;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.notes.TextualNote;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.ontology.TextLiturgical;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.tables.ReactBootstrapTableData;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.templates.Template;
@@ -84,6 +84,7 @@ import org.ocmc.ioc.liturgical.schemas.models.db.internal.LTKVJsonObject;
 import org.ocmc.ioc.liturgical.schemas.models.forms.ontology.TextLiturgicalTranslationCreateForm;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTK;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDb;
+import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDbNote;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDbOntologyEntry;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTKLink;
 import org.ocmc.ioc.liturgical.schemas.models.ws.db.Utility;
@@ -95,6 +96,7 @@ import org.ocmc.ioc.liturgical.schemas.models.ws.response.column.editor.LibraryT
 import org.ocmc.ioc.liturgical.schemas.models.db.links.LinkRefersToBiblicalText;
 import org.ocmc.ioc.liturgical.schemas.models.db.returns.LinkRefersToTextToTextTableRow;
 //import org.ocmc.ioc.liturgical.schemas.models.db.returns.ResultNewForms;
+import org.ocmc.ioc.liturgical.schemas.models.db.returns.ResultNewForms;
 
 import ioc.liturgical.ws.nlp.Utils;
 import net.ages.alwb.tasks.DependencyNodesCreateTask;
@@ -109,7 +111,6 @@ import net.ages.alwb.utils.core.datastores.json.exceptions.MissingSchemaIdExcept
 import net.ages.alwb.utils.core.generics.MultiMapWithList;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 import org.ocmc.ioc.liturgical.utils.GeneralUtils;
-import org.ocmc.ioc.liturgical.utils.LiturgicalDayProperties;
 
 import net.ages.alwb.utils.core.misc.AlwbUrl;
 import net.ages.alwb.utils.nlp.fetchers.Ox3kUtils;
@@ -170,6 +171,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  JsonArray treebankTypesArray = new JsonArray();
 	  JsonObject treebankTypesProperties = new JsonObject();
 	  JsonArray tagOperatorsDropdown = new JsonArray();
+	  JsonArray textNoteTypesDropdown = NOTE_TYPES.toDropdownJsonArray(true);
 	  List<DropdownItem> noteTypesDropdown = new ArrayList<DropdownItem>();
 	  List<DropdownItem> biblicalBookNamesDropdown = new ArrayList<DropdownItem>();
 	  List<DropdownItem> biblicalChapterNumbersDropdown = new ArrayList<DropdownItem>();
@@ -193,6 +195,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			  , boolean logQueriesWithNoMatches
 			  , boolean readOnly
 			  , InternalDbManager internalManager
+			  , String uid
+			  , String pwd
 			  ) {
 		  this.adminUserId = ServiceProvider.ws_usr;
 		  this.internalManager = internalManager; 
@@ -205,8 +209,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  while (tries <= maxTries) {
 			  neo4jManager = new Neo4jConnectionManager(
 					  neo4jDomain
-					  , ServiceProvider.ws_usr
-					  , ServiceProvider.ws_pwd
+					  , uid
+					  , pwd
 					  , readOnly
 					  );
 			  if (neo4jManager.isConnectionOK()) {
@@ -1097,7 +1101,12 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, String operator // for tags, e.g. AND, OR
 				) {
 			boolean prefixProps = false;
-			String theLabel = type;
+			String theLabel = "";
+			if (type.equals(TOPICS.NOTE_USER.label)) {
+				theLabel = type;
+			} else {
+				theLabel = TOPICS.NOTE_TEXTUAL.label;
+			}
 			String theProperty = property;
 			if (theProperty.startsWith("*")) {
 				theProperty = "value";
@@ -1118,7 +1127,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						.LABEL(theLabel)
 						.WHERE(theProperty)
 						;
-			} else {
+			} else { 
 				addWherePublic = this.addWherePublic(library, requestor);
 				builder = new CypherQueryBuilderForNotes(
 						prefixProps
@@ -1127,6 +1136,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						.MATCH()
 						.LABEL(theLabel)
 						.WHERE(theProperty)
+						.NOTE_TYPE(type)
 						;
 			}
 			
@@ -1152,7 +1162,27 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			}
 			builder.TAGS(tags);
 			builder.TAG_OPERATOR(operator);
-			builder.RETURN("from.value as text, to.id as id, to.library as library, to.topic as topic, to.key as key, to.value as value, to.tags as tags, to._valueSchemaId as _valueSchemaId");
+			if (type.equals(TOPICS.NOTE_USER.label)) {
+				builder.RETURN("from.value as text, to.id as id, to.library as library, to.topic as topic, to.key as key, to.value as value, to.tags as tags, to._valueSchemaId as _valueSchemaId");
+			} else {
+				StringBuffer sb = new StringBuffer();
+				sb.append("from.value as text");
+				sb.append(", to.id as id");
+				sb.append(", to.library as library");
+				sb.append(", to.topic as topic");
+				sb.append(", to.key as key");
+				sb.append(", to.value as value");
+				sb.append(", to.valueFormatted as valueFormatted");
+				sb.append(", to.noteType as type");
+				sb.append(", to.noteTitle as title");
+				sb.append(", to.liturgicalScope as liturgicalScope");
+				sb.append(", to.liturgicalLemma as liturgicalLemma");
+				sb.append(", to.biblicalLemma as biblicalLemma");
+				sb.append(", to.biblicalScope as biblicalScope");
+				sb.append(", to.tags as tags");
+				sb.append(", to._valueSchemaId as _valueSchemaId");
+				builder.RETURN(sb.toString());
+			}
 			builder.ORDER_BY("to.seq"); // 
 
 			CypherQueryForNotes q = builder.build();
@@ -1641,21 +1671,22 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					String validation = SCHEMA_CLASSES.validate(json);
 					if (validation.length() == 0) {
 					try {
-							LTKDb record = 
-									 gson.fromJson(
-											json
-											, SCHEMA_CLASSES
-												.classForSchemaName(
-														form.get_valueSchemaId())
-												.ltkDb.getClass()
-								);
-							if (record.getVisibility() != VISIBILITY.PUBLIC) {
-								if (record.getLibrary().equals(this.getUserDomain(requestor))) {
-									record.setVisibility(VISIBILITY.PERSONAL);
-								} else {
-										record.setVisibility(VISIBILITY.PRIVATE);
-								}
-							}
+						LTKDbNote record = 
+									 (LTKDbNote) gson.fromJson(
+								json
+								, SCHEMA_CLASSES
+									.classForSchemaName(
+											form.get_valueSchemaId())
+									.ltkDb.getClass()
+);
+//							if (record.getVisibility() != VISIBILITY.PUBLIC) {
+//								if (record.getLibrary().equals(this.getUserDomain(requestor))) {
+//									record.setVisibility(VISIBILITY.PERSONAL);
+//								} else {
+//										record.setVisibility(VISIBILITY.PRIVATE);
+//								}
+//							}
+						    record.setValue(record.getValueFormatted());
 							record.setSubClassProperties(json);
 							record.setActive(true);
 							record.setCreatedBy(requestor);
@@ -1856,16 +1887,22 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 
 		public RequestStatus updateLTKDbObject(
 				String requestor
-				, String json // must be a subclass of LTKDbOntologyEntry
+				, String json 
 				)  {
 			RequestStatus result = new RequestStatus();
 			try {
 				LTKDb record = gson.fromJson(json, LTKDb.class);
 				if (internalManager.authorized(requestor, VERBS.PUT, record.getLibrary())) {
+					String tempJson = json;
 					// convert it to the proper subclass of LTKDb
+					if (record.get_valueSchemaId().startsWith("TextualNote")) {
+						TextualNote note = gson.fromJson(json, TextualNote.class);
+						note.setValue(note.getValueFormatted()); // this will remove HTML formatting and put the pure text into the value
+						tempJson  = note.toJsonString();
+					}
 					record = 
 							gson.fromJson(
-									json
+									tempJson
 									, SCHEMA_CLASSES
 										.classForSchemaName(
 												record.get_valueSchemaId())
@@ -1901,7 +1938,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		}
 
 		/**
-		 * Todo: filter the sections and create a Section doc for each one
+		 * TODO: filter the sections and create a Section doc for each one
 		 */
 		public RequestStatus updateTemplate(
 				String requestor
@@ -2683,6 +2720,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				values.add("typeProps", this.noteTypesProperties);
 				values.add("typeTags", getNotesTagsForAllTypes());
 				values.add("tagOperators", tagOperatorsDropdown);
+				values.add("textNoteTypes", this.textNoteTypesDropdown);
 				JsonObject jsonDropdown = new JsonObject();
 				jsonDropdown.add("dropdown", values);
 
@@ -2763,6 +2801,25 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				result.setResult(list);
 				result.setQuery("get dropdowns for ontology search");
 
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+
+		public ResultJsonObjectArray getOntologyEntitiesDropdown(
+				String relationshipType
+				) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
+				JsonArray entities = getDropdownInstancesForOntologyType(relationshipType);
+				JsonObject jsonDropdown = new JsonObject();
+				jsonDropdown.add("dropdown", entities);
+				List<JsonObject> list = new ArrayList<JsonObject>();
+				list.add(jsonDropdown);
+				result.setResult(list);
+				result.setQuery("get dropdowns for ontology search");
 			} catch (Exception e) {
 				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 				result.setStatusMessage(e.getMessage());
@@ -3176,7 +3233,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			try {
 				for (TOPICS t : TOPICS.values()) {
 					if (
-							t == TOPICS.NOTES_ROOT 
+							t == TOPICS.NOTE_TEXTUAL
 							|| t == TOPICS.NOTE_USER 
 							) {
 						JsonArray value = getTags(t.label);
@@ -3353,6 +3410,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				AgesIndexTableData data = ages.toReactTableDataFromJson();
 				AgesIndexTableData readingData = ages.toReactTableDataFromDailyReadingHtml();
 				data.addList(readingData);
+				AgesIndexTableData bookData = ages.toReactTableDataFromOlwBooksHtml();
+				data.addList(bookData);
 				List<JsonObject> list = new ArrayList<JsonObject>();
 				list.add(data.toJsonObject());
 				result.setResult(list);
@@ -3517,11 +3576,12 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						, centerFallback
 						, rightFallback
 						, this.printPretty // print pretty
+						, this
 						);
 				LDOM template = ages.toLDOM();
 				String title = template.getPdfFilename();
 				Map<String,String> values = template.getValues();
-				
+			
 				// Get the title information
 				AlwbUrl urlUtils = new AlwbUrl(url);
 				template.setLeftTitle(this.getTitleForCover(urlUtils, leftLibrary, leftFallback));
@@ -3543,8 +3603,6 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				 * we do not need to add them. We already have them.
 				 */
 				for ( Entry<String,String> entry: template.getValues().entrySet()) {
-//					System.out.println("Left: " + leftLibrary + " center: " + centerLibrary + " right: " + rightLibrary);
-//					System.out.println(entry.getKey());
 					if (leftLibrary != null && entry.getKey().startsWith(leftLibrary)) {
 						if (
 								leftLibrary.equals("gr_gr_cog")  
@@ -3554,7 +3612,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						} else {
 							ResultJsonObjectArray dbValue = this.getForId(entry.getKey(), leftLibrary);
 							if (dbValue.valueCount == 1) {
-								values.put(entry.getKey(), dbValue.getFirstObjectValueAsString());
+								JsonObject o = dbValue.getFirstObject();
+								if (o.get("value").getAsString().trim().length() > 0) {
+									values.put(entry.getKey(), dbValue.getFirstObjectValueAsString());
+								}
 							}
 						}
 					} else if (
@@ -3570,7 +3631,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						} else {
 							ResultJsonObjectArray dbValue = this.getForId(entry.getKey(), centerLibrary);
 							if (dbValue.valueCount == 1) {
-								values.put(entry.getKey(), dbValue.getFirstObjectValueAsString());
+								JsonObject o = dbValue.getFirstObject();
+								if (o.get("value").getAsString().trim().length() > 0) {
+									values.put(entry.getKey(), dbValue.getFirstObjectValueAsString());
+								}
 							}
 						}
 					} else if (
@@ -3586,7 +3650,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						} else {
 							ResultJsonObjectArray dbValue = this.getForId(entry.getKey(), rightLibrary);
 							if (dbValue.valueCount == 1) {
-								values.put(entry.getKey(), dbValue.getFirstObjectValueAsString());
+								JsonObject o = dbValue.getFirstObject();
+								if (o.get("value").getAsString().trim().length() > 0) {
+									values.put(entry.getKey(), dbValue.getFirstObjectValueAsString());
+								}
 							}
 						}
 					}
@@ -3809,7 +3876,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						if (entry.getKey().startsWith(translationLibrary)) {
 							ResultJsonObjectArray dbValue = this.getForId(entry.getKey(), translationLibrary);
 							if (dbValue.valueCount == 1) {
-								values.put(entry.getKey(), dbValue.getFirstObjectValueAsString());
+								JsonObject o = dbValue.getFirstObject();
+								if (o.get("value").getAsString().trim().length() > 0) {
+									values.put(entry.getKey(), dbValue.getFirstObjectValueAsString());
+								}
 							}
 						}
 					}
@@ -4042,9 +4112,12 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		 * @return
 		 */
 		public JsonArray getDropdownInstancesForOntologyType(String type) {
-			JsonArray result = new JsonArray();
-				String query  = "match (n:" + TOPICS.ONTOLOGY_ROOT.label + ") where n.id starts with = \"en_sys_ontology~" + type + "~\" return n.id as id, n.name as name";
-				ResultJsonObjectArray entries = getForQuery(query, false, false);
+				JsonArray result = new JsonArray();
+				StringBuffer query = new StringBuffer();
+				query.append("match (n:OntologyRoot:");
+				query.append(type);
+				query.append(") return n.id as id, n.name as name");
+				ResultJsonObjectArray entries = getForQuery(query.toString(), false, false);
 				for (JsonElement entry : entries.getValues()) {
 					try {
 						if (entry.getAsJsonObject().has("name")) { // exclude items with no name
@@ -4067,9 +4140,11 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			Map<String,JsonArray> result = new TreeMap<String,JsonArray>();
 			for (TOPICS t : TOPICS.values()) {
 				try {
-					JsonArray array = this.getDropdownInstancesForOntologyType(t.label);
-					if (array != null && array.size() > 0) {
-						result.put(t.label, array);
+					if (! t.label.toLowerCase().contains("root")) {
+						JsonArray array = this.getDropdownInstancesForOntologyType(t.label);
+						if (array != null && array.size() > 0) {
+							result.put(t.label, array);
+						}
 					}
 				} catch (Exception e) {
 					ErrorUtils.report(logger, e);
@@ -4310,8 +4385,11 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			ResultNewForms result = new ResultNewForms(true);
 			result.setQuery(query);
 			result.setDomains(internalManager.getDomainDropdownsForUser(requestor));
-			result.setOntologyTypesDropdown(TOPICS.keyNamesToDropdown());
-			result.setOntologyDropdowns(getDropdownsForOntologyInstances());
+			result.setOntologyTypesDropdown(
+					TOPICS.keyNamesTrueOntologyToDropdown()
+					); // for now just loading ontology schemas
+//			result.setOntologyTypesDropdown(TOPICS.keyNamesToDropdown()); // this version loads all types
+//			result.setOntologyDropdowns(this.getDropdownsForOntologyInstances()); // takes too long to load.
 			
 			result.setBiblicalBooksDropdown(this.biblicalBookNamesDropdown);
 			result.setBiblicalChaptersDropdown(this.biblicalChapterNumbersDropdown);
@@ -4329,10 +4407,9 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			List<JsonObject> dbResults = new ArrayList<JsonObject>();
 			try {
 				for (org.ocmc.ioc.liturgical.schemas.constants.NEW_FORM_CLASSES_DB_API e : NEW_FORM_CLASSES_DB_API.values()) {
-					
-					if (internalManager.userAuthorizedForThisForm(requestor, e.restriction)) {
-						dbResults.add(e.obj.toJsonObject());
-					}
+						if (internalManager.userAuthorizedForThisForm(requestor, e.restriction)) {
+							dbResults.add(e.obj.toJsonObject());
+						}
 				}
 				for (TEMPLATE_CONFIG_MODELS e : TEMPLATE_CONFIG_MODELS.values()) {
 					dbResults.add(e.model.toJsonObject());
@@ -4699,7 +4776,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				sb.append(relationshipType.typename);
 				sb.append("]->(e)");
 				ResultJsonObjectArray queryResult = this.getForQuery(sb.toString(),false, false);
-				if (queryResult.status.getCounterTotal() > 0) {
+				if (queryResult.status.getCounterTotal() < 1) {
 					status.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 					status.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message);
 				} else {

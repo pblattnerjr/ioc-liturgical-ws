@@ -4,7 +4,7 @@
   <groupId>ioc</groupId>
   <artifactId>liturgical-ws</artifactId>
   <name>IOC Liturgical Web Services</name>
-  <version>v1.4.6</version>
+  <version>v1.5.1</version>
   <description>Web Services used for International Orthodox Christian Liturgical Texts</description>
   <build>
     <resources>
@@ -119,6 +119,13 @@
       </snapshots>
       <id>ioc.liturgical.utils</id>
       <url>https://raw.github.com/OCMC-Translation-Projects/ioc-liturgical-utils/mvn-repo/</url>
+    </repository>
+    <repository>
+      <snapshots>
+        <updatePolicy>always</updatePolicy>
+      </snapshots>
+      <id>pols-git</id>
+      <url>https://raw.github.com/OCMC-Translation-Projects/pols-git/mvn-repo/</url>
     </repository>
   </repositories>
   <properties>

@@ -24,6 +24,7 @@ public class CypherQueryForNotes {
 	private String MATCH = "";
 	private String TYPE = "";
 	private String EXCLUDE_TYPE = "";
+	private String NOTE_TYPE = "";
 	private String LIBRARY = "";
 	private String LABEL = "";
 	private String WHERE = "";
@@ -43,6 +44,7 @@ public class CypherQueryForNotes {
 			String MATCH
 			, String TYPE
 			, String EXCLUDE_TYPE
+			, String NOTE_TYPE
 			, String LIBRARY
 			, String LABEL
 			, String WHERE
@@ -61,6 +63,7 @@ public class CypherQueryForNotes {
 		this.MATCH = MATCH; // empty string--just used to make builder look like cypher.
 		this.TYPE = TYPE;
 		this.EXCLUDE_TYPE = EXCLUDE_TYPE;
+		this.NOTE_TYPE = NOTE_TYPE;
 		this.LIBRARY = LIBRARY;
 		this.LABEL = LABEL;
 		this.WHERE = WHERE;
@@ -146,6 +149,18 @@ public class CypherQueryForNotes {
 		if (whereClause.length() > 0) {
 			sb.append(whereClause);
 		}
+
+		if (NOTE_TYPE != null && NOTE_TYPE.length() > 0) {
+			if (! NOTE_TYPE.startsWith("*")) {
+				if (whereClause.length() > 0) {
+					sb.append(" AND ");
+				} else {
+					sb.append(" WHERE  ");
+				}
+				sb.append("to.noteType = '" + NOTE_TYPE + "' ");
+			} 
+		}
+		
 		sb.append(" RETURN " + RETURN);
 		sb.append(" ORDER BY " + ORDER_BY);
 		return sb.toString();
@@ -345,6 +360,16 @@ public class CypherQueryForNotes {
 
 	public void setLABEL(String lABEL) {
 		LABEL = lABEL;
+	}
+
+
+	public String getNOTE_TYPE() {
+		return NOTE_TYPE;
+	}
+
+
+	public void setNOTE_TYPE(String NOTE_TYPE) {
+		this.NOTE_TYPE = NOTE_TYPE;
 	}
 
 }

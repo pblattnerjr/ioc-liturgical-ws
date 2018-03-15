@@ -15,6 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ioc.liturgical.ws.constants.Constants;
+import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
+
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 import net.ages.alwb.utils.core.misc.AlwbUrl;
@@ -43,6 +45,7 @@ public class AgesHtmlToLDOM {
 	private String languageCodes = "";
 	private Map<String,String> greekValues = new TreeMap<String,String>();
 	private Map<String,String> englishValues = new TreeMap<String,String>();
+	private ExternalDbManager dbManager = null;
 	
 	public AgesHtmlToLDOM(
 			String url
@@ -52,6 +55,7 @@ public class AgesHtmlToLDOM {
 			, String leftFallback
 			, String centerFallback
 			, String rightFallback
+			, ExternalDbManager dbManager
 			) {
 		this.url = url;
 		this.leftLibrary = leftLibrary;
@@ -61,6 +65,7 @@ public class AgesHtmlToLDOM {
 		this.centerFallback = centerFallback;
 		this.rightFallback = rightFallback;
 		this.setLanguageCodes();
+		this.dbManager = dbManager;
 	}
 	public AgesHtmlToLDOM(
 			String url
@@ -71,6 +76,7 @@ public class AgesHtmlToLDOM {
 			, String centerFallback
 			, String rightFallback
 			, boolean printPretty
+			, ExternalDbManager dbManager
 			) {
 		this.url = url;
 		this.leftLibrary = leftLibrary;
@@ -81,6 +87,7 @@ public class AgesHtmlToLDOM {
 		this.rightFallback = rightFallback;
 		this.printPretty = printPretty;
 		this.setLanguageCodes();
+		this.dbManager = dbManager;
 	}
 
 	private void setLanguageCodes() {
@@ -125,23 +132,37 @@ public class AgesHtmlToLDOM {
 		try {
         	IdManager idManager = null;
 	        for (Element valueSpan : valueSpans) {
-	        	String dataKey = valueSpan.attr("data-key");
+	        	String dataKey = "";
+	        	if (valueSpan.hasClass("key")) {
+		        	dataKey = valueSpan.select("span.key").attr("data-key");
+	        	} else {
+		        	dataKey = valueSpan.attr("data-key");
+	        	}
 	        	String [] parts = dataKey.split("\\|");
 	        	String key = parts[1];
 	        	parts = parts[0].split("_");
-	        	String domain = parts[1] 
-						+ Constants.DOMAIN_DELIMITER 
-						+ parts[2].toLowerCase() 
-						+ Constants.DOMAIN_DELIMITER 
-	        			+ parts[3]
-	        	;
+	        	String domain = "gr_GR_cog";
+	        	if (parts.length == 4) {
+		        	domain = parts[1] 
+							+ Constants.DOMAIN_DELIMITER 
+							+ parts[2].toLowerCase() 
+							+ Constants.DOMAIN_DELIMITER 
+		        			+ parts[3]
+		        	;
+	        	}
 	        	String topic = parts[0];
 	        	String value = "";
 	        	if (valueSpan.hasClass("key")) {
 	        		value = valueSpan.parent().text().trim();
 	        	} else {
 		        	value = valueSpan.text().trim();
-	        	}
+	        	}   
+    			if (value.startsWith("[saint")
+    					||value.startsWith("[paragraph")
+    					|| value.contains("~")
+    					) {
+    				value = "";
+    			}
 	        	if (domain.startsWith("gr")) {
 		        	idManager = new IdManager("gr_gr_ages", topic, key);
 		        	if (value.length() == 0) {
@@ -165,40 +186,49 @@ public class AgesHtmlToLDOM {
 		        		this.englishValues.put(idManager.getId(), value);
 		        	}
 	        	}
-	        }
-	        for (Element valueSpan : versionDesignations) {
-	        	String dataKey = valueSpan.select("span.key").attr("data-key");
-	        	String [] parts = dataKey.split("\\|");
-	        	String key = parts[1];
-	        	parts = parts[0].split("_");
-	        	String domain = parts[1] 
-						+ Constants.DOMAIN_DELIMITER 
-						+ parts[2].toLowerCase() 
-						+ Constants.DOMAIN_DELIMITER 
-	        			+ parts[3]
-	        	;
-	        	String topic = parts[0];
-	        	String value = "";
-	        	if (valueSpan.hasClass("key")) {
-	        		value = valueSpan.parent().text().trim();
-	        	} else {
-		        	value = valueSpan.text().trim();
-	        	}
-	        	idManager = new IdManager(domain, topic, key);
-	        	if (domain.startsWith("gr")) {
-	        		if (this.greekValues.containsKey(idManager.getId())) {
-	        			// ignore it
-	        		} else {
-		        		this.greekValues.put(idManager.getId(), value);
-	        		}
-	        	} else {
-	        		if (this.englishValues.containsKey(idManager.getId())) {
-	        			// ignore it
-	        		} else {
-		        		this.englishValues.put(idManager.getId(), value);
-	        		}
-	        	}
-	        }
+			}
+//	        for (Element valueSpan : versionDesignations) {
+//	        	String dataKey = valueSpan.select("span.key").attr("data-key");
+//	        	String [] parts = dataKey.split("\\|");
+//	        	String key = parts[1];
+//	        	parts = parts[0].split("_");
+//	        	String domain = "gr_GR_cog";
+//	        	if (parts.length == 4) {
+//		        	domain = parts[1] 
+//							+ Constants.DOMAIN_DELIMITER 
+//							+ parts[2].toLowerCase() 
+//							+ Constants.DOMAIN_DELIMITER 
+//		        			+ parts[3]
+//		        	;
+//	        	}
+//	        	String topic = parts[0];
+//	        	String value = "";
+//	        	if (valueSpan.hasClass("key")) {
+//	        		value = valueSpan.parent().text().trim();
+//	        	} else {
+//		        	value = valueSpan.text().trim();
+//	        	}
+//    			if (value.startsWith("[saint")
+//    					||value.startsWith("[paragraph")
+//    					|| value.contains("~")
+//    					) {
+//	        		value = "";
+//	        	}
+//	        	idManager = new IdManager(domain, topic, key);
+//	        	if (domain.startsWith("gr")) {
+//	        		if (this.greekValues.containsKey(idManager.getId())) {
+//	        			// ignore it
+//	        		} else {
+//			        		this.greekValues.put(idManager.getId(), value);
+//	        		}
+//	        	} else {
+//	        		if (this.englishValues.containsKey(idManager.getId())) {
+//	        			// ignore it
+//	        		} else {
+//			        		this.englishValues.put(idManager.getId(), value);
+//	        		}
+//	        	}
+//        	}
 		} catch (Exception e) {
 			throw e;
 		}
@@ -230,12 +260,15 @@ public class AgesHtmlToLDOM {
 	    	String key = parts[1];
 	    	parts = parts[0].split("_");
 	    	String topic = parts[0];
-	    	String domain = parts[1] 
-					+ Constants.DOMAIN_DELIMITER 
-					+ parts[2].toLowerCase() 
-					+ Constants.DOMAIN_DELIMITER 
-	    			+ parts[3]
-	    	;
+	    	String domain = "gr_GR_cog";
+	    	if (parts.length == 4) {
+		    	domain = parts[1] 
+						+ Constants.DOMAIN_DELIMITER 
+						+ parts[2].toLowerCase() 
+						+ Constants.DOMAIN_DELIMITER 
+		    			+ parts[3]
+		    	;
+	    	}
 	    	domain = domain.toLowerCase();
 	    	result = new IdManager(domain + Constants.ID_DELIMITER + topic + Constants.ID_DELIMITER + key);
 		} catch (Exception e) {
@@ -252,10 +285,10 @@ public class AgesHtmlToLDOM {
 		LDOM result = new LDOM(url, printPretty);
 		// first add all the Greek and English values just in case
 		for (Entry<String,String> entry : this.greekValues.entrySet()) {
-			result.addValue(entry.getKey(), entry.getValue());
+				result.addValue(entry.getKey(), entry.getValue(), false);
 		}
 		for (Entry<String,String> entry : this.englishValues.entrySet()) {
-			result.addValue(entry.getKey(), entry.getValue());
+				result.addValue(entry.getKey(), entry.getValue(), false);
 		}
 		try {
 	        for (Element valueSpan : valueSpans) {
@@ -275,7 +308,11 @@ public class AgesHtmlToLDOM {
 	        		domain = this.rightLibrary;
 	        		fallbackDomain = this.rightFallback;
 	        	}
-	        	if (domain != null && domain.length() > 0 && fallbackDomain != null && fallbackDomain.length()> 0) {
+	        	if (domain != null 
+	        			&& domain.length() > 0 
+	        			&& fallbackDomain != null 
+	        			&& fallbackDomain.length()> 0
+	        			) {
 		        	idManager.setLibrary(fallbackDomain);
 		        	String value = "";
 		        	if (domain.startsWith("gr")) {
@@ -297,7 +334,7 @@ public class AgesHtmlToLDOM {
 		        	idManager.setLibrary(domain);
 		        	result.addDomain(domain);
 		        	result.addTopicKey(topicKey);
-		        	result.addValue(idManager.getId(), value);
+		        	result.addValue(idManager.getId(), value, false);
 	        		valueSpan.attr(
 	        				"data-key"
 	        				, idManager.getTopic()
@@ -462,6 +499,7 @@ public class AgesHtmlToLDOM {
 		return result;
 	}
 	
+	
 	/**
 	 * This version removes the media-group
 	 * @return
@@ -469,7 +507,14 @@ public class AgesHtmlToLDOM {
 	 */
 	public LDOM toLDOM() throws Exception {
 		LDOM result = new LDOM(url, printPretty);
-		result.setLibraries(leftLibrary, centerLibrary, rightLibrary, leftFallback, centerFallback, rightFallback);
+		result.setLibraries(
+				leftLibrary
+				, centerLibrary
+				, rightLibrary
+				, leftFallback
+				, centerFallback
+				, rightFallback
+				);
 		Document doc = null;
 		Element content = null;
 		try {
@@ -497,6 +542,9 @@ public class AgesHtmlToLDOM {
 				if (keys.size() == 0) {
 					keys = content.select("span.key");
 				}
+			}
+			if (this.dbManager != null) {
+//				populate(content);
 			}
 			LDOM values = this.getValues(keys);
 			result.setDomains(values.getDomains());

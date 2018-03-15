@@ -15,8 +15,9 @@ package ioc.liturgical.ws.managers.databases.external.neo4j.cypher;
 
 public class CypherQueryBuilderForNotes {
 	private String MATCH = "";
-	private String TYPE = "";
 	private String EXCLUDE_TYPE;
+	private String TYPE = "";
+	private String NOTE_TYPE = "";
 	private String LIBRARY = "";
 	private String WHERE = "";
 	private String EQUALS = "";
@@ -52,6 +53,15 @@ public class CypherQueryBuilderForNotes {
     		// ignore
     	} else {
           this.TYPE = ":" + TYPE;
+    	}
+        return this;
+    }
+    
+    public CypherQueryBuilderForNotes NOTE_TYPE(String TYPE) {
+    	if (TYPE.startsWith("*") || TYPE.toLowerCase().startsWith("all") || TYPE.length() == 0) {
+    		// ignore
+    	} else {
+          this.NOTE_TYPE = TYPE;
     	}
         return this;
     }
@@ -168,6 +178,7 @@ public class CypherQueryBuilderForNotes {
         		MATCH
         		, TYPE
         		, EXCLUDE_TYPE
+        		, NOTE_TYPE
         		, LIBRARY
         		, LABEL
         		, WHERE

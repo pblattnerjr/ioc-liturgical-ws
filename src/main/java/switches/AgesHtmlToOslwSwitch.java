@@ -357,7 +357,7 @@ public class AgesHtmlToOslwSwitch {
 		}
 		case "p-dialog-bold": {
 		// {eu.baptism}{euBAP.Key0313.text} (http://www.agesinitiatives.com/dcs/public/dcs/h/b/baptism/gr-en/index.html)
-			result = "Undefined";
+			result = "DialogBold";
 			break;
 		}
 		case "p-dialog-italics": {
@@ -372,7 +372,7 @@ public class AgesHtmlToOslwSwitch {
 		}
 		case "p-dialog-italics-red": {
 		// {prayers}{EisToOnoma}{prayers}{res04p}{rubrical}{Thrice} (http://www.agesinitiatives.com/dcs/public/dcs/h/b/baptism/gr-en/index.html)
-			result = "Undefined";
+			result = "DialogItalicsRed"; 
 			break;
 		}
 		case "p-dialog-key": {
@@ -765,7 +765,7 @@ public class AgesHtmlToOslwSwitch {
 		}
 		case "p-mixed-designation-melody": {
 		// {misc}{Ode3}{he.h.m4}{EffrainetaiEpiSoi.name} (http://www.agesinitiatives.com/dcs/public/dcs/h/b/unction/gr-en/index.html)
-			result = "Undefined";
+			result = "MixedModeDesignation";
 			break;
 		}
 		case "p-mixed-designation-mode": {
@@ -778,9 +778,14 @@ public class AgesHtmlToOslwSwitch {
 			result = "MixedDesignationModeDesignation";
 			break;
 		}
+		case "p-mixed-designation-mode-melody": {
+		// {misc}{Ode1}{misc}{Mode8} (http://www.agesinitiatives.com/dcs/public/dcs/h/b/baptism/gr-en/index.html)
+			result = "MixedDesignationMode";
+			break;
+		}
 		case "p-mixed-italicsred": {
 		//  (http://www.agesinitiatives.com/dcs/public/dcs/h/b/baptism/gr-en/index.html)
-			result = "Undefined";
+			result = "RubricItalics";
 			break;
 		}
 		case "p-mixed-key-mode-key~": {
@@ -800,7 +805,7 @@ public class AgesHtmlToOslwSwitch {
 		}
 		case "p-mixed-mode-designation-melody": {
 		// {misc}{Mode4}{misc}{Ode1}{he.h.m4}{ThalassisToErythraion.name} (http://www.agesinitiatives.com/dcs/public/dcs/h/b/unction/gr-en/index.html)
-			result = "Undefined";
+			result = "MixedModeDesignation";
 			break;
 		}
 		case "p-mixed-mode-key~-melody-key~": {
@@ -855,7 +860,7 @@ public class AgesHtmlToOslwSwitch {
 		}
 		case "p-prayerzero": {
 		// {eu.baptism}{euBAP.Key0208.text} (http://www.agesinitiatives.com/dcs/public/dcs/h/b/baptism/gr-en/index.html)
-			result = "Undefined";
+			result = "Prayer";
 			break;
 		}
 		case "p-reading": {
@@ -900,6 +905,10 @@ public class AgesHtmlToOslwSwitch {
 		}
 		case "p-readingzero": {
 		// {ps}{psa26.v1a.text} (http://www.agesinitiatives.com/dcs/public/dcs/h/b/baptism/gr-en/index.html)
+			result = "ReadingZero";
+			break;
+		}
+		case "p-readingzero-designation": {
 			result = "ReadingZero";
 			break;
 		}

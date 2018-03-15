@@ -44,7 +44,11 @@ public class AgesHtmlToEditableLDOM {
 		this.url = url;
 		this.centerLibrary = centerLibrary;
 	}
-	public AgesHtmlToEditableLDOM(String url, String centerLibrary, boolean printPretty) {
+	public AgesHtmlToEditableLDOM(
+			String url
+			, String centerLibrary
+			, boolean printPretty
+			) {
 		this.url = url;
 		this.centerLibrary = centerLibrary;
 		this.printPretty = printPretty;
@@ -87,13 +91,17 @@ public class AgesHtmlToEditableLDOM {
 	        	if (tdClass.equals("centerCell")) {
 	        		domain = this.centerLibrary;
 	        	} else {
-	        		domain =
-		        			parts[1] 
-		    						+ Constants.DOMAIN_DELIMITER 
-		    						+ parts[2].toLowerCase() 
-		    						+ Constants.DOMAIN_DELIMITER 
-		    	        			+ parts[3]
-		    	        	;
+	        		if (parts.length == 4) { // for some as yet unknown reason AGES html has some data-keys without a domain
+		        		domain =
+			        			parts[1] 
+			    						+ Constants.DOMAIN_DELIMITER 
+			    						+ parts[2].toLowerCase() 
+			    						+ Constants.DOMAIN_DELIMITER 
+			    	        			+ parts[3]
+			    	        	;
+	        		} else {
+	        			domain = "gr_GR_cog"; // don't know what it should be so use Greek
+	        		}
 	        	}
 	        	String topic = parts[0];
 	        	String value = "";
@@ -102,11 +110,14 @@ public class AgesHtmlToEditableLDOM {
 	        	} else {
 		        	value = valueSpan.text();
 	        	}
+	        	if (value.contains("~")) {
+	        		value = value.replaceAll("~", " ~ ");
+	        	}
 	        	String topicKey = topic + Constants.ID_DELIMITER + key;
 	        	IdManager idManager = new IdManager(domain, topic, key);
 	        	result.addDomain(domain);
 	        	result.addTopicKey(topicKey);
-	        	result.addValue(idManager.getId(), value);
+	        	result.addValue(idManager.getId(), value, true);
 	        	if (tdClass.equals("centerCell")) {
 	        		valueSpan.attr(
 	        				"data-key"
@@ -143,11 +154,14 @@ public class AgesHtmlToEditableLDOM {
 	        	} else {
 		        	value = valueSpan.text();
 	        	}
+	        	if (value.contains("~")) {
+	        		value = value.replaceAll("~", " ~ ");
+	        	}
 	        	String topicKey = topic + Constants.ID_DELIMITER + key;
 	        	IdManager idManager = new IdManager(domain, topic, key);
 	        	result.addDomain(domain);
 	        	result.addTopicKey(topicKey);
-	        	result.addValue(idManager.getId(), value);
+	        	result.addValue(idManager.getId(), value, true);
 	        	if (tdClass.equals("centerCell")) {
 	        		valueSpan.attr(
 	        				"data-key"
@@ -183,13 +197,16 @@ public class AgesHtmlToEditableLDOM {
 			        	String [] parts = dataKey.split("\\|");
 			        	String key = parts[1];
 			        	parts = parts[0].split("_");
-			        	String domain = 
-			        			parts[1] 
-								+ Constants.DOMAIN_DELIMITER 
-								+ parts[2].toLowerCase() 
-								+ Constants.DOMAIN_DELIMITER 
-			        			+ parts[3]
-			        	;
+			        	String domain = "gr_GR_cog";
+			        	if (parts.length == 4) {
+				        	domain = 
+				        			parts[1] 
+									+ Constants.DOMAIN_DELIMITER 
+									+ parts[2].toLowerCase() 
+									+ Constants.DOMAIN_DELIMITER 
+				        			+ parts[3]
+				        	;
+			        	}
 			        	String topic = parts[0];
 			        	String topicKey = topic + Constants.ID_DELIMITER + key;
 			        	IdManager idManager = new IdManager(domain, topic, key);
@@ -240,6 +257,7 @@ public class AgesHtmlToEditableLDOM {
 			if (this.centerLibrary.length() > 0) {
 				this.cloneGreek(content);
 			}
+
 			Elements keys = content.select("span.kvp");
 			if (keys.size() == 0) {
 				keys = content.select("span.key");
@@ -249,6 +267,16 @@ public class AgesHtmlToEditableLDOM {
 			result.setDomains(values.getDomains());
 			result.setTopicKeys(values.getTopicKeys());
 			result.setValues(values.getValues());
+			
+			if (this.centerLibrary.length() > 0) {
+				content.select("td.leftCell").forEach(e -> e.attr("class", "cellOneOfThree"));
+				content.select("td.centerCell").forEach(e -> e.attr("class", "cellTwoOfThree"));
+				content.select("td.rightCell").forEach(e -> e.attr("class", "cellThreeOfThree"));
+			} else  {
+				content.select("td.leftCell").forEach(e -> e.attr("class", "cellOneOfTwo"));
+				content.select("td.rightCell").forEach(e -> e.attr("class", "cellTwoOfTwo"));
+			}
+
 			LDOM_Element eContent = new LDOM_Element(printPretty);
 			eContent.setTag(content.tagName());
 			eContent.setClassName(content.attr("class"));

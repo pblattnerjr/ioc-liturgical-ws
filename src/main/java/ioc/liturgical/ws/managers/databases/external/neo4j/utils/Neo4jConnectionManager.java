@@ -699,6 +699,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		return result;
 	}
 
+
 	public RequestStatus updateWhereEqual(LTKDb doc) throws DbException {
 		RequestStatus result = new RequestStatus();
 		int count = 0;
@@ -728,6 +729,34 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		return result;
 	}
 
+	public RequestStatus updateWhereEqual(String currentId, LTKDb doc) throws DbException {
+		RequestStatus result = new RequestStatus();
+		int count = 0;
+		setIdConstraint(doc.toSchemaAsLabel());
+		String query = 
+				"match (n:" + TOPICS.ROOT.label + ") where n.id = \"" 
+				+ currentId
+		        + "\" set n = {props} return count(n)";
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
+			Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
+			StatementResult neoResult = session.run(query, props);
+			count = neoResult.consume().counters().propertiesSet();
+			if (count > 0) {
+		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": updated " + doc.getId());
+		    	this.insert(new Transaction(query, doc, hostName));
+			} else {
+		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + " " + doc.getId());
+			}
+		} catch (Exception e){
+			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+			result.setDeveloperMessage(e.getMessage());
+		}
+    	recordQuery(query, result.getCode(), count);
+		return result;
+	}
 	public RequestStatus updateWhereRelationshipEqual(LTKDb doc) throws DbException {
 		RequestStatus result = new RequestStatus();
 		int count = 0;

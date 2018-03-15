@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.ocmc.ioc.liturgical.schemas.constants.SINGLETON_KEYS;
 import org.ocmc.ioc.liturgical.schemas.constants.TOPICS;
 import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
+import org.apache.commons.io.FileUtils;
 import org.joda.time.Instant;
 import org.ocmc.ioc.liturgical.schemas.constants.ENDPOINTS_DB_API;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
@@ -162,7 +163,7 @@ public class Neo4jController {
 			return json.toString();
 		});
 
-		// GET user notes matching specified parameters
+		// GET notes matching specified parameters
 		path = ENDPOINTS_DB_API.NOTES.pathname;
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
@@ -290,6 +291,16 @@ public class Neo4jController {
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
         	return externalManager.getOntologySearchDropdown().toJsonString();
+		});
+
+		// GET dropdowns for searching ontology properties
+		path = ENDPOINTS_DB_API.DROPDOWNS_ONTOLOGY_ENTITIES.pathname;
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+        	return externalManager.getOntologyEntitiesDropdown(
+        			request.queryParams("t")  // link type (e.g. REFERS_TO_HUMAN)
+        			).toJsonString();
 		});
 
 		// GET dropdowns for searching notes
@@ -428,12 +439,28 @@ public class Neo4jController {
 			        		}
 			        	}
 			        }
+			        
+			        File newFile = new File(
+			        		ServiceProvider.staticExternalFileLocation 
+			        		+ "/pdf/" 
+			        		+ id
+			        		+ ".pdf"
+			        );
 			        byte[] data = Files.readAllBytes(filePath);
 			        HttpServletResponse httpServletResponse = response.raw();
 			        httpServletResponse.setContentType("application/pdf");
+			        httpServletResponse.setContentLength(data.length);
 			        httpServletResponse.addHeader("Content-Disposition", "inline; filename=" + id + ".pdf");
+			        httpServletResponse.addHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+			        httpServletResponse.addHeader("Pragma", "no-cache");
+			        httpServletResponse.addHeader("Expires", "0");
 			        httpServletResponse.getOutputStream().write(data);
+			        httpServletResponse.getOutputStream().flush();
 			        httpServletResponse.getOutputStream().close();
+			        
+			        /**
+    						headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+			         */
 			    } catch (IOException e) {
 			        e.printStackTrace();
 			    }

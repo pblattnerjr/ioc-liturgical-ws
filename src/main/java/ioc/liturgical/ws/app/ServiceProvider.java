@@ -133,7 +133,7 @@ public class ServiceProvider {
 	static boolean createTestUsers = false; // can be overridden by serviceProvider.config
 	static boolean runningJUnitTests = false; // can be overridden by serviceProvider.config
 	static boolean useExternalStaticFiles = true; // can be overridden by serviceProvider.config
-	static String staticExternalFileLocation = null;
+	public static String staticExternalFileLocation = null;
 	
 	public static boolean synchEnabled = false; // can be overridden by serviceProvider.config
 	public static String synchDomain = "";  // can be overridden by serviceProvider.config
@@ -360,7 +360,8 @@ public class ServiceProvider {
 		 */
 		if (! runningJUnitTests) {
 			if (useExternalStaticFiles) {
-				externalStaticFileLocation(ServiceProvider.staticExternalFileLocation);
+//				externalStaticFileLocation(ServiceProvider.staticExternalFileLocation);
+				externalStaticFileLocation(Constants.PDF_FOLDER);
 			} else {
 				staticFileLocation("/public"); 
 			}
@@ -390,6 +391,8 @@ public class ServiceProvider {
 						, logQueriesWithNoMatches
 						, externalDbIsReadOnly
 						, storeManager
+						  , ServiceProvider.ws_usr
+						  , ServiceProvider.ws_pwd
 						);
 				docService.setPrettyPrint(debug);
 
@@ -909,8 +912,9 @@ public class ServiceProvider {
 	  public static String sendMessage(String message) {
 		  String response = "";
 		  if (ServiceProvider.messagingEnabled) {
+			  String hostAndMessage = hostname + message;
 			  try {
-				  response = MessageUtils.sendMessage(messagingToken, hostname + " " + message);
+				  response = MessageUtils.sendMessage(messagingToken, hostAndMessage);
 			  } catch (Exception e) {
 				  ServiceProvider.messagingEnabled = false;
 			  }

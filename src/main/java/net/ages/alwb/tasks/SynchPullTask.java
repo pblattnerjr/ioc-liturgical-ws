@@ -8,6 +8,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.managers.databases.external.neo4j.utils.Neo4jConnectionManager;
 import ioc.liturgical.ws.managers.synch.SynchManager;
 
@@ -74,47 +75,51 @@ public class SynchPullTask implements Runnable {
 	public void run() {
 		try {
 			if (synchManager.synchConnectionOK()) {
-				SynchLog log = dbManager.getSynchLog();
-				ResultJsonObjectArray transactions  = synchManager.getTransactionsSince("wsadmin",log.getLastUsedSynchTimestamp());
-				if (transactions.valueCount > 0) {
-					logger.info("Got " + transactions.valueCount + " transactions from synch server");
-					for (JsonObject o : transactions.values) {
-						try {
-							Transaction trans = gson.fromJson(o, Transaction.class);
-							LTKDb ltkDb = gson.fromJson(trans.getJson(), LTKDb.class);
-							LTKDb record = 
-										gson.fromJson(
-												trans.getJson()
-												, SCHEMA_CLASSES
-													.classForSchemaName(
-															ltkDb.get_valueSchemaId())
-													.ltkDb.getClass()
-									);
-							RequestStatus status = dbManager.processTransaction(trans);
-							if (status.getCode() == HTTP_RESPONSE_CODES.OK.code) {
-								if (this.printpretty) {
-									logger.info("Ran transaction " + trans.getId() + " against local database.");
+				try {
+					SynchLog log = dbManager.getSynchLog();
+					ResultJsonObjectArray transactions  = synchManager.getTransactionsSince("wsadmin",log.getLastUsedSynchTimestamp());
+					if (transactions.valueCount > 0) {
+						logger.info("Got " + transactions.valueCount + " transactions from synch server");
+						for (JsonObject o : transactions.values) {
+							try {
+								Transaction trans = gson.fromJson(o, Transaction.class);
+								LTKDb ltkDb = gson.fromJson(trans.getJson(), LTKDb.class);
+								LTKDb record = 
+											gson.fromJson(
+													trans.getJson()
+													, SCHEMA_CLASSES
+														.classForSchemaName(
+																ltkDb.get_valueSchemaId())
+														.ltkDb.getClass()
+										);
+								RequestStatus status = dbManager.processTransaction(trans);
+								if (status.getCode() == HTTP_RESPONSE_CODES.OK.code) {
+									if (this.printpretty) {
+										logger.info("Ran transaction " + trans.getId() + " against local database.");
+									}
+									log.setLastUsedSynchTimestamp(trans.getKey());
+									log.recordSynchTime();
+									dbManager.recordSynch(log);
+								} else {
+									String message = "Could not run transaction " + trans.getId() 
+										+ " against local database. " 
+											+ status.code 
+											+ ": " 
+											+ status.developerMessage;
+									logger.error(message);
+									if (this.messagingEnabled) {
+										MessageUtils.sendMessage(this.messagingToken, message);
+									}
 								}
-								log.setLastUsedSynchTimestamp(trans.getKey());
-								log.recordSynchTime();
-								dbManager.recordSynch(log);
-							} else {
-								String message = "Could not run transaction " + trans.getId() 
-									+ " against local database. " 
-										+ status.code 
-										+ ": " 
-										+ status.developerMessage;
-								logger.error(message);
-								if (this.messagingEnabled) {
-									MessageUtils.sendMessage(this.messagingToken, message);
-								}
+							} catch (Exception e) {
+								String message = "Could not run transaction against local database: " + o.toString();
+								ErrorUtils.report(logger, e);
+								MessageUtils.sendMessage(this.messagingToken, message);
 							}
-						} catch (Exception e) {
-							String message = "Could not run transaction against local database: " + o.toString();
-							ErrorUtils.report(logger, e);
-							MessageUtils.sendMessage(this.messagingToken, message);
 						}
 					}
+				} catch (Exception e) {
+					ServiceProvider.sendMessage("SynchPullTask error " + e.getStackTrace().toString());
 				}
 			} else {
 				logger.info("Synch Manager not available...");

@@ -56,6 +56,7 @@ import org.ocmc.ioc.liturgical.schemas.constants.STATUS;
 import org.ocmc.ioc.liturgical.schemas.constants.USER_TOPICS;
 import org.ocmc.ioc.liturgical.schemas.constants.UTILITIES;
 import org.ocmc.ioc.liturgical.schemas.constants.VERBS;
+import org.ocmc.ioc.liturgical.schemas.constants.VISIBILITY;
 import org.ocmc.ioc.liturgical.schemas.exceptions.BadIdException;
 import org.ocmc.ioc.liturgical.schemas.constants.SCHEMA_CLASSES;
 import ioc.liturgical.ws.managers.auth.UserStatus;
@@ -564,14 +565,19 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			dropdowns.add("readers", userIdsToDropdown(getDomainReaders(domain)));
 			dropdowns.add("reviewers", userIdsToDropdown(getDomainAdmins(domain)));
 			JsonObject statuses = new JsonObject();
+			JsonObject visibility = new JsonObject();
 			
-			// get the statuses to use with the domain
-			statuses.add("statuses", STATUS.toDropdownJsonArray());
+			// get the status dropdown
+			statuses.add("statusDropdown", STATUS.toDropdownJsonArray());
 			
+			// get the visibility dropdown to use with the domain
+			visibility.add("visibilityDropdown", VISIBILITY.toDropdownJsonArray());
+
 			// build the JsonObject  list
 			List<JsonObject> list = new ArrayList<JsonObject>();
 			list.add(dropdowns);
 			list.add(statuses);
+			list.add(visibility);
 			list.add(info);
 			// add the list to the final result
 			result.setResult(list);
@@ -987,17 +993,6 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			domain.setCountryCode("us");
 			domain.setRealm("pentiucpublic");
 			domain.setDescription("Notes and Translations by the Rev. Dr. Eugen Pentiuc");
-			labels = new ArrayList<String>();
-			labels.add("Liturgical");
-			domain.setLabels(labels);
-			addDomain(wsAdmin, domain.toJsonString());
-
-			// add domain for Archdiocese of Guatemala
-			domain = new DomainCreateForm();
-			domain.setLanguageCode("spa");
-			domain.setCountryCode("gtm");
-			domain.setRealm("saog");
-			domain.setDescription("Translations for the Holy Orthodox Archbishopric in Guatemala");
 			labels = new ArrayList<String>();
 			labels.add("Liturgical");
 			domain.setLabels(labels);
