@@ -1,5 +1,7 @@
 package net.ages.alwb.utils.transformers.adapters;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,9 +9,11 @@ import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
+import org.ocmc.ioc.liturgical.utils.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.Constants;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 import net.ages.alwb.utils.transformers.adapters.models.LDOM;
@@ -244,10 +248,11 @@ public class AgesHtmlToEditableLDOM {
 	 */
 	public LDOM toLDOM() throws Exception {
 		LDOM result = new LDOM(url, printPretty);
+		Connection c = null;
 		Document doc = null;
 		Element content = null;
 		try {
-			Connection c = Jsoup.connect(url);
+			c = Jsoup.connect(url);
 			doc = c.timeout(60*1000).get();
 			content = doc.select("div.content").first();
 			// remove rows that contain a media-group

@@ -3,6 +3,9 @@ package ioc.liturgical.ws.managers.databases.external.neo4j.cypher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 
 /**
@@ -38,6 +41,7 @@ public class CypherQueryForDocs {
 	private String RETURN = "";
 	private String ORDER_BY = "";
 	private String REQUESTOR = "";
+	private String REQUESTOR_DOMAINS = "";
 	private boolean prefixProperties = true;
 	private boolean addWherePublic = true;
 	
@@ -62,6 +66,7 @@ public class CypherQueryForDocs {
 			, String RETURN
 			, String ORDER_BY
 			, String REQUESTOR
+			, String REQUESTOR_DOMAINS
 			, boolean prefixProperties
 			, boolean addWherePublic
 			) {
@@ -81,6 +86,7 @@ public class CypherQueryForDocs {
 		this.RETURN = RETURN;
 		this.ORDER_BY = ORDER_BY;
 		this.REQUESTOR = REQUESTOR;
+		this.REQUESTOR_DOMAINS = REQUESTOR_DOMAINS;
 		this.prefixProperties = prefixProperties;
 		this.addWherePublic = addWherePublic;
 		this.TAG_OPERATOR = TAG_OPERATOR;
@@ -170,12 +176,16 @@ public class CypherQueryForDocs {
 			} else {
 				sb.append(" WHERE");
 			}
-			if (this.REQUESTOR.length() > 0 && (! this.REQUESTOR.startsWith("*"))) {
-				sb.append(" (doc.visibility = 'PUBLIC' or doc.createdBy = '");
-				sb.append(this.REQUESTOR);
-				sb.append("' or doc.assignedTo = '");
-				sb.append(this.REQUESTOR);
-				sb.append("') ");
+			if (this.REQUESTOR_DOMAINS.length() > 0) {
+				sb.append(" (doc.visibility = 'PUBLIC' or doc.library in ");
+				sb.append(this.REQUESTOR_DOMAINS);
+				sb.append(") ");
+//				if (this.REQUESTOR.length() > 0 && (! this.REQUESTOR.startsWith("*"))) {
+//				sb.append(" (doc.visibility = 'PUBLIC' or doc.createdBy = '");
+//				sb.append(this.REQUESTOR);
+//				sb.append("' or doc.assignedTo = '");
+//				sb.append(this.REQUESTOR);
+//				sb.append("') ");
 			} else {
 				sb.append(" doc.visibility = 'PUBLIC' ");
 			}
@@ -454,6 +464,16 @@ public class CypherQueryForDocs {
 
 	public void setLIBRARY(String lIBRARY) {
 		LIBRARY = lIBRARY;
+	}
+
+
+	public String getREQUESTOR_DOMAINS() {
+		return REQUESTOR_DOMAINS;
+	}
+
+
+	public void setREQUESTOR_DOMAINS(String rEQUESTOR_DOMAINS) {
+		REQUESTOR_DOMAINS = rEQUESTOR_DOMAINS;
 	}
 
 

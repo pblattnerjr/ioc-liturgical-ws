@@ -216,7 +216,9 @@ public class ServiceProvider {
 				input = ServiceProvider.class.getClassLoader().getResourceAsStream("serviceProvider.config");
 			}
 			prop.load(input);
-			
+
+			logger.info("java.version = " + System.getProperty("java.version"));
+			logger.info("java.vm.version = " + System.getProperty("java.vm.version"));
 			debug = toBoolean(debug, prop.getProperty("debug"));
 			String envDebug  = System.getenv("WS_DEBUG");
 			if (envDebug != null && envDebug.startsWith("true")) {

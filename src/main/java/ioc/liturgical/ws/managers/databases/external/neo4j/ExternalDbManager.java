@@ -173,6 +173,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  JsonArray tagOperatorsDropdown = new JsonArray();
 	  JsonArray textNoteTypesDropdown = NOTE_TYPES.toDropdownJsonArray(true);
 	  List<DropdownItem> noteTypesDropdown = new ArrayList<DropdownItem>();
+	  List<DropdownItem> noteTypesBilDropdown = new ArrayList<DropdownItem>();
 	  List<DropdownItem> biblicalBookNamesDropdown = new ArrayList<DropdownItem>();
 	  List<DropdownItem> biblicalChapterNumbersDropdown = new ArrayList<DropdownItem>();
 	  List<DropdownItem> biblicalVerseNumbersDropdown = new ArrayList<DropdownItem>();
@@ -358,6 +359,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 
 	  private void buildNoteTypesDropdown() {
 		  this.noteTypesDropdown = NOTE_TYPES.toDropdownList();
+		  this.noteTypesBilDropdown = NOTE_TYPES.toDropdownBilList();
 	  }
 	  
 	  private void buildBiblicalBookNamesDropdown() {
@@ -1042,6 +1044,11 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					, addWherePublic
 					)
 					.REQUESTOR(requestor)
+					.REQUESTOR_DOMAINS(
+							gson.toJson(
+									internalManager.getDomainsUserCanView(requestor)
+									)
+							)
 					.MATCH()
 					.LABEL(type)
 					.LABEL(domain)
@@ -1114,7 +1121,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			String library = this.getUserDomain(requestor);
 			String theQuery = GeneralUtils.toNfc(query);
 			CypherQueryBuilderForNotes builder = null;
-			boolean addWherePublic = false;  //this.addWherePublic(library, requestor);
+			boolean addWherePublic = this.addWherePublic(library, requestor);
 			
 			if (type.equals(TOPICS.NOTE_USER.label)) {
 				builder = new CypherQueryBuilderForNotes(
@@ -1128,11 +1135,12 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						.WHERE(theProperty)
 						;
 			} else { 
-				addWherePublic = this.addWherePublic(library, requestor);
+				addWherePublic = true;
 				builder = new CypherQueryBuilderForNotes(
 						prefixProps
 						, addWherePublic
 						)
+						.REQUESTOR(requestor)
 						.MATCH()
 						.LABEL(theLabel)
 						.WHERE(theProperty)
@@ -4396,6 +4404,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			result.setBiblicalVersesDropdown(this.biblicalVerseNumbersDropdown);
 			result.setBiblicalSubversesDropdown(this.biblicalVerseSubVersesDropdown);
 			result.setNoteTypesDropdown(this.noteTypesDropdown);
+			result.setNoteTypesBilDropdown(this.noteTypesBilDropdown);
 			result.setLiturgicalBooksDropdown(this.liturgicalBookNamesDropdown);
 			result.setTemplateNewTemplateDropdown(this.templateNewTemplateDropdown);
 			result.setTemplatePartsDropdown(this.templatePartsDropdown);

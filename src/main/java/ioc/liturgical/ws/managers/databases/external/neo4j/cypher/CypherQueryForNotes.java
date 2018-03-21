@@ -122,28 +122,28 @@ public class CypherQueryForNotes {
 		
 		if (addWherePublic) {
 			if (whereClause.length() > 0) {
-				sb.append(" AND ");
+				whereClause.append(" AND ");
 			} else {
-				sb.append(" WHERE");
+				whereClause.append(" WHERE");
 			}
 			if (this.REQUESTOR.length() > 0 && (! this.REQUESTOR.startsWith("*"))) {
-				sb.append(" (to.visibility = 'PUBLIC' or to.createdBy = '");
-				sb.append(this.REQUESTOR);
-				sb.append("' or to.assignedTo = '");
-				sb.append(this.REQUESTOR);
-				sb.append("') ");
+				whereClause.append(" (to.visibility = 'PUBLIC' or to.createdBy = '");
+				whereClause.append(this.REQUESTOR);
+				whereClause.append("' or to.assignedTo = '");
+				whereClause.append(this.REQUESTOR);
+				whereClause.append("') ");
 			} else {
-				sb.append(" doc.visibility = 'PUBLIC' ");
+				whereClause.append(" doc.visibility = 'PUBLIC' ");
 			}
 		}
 
 		if (EXCLUDE_TYPE != null && EXCLUDE_TYPE.length() > 0) {
 			if (whereClause.length() > 0) {
-				sb.append(" AND NOT ");
+				whereClause.append(" AND NOT ");
 			} else {
-				sb.append(" WHERE NOT ");
+				whereClause.append(" WHERE NOT ");
 			}
-			sb.append("type(to) = '" + EXCLUDE_TYPE + "' ");
+			whereClause.append("type(to) = '" + EXCLUDE_TYPE + "' ");
 		}
 
 		if (whereClause.length() > 0) {
@@ -292,7 +292,7 @@ public class CypherQueryForNotes {
 			) {
 		StringBuffer result = new StringBuffer();
 		String theOperator = " all "; // initialize to 'all', but change to 'any' if using 'or'
-		if (operator.trim().equals("or")) {
+		if (operator.trim().equals("or") || operator.trim().equals("any")) {
 			theOperator = " any ";
 		}
 		if (tags != null && tags.length() > 0) {

@@ -1,5 +1,8 @@
 package ioc.liturgical.ws.managers.databases.external.neo4j.cypher;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *  Provides a means to build a query for searching docs.
  * There are three types of query builders:
@@ -33,6 +36,7 @@ public class CypherQueryBuilderForDocs {
 	private String RETURN = "";
 	private String ORDER_BY = "";
 	private String REQUESTOR = "";
+	private String REQUESTOR_DOMAINS = "";
     private boolean prefixProperties = true;
     private boolean addWherePublic = true;
     
@@ -172,6 +176,11 @@ public class CypherQueryBuilderForDocs {
         return this;
     }
 
+    public CypherQueryBuilderForDocs REQUESTOR_DOMAINS(String DOMAINS) {
+        this.REQUESTOR_DOMAINS = DOMAINS;
+        return this;
+    }
+
     public CypherQueryForDocs build() {
         return new CypherQueryForDocs(
         		MATCH
@@ -194,6 +203,7 @@ public class CypherQueryBuilderForDocs {
         		, RETURN
         		, ORDER_BY
         		, REQUESTOR
+        		, REQUESTOR_DOMAINS
         		, prefixProperties
         		, addWherePublic
         		);

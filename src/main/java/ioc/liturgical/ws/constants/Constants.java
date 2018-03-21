@@ -3,7 +3,7 @@ package ioc.liturgical.ws.constants;
 import java.util.concurrent.TimeUnit;
 
 public class Constants {
-		public static final String VERSION = "1.5.1"; // should match most recent jar
+		public static final String VERSION = "1.5.7"; // should match most recent jar
 		public static final String ID_DELIMITER = "~";
 		public static final String ID_SPLITTER = "~";
 		public static final String PIPE_SPLITTER = "\\|";
@@ -51,6 +51,8 @@ public class Constants {
 		public static final String UI_WIDGET_CHECKBOXES = "checkboxes";
 		public static final String UI_WIDGET_RADIO = "radio";
 		public static final String UI_WIDGET_SELECT = "select";
+		public static final String LIML_URL = "https://liml.org";
+		public static final String LIML_STATIC = "/static/";
 		public static final String DEFAULT_URL = "bolt://localhost:7687";// "bolt://neo4j:1234@localhost";
 //		public static final String PDF_FOLDER  = "/Users/mac002/git/ocmc-translation-projects/ioc-liturgical-docker/pdf/data";  
 		public static final String PDF_FOLDER  = "/private/var/lib/pdf/data";  

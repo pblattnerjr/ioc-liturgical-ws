@@ -1,5 +1,6 @@
 package net.ages.alwb.utils.transformers.adapters;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -517,9 +518,15 @@ public class AgesHtmlToLDOM {
 				);
 		Document doc = null;
 		Element content = null;
+		Connection c = null;
 		try {
-			Connection c = Jsoup.connect(url);
-			doc = c.timeout(60*1000).get();
+			if (url.contains("resources/theophany")) {
+				File in = new File(url);
+				doc = Jsoup.parse(in, "UTF-8", "http://example.com/");
+			} else {
+				c = Jsoup.connect(url);
+				doc = c.timeout(60*1000).get();
+			}
 			AlwbUrl urlUtils = new AlwbUrl(url);
 			result.setPdfFilename(urlUtils.getFileName(), this.languageCodes);
 			content = doc.select("div.content").first();

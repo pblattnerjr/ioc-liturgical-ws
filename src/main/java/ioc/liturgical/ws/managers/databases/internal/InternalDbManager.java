@@ -1062,6 +1062,17 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			domain.setLabels(labels);
 			addDomain(wsAdmin, domain.toJsonString());
 
+			// add domain for the Festal Menaion (TFM)
+			domain = new DomainCreateForm();
+			domain.setLanguageCode("en");
+			domain.setCountryCode("uk");
+			domain.setRealm("tfm");
+			domain.setDescription("The Festal Menaion - Mother Mary and Metropolitan Kallistos");
+			labels = new ArrayList<String>();
+			labels.add("Liturgical");
+			domain.setLabels(labels);
+			addDomain(wsAdmin, domain.toJsonString());
+
 			// add domain for Spanish - Guatemala
 			domain = new DomainCreateForm();
 			domain.setLanguageCode("spa");
@@ -1186,6 +1197,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 				this.grantRole("wsadmin", ROLES.ADMIN, "en_uk_gev", username);
 				this.grantRole("wsadmin", ROLES.ADMIN, "en_uk_gesot", username);
 				this.grantRole("wsadmin", ROLES.ADMIN, "en_uk_gemot", username);
+				this.grantRole("wsadmin", ROLES.ADMIN, "en_uk_tfm", username);
 				logger.info("user Colburn added");
 				stats = new UserStatistics();
 				addUserStats(user.getUsername(),stats);
@@ -2641,6 +2653,21 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		}
 	}
 
+	public List<String> getDomainsTheUserReads(String username) {
+		List<String> result = new ArrayList<String>();
+		if (isDbAdmin(username)) {
+			return getDomains();
+		} else {
+			JsonObject json = getWhereLike(ROLES.READER.keyname + "%" + username);
+			if (json.get("valueCount").getAsInt() > 0) {
+				for (JsonElement value : json.get("values").getAsJsonArray()) {
+					result.add(value.getAsJsonObject().get("topic").getAsString());
+				}
+			}
+			return result;
+		}
+	}
+
 	public JsonArray getDomainsUserCanRead(String username) {
 		JsonArray result = new JsonArray();
 		JsonObject json = getWhereLike(ROLES.READER.keyname + "%" + username);
@@ -2655,6 +2682,37 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		JsonObject json = getWhereLike(ROLES.AUTHOR.keyname + "%" + username);
 		if (json.get("valueCount").getAsInt() > 0) {
 			result = json.get("values").getAsJsonArray();
+		}
+		return result;
+	}
+	
+	public JsonArray getDomainsUserCanView(String username) {
+		JsonArray result =  new JsonArray();
+		List<String> domains = new ArrayList<String>();
+		JsonArray admins = getDomainsUserCanAdminister(username).getAsJsonArray();
+		JsonArray authors = getDomainsUserCanAdminister(username).getAsJsonArray();
+		JsonArray reads = getDomainsUserCanAdminister(username).getAsJsonArray();
+
+		for (JsonElement e : admins) {
+			String domain = e.getAsJsonObject().get("topic").getAsString();
+			if (! domains.contains(domain)) {
+				domains.add(domain);
+			}
+		}
+		for (JsonElement e : authors) {
+			String domain = e.getAsJsonObject().get("topic").getAsString();
+			if (! domains.contains(domain)) {
+				domains.add(domain);
+			}
+		}
+		for (JsonElement e : reads) {
+			String domain = e.getAsJsonObject().get("topic").getAsString();
+			if (! domains.contains(domain)) {
+				domains.add(domain);
+			}
+		}
+		for (String domain : domains) {
+			result.add(domain);
 		}
 		return result;
 	}

@@ -16,6 +16,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 import net.ages.alwb.utils.transformers.adapters.models.AgesIndexTableData;
 import net.ages.alwb.utils.transformers.adapters.models.AgesIndexTableRowData;
@@ -39,7 +40,8 @@ public class AgesWebsiteIndexToReactTableData {
 	private String agesOcmcBaseUrl = "http://www.agesinitiatives.com/dcs/ocmc/dcs/";
 	private String agesOcmcIndex = "customindex.html";
 	private String readingsIndex = agesOcmcBaseUrl + agesOcmcIndex;
-
+	private String theophanyUrl = Constants.LIML_URL + Constants.LIML_STATIC + "theophany.html";
+	
 	private boolean printPretty = false;
 
 	public AgesWebsiteIndexToReactTableData() {
@@ -109,6 +111,12 @@ public class AgesWebsiteIndexToReactTableData {
 					}
 				}
 			}
+			AgesIndexTableRowData theophany = new AgesIndexTableRowData(printPretty);
+			theophany.setDayOfWeek("any");
+			theophany.setType("Theophany");
+			theophany.setDate("m01/d06");
+			theophany.setUrl(theophanyUrl);
+			result.addRow(theophany);
 		} catch (Exception e) {
 			ErrorUtils.report(logger, e);
 		}
