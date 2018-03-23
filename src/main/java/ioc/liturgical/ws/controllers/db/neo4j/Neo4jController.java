@@ -308,7 +308,8 @@ public class Neo4jController {
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
-        	return externalManager.getNotesSearchDropdown().toJsonString();
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+        	return externalManager.getNotesSearchDropdown(requestor).toJsonString();
 		});
 
 		// GET dropdowns for searching templates

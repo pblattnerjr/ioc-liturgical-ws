@@ -15,9 +15,12 @@ import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonObject;
+
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 import net.ages.alwb.utils.core.misc.AlwbUrl;
@@ -126,9 +129,22 @@ public class AgesHtmlToLDOM {
 		return result;
 	}
 	
+	private void normalizeDesignations(Elements versionDesignations) {
+        for (Element valueSpan : versionDesignations) {
+        	String id = valueSpan.select("span.key").attr("data-key");
+        	String text = valueSpan.text();
+    		valueSpan.addClass("kvp versiondesignation");
+        		valueSpan.attr(
+        				"data-key"
+        				, id
+        		); 
+        		valueSpan.children().remove();
+        		valueSpan.text(text);
+        }
+	}
+
 	private void loadOriginalValues(
 			Elements valueSpans
-			, Elements versionDesignations
 			) {
 		try {
         	IdManager idManager = null;
@@ -188,48 +204,6 @@ public class AgesHtmlToLDOM {
 		        	}
 	        	}
 			}
-//	        for (Element valueSpan : versionDesignations) {
-//	        	String dataKey = valueSpan.select("span.key").attr("data-key");
-//	        	String [] parts = dataKey.split("\\|");
-//	        	String key = parts[1];
-//	        	parts = parts[0].split("_");
-//	        	String domain = "gr_GR_cog";
-//	        	if (parts.length == 4) {
-//		        	domain = parts[1] 
-//							+ Constants.DOMAIN_DELIMITER 
-//							+ parts[2].toLowerCase() 
-//							+ Constants.DOMAIN_DELIMITER 
-//		        			+ parts[3]
-//		        	;
-//	        	}
-//	        	String topic = parts[0];
-//	        	String value = "";
-//	        	if (valueSpan.hasClass("key")) {
-//	        		value = valueSpan.parent().text().trim();
-//	        	} else {
-//		        	value = valueSpan.text().trim();
-//	        	}
-//    			if (value.startsWith("[saint")
-//    					||value.startsWith("[paragraph")
-//    					|| value.contains("~")
-//    					) {
-//	        		value = "";
-//	        	}
-//	        	idManager = new IdManager(domain, topic, key);
-//	        	if (domain.startsWith("gr")) {
-//	        		if (this.greekValues.containsKey(idManager.getId())) {
-//	        			// ignore it
-//	        		} else {
-//			        		this.greekValues.put(idManager.getId(), value);
-//	        		}
-//	        	} else {
-//	        		if (this.englishValues.containsKey(idManager.getId())) {
-//	        			// ignore it
-//	        		} else {
-//			        		this.englishValues.put(idManager.getId(), value);
-//	        		}
-//	        	}
-//        	}
 		} catch (Exception e) {
 			throw e;
 		}
@@ -458,14 +432,18 @@ public class AgesHtmlToLDOM {
 			        	String topic = parts[0];
 			        	String topicKey = topic + Constants.ID_DELIMITER + key;
 			        	IdManager idManager = new IdManager(domain, topic, key);
+						eChild.setDataKey(idManager.getId());
+						eChild.setTopicKey(topicKey);
 			        	if (key.equals("version.designation")) {
-			        		if (child.attr("class").equals("key")) {
-								eChild.setDataKey(idManager.getId());
-								eChild.setTopicKey(topicKey);
-			        		}
-			        	} else {
-							eChild.setDataKey(idManager.getId());
-							eChild.setTopicKey(topicKey);
+			        		child.addClass("versiondesignation");
+			        		eChild.setClassName(child.className());
+//			        		if (child.attr("class").equals("key")) {
+//								eChild.setDataKey(idManager.getId());
+//								eChild.setTopicKey(topicKey);
+//			        		}
+//			        	} else {
+//							eChild.setDataKey(idManager.getId());
+//							eChild.setTopicKey(topicKey);
 			        	}
 					}
 					if (child.hasAttr("data-original")) {
@@ -535,12 +513,13 @@ public class AgesHtmlToLDOM {
 			content.select("tr:has(div.media-group)").remove();
 			content.select("tr:has(div.media-group-empty)").remove();
 
-			Elements keys = content.select("span.kvp");
 			Elements versionDesignations = content.select("span.versiondesignation");
+			this.normalizeDesignations(versionDesignations);
+			Elements keys = content.select("span.kvp");
 			if (keys.size() == 0) {
 				keys = content.select("span.key");
 			}
-			this.loadOriginalValues(keys, versionDesignations); // save off the Greek and English values
+			this.loadOriginalValues(keys); // save off the Greek and English values
 			this.equalizeTopicKeys(); // sometimes the Greek or English has extra topic-keys.  Make sure they both have the same ones.
 			
 			if (this.centerLibrary.length() > 0) { // add the center column and get the keys again so they have the new column
@@ -576,7 +555,39 @@ public class AgesHtmlToLDOM {
 			} else {
 				content.select("td.leftCell").forEach(e -> e.attr("class", "cellOneOfOne"));
 			}
-			content.select("span.kvp").forEach(e -> e.attr("class", "kvp readonly"));
+			// get rid of blanks
+			content.select("span.kvp").forEach(e -> {
+				e.addClass("readonly");
+				if (e.hasClass("versiondesignation")) {
+					Element sibling = e.firstElementSibling();
+					if (! sibling.hasText()) {
+						e.addClass("deleteThis");
+					}
+				}
+				this.setValue(e);
+			}
+			);
+			content.select("p.break").forEach(e -> {
+				Element tr = e.parent().parent();
+				tr.addClass("deleteThis");
+			});
+			content.select("p.chapverse").forEach(e -> {
+				Element tr = e.parent().parent();
+				Element followingTr = tr.nextElementSibling();
+				if (followingTr.text().trim().length() == 0) {
+					tr.addClass("deleteThis");
+				}
+			});
+
+			content.select("span.deleteThis").remove();
+			content.select("tr.deleteThis").remove();
+
+			content.select("tr").forEach(e -> {
+				if (e.text().trim().length() == 0) {
+					e.addClass("deleteThis");
+				}
+			});
+			content.select("tr.deleteThis").remove();
 			LDOM_Element eContent = new LDOM_Element(printPretty);
 			eContent.setTag(content.tagName());
 			eContent.setClassName(content.attr("class"));
@@ -587,6 +598,65 @@ public class AgesHtmlToLDOM {
 			result.setTopElement(eContent);
 		} catch (Exception e) {
 			throw e;
+		}
+		return result;
+	}
+	
+	private void setValue(Element e) {
+    	String dataKey = e.attr("data-key");
+    	String [] parts = dataKey.split("\\|");
+    	String key = parts[1];
+    	parts = parts[0].split("_");
+    	String domain = 
+    			parts[1] 
+				+ Constants.DOMAIN_DELIMITER 
+				+ parts[2].toLowerCase() 
+				+ Constants.DOMAIN_DELIMITER 
+    			+ parts[3]
+    	;
+    	String topic = parts[0];
+    	IdManager idManager = new IdManager(domain, topic, key);
+    	String value = "";
+    	// first see if we already have the value
+    	if (domain.startsWith("gr")) {
+    		if (this.greekValues.containsKey(idManager.getId())) {
+    			value = this.greekValues.get(idManager.getId());
+    		}
+    	} else if (domain.startsWith("en")) {
+    		if (this.englishValues.containsKey(idManager.getId())) {
+    			value = this.englishValues.get(idManager.getId());
+    		}
+    	}
+    	if (value.length() == 0) {
+    		// we did not find the value in memory, so do a database call
+        	value = this.getValue(idManager.getId());
+        	if (value.length() == 0) {
+    			String fallbackLibrary = "";
+    			if (leftLibrary != null && domain.equals(leftLibrary)) {
+    				fallbackLibrary = leftFallback;
+    			} else if (centerLibrary != null && domain.equals(centerLibrary)) {
+    				fallbackLibrary = centerFallback;
+    			} else if (rightLibrary != null && domain.equals(rightLibrary)) {
+    				fallbackLibrary = rightFallback;
+    			}
+    			idManager.setLibrary(fallbackLibrary);
+    	    	value = this.getValue(idManager.getId());
+        	}
+    	}
+    	if (value.startsWith("[saint") || value.startsWith("[paragraph")) {
+    		value = "";
+    	}
+		e.text(value);
+	}
+	
+	private String getValue(String id) {
+		String result = "";
+		ResultJsonObjectArray dbValue = dbManager.getForId(id, "Root");
+		if (dbValue.valueCount == 1) {
+			JsonObject o = dbValue.getFirstObject();
+			if (o.get("value").getAsString().trim().length() > 0) {
+				result = dbValue.getFirstObjectValueAsString();
+			}
 		}
 		return result;
 	}

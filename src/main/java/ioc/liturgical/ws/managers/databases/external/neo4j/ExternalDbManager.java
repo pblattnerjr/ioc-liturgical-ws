@@ -2720,13 +2720,14 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 		
-		public ResultJsonObjectArray getNotesSearchDropdown() {
+		public ResultJsonObjectArray getNotesSearchDropdown(String requestor) {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
+				String library = this.getUserDomain(requestor);
 				JsonObject values = new JsonObject();
 				values.add("typeList", this.noteTypesArray);
 				values.add("typeProps", this.noteTypesProperties);
-				values.add("typeTags", getNotesTagsForAllTypes());
+				values.add("typeTags", getNotesTagsForAllTypes(library));
 				values.add("tagOperators", tagOperatorsDropdown);
 				values.add("textNoteTypes", this.textNoteTypesDropdown);
 				JsonObject jsonDropdown = new JsonObject();
@@ -3163,6 +3164,37 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
+		public JsonArray getTags(String library, String type) {
+			JsonArray result  = new JsonArray();
+			try {
+				String q = "match (n:"+ type + ") where n.library = '" + library + "' return distinct n.tags as " + type;
+				ResultJsonObjectArray query = neo4jManager.getForQuery(q);
+				if (query.getResultCount() > 0) {
+					TreeSet<String> labels  = new TreeSet<String>();
+					for (JsonObject obj : query.getResult()) {
+						if (obj.has(type)) {
+							JsonArray queryResult  = obj.get(type).getAsJsonArray();
+							// combine the labels into a unique list
+							for (JsonElement e : queryResult) {
+								if (! labels.contains(e.getAsString())) {
+									labels.add(e.getAsString());
+								}
+							}
+						}
+					}
+					// add the labels to a JsonArray of Option Entries.
+					for (String label : labels) {
+						DropdownItem entry = new DropdownItem(label);
+						result.add(entry.toJsonObject());
+					}
+				}
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+			return result;
+		}
+
+
 		public JsonArray getOntologyTags(String type) {
 			JsonArray result  = new JsonArray();
 			try {
@@ -3255,6 +3287,24 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			
 		}
 
+		public JsonObject getNotesTagsForAllTypes(String library) {
+			JsonObject result  = new JsonObject();
+			try {
+				for (TOPICS t : TOPICS.values()) {
+					if (
+							t == TOPICS.NOTE_TEXTUAL
+							|| t == TOPICS.NOTE_USER 
+							) {
+						JsonArray value = getTags(library, t.label);
+						result.add(t.label, value);
+					}
+				}
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+			return result;
+			
+		}
 		public JsonObject getTemplatesTagsForAllTypes() {
 			JsonObject result  = new JsonObject();
 			try {

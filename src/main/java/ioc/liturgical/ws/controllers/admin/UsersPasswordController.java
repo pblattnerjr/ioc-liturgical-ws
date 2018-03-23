@@ -5,6 +5,7 @@ import static spark.Spark.put;
 
 import org.ocmc.ioc.liturgical.schemas.constants.ENDPOINTS_ADMIN_API;
 import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
+import org.ocmc.ioc.liturgical.schemas.models.db.internal.LTKVJsonObject;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +25,6 @@ public class UsersPasswordController {
 		/**
 		 * GET 
 		 */
-//		String path = ADMIN_ENDPOINTS.USERS_PASSWORD.toLibraryTopicKeyPath();
 		String path = "/admin/api/v1/users/password";
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
@@ -37,6 +37,20 @@ public class UsersPasswordController {
 			} else {
 				response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 			}
+			return json.toString();
+		});
+
+		path = "/admin/api/v1/users/passwordchange";
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
+			JsonObject json = storeManager.getUserPasswordChangeFormWithUiSchema(
+					requestor
+					, requestor
+					);
+			response.status(HTTP_RESPONSE_CODES.OK.code);
 			return json.toString();
 		});
 
