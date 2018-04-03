@@ -375,7 +375,7 @@ public class ServiceProvider {
 			logger.info("Property file loaded OK");
 			// Create the manager for operations involving the underlying datastore
 			storeManager = new InternalDbManager(
-					"ioc-liturgical-db"
+					"datastore/ioc-liturgical-db"
 					, "json"
 					, deleteExistingDataStoreFile
 					, deleteExistingDataStoreRecords

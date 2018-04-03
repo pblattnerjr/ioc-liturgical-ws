@@ -41,6 +41,7 @@ import org.ocmc.ioc.liturgical.schemas.models.ws.forms.LabelCreateForm;
 import org.ocmc.ioc.liturgical.schemas.models.ws.forms.SelectionWidgetSchema;
 import org.ocmc.ioc.liturgical.schemas.models.ws.forms.UserCreateForm;
 import org.ocmc.ioc.liturgical.schemas.models.ws.forms.UserPasswordChangeForm;
+import org.ocmc.ioc.liturgical.schemas.models.ws.forms.UserPasswordSelfChangeForm;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.DomainWorkflowInfo;
 import org.ocmc.ioc.liturgical.schemas.constants.ENDPOINTS_ADMIN_API;
 import ioc.liturgical.ws.constants.Constants;
@@ -221,9 +222,6 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			String id = null;
 			if (json.has(Constants.VALUE_SCHEMA_ID)) {
 				id = json.get(Constants.VALUE_SCHEMA_ID).getAsString();
-				if (id.contains("Config")) {
-					System.out.print("");
-				}
 			} else if (json.has("doc." + Constants.VALUE_SCHEMA_ID)) {
 				id = json.get("doc." + Constants.VALUE_SCHEMA_ID).getAsString();
 			} else if (json.has("link")) {
@@ -339,6 +337,27 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	private String userFromQuery(String query) {
 		return query;
 	}
+	
+	
+	public LTKVJsonObject getUserSelfServicePasswordChangeForm(
+			String requestor
+			, String username
+			) {
+		LTKVJsonObject record = null;
+		try {
+			UserPasswordSelfChangeForm form = new UserPasswordSelfChangeForm();
+			form.setUsername(username);
+			record = 
+					new LTKVJsonObject(
+							new IdManager("users","password",username).getId()
+						, form.schemaIdAsString()
+						, form.toJsonObject()
+						);
+		} catch (Exception e) {
+			ErrorUtils.report(logger, e);
+		}
+		return record;
+	}
 
 	public LTKVJsonObject getUserPasswordChangeForm(
 			String requestor
@@ -425,6 +444,28 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		return result.toJsonObject();
 	}
 	
+	public JsonObject getUserPasswordChangeFormWithUiSchema(
+			String requestor
+			, String query) {
+		ResultJsonObjectArray result = new ResultJsonObjectArray(prettyPrint);
+		result.setQuery(query);
+		List<JsonObject> dbResults = new ArrayList<JsonObject>();
+		try {
+			dbResults.add(
+					getUserSelfServicePasswordChangeForm(
+					requestor
+					, requestor
+					).toJsonObject()
+			);
+			result.setValueSchemas(getSchemas(dbResults, null));
+			result.setResult(dbResults);
+		} catch (Exception e) {
+			result.setStatusCode(HTTP_RESPONSE_CODES.SERVER_ERROR.code);
+			result.setStatusMessage(e.getMessage());
+		}
+		return result.toJsonObject();
+	}
+
 	private void initializeAgesDomains() {
 		for (String d : agesDomains) {
 			String library = d.toLowerCase();

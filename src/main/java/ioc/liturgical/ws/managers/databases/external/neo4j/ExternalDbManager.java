@@ -2720,13 +2720,14 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 		
-		public ResultJsonObjectArray getNotesSearchDropdown() {
+		public ResultJsonObjectArray getNotesSearchDropdown(String requestor) {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
+				String library = this.getUserDomain(requestor);
 				JsonObject values = new JsonObject();
 				values.add("typeList", this.noteTypesArray);
 				values.add("typeProps", this.noteTypesProperties);
-				values.add("typeTags", getNotesTagsForAllTypes());
+				values.add("typeTags", getNotesTagsForAllTypes(library));
 				values.add("tagOperators", tagOperatorsDropdown);
 				values.add("textNoteTypes", this.textNoteTypesDropdown);
 				JsonObject jsonDropdown = new JsonObject();
@@ -3163,6 +3164,37 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
+		public JsonArray getTags(String library, String type) {
+			JsonArray result  = new JsonArray();
+			try {
+				String q = "match (n:"+ type + ") where n.library = '" + library + "' return distinct n.tags as " + type;
+				ResultJsonObjectArray query = neo4jManager.getForQuery(q);
+				if (query.getResultCount() > 0) {
+					TreeSet<String> labels  = new TreeSet<String>();
+					for (JsonObject obj : query.getResult()) {
+						if (obj.has(type)) {
+							JsonArray queryResult  = obj.get(type).getAsJsonArray();
+							// combine the labels into a unique list
+							for (JsonElement e : queryResult) {
+								if (! labels.contains(e.getAsString())) {
+									labels.add(e.getAsString());
+								}
+							}
+						}
+					}
+					// add the labels to a JsonArray of Option Entries.
+					for (String label : labels) {
+						DropdownItem entry = new DropdownItem(label);
+						result.add(entry.toJsonObject());
+					}
+				}
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+			return result;
+		}
+
+
 		public JsonArray getOntologyTags(String type) {
 			JsonArray result  = new JsonArray();
 			try {
@@ -3255,6 +3287,24 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			
 		}
 
+		public JsonObject getNotesTagsForAllTypes(String library) {
+			JsonObject result  = new JsonObject();
+			try {
+				for (TOPICS t : TOPICS.values()) {
+					if (
+							t == TOPICS.NOTE_TEXTUAL
+							|| t == TOPICS.NOTE_USER 
+							) {
+						JsonArray value = getTags(library, t.label);
+						result.add(t.label, value);
+					}
+				}
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+			return result;
+			
+		}
 		public JsonObject getTemplatesTagsForAllTypes() {
 			JsonObject result  = new JsonObject();
 			try {
@@ -3614,7 +3664,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					if (leftLibrary != null && entry.getKey().startsWith(leftLibrary)) {
 						if (
 								leftLibrary.equals("gr_gr_cog")  
-								|| leftLibrary.equals("en_us_dedes")
+//								|| leftLibrary.equals("en_us_dedes")
 							) {
 							// ignore
 						} else {
@@ -3633,7 +3683,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 							) {
 						if (
 								centerLibrary.equals("gr_gr_cog")  
-								|| centerLibrary.equals("en_us_dedes")
+//								|| centerLibrary.equals("en_us_dedes")
 							) {
 								// ignore
 						} else {
@@ -3652,7 +3702,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 							) {
 						if (
 								rightLibrary.equals("gr_gr_cog")  
-								|| rightLibrary.equals("en_us_dedes")
+	//							|| rightLibrary.equals("en_us_dedes")
 							) {
 								// ignore
 						} else {
@@ -3897,8 +3947,6 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				list.add(template.toJsonObject());
 				result.setResult(list);
 				result.setQuery("get AGES template metadata for " + url);
-				// TODO: remove for production
-				FileUtils.writeFile("/volumes/ssd2/templates/editor.json", template.toJsonString());
 			} catch (Exception e) {
 				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 				result.setStatusMessage(e.getMessage());
@@ -3907,6 +3955,27 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
+		/**
+		 * 
+		 * @param a list of the db IDs to look up
+		 * @return a map with the values populated
+		 */
+		public  Map<String,String> setValues(List<String> dbIds) {
+			Map<String,String> result = new TreeMap<String,String>();
+			for (String id : dbIds) {
+				try {
+					String value = this.getForId(id).getFirstObjectValueAsString();
+					if (value == null || value.trim().length() == 0) {
+						// ignore
+					} else {
+						result.put(id, value);
+					}
+				} catch (Exception e) {
+					ErrorUtils.report(logger, e);
+				}
+			}
+			return result;
+		}
 		/**
 		 * Uses the createdWhen property of Neo4j nodes in the database
 		 * to find the most recently (last) created node for the given

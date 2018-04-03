@@ -1,7 +1,5 @@
 package net.ages.alwb.utils.transformers.adapters;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,11 +7,9 @@ import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
-import org.ocmc.ioc.liturgical.utils.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.Constants;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 import net.ages.alwb.utils.transformers.adapters.models.LDOM;
@@ -174,7 +170,9 @@ public class AgesHtmlToEditableLDOM {
 	        						+ domain 
 	        						+ "|" 
 	        						+ key
-	        		); // e.g., titles_en_US_dedes|OnSunday
+	        		); 
+	        		valueSpan.addClass("kvp");
+	        		valueSpan.children().remove();
 	        	}
 	        }
 		} catch (Exception e) {
@@ -215,15 +213,8 @@ public class AgesHtmlToEditableLDOM {
 			        	String topicKey = topic + Constants.ID_DELIMITER + key;
 			        	IdManager idManager = new IdManager(domain, topic, key);
 			        	eChild.setDataDomain(domain);
-			        	if (key.equals("version.designation")) {
-			        		if (child.attr("class").equals("key")) {
-								eChild.setDataKey(idManager.getId());
-								eChild.setTopicKey(topicKey);
-			        		}
-			        	} else {
-							eChild.setDataKey(idManager.getId());
-							eChild.setTopicKey(topicKey);
-			        	}
+						eChild.setDataKey(idManager.getId());
+						eChild.setTopicKey(topicKey);
 					}
 					seq = seq + 1;
 					eChild.setKey("V" + seq);
@@ -262,12 +253,11 @@ public class AgesHtmlToEditableLDOM {
 			if (this.centerLibrary.length() > 0) {
 				this.cloneGreek(content);
 			}
-
+			Elements versionDesignations = content.select("span.versiondesignation");
 			Elements keys = content.select("span.kvp");
 			if (keys.size() == 0) {
 				keys = content.select("span.key");
 			}
-			Elements versionDesignations = content.select("span.versiondesignation");
 			LDOM values = this.getValues(keys, versionDesignations);
 			result.setDomains(values.getDomains());
 			result.setTopicKeys(values.getTopicKeys());
