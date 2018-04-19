@@ -4,7 +4,7 @@
   <groupId>ioc</groupId>
   <artifactId>liturgical-ws</artifactId>
   <name>IOC Liturgical Web Services</name>
-  <version>v1.5.8</version>
+  <version>2018.4.19.01</version>
   <description>Web Services used for International Orthodox Christian Liturgical Texts</description>
   <build>
     <resources>

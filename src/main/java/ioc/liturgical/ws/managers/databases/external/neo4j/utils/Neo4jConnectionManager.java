@@ -35,6 +35,7 @@ import org.ocmc.ioc.liturgical.schemas.models.ModelHelpers;
 import org.ocmc.ioc.liturgical.schemas.models.db.internal.LTKVJsonObject;
 import org.ocmc.ioc.liturgical.schemas.models.db.stats.QueryStatistics;
 import org.ocmc.ioc.liturgical.schemas.models.db.stats.SynchLog;
+import org.ocmc.ioc.liturgical.schemas.models.messaging.Message;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDb;
 import org.ocmc.ioc.liturgical.schemas.models.synch.Transaction;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
@@ -380,6 +381,36 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + "  " + doc.whenTransactionRecordedInThisDatabase );
+			}
+		} catch (Exception e){
+			if (e.getMessage().contains("already exists")) {
+				result.setCode(HTTP_RESPONSE_CODES.CONFLICT.code);
+				result.setDeveloperMessage(HTTP_RESPONSE_CODES.CONFLICT.message);
+			} else {
+				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setDeveloperMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+			}
+			result.setUserMessage(e.getMessage());
+		}
+    	recordQuery(query, result.getCode(), count);
+		return result;
+	}
+
+	public RequestStatus insert(Message doc) throws DbException {
+		RequestStatus result = new RequestStatus();
+		int count = 0;
+		setIdConstraint("Message");
+		String query = "create (n:Message) set n = {props} return n";
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
+			Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
+			StatementResult neoResult = session.run(query, props);
+			count = neoResult.consume().counters().nodesCreated();
+			if (count > 0) {
+		    	result.setCode(HTTP_RESPONSE_CODES.CREATED.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.CREATED.message + ": created ");
+			} else {
+		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
 			}
 		} catch (Exception e){
 			if (e.getMessage().contains("already exists")) {

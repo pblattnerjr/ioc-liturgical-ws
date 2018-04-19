@@ -82,6 +82,7 @@ import org.ocmc.ioc.liturgical.schemas.models.db.docs.templates.Template;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.templates.TemplateNode;
 import org.ocmc.ioc.liturgical.schemas.models.db.internal.LTKVJsonObject;
 import org.ocmc.ioc.liturgical.schemas.models.forms.ontology.TextLiturgicalTranslationCreateForm;
+import org.ocmc.ioc.liturgical.schemas.models.messaging.Message;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTK;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDb;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDbNote;
@@ -149,6 +150,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	private boolean logAllQueries = false;
 	private boolean logQueriesWithNoMatches = false;
 	private boolean   printPretty = true;
+	public boolean isConnectionOK = false;
 	private boolean readOnly = false;
 	private boolean runningUtility = false;
 	private String runningUtilityName = "";
@@ -215,6 +217,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					  , readOnly
 					  );
 			  if (neo4jManager.isConnectionOK()) {
+				  this.isConnectionOK = true;
 				  if (synchManager != null) {
 					  Neo4jConnectionManager.setSynchManager(synchManager);
 				  }
@@ -606,6 +609,14 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  return result;
 	  }
 
+			
+	 public boolean messageExists(String id) {
+		 boolean result = false;
+		 String query = "match (n:Message) where n.id = '" + id + "' return n.id";
+		 ResultJsonObjectArray array = this.getForQuery(query, false, false);
+		 result = array.getValueCount() > 0;
+		 return result;
+	 }
 	  /**
 	   * @param query
 	   * @param setValueSchemas
@@ -2128,6 +2139,17 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			}
 		}
 		
+		public RequestStatus insertMessage(Message message) {
+			RequestStatus result = new RequestStatus();
+			try {
+				result =  neo4jManager.insert(message);
+			} catch (Exception e) {
+				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setMessage(e.getMessage());
+			}
+			return result;
+		}
+		
 		public boolean existsUniqueRelationship(String id) {
 			try {
 				ResultJsonObjectArray json = this.getForIdOfRelationship(id);
@@ -2884,7 +2906,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				String treeId = LIBRARIES.LINGUISTICS.toSystemDomain()
 						+ Constants.ID_DELIMITER
 						+ id;
-				ResultJsonObjectArray treeData = this.getForIdStartsWith(treeId, TOPICS.TOKEN_GRAMMAR);
+				ResultJsonObjectArray treeData = this.getForIdStartsWith(
+						treeId
+						, TOPICS.TOKEN_GRAMMAR
+						);
 				if (treeData.getResultCount() == 0) {
 					String value = getValueForLiturgicalText(requestor,id);
 					if (value.length() > 0) {
@@ -3664,7 +3689,6 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					if (leftLibrary != null && entry.getKey().startsWith(leftLibrary)) {
 						if (
 								leftLibrary.equals("gr_gr_cog")  
-//								|| leftLibrary.equals("en_us_dedes")
 							) {
 							// ignore
 						} else {
@@ -3683,7 +3707,6 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 							) {
 						if (
 								centerLibrary.equals("gr_gr_cog")  
-//								|| centerLibrary.equals("en_us_dedes")
 							) {
 								// ignore
 						} else {
@@ -3702,7 +3725,6 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 							) {
 						if (
 								rightLibrary.equals("gr_gr_cog")  
-	//							|| rightLibrary.equals("en_us_dedes")
 							) {
 								// ignore
 						} else {

@@ -17,7 +17,8 @@ public class AgesHtmlToOslwSwitch {
 	 * oslw-liturgical-text.sty file.  Update it in the git
 	 * oslw-system-tex project and push it to Github.
 	 * 
-	 * Any servers using it will then need to be updated from Github.
+	 * Any servers using it will then need to be updated from Github.  Put the
+	 * updated file in /usr/local/ocmc/docker/pdf/data/system
 	 * 
 	 * @param command
 	 * @return
@@ -28,6 +29,10 @@ public class AgesHtmlToOslwSwitch {
 		case "-key": {
 		//  (http://www.agesinitiatives.com/dcs/public/dcs/h/b/greatwaterblessing/gr-en/index.html)
 			result = "Undefined";
+			break;
+		}
+		case "p": {
+			result = "Para";
 			break;
 		}
 		case "p-actor": {
@@ -316,8 +321,7 @@ public class AgesHtmlToOslwSwitch {
 			break;
 		}
 		case "p-chant": {
-		// {ps}{psa118.v0.text}{titles}{Allilouia}{ps}{psa118.v12.text}{titles}{Allilouia} (http://www.agesinitiatives.com/dcs/public/dcs/h/b/funeral/gr-en/index.html)
-			result = "Undefined";
+			result = "Para";
 			break;
 		}
 		case "p-chapverse": {
@@ -350,13 +354,16 @@ public class AgesHtmlToOslwSwitch {
 			result = "Undefined";
 			break;
 		}
+		case "p-designation-rubric": {
+			result = "Designation";
+			break;
+		}
 		case "p-dialog": {
 		// {prayers}{enarxis01} (http://www.agesinitiatives.com/dcs/public/dcs/h/b/baptism/gr-en/index.html)
 			result = "Dialog";
 			break;
 		}
 		case "p-dialog-bold": {
-		// {eu.baptism}{euBAP.Key0313.text} (http://www.agesinitiatives.com/dcs/public/dcs/h/b/baptism/gr-en/index.html)
 			result = "DialogBold";
 			break;
 		}
@@ -665,7 +672,10 @@ public class AgesHtmlToOslwSwitch {
 			break;
 		}
 		case "p-heirmos-red": {
-		// {he.h.m6}{IToChaireDiAngelou.text}{rubrical}{Twice} (http://www.agesinitiatives.com/dcs/public/dcs/h/b/smallwaterblessing/gr-en/index.html)
+			result = "HiermosRubric";
+			break;
+		}
+		case "p-heirmos-red-designation": {
 			result = "HiermosRubric";
 			break;
 		}
@@ -833,6 +843,10 @@ public class AgesHtmlToOslwSwitch {
 			result = "Undefined";
 			break;
 		}
+		case "p-mixed-rubric": {
+			result = "Rubric";
+			break;
+		}
 		case "p-mode": {
 		// {misc}{Mode1} (http://www.agesinitiatives.com/dcs/public/dcs/h/b/baptism/gr-en/index.html)
 			result = "Mode";
@@ -864,22 +878,34 @@ public class AgesHtmlToOslwSwitch {
 			break;
 		}
 		case "p-reading": {
-		// {le.ep.va.baptism}{levaBAP.Epistle.text} (http://www.agesinitiatives.com/dcs/public/dcs/h/b/baptism/gr-en/index.html)
 			result = "Reading";
 			break;
 		}
-		case "p-reading-boldred": {
-		// {me.m08.d01}{meDate.text} (http://www.agesinitiatives.com/dcs/public/dcs/h/s/2017/08/01/li/gr-en/index.html)
-			result = "ReadingRedBold";
-			break;
-		}
-		case "p-reading-designation": {
-		// {le.ep.va.baptism}{levaBAP.Epistle.text} (http://www.agesinitiatives.com/dcs/public/dcs/h/b/baptism/gr-en/index.html)
+		case "p-reading-anum-reference": {
 			result = "ReadingVersion";
 			break;
 		}
+		case "p-reading-boldred": {
+			result = "ReadingRedBold";
+			break;
+		}
+		case "p-readingcenter": {
+			result = "ReadingCenter";
+			break;
+		}
+		case "p-readingcenterzero": {
+			result = "ReadingCenter";
+			break;
+		}
+		case "p-reading-designation": {
+			result = "ReadingVersion";
+			break;
+		}
+		case "p-reading-italics": {
+			result = "ReadingItalics";
+			break;
+		}
 		case "p-reading-italicsred": {
-		// {le.go.os}{leosMA.SixPsalmsIntro1.text}{rubrical}{Thrice} (http://www.agesinitiatives.com/dcs/public/dcs/h/c/matinsordinary/gr-en/index.html)
 			result = "ReadingRedItalics";
 			break;
 		}
@@ -946,6 +972,10 @@ public class AgesHtmlToOslwSwitch {
 		case "p-source0": {
 		//  (http://www.agesinitiatives.com/dcs/public/dcs/h/b/funeral_brightweek/gr-en/index.html)
 			result = "SourceZero";
+			break;
+		}
+		case "p-titlezero": {
+			result = "TitleZero";
 			break;
 		}
 		case "p-verse": {

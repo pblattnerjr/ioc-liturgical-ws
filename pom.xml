@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>ioc</groupId>
   <artifactId>liturgical-ws</artifactId>
-  <version>v1.5.8</version>
+  <version>v2018.4.19.01</version>
   <name>IOC Liturgical Web Services</name>
   
   	<properties>

@@ -38,7 +38,7 @@ public class CypherQueryBuilderForDocs {
 	private String REQUESTOR = "";
 	private String REQUESTOR_DOMAINS = "";
     private boolean prefixProperties = true;
-    private boolean addWherePublic = true;
+    private boolean addWherePublic = false;
     
 	public CypherQueryBuilderForDocs(){};
 	

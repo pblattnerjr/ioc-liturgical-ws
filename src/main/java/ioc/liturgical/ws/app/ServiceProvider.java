@@ -49,7 +49,9 @@ import net.ages.alwb.tasks.SynchPullTask;
 import net.ages.alwb.tasks.SynchPushTask;
 import net.ages.alwb.utils.core.datastores.json.manager.JsonObjectStoreManager;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
+import org.ocmc.ioc.liturgical.schemas.models.messaging.Message;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import org.ocmc.ioc.liturgical.utils.MessageUtils;
@@ -911,18 +913,48 @@ public class ServiceProvider {
 		}
 	  }
 
+	  /**
+	   * 
+	   * This method sends a message to the message service.
+	   * First, though, it uses a digest of the message to see if we
+	   * have already sent this message. That way a message is only
+	   * sent once even if a situation keeps occurring.  The digest
+	   * is store as the key of the message in the database.
+	   * 
+	   * @param message the message to be sent
+	   * @return the status about sending the message
+	   */
 	  public static String sendMessage(String message) {
 		  String response = "";
-		  if (ServiceProvider.messagingEnabled) {
-			  String hostAndMessage = hostname + message;
-			  try {
-				  response = MessageUtils.sendMessage(messagingToken, hostAndMessage);
-			  } catch (Exception e) {
-				  ServiceProvider.messagingEnabled = false;
+		  boolean messageExists = false;
+		  String digest = "";
+
+		  try {
+			  if (ServiceProvider.messagingEnabled) {
+				  if (! message.equals("ServiceManager started.")) {
+					  if (docService != null && docService.isConnectionOK) {
+						  digest = DigestUtils.md5Hex(message);
+						  Message theMessage = new Message(digest, message);
+						  messageExists = docService.messageExists(theMessage.getId());
+						  if (! messageExists) {
+							  docService.insertMessage(theMessage);
+						  }
+					  }
+				  } 
+				  if (!messageExists) {
+					  String hostAndMessage = hostname + message;
+					  response = MessageUtils.sendMessage(messagingToken, hostAndMessage);
+				  } else {
+					  response = "Message previously sent";
+				  }
+			  } else {
+				  response = "Messaging not enabled";
 			  }
-		  } else {
-			  response = "Messaging not enabled";
+		  } catch (Exception e) {
+			  response = e.getMessage();
+			  ErrorUtils.report(logger, e);
 		  }
+
 		  return response;
 	  }
 

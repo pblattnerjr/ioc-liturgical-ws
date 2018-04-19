@@ -467,22 +467,10 @@ public class AgesHtmlToLDOM {
 						eChild.setDataKey(idManager.getId());
 						eChild.setTopicKey(topicKey);
 			        	if (key.equals("version.designation")) {
-<<<<<<< HEAD
 			        		Element childParent = child.parent();
 			        		Element sibling = child.firstElementSibling();
 			        		child.addClass("versiondesignation");
 			        		eChild.setClassName(child.className());
-=======
-			        		child.addClass("versiondesignation");
-			        		eChild.setClassName(child.className());
-//			        		if (child.attr("class").equals("key")) {
-//								eChild.setDataKey(idManager.getId());
-//								eChild.setTopicKey(topicKey);
-//			        		}
-//			        	} else {
-//							eChild.setDataKey(idManager.getId());
-//							eChild.setTopicKey(topicKey);
->>>>>>> master
 			        	}
 					}
 					if (child.hasAttr("data-original")) {
@@ -557,17 +545,9 @@ public class AgesHtmlToLDOM {
 
 			Elements versionDesignations = content.select("span.versiondesignation");
 			this.normalizeDesignations(versionDesignations);
-<<<<<<< HEAD
 			Elements keys = content.select("span.kvp, span.key");
 //			Map<String,String> theValues = dbManager.setValues(keys);
 			this.loadOriginalValues(keys); // load the Greek and English values
-=======
-			Elements keys = content.select("span.kvp");
-			if (keys.size() == 0) {
-				keys = content.select("span.key");
-			}
-			this.loadOriginalValues(keys); // save off the Greek and English values
->>>>>>> master
 			this.equalizeTopicKeys(); // sometimes the Greek or English has extra topic-keys.  Make sure they both have the same ones.
 			
 			if (this.centerLibrary.length() > 0) { // add the center column and get the keys again so they have the new column
@@ -601,10 +581,6 @@ public class AgesHtmlToLDOM {
 			} else {
 				content.select("td.leftCell").forEach(e -> e.attr("class", "cellOneOfOne"));
 			}
-<<<<<<< HEAD
-=======
-			// get rid of blanks
->>>>>>> master
 			content.select("span.kvp").forEach(e -> {
 				e.addClass("readonly");
 				if (e.hasClass("versiondesignation")) {
@@ -616,13 +592,6 @@ public class AgesHtmlToLDOM {
 				this.setValue(e);
 			}
 			);
-<<<<<<< HEAD
-=======
-			content.select("p.break").forEach(e -> {
-				Element tr = e.parent().parent();
-				tr.addClass("deleteThis");
-			});
->>>>>>> master
 			content.select("p.chapverse").forEach(e -> {
 				Element tr = e.parent().parent();
 				Element followingTr = tr.nextElementSibling();
@@ -630,27 +599,17 @@ public class AgesHtmlToLDOM {
 					tr.addClass("deleteThis");
 				}
 			});
-<<<<<<< HEAD
 			content.select("p.break").forEach(e -> {
 				Element tr = e.parent().parent();
 				tr.addClass("deleteThis");
 			});
-=======
-
-			content.select("span.deleteThis").remove();
-			content.select("tr.deleteThis").remove();
-
->>>>>>> master
 			content.select("tr").forEach(e -> {
 				if (e.text().trim().length() == 0) {
 					e.addClass("deleteThis");
 				}
 			});
 			content.select("tr.deleteThis").remove();
-<<<<<<< HEAD
 			content.select("span.deleteThis").remove();
-=======
->>>>>>> master
 			LDOM_Element eContent = new LDOM_Element(printPretty);
 			eContent.setTag(content.tagName());
 			eContent.setClassName(content.attr("class"));
@@ -677,6 +636,11 @@ public class AgesHtmlToLDOM {
 				+ Constants.DOMAIN_DELIMITER 
     			+ parts[3]
     	;
+    	if (parts[1].equals("gr")) {
+    		domain = "gr_gr_ages";
+    	} else if (parts[1].equals("en")) {
+    		domain = "en_us_ages";
+    	}
     	String topic = parts[0];
     	IdManager idManager = new IdManager(domain, topic, key);
     	String value = "";
