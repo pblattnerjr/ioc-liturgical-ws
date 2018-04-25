@@ -1168,10 +1168,21 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			domain.setType(DOMAIN_TYPES.COLLECTIVE);
 			addDomain(wsAdmin, domain.toJsonString());
 
+			// add domain for system linguistics
+			domain = new DomainCreateForm();
+			domain.setLanguageCode("en");
+			domain.setCountryCode("sys");
+			domain.setRealm("linguistics");
+			domain.setDescription("System linguistics entries");
+			domain.setLabels(labels);
+			domain.setType(DOMAIN_TYPES.COLLECTIVE);
+			addDomain(wsAdmin, domain.toJsonString());
+
 			logger.info("domains added");
 
 			// TODO: delete the code for the following users once the database is in use
 			
+			String linguisticsDomain = "en_sys_linguistics";
 			String ontologyDomain = "en_sys_ontology";
 			String ocmcDomain = "en_us_ocmc";
 			String greekDomain = "gr_gr_cog";
@@ -1235,6 +1246,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 				addUser("wsadmin", user.toJsonString());
 				this.grantRole("wsadmin", ROLES.ADMIN, ontologyDomain, username);
 				this.grantRole("wsadmin", ROLES.ADMIN, ocmcDomain, username);
+				this.grantRole("wsadmin", ROLES.ADMIN, linguisticsDomain, username);
 				this.grantRole("wsadmin", ROLES.ADMIN, "en_uk_gev", username);
 				this.grantRole("wsadmin", ROLES.ADMIN, "en_uk_gesot", username);
 				this.grantRole("wsadmin", ROLES.ADMIN, "en_uk_gemot", username);

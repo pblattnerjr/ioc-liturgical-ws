@@ -3,6 +3,7 @@ package net.ages.alwb.utils.transformers.adapters;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
@@ -20,6 +21,7 @@ import com.google.gson.JsonObject;
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 
+import org.ocmc.ioc.liturgical.schemas.iso.lang.LocaleDate;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import net.ages.alwb.utils.core.id.managers.IdManager;
@@ -47,6 +49,9 @@ public class AgesHtmlToLDOM {
 	private String centerFallback = "";
 	private String rightFallback = "";
 	private String languageCodes = "";
+	private boolean isDailyReading = false;
+	private String readingYear = "";
+	private String readingMonth = "";
 	private Map<String,String> greekValues = new TreeMap<String,String>();
 	private Map<String,String> englishValues = new TreeMap<String,String>();
 	private ExternalDbManager dbManager = null;
@@ -179,6 +184,13 @@ public class AgesHtmlToLDOM {
     					|| value.contains("~")
     					) {
     				value = "";
+    				valueSpan.text("");
+    			}
+    			if (key != null && key.length() > 0) {
+    				if (key.endsWith(".commemoration.text")) {
+    					valueSpan.parent().removeClass("reading");
+    					valueSpan.parent().addClass("designation");
+    				}
     			}
 	        	if (domain.startsWith("gr")) {
 		        	idManager = new IdManager("gr_gr_ages", topic, key);
@@ -260,10 +272,24 @@ public class AgesHtmlToLDOM {
 		LDOM result = new LDOM(url, printPretty);
 		// first add all the Greek and English values just in case
 		for (Entry<String,String> entry : this.greekValues.entrySet()) {
-				result.addValue(entry.getKey(), entry.getValue(), false);
+			String value = entry.getValue();
+			String key = entry.getKey();
+			if (key.contains("~calendar~")) {
+				result.addValue(key + ".doc", value, false);
+				result.addValue(key + ".toc", value, false);
+				result.addValue(key + ".header", value, false);
+			}
+			result.addValue(key, value, false);
 		}
 		for (Entry<String,String> entry : this.englishValues.entrySet()) {
-				result.addValue(entry.getKey(), entry.getValue(), false);
+			String value = entry.getValue();
+			String key = entry.getKey();
+			if (key.contains("~calendar~")) {
+				result.addValue(key + ".doc", value, false);
+				result.addValue(key + ".toc", value, false);
+				result.addValue(key + ".header", value, false);
+			}
+			result.addValue(key, value, false);
 		}
 		// now add the fallbacks
 		try {
@@ -300,42 +326,6 @@ public class AgesHtmlToLDOM {
 			        		value = englishValues.get(idManager.getId());
 			        	}
 		        	}
-//		        	if (value == null || value.length() == 0) {
-//		        		// we could not find the fallback.  Just grab the Greek.
-//		        		if (idManager.getKey().equals("version.designation")) {
-//			        		// ignore
-//			        	} else {
-//			        		IdManager temp = new IdManager(idManager.getId());
-//			        		temp.setLibrary("gr_gr_ages");
-//			        		value = greekValues.get(temp.getId());
-//		        			if (value == null) {
-//		        				value = "";
-//		        			}
-//			        	}
-//		        		
-//		        		IdManager temp = this.dataKeyToIdManager(
-//		        				getTopicKeyOfAdjoiningCell(
-//		        						dataKey
-//		        						, valueSpan
-//		        						)
-//		        				);
-//		        		if (temp.getTopic().equals("me.m01.d03") 
-//		        				&& temp.getKey().equals("meMA.Kontakion1.text")
-//		        				) {
-//			        		String houston = "We have a problem.";
-//		        		}
-//			        	if (fallbackDomain.startsWith("gr")) {
-//			        		temp.setLibrary("gr_gr_ages");
-//			        		value = greekValues.get(temp.getId());
-//			        	} else {
-//				        	if (idManager.getKey().equals("version.designation")) {
-//				        		// ignore
-//				        	} else {
-//				        		temp.setLibrary("en_us_ages");
-//				        		value = englishValues.get(temp.getId());
-//				        	}
-//			        	}
-//		        	}
 		        	String topicKey = idManager.getTopicKey();
 		        	idManager.setLibrary(domain);
 		        	result.addDomain(domain);
@@ -365,79 +355,19 @@ public class AgesHtmlToLDOM {
 		return result;
 	}
 
-//	private String getTopicKeyOfAdjoiningCell(String dataKey, Element span) {
-//		String result = dataKey;
-//		String cellClass = "";
-//		Element parent = null;
-//		Element test = span;
-//		int count = -1;
-//		while (parent == null && count < 10) { // don't want in infinite loop, so control it with the count variable.
-//			test = test.parent();
-//			String tag = test.tagName();
-//			if (tag.equals("td")) {
-//				cellClass = test.attr("class");
-//			}
-//			if (tag.equals("tr")) {
-//				parent = test;
-//				break;
-//			}
-//			count++;
-//		}
-//		Elements leftKeys = parent.child(0).select("span.kvp");
-//		Elements rightKeys = null;
-//
-//		if (parent.children().size() == 2) {
-//			rightKeys = parent.child(1).select("span.kvp");
-//		} else if (parent.children().size() == 3) {
-//			rightKeys = parent.child(2).select("span.kvp");
-//		}
-//		try {
-//			String key = "";
-//			if (rightKeys != null) { // handles the case where we only have one column
-//				if (cellClass.equals("leftCell") || cellClass.equals("centerCell")) {
-//					int index = 0;
-//					for (Element keySpan : leftKeys) {
-//						key = keySpan.attr("data-key").toLowerCase();
-//						if (key.equals(dataKey.toLowerCase())) {
-//							break;
-//						} else {
-//							index++;
-//						}
-//					}
-//					if (index < rightKeys.size()) {
-//						result = rightKeys.get(index).attr("data-key"); 
-//					}
-//				} else {
-//					int index = 0;
-//					for (Element keySpan : rightKeys) {
-//						key = keySpan.attr("data-key").toLowerCase();
-//						if (key.equals(dataKey.toLowerCase())) {
-//							break;
-//						} else {
-//							index++;
-//						}
-//					}
-//					if (index < leftKeys.size()) {
-//						result = leftKeys.get(index).attr("data-key"); 
-//					}
-//				}
-//			}
-//		} catch (Exception e) {
-//			ErrorUtils.report(logger, e);
-//		}
-//		return result;
-//	}
 	/**
 	 * Gets the children (recursively) for the elements in the parameter named 'children'
-	 * @param children
-	 * @param seq
-	 * @return
-	 * @throws Exception
+	 * @param children an array of Elements that are the children of the root element
+	 * @param seq the sequence number
+	 * @return a list of LDOM element
+	 * @throws Exception if an error occurs
 	 */
 	private List<LDOM_Element> getChildren(Elements children, int seq) throws Exception {
 		List<LDOM_Element> result = new ArrayList<LDOM_Element>();
+		int count = -1;
 		try {
 			for (Element child : children) {
+				count++;
 				try {
 					LDOM_Element eChild = new LDOM_Element(true);
 					String key = "";
@@ -533,20 +463,67 @@ public class AgesHtmlToLDOM {
 				doc = Jsoup.parse(in, "UTF-8", "http://example.com/");
 			} else {
 				c = Jsoup.connect(url);
-				doc = c.timeout(60*1000).get();
+				doc = c.timeout(60*1000).maxBodySize(0).get();
 			}
 			AlwbUrl urlUtils = new AlwbUrl(url);
+
+			// see if this webpage is for daily readings for OCMC
+			String titleText = doc.select("title").text();
+			if (titleText.startsWith("cu.ocmc_guatemala")) {
+				String [] titleParts = titleText.split("_");
+				if (titleParts.length == 4) {
+					this.isDailyReading = true;
+					this.readingYear = titleParts[2];
+					this.readingMonth = titleParts[3];
+				}
+			}
+			
 			result.setPdfFilename(urlUtils.getFileName(), this.languageCodes);
 			content = doc.select("div.content").first();
-
+					
 			// remove rows that contain a media-group
 			content.select("tr:has(div.media-group)").remove();
 			content.select("tr:has(div.media-group-empty)").remove();
 
+			// See if this is a lectionary.  If so, we need to handle the day titles.
+			Elements boldredSpans = content.select("span.boldred");
+			for (Element boldred : boldredSpans) {
+				if (boldred.select("span.kvp").isEmpty()) {
+					String library =  "gr_gr_cog";
+					String day = "";
+					if (boldred.parent().parent().hasClass("rightCell")) {
+						library = "en_us_dedes";
+					}
+					String text = boldred.text();
+					String [] parts = text.split(",");
+					if (parts.length == 3) {
+						parts = parts[1].trim().split(" ");
+						if (parts.length == 2) {
+							int intDay = Integer.parseInt(parts[1].trim());
+							day = String.format("%02d", intDay);
+						} else {
+							logger.info("Unexpected text format.  Not a date? " + text);
+						}
+					} else {
+						logger.info("Unexpected text format.  Not a date? " + text);
+					}
+					String newKey = "calendar_" 
+							+ library 
+							+ "|y" 
+							+ this.readingYear 
+							+ ".m" 
+							+ this.readingMonth
+							+ ".d" 
+							+ day
+							+ ".md";
+					boldred.attr("class", "kvp");
+					boldred.attr("data-key", newKey);
+					boldred.parent().attr("class","LectionaryDate");
+				}
+			}
 			Elements versionDesignations = content.select("span.versiondesignation");
 			this.normalizeDesignations(versionDesignations);
 			Elements keys = content.select("span.kvp, span.key");
-//			Map<String,String> theValues = dbManager.setValues(keys);
 			this.loadOriginalValues(keys); // load the Greek and English values
 			this.equalizeTopicKeys(); // sometimes the Greek or English has extra topic-keys.  Make sure they both have the same ones.
 			
@@ -562,6 +539,7 @@ public class AgesHtmlToLDOM {
 			result.setDomains(values.getDomains());
 			result.setTopicKeys(values.getTopicKeys());
 			result.setValues(values.getValues());
+
 			if (this.centerLibrary == null || this.centerLibrary.length() == 0) {
 				content.select("td.centerCell").remove();
 			}
@@ -592,6 +570,7 @@ public class AgesHtmlToLDOM {
 				this.setValue(e);
 			}
 			);
+			
 			content.select("p.chapverse").forEach(e -> {
 				Element tr = e.parent().parent();
 				Element followingTr = tr.nextElementSibling();
@@ -608,8 +587,10 @@ public class AgesHtmlToLDOM {
 					e.addClass("deleteThis");
 				}
 			});
+			
 			content.select("tr.deleteThis").remove();
 			content.select("span.deleteThis").remove();
+
 			LDOM_Element eContent = new LDOM_Element(printPretty);
 			eContent.setTag(content.tagName());
 			eContent.setClassName(content.attr("class"));
@@ -623,8 +604,9 @@ public class AgesHtmlToLDOM {
 		}
 		return result;
 	}
-	
+		
 	private void setValue(Element e) {
+    	String value = "";
     	String dataKey = e.attr("data-key");
     	String [] parts = dataKey.split("\\|");
     	String key = parts[1];
@@ -643,35 +625,39 @@ public class AgesHtmlToLDOM {
     	}
     	String topic = parts[0];
     	IdManager idManager = new IdManager(domain, topic, key);
-    	String value = "";
-    	// first see if we already have the value
-    	if (domain.startsWith("gr")) {
-    		if (this.greekValues.containsKey(idManager.getId())) {
-    			value = this.greekValues.get(idManager.getId());
-    		}
-    	} else if (domain.startsWith("en")) {
-    		if (this.englishValues.containsKey(idManager.getId())) {
-    			value = this.englishValues.get(idManager.getId());
-    		}
-    	}
-    	if (value.length() == 0) {
-    		// we did not find the value in memory, so do a database call
-        	value = this.getValue(idManager.getId());
-        	if (value.length() == 0) {
-    			String fallbackLibrary = "";
-    			if (leftLibrary != null && domain.equals(leftLibrary)) {
-    				fallbackLibrary = leftFallback;
-    			} else if (centerLibrary != null && domain.equals(centerLibrary)) {
-    				fallbackLibrary = centerFallback;
-    			} else if (rightLibrary != null && domain.equals(rightLibrary)) {
-    				fallbackLibrary = rightFallback;
-    			}
-    			idManager.setLibrary(fallbackLibrary);
-    	    	value = this.getValue(idManager.getId());
+
+    	if (e.parent().hasClass("LectionaryDate")) {
+			value = e.text();
+    	} else {
+        	// first see if we already have the value
+        	if (domain.startsWith("gr")) {
+        		if (this.greekValues.containsKey(idManager.getId())) {
+        			value = this.greekValues.get(idManager.getId());
+        		}
+        	} else if (domain.startsWith("en")) {
+        		if (this.englishValues.containsKey(idManager.getId())) {
+        			value = this.englishValues.get(idManager.getId());
+        		}
         	}
-    	}
-    	if (value.startsWith("[saint") || value.startsWith("[paragraph")) {
-    		value = "";
+        	if (value.length() == 0) {
+        		// we did not find the value in memory, so do a database call
+            	value = this.getValue(idManager.getId());
+            	if (value.length() == 0) {
+        			String fallbackLibrary = "";
+        			if (leftLibrary != null && domain.equals(leftLibrary)) {
+        				fallbackLibrary = leftFallback;
+        			} else if (centerLibrary != null && domain.equals(centerLibrary)) {
+        				fallbackLibrary = centerFallback;
+        			} else if (rightLibrary != null && domain.equals(rightLibrary)) {
+        				fallbackLibrary = rightFallback;
+        			}
+        			idManager.setLibrary(fallbackLibrary);
+        	    	value = this.getValue(idManager.getId());
+            	}
+        	}
+        	if (value.startsWith("[saint") || value.startsWith("[paragraph")) {
+        		value = "";
+        	}
     	}
 		e.text(value);
 	}

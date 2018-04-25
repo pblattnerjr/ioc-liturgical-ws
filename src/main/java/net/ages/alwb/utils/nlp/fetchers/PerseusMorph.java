@@ -64,6 +64,7 @@ public class PerseusMorph {
 				doc = Jsoup.connect(url)
 						.data("l", token)
 						.data("la", "greek") 
+						.maxBodySize(0)
 						.timeout(60000)
 						.get();
 				if (doc != null) {

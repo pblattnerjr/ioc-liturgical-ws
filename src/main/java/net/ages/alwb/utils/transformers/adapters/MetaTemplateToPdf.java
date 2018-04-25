@@ -86,13 +86,28 @@ public class MetaTemplateToPdf {
 	}
 	
 	public void process() {
+		boolean singleColumn = 
+				(template.getCenterLibrary() == "" || template.getCenterLibrary().length() == 0)
+				&& (template.getRightLibrary() == "" || template.getRightLibrary().length() == 0)
+		;
 		this.texFileSb.append("\\documentclass[extrafontsizes,12pt]{memoir}\n");
 		this.texFileSb.append("\\usepackage[hyphenate]{system/ocmc-liturgical-text}%\n");
 		this.texFileSb.append("\\input{system/control} %\n");
+		if (singleColumn) {
+			this.texFileSb.append("\\usepackage{multicol}%\n");
+		}
 		this.texFileSb.append("\\begin{document}%\n");
+		if (template.url.contains("guatemala")) {
+//			this.texFileSb.append("\\renewcommand{\\contentsname}{Índice}}\n\n");
+//			this.texFileSb.append("\n\\tableofcontents\n\n\\vfill");
+		}
+
 		this.texFileSb.append("\\mainmatter%\n");
 		this.texFileSb.append("\\ltColumnsOn%\n");
 
+		if (singleColumn) {
+			this.texFileSb.append("\\begin{multicols}{2}%\n");
+		}
 		if (template.getLeftLibrary() != null && template.getLeftLibrary().length() > 0) {
 			IdManager m = new IdManager();
 			m.setLibrary(template.getLeftLibrary());
@@ -151,12 +166,21 @@ public class MetaTemplateToPdf {
 		if (template.getLeftTitleDate() != null && template.getLeftTitleDate().length() > 0) {
 			this.texFileSb.append("\\ltServiceDate{pdf}{title.date}\n");
 		}
+		
 		this.process(template.getTopElement());
 		int redirectCount = 0;
 		for (OslwRowElement rowElement : list) {
 			OslwCellElement cell1 = rowElement.getCells().get(0);
 			OslwCellElement cell2 = null;
 			OslwCellElement cell3 = null;
+			
+			/**
+			 * The OSLW \lt commands can only handle up to four IDs. 
+			 * So, we need to check the number of cell elements.
+			 * If the exceed four, we will generate Rids instead (see below).
+			 */
+			boolean moreThanFourKeys = cell1.getKvpCellElements().size() > 4;
+
 			if (rowElement.getCells().size() > 1) {
 				cell2 = rowElement.getCells().get(1);
 				if (rowElement.getCells().size() > 2) {
@@ -165,7 +189,7 @@ public class MetaTemplateToPdf {
 			}
 			/**
 			 * Check to see if the keys match for all cells.
-			 * If not, we will create a special set of redirects.
+			 * If not, we will create a special set of redirects with RIDs.
 			 */
 			if (cell1.commands.size() > 0) {
 				boolean allCellsKeysMatch = true;
@@ -182,9 +206,7 @@ public class MetaTemplateToPdf {
 					}
 				}
 				
-				if (allCellsKeysMatch) {
-					this.texFileSb.append(cell1.toOslw());
-				} else {
+				if (moreThanFourKeys || ! allCellsKeysMatch) {
 					redirectCount++;
 					this.texFileSb.append(
 							this.getRids(
@@ -195,8 +217,17 @@ public class MetaTemplateToPdf {
 									, template.rightLibrary
 									)
 							);
+				} else {
+					this.texFileSb.append(cell1.toOslw());
+				}
+				
+				if (singleColumn) {
+					this.texFileSb.append("\n");
 				}
 			}
+		}
+		if (singleColumn) {
+			this.texFileSb.append("\\end{multicols}%\n");
 		}
 		this.texFileSb.append("\\ltColumnsOff%\n");
 		this.texFileSb.append(
@@ -217,23 +248,30 @@ public class MetaTemplateToPdf {
 			) {
 		StringBuffer result = new StringBuffer();
 		OslwCellElement cell1 = row.getCells().get(0);
-		OslwCellElement cell2 = row.getCells().get(1);
+		OslwCellElement cell2 = null;
 		OslwCellElement cell3 = null;
 		int cell1IdCount = cell1.getKvpCellElements().size();
-		int cell2IdCount = cell2.getKvpCellElements().size();
+		int cell2IdCount = 0;
 		int cell3IdCount = 0;
-		if (row.getCells().size() > 2) {
-			cell3 = row.getCells().get(2);
-			cell3IdCount = cell3.getKvpCellElements().size();
+		if (row.getCells().size() > 1) {
+			cell2 = row.getCells().get(1);
+			cell2IdCount = cell2.getKvpCellElements().size();
+			if (row.getCells().size() > 2) {
+				cell3 = row.getCells().get(2);
+				cell3IdCount = cell3.getKvpCellElements().size();
+			}
 		}
 		int maxIdCount = Math.max(Math.max(cell1IdCount, cell2IdCount), cell3IdCount);
+		boolean hasDesignation = false; 
 		result.append(cell1.toOslwRedirectResources(redirectCount, maxIdCount, leftLibrary));
-		result.append(cell2.toOslwRedirectResources(redirectCount, maxIdCount, centerLibrary));
-		boolean hasDesignation = cell2.getVersionDesignationId().length() > 0; 
-		if (row.getCells().size() > 2) {
-			result.append(cell3.toOslwRedirectResources(redirectCount, maxIdCount, rightLibrary));
-			if (hasDesignation == false) {
-				hasDesignation = cell3.getVersionDesignationId().length() > 0;
+		if (row.getCells().size() > 1) {
+			result.append(cell2.toOslwRedirectResources(redirectCount, maxIdCount, centerLibrary));
+			hasDesignation = cell2.getVersionDesignationId().length() > 0; 
+			if (row.getCells().size() > 2) {
+				result.append(cell3.toOslwRedirectResources(redirectCount, maxIdCount, rightLibrary));
+				if (hasDesignation == false) {
+					hasDesignation = cell3.getVersionDesignationId().length() > 0;
+				}
 			}
 		}
 		result.append(cell1.toOslwRedirect(redirectCount, maxIdCount, hasDesignation)); 

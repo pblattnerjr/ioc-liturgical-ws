@@ -68,6 +68,7 @@ public class PerseusXmlMorph {
 			doc = Jsoup.connect(url)
 					.data("lang", "greek")
 					.data("lookup", betaCode) 
+					.maxBodySize(0)
 					.timeout(300000)
 					.get();
 			if (doc != null) {

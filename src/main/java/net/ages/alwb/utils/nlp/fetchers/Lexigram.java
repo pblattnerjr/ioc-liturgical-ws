@@ -40,6 +40,7 @@ public class Lexigram {
 		try {
 			doc = Jsoup.connect(url + token+"#Hist1")
 					.timeout(3000)
+					.maxBodySize(0)
 					.get();
 			if (doc != null) {
 				Elements elements = doc.select("body");

@@ -334,6 +334,10 @@ public class AgesHtmlToOslwSwitch {
 			result = "Undefined";
 			break;
 		}
+		case "p-LectionaryDate": {
+			result = "Section";
+			break;
+		}
 		case "p-designation": {
 		// {eu.baptism}{euBAP.title} (http://www.agesinitiatives.com/dcs/public/dcs/h/b/baptism/gr-en/index.html)
 			result = "Designation";

@@ -1,5 +1,8 @@
 package net.ages.alwb.utils.core.misc;
 
+import ioc.liturgical.ws.app.ServiceProvider;
+import ioc.liturgical.ws.constants.Constants;
+
 public class AlwbUrl {
 	private String urlString = "";
 	private String type = "";
@@ -24,10 +27,19 @@ public class AlwbUrl {
 			month = parts[startIndex+2];
 			day = parts[startIndex+3];
 			name = parts[startIndex+4];
+		} else if (type.equals("c")) {
+			try {
+				parts = url.split("\\/");
+				parts = parts[8].split(Constants.DOMAIN_SPLITTER);
+				month = parts[3];
+				year = parts[2];
+				name  = "dr"; // daily readings
+			} catch (Exception e) {
+				ServiceProvider.sendMessage("ExternalDbManager.getAgesService can't parse date from url " + url);
+			}
 		} else {
 			name = parts[startIndex+1];
 		}
-		
 	}
 	
 	public String getFileName() {

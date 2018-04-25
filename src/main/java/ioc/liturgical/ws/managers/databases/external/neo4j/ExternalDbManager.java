@@ -3,7 +3,9 @@ package ioc.liturgical.ws.managers.databases.external.neo4j;
 import java.text.Normalizer;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,6 +34,7 @@ import org.ocmc.ioc.liturgical.utils.FileUtils;
 import ioc.liturgical.ws.managers.interfaces.HighLevelDataStoreInterface;
 import ioc.liturgical.ws.managers.synch.SynchManager;
 import ioc.liturgical.ws.app.ServiceProvider;
+import ioc.liturgical.ws.calendar.DateGenerator;
 
 import org.ocmc.ioc.liturgical.schemas.constants.BIBLICAL_BOOKS;
 import ioc.liturgical.ws.constants.Constants;
@@ -51,6 +54,7 @@ import org.ocmc.ioc.liturgical.schemas.constants.UTILITIES;
 import org.ocmc.ioc.liturgical.schemas.constants.VERBS;
 import org.ocmc.ioc.liturgical.schemas.constants.VISIBILITY;
 import org.ocmc.ioc.liturgical.schemas.exceptions.BadIdException;
+import org.ocmc.ioc.liturgical.schemas.iso.lang.LocaleDate;
 
 import ioc.liturgical.ws.managers.databases.external.neo4j.constants.MATCHERS;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryBuilderForDocs;
@@ -250,9 +254,28 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			  if (! this.existsWordAnalyses("ἀβλαβεῖς")) {
 				  this.loadTheophanyGrammar();
 			  }
+			  logger.info("Creating calendars");
+			  this.createCalendars(Calendar.getInstance().get(Calendar.YEAR));
+			  logger.info("Calendars created");
 		  } else {
 			  ServiceProvider.sendMessage("Could not connect to Neo4j Database at " + neo4jDomain + ". ");
 		  }
+		  /**
+		   * TODO: remove this code.  One time only use...
+		   * 
+		   */
+		  TextLiturgical temp = new TextLiturgical("gr_gr_cog", "template.titles", "dr.pdf.header");
+		  temp.setVisibility(VISIBILITY.PUBLIC);
+		  temp.setValue("Καθημερινά Κείμενα");
+		  this.addLTKDbObject("wsadmin", temp.toJsonString());
+		  temp = new TextLiturgical("gr_gr_cog", "template.titles", "dr.pdf.cover");
+		  temp.setVisibility(VISIBILITY.PUBLIC);
+		  temp.setValue("Καθημερινά Κείμενα");
+		  this.addLTKDbObject("wsadmin", temp.toJsonString());
+		  temp = new TextLiturgical("gr_gr_cog", "template.titles", "dr.html.tab");
+		  temp.setVisibility(VISIBILITY.PUBLIC);
+		  temp.setValue("Καθημερινά Κείμενα");
+		  this.addLTKDbObject("wsadmin", temp.toJsonString());
 	  }
 	  
 	  /**
@@ -287,6 +310,105 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			  }
 		  }
 	  }
+
+	  
+	  public List<String> getLiturgicalLibraries() {
+		  List<String> result = new ArrayList<String>();
+		  String query = "match (n:Liturgical) return distinct n.library order by n.library";
+		  ResultJsonObjectArray queryResult = this.getForQuery(
+				  query
+				  , false
+				  , false
+				  );
+		  for (JsonObject o : queryResult.getResult()) {
+			  result.add(o.get("n.library").getAsString());
+		  }
+		  return result;
+	  }
+	  
+
+	  /**
+	   * Creates a calendar for each Liturgical library for the specified year and the next.
+	   * This results in two entries for each day for the library, e.g. : 
+	   *  gr_gr_cog~calendar~y2018.m05.d01.ymd which will have the year
+	   * gr_gr_cog~calendar~y2018.m05.d01.md which will have just the month and day
+	   * 
+	   * The reason we generate for an extra year is so the values will be available when
+	   * working on liturgical services for the following year.
+	   * 
+	   * @param year the year for the calendars 
+	   */
+	  public void createCalendars(int year) {
+		  List<String> shortList = new ArrayList<String>();
+		  int nextYear = year + 1;
+		  shortList.add("en_us_dedes");
+		  shortList.add("spa_gt_odg");
+		  shortList.add("gr_gr_cog");
+		  // Problem: this takes way too long.  About 20 minutes per library.  So, for now just do the short list.
+		  // for (String library : this.getLiturgicalLibraries()) {
+		  for (String library : shortList) {
+			  if (library.equals("en_uk_kjv")  // ignore scripture libraries
+					  || library.equals("en_us_eob")
+					  || library.equals("en_us_net")
+					  || library.equals("en_us_nkjv")
+					  || library.equals("en_us_rsv")
+					  || library.equals("en_us_saas")
+					  ) {
+				  // ignore
+			  } else {
+				  long calCount = this.getCalendarDayCount(library, year);
+				  if (calCount < 365) {
+					  this.createCalendar(library, year);
+				  }
+				  calCount = this.getCalendarDayCount(library, nextYear);
+				  if (calCount < 365) {
+					  this.createCalendar(library, nextYear);
+				  }
+			  }
+		  }
+	  }
+	  
+	  public long getCalendarDayCount(String library, int year) {
+		 long count = 0;
+		  String query = "match (n:Liturgical) where n.id starts with '" 
+		 + library 
+		 + Constants.ID_DELIMITER 
+		 + "calendar"
+		 + Constants.ID_DELIMITER 
+		 + "y" + year + "' return count(n)";
+		  ResultJsonObjectArray queryResult = this.getForQuery(query, false, false);
+		  String strCount = queryResult.getFirstObject().get("count(n)").getAsString();
+		  try {
+			  count = Long.parseLong(strCount);
+		  } catch (Exception e) {
+			  // ignore
+		  }
+		  return count;
+	  }
+	  
+	  public void createCalendar(String library, int year) {
+		  try {
+			  logger.info("Creating calendar for " + library + " for " + year);
+				DateGenerator generator = new DateGenerator(library, year);
+				Map<String,String> days = generator.getDays();
+				for (Entry<String,String> entry : days.entrySet()) {
+						IdManager idManager = new IdManager(entry.getKey());
+						TextLiturgical day = new TextLiturgical(
+								idManager.getLibrary()
+								, idManager.getTopic()
+								, idManager.getKey()
+								);
+						day.setValue(entry.getValue());
+						day.setSeq(idManager.getId());
+						day.setVisibility(VISIBILITY.PUBLIC);
+						this.addLTKDbObject("wsadmin", day.toJsonString());
+				}
+				  logger.info("Finished creating calendar for " + library + " for " + year);
+		  } catch (Exception e) {
+			  ErrorUtils.report(logger, e);
+		  }
+	  }
+	  
 	  /**
 	   * Query the database for word grammar analyses for the specified word
 	   * @param word - case sensitive
@@ -3581,6 +3703,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						result = titleValue.getFirstObjectValueAsString();
 					}
 				}
+				if (url.getType().equals("c")) {
+					LocaleDate localeDate = new LocaleDate(idManager.getLocale(), url.getYear(), url.getMonth(), "1");
+					result = result + " " + localeDate.getMonthNameFull() + " " + localeDate.getYear();
+				}
 			} catch (Exception e) {
 				// ignore
 			}
@@ -3662,8 +3788,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						, this
 						);
 				LDOM template = ages.toLDOM();
-				String title = template.getPdfFilename();
-				Map<String,String> values = template.getValues();
+				Map<String,String> values = new TreeMap<String,String>();
+				values.putAll(template.getValues());
 			
 				// Get the title information
 				AlwbUrl urlUtils = new AlwbUrl(url);
@@ -3680,63 +3806,106 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					template.setRightHeaderTitle(this.getTitleForHeader(urlUtils, rightLibrary, rightFallback));
 					template.setRightTitleDate(this.getTitleDate(urlUtils, rightLibrary));
 				}
+				
 				/**
 				 * Build a new values map, with entries for left, center, and right.
 				 * If the requested left, center, or right library is gr_gr_cog, or en_us_dedes
 				 * we do not need to add them. We already have them.
 				 */
 				for ( Entry<String,String> entry: template.getValues().entrySet()) {
-					if (leftLibrary != null && entry.getKey().startsWith(leftLibrary)) {
-						if (
-								leftLibrary.equals("gr_gr_cog")  
-							) {
-							// ignore
-						} else {
-							ResultJsonObjectArray dbValue = this.getForId(entry.getKey(), leftLibrary);
-							if (dbValue.valueCount == 1) {
-								JsonObject o = dbValue.getFirstObject();
-								if (o.get("value").getAsString().trim().length() > 0) {
-									values.put(entry.getKey(), dbValue.getFirstObjectValueAsString());
+					String key = entry.getKey();
+					boolean entryContainsCalendar = key.contains("~calendar~");
+						if (leftLibrary != null && key.startsWith(leftLibrary)) {
+							if (
+									leftLibrary.equals("gr_gr_cog")  
+									&& (! entryContainsCalendar)
+								) {
+									// ignore
+							} else {
+								ResultJsonObjectArray dbValue = this.getForId(key, leftLibrary);
+								if (dbValue.valueCount == 1) {
+									JsonObject o = dbValue.getFirstObject();
+									String value = dbValue.getFirstObjectValueAsString();
+									if (o.get("value").getAsString().trim().length() > 0) {
+										if (entryContainsCalendar) {
+											values.put(key, value);
+											// the .doc, .toc, and .header are used in OSLW (Latex) for the PDFs.
+											values.put(key + ".doc", value);
+											values.put(key + ".toc", value);
+											values.put(key + ".header", value);
+										} else {
+											if (value.startsWith("[saint") || value.startsWith("[para")) {
+												// ignore
+											} else {
+												values.put(key, value);
+											}
+										}
+									}
+								}
+							}
+						} else if (
+								centerLibrary != null 
+								&& centerLibrary.length() != 0 
+								&& entry.getKey().startsWith(centerLibrary)
+								) {
+							if (
+									centerLibrary.equals("gr_gr_cog")  
+									&& (! entryContainsCalendar)
+								) {
+									// ignore
+							} else {
+								ResultJsonObjectArray dbValue = this.getForId(key, centerLibrary);
+								if (dbValue.valueCount == 1) {
+									JsonObject o = dbValue.getFirstObject();
+									String value = dbValue.getFirstObjectValueAsString();
+									if (o.get("value").getAsString().trim().length() > 0) {
+										if (entryContainsCalendar) {
+											values.put(key, value);
+											values.put(key + ".doc", value);
+											values.put(key + ".toc", value);
+											values.put(key + ".header", value);
+										} else {
+											if (value.startsWith("[saint") || value.startsWith("[para")) {
+												// ignore
+											} else {
+												values.put(key, value);
+											}
+										}
+									}
+								}
+							}
+						} else if (
+								rightLibrary != null 
+								&& rightLibrary.length() != 0 
+								&& entry.getKey().startsWith(rightLibrary)
+								) {
+							if (
+									rightLibrary.equals("gr_gr_cog")  
+									&& (! entryContainsCalendar)
+								) {
+									// ignore
+							} else {
+								ResultJsonObjectArray dbValue = this.getForId(key, rightLibrary);
+								if (dbValue.valueCount == 1) {
+									JsonObject o = dbValue.getFirstObject();
+									String value = dbValue.getFirstObjectValueAsString();
+									if (o.get("value").getAsString().trim().length() > 0) {
+										if (entryContainsCalendar) {
+											values.put(key, value);
+											values.put(key + ".doc", value);
+											values.put(key + ".toc", value);
+											values.put(key + ".header", value);
+										} else {
+											if (value.startsWith("[saint") || value.startsWith("[para")) {
+												// ignore
+											} else {
+												values.put(key, value);
+											}
+										}
+									}
 								}
 							}
 						}
-					} else if (
-							centerLibrary != null 
-							&& centerLibrary.length() != 0 
-							&& entry.getKey().startsWith(centerLibrary)
-							) {
-						if (
-								centerLibrary.equals("gr_gr_cog")  
-							) {
-								// ignore
-						} else {
-							ResultJsonObjectArray dbValue = this.getForId(entry.getKey(), centerLibrary);
-							if (dbValue.valueCount == 1) {
-								JsonObject o = dbValue.getFirstObject();
-								if (o.get("value").getAsString().trim().length() > 0) {
-									values.put(entry.getKey(), dbValue.getFirstObjectValueAsString());
-								}
-							}
-						}
-					} else if (
-							rightLibrary != null 
-							&& rightLibrary.length() != 0 
-							&& entry.getKey().startsWith(rightLibrary)
-							) {
-						if (
-								rightLibrary.equals("gr_gr_cog")  
-							) {
-								// ignore
-						} else {
-							ResultJsonObjectArray dbValue = this.getForId(entry.getKey(), rightLibrary);
-							if (dbValue.valueCount == 1) {
-								JsonObject o = dbValue.getFirstObject();
-								if (o.get("value").getAsString().trim().length() > 0) {
-									values.put(entry.getKey(), dbValue.getFirstObjectValueAsString());
-								}
-							}
-						}
-					}
 				}
 				template.setValues(values);
 

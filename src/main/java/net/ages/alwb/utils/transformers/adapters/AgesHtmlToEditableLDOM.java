@@ -244,7 +244,7 @@ public class AgesHtmlToEditableLDOM {
 		Element content = null;
 		try {
 			c = Jsoup.connect(url);
-			doc = c.timeout(60*1000).get();
+			doc = c.timeout(60*1000).maxBodySize(0).get();
 			content = doc.select("div.content").first();
 			// remove rows that contain a media-group
 			content.select("tr:has(div.media-group)").remove();

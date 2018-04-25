@@ -1,5 +1,6 @@
 package net.ages.alwb.utils.transformers.adapters.models;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,7 +44,7 @@ public class LDOM extends AbstractLDOM {
 	@Expose public String centerTitleDate = "";
 	@Expose public String rightTitleDate = "";
 	@Expose public List<String> domains = new ArrayList<String>();
-	@Expose public Map<String,String> values = new TreeMap<String,String>();
+	@Expose public Map<String,String> values = Collections.synchronizedMap(new TreeMap<String,String>());
 	
 	public LDOM(String source) {
 		super(source);
@@ -81,7 +82,7 @@ public class LDOM extends AbstractLDOM {
 	}
 
 	public Map<String, String> getValues() {
-		return values;
+		return this.values;
 	}
 
 	public void setValues(Map<String, String> values) {

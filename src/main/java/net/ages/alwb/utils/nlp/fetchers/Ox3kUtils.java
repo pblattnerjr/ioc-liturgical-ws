@@ -35,11 +35,13 @@ public class Ox3kUtils {
 		try {
 			doc = Jsoup.connect(href)
 					.timeout(6000)
+					.maxBodySize(0)
 					.get();
 		} catch (HttpStatusException h ) {
 				try {
 					doc = Jsoup.connect(href + "_1")
 							.timeout(6000)
+							.maxBodySize(0)
 							.get();
 				} catch (IOException e) {
 					e.printStackTrace();

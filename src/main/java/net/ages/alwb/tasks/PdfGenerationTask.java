@@ -51,6 +51,7 @@ public class PdfGenerationTask implements Runnable {
 		String command = "cd " + Constants.PDF_FOLDER + " && xelatex " + this.pdfId + ".tex";
 		commands.add(command);
 		String result = this.executeCommandProcessor(Constants.PDF_FOLDER + "/makepdf", this.pdfId + ".tex", Constants.PDF_FOLDER);
+	//	result = this.executeCommandProcessor(Constants.PDF_FOLDER + "/makepdf", this.pdfId + ".tex", Constants.PDF_FOLDER);
 		if (result != null && result.length() > 0) {
 			System.out.println(result);
 		}

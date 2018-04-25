@@ -57,7 +57,7 @@ public class AgesWebsiteIndexToReactTableData {
 		Connection readingsIndexConnection = null;
 		try {
 			readingsIndexConnection = Jsoup.connect(olwBooksUrl);
-			readingsIndexDoc = readingsIndexConnection.timeout(60*1000).get();
+			readingsIndexDoc = readingsIndexConnection.timeout(60*1000).maxBodySize(0).get();
 			Elements books = readingsIndexDoc.select("a.index-books-file-link");
 			for (Element bookAnchor : books) {
 				String href = bookAnchor.attr("href");
@@ -129,7 +129,7 @@ public class AgesWebsiteIndexToReactTableData {
 		Connection readingsIndexConnection = null;
 		try {
 			readingsIndexConnection = Jsoup.connect(readingsIndex);
-			readingsIndexDoc = readingsIndexConnection.timeout(60*1000).get();
+			readingsIndexDoc = readingsIndexConnection.timeout(60*1000).maxBodySize(0).get();
 			Elements months = readingsIndexDoc.select("a.index-custom-file-link");
 			for (Element monthAnchor : months) {
 				String href = monthAnchor.attr("href");
@@ -169,7 +169,7 @@ public class AgesWebsiteIndexToReactTableData {
 		Connection readingsIndexConnection = null;
 		try {
 			datesIndexConnection = Jsoup.connect(servicesIndex);
-			servicesIndexDoc = datesIndexConnection.timeout(60*1000).get();
+			servicesIndexDoc = datesIndexConnection.timeout(60*1000).maxBodySize(0).get();
 			Elements days = servicesIndexDoc.select("a.index-day-link");
 			for (Element day : days) {
 				String href = day.attr("href");
@@ -179,7 +179,7 @@ public class AgesWebsiteIndexToReactTableData {
 				String date = year + "/" + month + "/" + monthDay;
 				String dayOfWeekName = day.text().trim().split("-")[1];
 				servicesIndexConnection = Jsoup.connect(baseUrl + href);
-				dayIndexDoc = servicesIndexConnection.timeout(60*1000).get();
+				dayIndexDoc = servicesIndexConnection.timeout(60*1000).maxBodySize(0).get();
 				Elements services = dayIndexDoc.select("a.index-file-link");
 				for (Element service : services) {
 					String fileHref = service.attr("href");
@@ -199,7 +199,7 @@ public class AgesWebsiteIndexToReactTableData {
 				}
 			}
 			booksIndexConnection = Jsoup.connect(booksIndex);
-			booksIndexDoc = booksIndexConnection.timeout(60*1000).get();
+			booksIndexDoc = booksIndexConnection.timeout(60*1000).maxBodySize(0).get();
 			Element menu = booksIndexDoc.getElementById("dcs_tree");
 			Elements anchors = menu.select("li > ul > li > ul > li");
 			for (Element anchor : anchors) {
