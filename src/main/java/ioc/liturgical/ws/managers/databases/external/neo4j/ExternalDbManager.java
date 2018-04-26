@@ -254,28 +254,28 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			  if (! this.existsWordAnalyses("ἀβλαβεῖς")) {
 				  this.loadTheophanyGrammar();
 			  }
-			  logger.info("Creating calendars");
-			  this.createCalendars(Calendar.getInstance().get(Calendar.YEAR));
-			  logger.info("Calendars created");
+//			  logger.info("Creating calendars");
+//			  this.createCalendars(Calendar.getInstance().get(Calendar.YEAR));
+//			  logger.info("Calendars created");
+			  /**
+			   * TODO: remove code below.  One time only use...
+			   * 
+			   */
+			  TextLiturgical temp = new TextLiturgical("gr_gr_cog", "template.titles", "dr.pdf.header");
+			  temp.setVisibility(VISIBILITY.PUBLIC);
+			  temp.setValue("Καθημερινά Κείμενα");
+			  this.addLTKDbObject("wsadmin", temp.toJsonString());
+			  temp = new TextLiturgical("gr_gr_cog", "template.titles", "dr.pdf.cover");
+			  temp.setVisibility(VISIBILITY.PUBLIC);
+			  temp.setValue("Καθημερινά Κείμενα");
+			  this.addLTKDbObject("wsadmin", temp.toJsonString());
+			  temp = new TextLiturgical("gr_gr_cog", "template.titles", "dr.html.tab");
+			  temp.setVisibility(VISIBILITY.PUBLIC);
+			  temp.setValue("Καθημερινά Κείμενα");
+			  this.addLTKDbObject("wsadmin", temp.toJsonString());
 		  } else {
 			  ServiceProvider.sendMessage("Could not connect to Neo4j Database at " + neo4jDomain + ". ");
 		  }
-		  /**
-		   * TODO: remove this code.  One time only use...
-		   * 
-		   */
-		  TextLiturgical temp = new TextLiturgical("gr_gr_cog", "template.titles", "dr.pdf.header");
-		  temp.setVisibility(VISIBILITY.PUBLIC);
-		  temp.setValue("Καθημερινά Κείμενα");
-		  this.addLTKDbObject("wsadmin", temp.toJsonString());
-		  temp = new TextLiturgical("gr_gr_cog", "template.titles", "dr.pdf.cover");
-		  temp.setVisibility(VISIBILITY.PUBLIC);
-		  temp.setValue("Καθημερινά Κείμενα");
-		  this.addLTKDbObject("wsadmin", temp.toJsonString());
-		  temp = new TextLiturgical("gr_gr_cog", "template.titles", "dr.html.tab");
-		  temp.setVisibility(VISIBILITY.PUBLIC);
-		  temp.setValue("Καθημερινά Κείμενα");
-		  this.addLTKDbObject("wsadmin", temp.toJsonString());
 	  }
 	  
 	  /**
