@@ -7,6 +7,7 @@ import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +32,9 @@ public class AgesHtmlToEditableLDOM {
 	private boolean printPretty = false;
 	private String url = "";
 	private String centerLibrary = "";
+	private boolean isDailyReading = false;
+	private String readingYear = "";
+	private String readingMonth = "";
 	
 	public AgesHtmlToEditableLDOM(String url) {
 		this.url = url;
@@ -113,6 +117,17 @@ public class AgesHtmlToEditableLDOM {
 	        	if (value.contains("~")) {
 	        		value = value.replaceAll("~", " ~ ");
 	        	}
+
+        		if (domain.equals("gr_gr_cog") || domain.equals("en_us_dedes")) {
+        			// ignore
+        		} else {
+    				if (value.startsWith("[saint") || value.startsWith("[para")) {
+    					if (! tdClass.equals("centerCell")) {
+        					domain = "en_us_dedes";
+    					}
+    				}
+        		}
+
 	        	String topicKey = topic + Constants.ID_DELIMITER + key;
 	        	IdManager idManager = new IdManager(domain, topic, key);
 	        	result.addDomain(domain);
@@ -249,9 +264,62 @@ public class AgesHtmlToEditableLDOM {
 			// remove rows that contain a media-group
 			content.select("tr:has(div.media-group)").remove();
 			content.select("tr:has(div.media-group-empty)").remove();
+			
+			// see if this webpage is for daily readings for OCMC
+			String titleText = doc.select("title").text();
+			if (titleText.startsWith("cu.ocmc_guatemala")) {
+				String [] titleParts = titleText.split("_");
+				if (titleParts.length == 4) {
+					this.isDailyReading = true;
+					this.readingYear = titleParts[2];
+					this.readingMonth = titleParts[3];
+				}
+			}
+			
+			// See if this is a lectionary.  If so, we need to handle the day titles.
+			if (this.isDailyReading) {
+				Elements boldredSpans = content.select("span.boldred");
+				for (Element boldred : boldredSpans) {
+					if (boldred.select("span.kvp").isEmpty()) {
+						String library =  "gr_gr_cog";
+						String day = "";
+						if (boldred.parent().parent().hasClass("rightCell")) {
+							library = "en_us_dedes";
+						}
+						String text = boldred.text();
+						String [] parts = text.split(",");
+						if (parts.length == 3) {
+							parts = parts[1].trim().split(" ");
+							if (parts.length == 2) {
+								int intDay = Integer.parseInt(parts[1].trim());
+								day = String.format("%02d", intDay);
+							} else {
+								logger.info("Unexpected text format.  Not a date? " + text);
+							}
+						} else {
+							logger.info("Unexpected text format.  Not a date? " + text);
+						}
+						String newKey = "calendar_" 
+								+ library 
+								+ "|y" 
+								+ this.readingYear 
+								+ ".m" 
+								+ this.readingMonth
+								+ ".d" 
+								+ day
+								+ ".md";
+						boldred.attr("class", "kvp");
+						boldred.attr("data-key", newKey);
+						boldred.parent().attr("class","designation");
+//						boldred.parent().tagName("h3");
+					}
+				}
+			}
 
+			this.normalizeRightColumnKeys(content); // if the right column does not have the expected English IDs, convert to en_us_dedes
+			
 			if (this.centerLibrary.length() > 0) {
-				this.cloneGreek(content);
+				this.cloneRightColumn(content);
 			}
 			Elements versionDesignations = content.select("span.versiondesignation");
 			Elements keys = content.select("span.kvp");
@@ -285,12 +353,46 @@ public class AgesHtmlToEditableLDOM {
 		}
 		return result;
 	}
-	
-	private void cloneGreek(Element content) {
+	// <td class="rightCell"><p class="reading"><span class="kvp" data-key="sy.m01.d01_spa_GT_odg|cl.S01.commemoration.text">[saint/com 1]</span> </p></td>
+	private void cloneRightColumn(Element content) {
 		for (Element cell : content.select("td.rightCell")) {
 			Element clone = cell.clone();
 			clone.attr("class","centerCell");
 			cell.before(clone);
+		}
+	}
+	
+	/**
+	 * When Fr. Seraphim created the ALWB templates for the daily readings for OCMC Guatemala,
+	 * he set the right-column domains for [saint... and [paragraph... to be spa_gt_odg.
+	 * They should be en_us_dedes.  This fixes the situation.
+	 * 
+	 * @param content
+	 */
+	private void normalizeRightColumnKeys(Element content) {
+		for (Element cell : content.select("td.rightCell")) {
+			Element span = null;
+			String dataKey = "";
+			String id = "";
+			IdManager idManager = null;
+		    try {
+				span = cell.select("span.kvp").first();
+				if (span != null && span.hasAttr("data-key")) {
+					dataKey = span.attr("data-key");
+					id = org.ocmc.ioc.liturgical.schemas.id.managers.IdManager.dataKeyToId(dataKey);
+					idManager = new IdManager(id);
+					if (idManager.getLibraryLanguage() != null) {
+						if (! idManager.getLibraryLanguage().equals("en")) {
+							if (span.hasText() && span.text().startsWith("[")) {
+								dataKey = idManager.getTopic() + "_en_us_dedes|" + idManager.getKey();
+								span.attr("data-key", dataKey);
+							}
+						}
+					}
+				}
+		    } catch (Exception e) {
+		    	ErrorUtils.report(logger, e);
+		    }
 		}
 	}
 }

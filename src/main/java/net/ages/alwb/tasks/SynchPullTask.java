@@ -74,7 +74,7 @@ public class SynchPullTask implements Runnable {
 	@Override
 	public void run() {
 		try {
-			if (synchManager.synchConnectionOK()) {
+			if (synchManager.synchConnectionOK() && dbManager.isConnectionOK()) {
 				try {
 					SynchLog log = dbManager.getSynchLog();
 					ResultJsonObjectArray transactions  = synchManager.getTransactionsSince("wsadmin",log.getLastUsedSynchTimestamp());

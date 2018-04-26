@@ -4122,8 +4122,12 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				if (translationLibrary.length() > 0) {
 					Map<String,String> values = template.getValues();
 					for ( Entry<String,String> entry: template.getValues().entrySet()) {
-						if (entry.getKey().startsWith(translationLibrary)) {
-							ResultJsonObjectArray dbValue = this.getForId(entry.getKey(), translationLibrary);
+						if (
+								entry.getKey().startsWith(translationLibrary) 
+								|| entry.getKey().endsWith(".md") // calendar day lookup
+								|| entry.getKey().endsWith(".ymd")
+								) {
+							ResultJsonObjectArray dbValue = this.getForId(entry.getKey(), "Liturgical");
 							if (dbValue.valueCount == 1) {
 								JsonObject o = dbValue.getFirstObject();
 								if (o.get("value").getAsString().trim().length() > 0) {
