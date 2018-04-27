@@ -1,6 +1,7 @@
 package ioc.liturgical.ws.managers.databases.external.neo4j;
 
 import java.text.Normalizer;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -257,22 +258,6 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 //			  logger.info("Creating calendars");
 //			  this.createCalendars(Calendar.getInstance().get(Calendar.YEAR));
 //			  logger.info("Calendars created");
-			  /**
-			   * TODO: remove code below.  One time only use...
-			   * 
-			   */
-			  TextLiturgical temp = new TextLiturgical("gr_gr_cog", "template.titles", "dr.pdf.header");
-			  temp.setVisibility(VISIBILITY.PUBLIC);
-			  temp.setValue("Καθημερινά Κείμενα");
-			  this.addLTKDbObject("wsadmin", temp.toJsonString());
-			  temp = new TextLiturgical("gr_gr_cog", "template.titles", "dr.pdf.cover");
-			  temp.setVisibility(VISIBILITY.PUBLIC);
-			  temp.setValue("Καθημερινά Κείμενα");
-			  this.addLTKDbObject("wsadmin", temp.toJsonString());
-			  temp = new TextLiturgical("gr_gr_cog", "template.titles", "dr.html.tab");
-			  temp.setVisibility(VISIBILITY.PUBLIC);
-			  temp.setValue("Καθημερινά Κείμενα");
-			  this.addLTKDbObject("wsadmin", temp.toJsonString());
 		  } else {
 			  ServiceProvider.sendMessage("Could not connect to Neo4j Database at " + neo4jDomain + ". ");
 		  }
@@ -3774,6 +3759,12 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, String rightFallback
 				, String requestor // username
 				) {
+
+			Instant start = Instant.now();
+//			Instant endToLdom = null;
+//			Instant startBuildValuesMap= null;
+//			Instant endBuildValuesMap = null;
+			
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
 				AgesHtmlToLDOM ages = new AgesHtmlToLDOM(
@@ -3787,7 +3778,9 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						, this.printPretty // print pretty
 						, this
 						);
-				LDOM template = ages.toLDOM();
+				LDOM template = ages.toLDOM2();
+//				LDOM template = ages.toLDOM();
+//				endToLdom = Instant.now();
 				Map<String,String> values = new TreeMap<String,String>();
 				values.putAll(template.getValues());
 			
@@ -3807,107 +3800,109 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					template.setRightTitleDate(this.getTitleDate(urlUtils, rightLibrary));
 				}
 				
-				/**
-				 * Build a new values map, with entries for left, center, and right.
-				 * If the requested left, center, or right library is gr_gr_cog, or en_us_dedes
-				 * we do not need to add them. We already have them.
-				 */
-				for ( Entry<String,String> entry: template.getValues().entrySet()) {
-					String key = entry.getKey();
-					boolean entryContainsCalendar = key.contains("~calendar~");
-						if (leftLibrary != null && key.startsWith(leftLibrary)) {
-							if (
-									leftLibrary.equals("gr_gr_cog")  
-									&& (! entryContainsCalendar)
-								) {
-									// ignore
-							} else {
-								ResultJsonObjectArray dbValue = this.getForId(key, leftLibrary);
-								if (dbValue.valueCount == 1) {
-									JsonObject o = dbValue.getFirstObject();
-									String value = dbValue.getFirstObjectValueAsString();
-									if (o.get("value").getAsString().trim().length() > 0) {
-										if (entryContainsCalendar) {
-											values.put(key, value);
-											// the .doc, .toc, and .header are used in OSLW (Latex) for the PDFs.
-											values.put(key + ".doc", value);
-											values.put(key + ".toc", value);
-											values.put(key + ".header", value);
-										} else {
-											if (value.startsWith("[saint") || value.startsWith("[para")) {
-												// ignore
-											} else {
-												values.put(key, value);
-											}
-										}
-									}
-								}
-							}
-						} else if (
-								centerLibrary != null 
-								&& centerLibrary.length() != 0 
-								&& entry.getKey().startsWith(centerLibrary)
-								) {
-							if (
-									centerLibrary.equals("gr_gr_cog")  
-									&& (! entryContainsCalendar)
-								) {
-									// ignore
-							} else {
-								ResultJsonObjectArray dbValue = this.getForId(key, centerLibrary);
-								if (dbValue.valueCount == 1) {
-									JsonObject o = dbValue.getFirstObject();
-									String value = dbValue.getFirstObjectValueAsString();
-									if (o.get("value").getAsString().trim().length() > 0) {
-										if (entryContainsCalendar) {
-											values.put(key, value);
-											values.put(key + ".doc", value);
-											values.put(key + ".toc", value);
-											values.put(key + ".header", value);
-										} else {
-											if (value.startsWith("[saint") || value.startsWith("[para")) {
-												// ignore
-											} else {
-												values.put(key, value);
-											}
-										}
-									}
-								}
-							}
-						} else if (
-								rightLibrary != null 
-								&& rightLibrary.length() != 0 
-								&& entry.getKey().startsWith(rightLibrary)
-								) {
-							if (
-									rightLibrary.equals("gr_gr_cog")  
-									&& (! entryContainsCalendar)
-								) {
-									// ignore
-							} else {
-								ResultJsonObjectArray dbValue = this.getForId(key, rightLibrary);
-								if (dbValue.valueCount == 1) {
-									JsonObject o = dbValue.getFirstObject();
-									String value = dbValue.getFirstObjectValueAsString();
-									if (o.get("value").getAsString().trim().length() > 0) {
-										if (entryContainsCalendar) {
-											values.put(key, value);
-											values.put(key + ".doc", value);
-											values.put(key + ".toc", value);
-											values.put(key + ".header", value);
-										} else {
-											if (value.startsWith("[saint") || value.startsWith("[para")) {
-												// ignore
-											} else {
-												values.put(key, value);
-											}
-										}
-									}
-								}
-							}
-						}
-				}
-				template.setValues(values);
+//				/**
+//				 * Build a new values map, with entries for left, center, and right.
+//				 * If the requested left, center, or right library is gr_gr_cog, or en_us_dedes
+//				 * we do not need to add them. We already have them.
+//				 */
+//	//			startBuildValuesMap = Instant.now();
+//				Set<String> keys = template.getValues().keySet();
+//				for ( String key: keys) {
+//					boolean entryContainsCalendar = key.contains("~calendar~");
+//						if (leftLibrary != null && key.startsWith(leftLibrary)) {
+//							if (
+//									leftLibrary.equals("gr_gr_cog")  
+//									&& (! entryContainsCalendar)
+//								) {
+//									// ignore
+//							} else {
+//								ResultJsonObjectArray dbValue = this.getForId(key, leftLibrary);
+//								if (dbValue.valueCount == 1) {
+//									JsonObject o = dbValue.getFirstObject();
+//									String value = dbValue.getFirstObjectValueAsString();
+//									if (o.get("value").getAsString().trim().length() > 0) {
+//										if (entryContainsCalendar) {
+//											values.put(key, value);
+//											// the .doc, .toc, and .header are used in OSLW (Latex) for the PDFs.
+//											values.put(key + ".doc", value);
+//											values.put(key + ".toc", value);
+//											values.put(key + ".header", value);
+//										} else {
+//											if (value.startsWith("[saint") || value.startsWith("[para")) {
+//												// ignore
+//											} else {
+//												values.put(key, value);
+//											}
+//										}
+//									}
+//								}
+//							}
+//						} else if (
+//								centerLibrary != null 
+//								&& centerLibrary.length() != 0 
+//								&& key.startsWith(centerLibrary)
+//								) {
+//							if (
+//									centerLibrary.equals("gr_gr_cog")  
+//									&& (! entryContainsCalendar)
+//								) {
+//									// ignore
+//							} else {
+//								ResultJsonObjectArray dbValue = this.getForId(key, centerLibrary);
+//								if (dbValue.valueCount == 1) {
+//									JsonObject o = dbValue.getFirstObject();
+//									String value = dbValue.getFirstObjectValueAsString();
+//									if (o.get("value").getAsString().trim().length() > 0) {
+//										if (entryContainsCalendar) {
+//											values.put(key, value);
+//											values.put(key + ".doc", value);
+//											values.put(key + ".toc", value);
+//											values.put(key + ".header", value);
+//										} else {
+//											if (value.startsWith("[saint") || value.startsWith("[para")) {
+//												// ignore
+//											} else {
+//												values.put(key, value);
+//											}
+//										}
+//									}
+//								}
+//							}
+//						} else if (
+//								rightLibrary != null 
+//								&& rightLibrary.length() != 0 
+//								&& key.startsWith(rightLibrary)
+//								) {
+//							if (
+//									rightLibrary.equals("gr_gr_cog")  
+//									&& (! entryContainsCalendar)
+//								) {
+//									// ignore
+//							} else {
+//								ResultJsonObjectArray dbValue = this.getForId(key, rightLibrary);
+//								if (dbValue.valueCount == 1) {
+//									JsonObject o = dbValue.getFirstObject();
+//									String value = dbValue.getFirstObjectValueAsString();
+//									if (o.get("value").getAsString().trim().length() > 0) {
+//										if (entryContainsCalendar) {
+//											values.put(key, value);
+//											values.put(key + ".doc", value);
+//											values.put(key + ".toc", value);
+//											values.put(key + ".header", value);
+//										} else {
+//											if (value.startsWith("[saint") || value.startsWith("[para")) {
+//												// ignore
+//											} else {
+//												values.put(key, value);
+//											}
+//										}
+//									}
+//								}
+//							}
+//						}
+//				}
+////				endBuildValuesMap = Instant.now();
+//				template.setValues(values);
 
 				// create a thread that will generate a PDF
 				ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -3928,6 +3923,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				result.setStatusMessage(e.getMessage());
 				ErrorUtils.report(logger, e);
 			}
+			Instant end = Instant.now();
+//			System.out.println(Duration.between(start,endToLdom) + " start to endToLdom");
+//			System.out.println(Duration.between(startBuildValuesMap,endBuildValuesMap) + " endValuesPutAll to endBuildValuesMap");
+			System.out.println(Duration.between(start, end) + " start to end");
 			return result;
 		}
 		

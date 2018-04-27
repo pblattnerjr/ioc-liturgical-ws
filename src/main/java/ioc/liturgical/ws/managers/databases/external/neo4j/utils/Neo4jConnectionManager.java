@@ -57,7 +57,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 	private static final String synchLogGetQuery = "match (doc:SynchLog) where doc.id = '" + SynchLog.singletonId + "' return properties(doc)";
 	private static final String synchLogCreateQuery = "create (doc:SynchLog) set doc = {props} return doc";
 	private static final String synchLogUpdateQuery = "match (doc:SynchLog) where doc.id = '" + SynchLog.singletonId + "' set doc = {props} return doc";
-	 private static String macAddress = "unknown";
+	 public static String macAddress = "unknown";
 	 private static String hostName = "unknown";
 	 private Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 	  private JsonParser parser = new JsonParser();
@@ -363,6 +363,10 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		} catch (Exception e) {
 			ErrorUtils.report(logger, e);
 		}
+	}
+	
+	public String getHostName() {
+		return hostName;
 	}
 	
 	public RequestStatus insert(Transaction doc) throws DbException {
@@ -893,9 +897,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		RequestStatus result = new RequestStatus();
 		// disallow the processing of a transaction that originated from this server
 		if (transaction.requestingMac.equals(macAddress)) { 
-			// ignore
-//			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-//			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + " Transaction originated from this server, so can't be processed.");
+			result.setCode(HTTP_RESPONSE_CODES.OK.code);
 		} else { // originated from another server, so go ahead and process it...
 			try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 				StatementResult neoResult = null;

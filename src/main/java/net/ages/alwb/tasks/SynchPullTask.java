@@ -84,33 +84,40 @@ public class SynchPullTask implements Runnable {
 							for (JsonObject o : transactions.values) {
 								try {
 									Transaction trans = gson.fromJson(o, Transaction.class);
-									LTKDb ltkDb = gson.fromJson(trans.getJson(), LTKDb.class);
-									LTKDb record = 
-												gson.fromJson(
-														trans.getJson()
-														, SCHEMA_CLASSES
-															.classForSchemaName(
-																	ltkDb.get_valueSchemaId())
-															.ltkDb.getClass()
-											);
-									RequestStatus status = dbManager.processTransaction(trans);
-									if (status.getCode() == HTTP_RESPONSE_CODES.OK.code) {
-										if (this.printpretty) {
-											logger.info("Ran transaction " + trans.getId() + " against local database.");
+									if (! trans.requestingMac.equals(dbManager.macAddress)) { 
+										LTKDb ltkDb = gson.fromJson(trans.getJson(), LTKDb.class);
+										LTKDb record = 
+													gson.fromJson(
+															trans.getJson()
+															, SCHEMA_CLASSES
+																.classForSchemaName(
+																		ltkDb.get_valueSchemaId())
+																.ltkDb.getClass()
+												);
+										RequestStatus status = dbManager.processTransaction(trans);
+										if (status.getCode() == HTTP_RESPONSE_CODES.OK.code) {
+											if (this.printpretty) {
+												logger.info("Ran transaction " + trans.getId() + " against local database.");
+											}
+											log.setLastUsedSynchTimestamp(trans.getKey());
+											log.recordSynchTime();
+											dbManager.recordSynch(log);
+										} else {
+											String message = "Could not run transaction " + trans.getId() 
+												+ " against local database. " 
+													+ status.code 
+													+ ": " 
+													+ status.developerMessage;
+											logger.error(message);
+											if (this.messagingEnabled) {
+												ServiceProvider.sendMessage(message);
+//												MessageUtils.sendMessage(this.messagingToken, message);
+											}
 										}
+									} else {
 										log.setLastUsedSynchTimestamp(trans.getKey());
 										log.recordSynchTime();
 										dbManager.recordSynch(log);
-									} else {
-										String message = "Could not run transaction " + trans.getId() 
-											+ " against local database. " 
-												+ status.code 
-												+ ": " 
-												+ status.developerMessage;
-										logger.error(message);
-										if (this.messagingEnabled) {
-											MessageUtils.sendMessage(this.messagingToken, message);
-										}
 									}
 								} catch (Exception e) {
 									String message = "Could not run transaction against local database: " + o.toString();
