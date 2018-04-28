@@ -2742,30 +2742,34 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	public JsonArray getDomainsUserCanView(String username) {
 		JsonArray result =  new JsonArray();
 		List<String> domains = new ArrayList<String>();
-		JsonArray admins = getDomainsUserCanAdminister(username).getAsJsonArray();
-		JsonArray authors = getDomainsUserCanAdminister(username).getAsJsonArray();
-		JsonArray reads = getDomainsUserCanAdminister(username).getAsJsonArray();
+		if (username == null || username.length() == 0) {
+			// ignore
+		} else {
+			JsonArray admins = getDomainsUserCanAdminister(username).getAsJsonArray();
+			JsonArray authors = getDomainsUserCanAuthor(username).getAsJsonArray();
+			JsonArray reads = getDomainsUserCanRead(username).getAsJsonArray();
 
-		for (JsonElement e : admins) {
-			String domain = e.getAsJsonObject().get("topic").getAsString();
-			if (! domains.contains(domain)) {
-				domains.add(domain);
+			for (JsonElement e : admins) {
+				String domain = e.getAsJsonObject().get("topic").getAsString();
+				if (! domains.contains(domain)) {
+					domains.add(domain);
+				}
 			}
-		}
-		for (JsonElement e : authors) {
-			String domain = e.getAsJsonObject().get("topic").getAsString();
-			if (! domains.contains(domain)) {
-				domains.add(domain);
+			for (JsonElement e : authors) {
+				String domain = e.getAsJsonObject().get("topic").getAsString();
+				if (! domains.contains(domain)) {
+					domains.add(domain);
+				}
 			}
-		}
-		for (JsonElement e : reads) {
-			String domain = e.getAsJsonObject().get("topic").getAsString();
-			if (! domains.contains(domain)) {
-				domains.add(domain);
+			for (JsonElement e : reads) {
+				String domain = e.getAsJsonObject().get("topic").getAsString();
+				if (! domains.contains(domain)) {
+					domains.add(domain);
+				}
 			}
-		}
-		for (String domain : domains) {
-			result.add(domain);
+			for (String domain : domains) {
+				result.add(domain);
+			}
 		}
 		return result;
 	}

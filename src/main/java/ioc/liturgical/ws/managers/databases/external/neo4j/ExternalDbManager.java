@@ -831,7 +831,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			}
 			
 			boolean addWherePublic = this.addWherePublic(domain, requestor);
-
+			
 			result = getForQuery(
 					getCypherQueryForDocSearch(
 							requestor

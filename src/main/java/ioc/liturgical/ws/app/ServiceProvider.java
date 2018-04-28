@@ -41,7 +41,6 @@ import ioc.liturgical.ws.controllers.ldp.LdpController;
 import ioc.liturgical.ws.managers.auth.AuthDecoder;
 import ioc.liturgical.ws.managers.auth.UserStatus;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
-import ioc.liturgical.ws.managers.databases.external.neo4j.utils.Neo4jConnectionManager;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 import ioc.liturgical.ws.managers.ldp.LdpManager;
 import ioc.liturgical.ws.managers.synch.SynchManager;
@@ -443,6 +442,9 @@ public class ServiceProvider {
 					dump(request);
 				}
 				if ((! externalDbAccessIsProtected && request.pathInfo().startsWith("/db/api"))
+						|| (
+								request.pathInfo().toLowerCase().endsWith("/docs") && request.requestMethod().equals("GET")
+							)
 						|| (
 								request.pathInfo().toLowerCase().startsWith("/ldp/api")
 							)
