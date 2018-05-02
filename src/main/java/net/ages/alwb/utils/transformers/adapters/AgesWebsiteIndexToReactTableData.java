@@ -119,10 +119,10 @@ public class AgesWebsiteIndexToReactTableData {
 			theophany.setUrl(theophanyUrl);
 			result.addRow(theophany);
 			AgesIndexTableRowData basil = new AgesIndexTableRowData(printPretty);
-			theophany.setDayOfWeek("any");
-			theophany.setType("Divine Liturgy of St. Basil");
-			theophany.setDate("any");
-			theophany.setUrl(basilUrl);
+			basil.setDayOfWeek("any");
+			basil.setType("Divine Liturgy of St. Basil");
+			basil.setDate("any");
+			basil.setUrl(basilUrl);
 			result.addRow(basil);
 		} catch (Exception e) {
 			ErrorUtils.report(logger, e);
