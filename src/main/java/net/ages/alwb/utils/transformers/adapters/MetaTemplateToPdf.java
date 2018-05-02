@@ -86,16 +86,37 @@ public class MetaTemplateToPdf {
 	}
 	
 	public void process() {
+		String chinese = "zh_";
+		String korean = "ko_";
+		boolean hasChinese = 
+				template.getLeftLibrary().startsWith(chinese)
+				|| template.getCenterLibrary().startsWith(chinese)
+				|| template.getRightLibrary().startsWith(chinese);
+
+		boolean hasKorean = 
+				template.getLeftLibrary().startsWith(korean)
+				|| template.getCenterLibrary().startsWith(korean)
+				|| template.getRightLibrary().startsWith(korean);
+
 		boolean singleColumn = 
 				(template.getCenterLibrary() == "" || template.getCenterLibrary().length() == 0)
 				&& (template.getRightLibrary() == "" || template.getRightLibrary().length() == 0)
 		;
 		this.texFileSb.append("\\documentclass[extrafontsizes,12pt]{memoir}\n");
-		this.texFileSb.append("\\usepackage[hyphenate]{system/ocmc-liturgical-text}%\n");
+		
+		if (hasChinese) {
+			this.texFileSb.append("\\usepackage[hyphenate,chinese]{system/ocmc-liturgical-text}%\n");
+		} else	if (hasKorean) {
+				this.texFileSb.append("\\usepackage[hyphenate,korean]{system/ocmc-liturgical-text}%\n");
+		} else {
+			this.texFileSb.append("\\usepackage[hyphenate]{system/ocmc-liturgical-text}%\n");
+		}
 		this.texFileSb.append("\\input{system/control} %\n");
 		if (singleColumn) {
 			this.texFileSb.append("\\usepackage{multicol}%\n");
 		}
+		this.texFileSb.append("\\usepackage[defaultlines=4,all]{nowidow}%\n");
+		
 		this.texFileSb.append("\\begin{document}%\n");
 		if (template.url.contains("guatemala")) {
 //			this.texFileSb.append("\\renewcommand{\\contentsname}{Índice}}\n\n");

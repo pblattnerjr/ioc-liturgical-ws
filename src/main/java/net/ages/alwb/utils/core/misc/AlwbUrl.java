@@ -21,7 +21,11 @@ public class AlwbUrl {
 				break;
 			}
 		}
-		type = parts[startIndex];
+		if (parts[2].equals("liml.org")) {
+			type  = "b"; // book
+		} else {
+			type = parts[startIndex];
+		}
 		if (type.equals("s")) {
 			year = parts[startIndex+1];
 			month = parts[startIndex+2];
@@ -36,6 +40,14 @@ public class AlwbUrl {
 				name  = "dr"; // daily readings
 			} catch (Exception e) {
 				ServiceProvider.sendMessage("ExternalDbManager.getAgesService can't parse date from url " + url);
+			}
+		} else if (type.equals("b")) {
+			if (parts[4].contains("basil")) {
+				if (parts[4].contains("vesperal")) {
+					name = "vl";
+				} else {
+					name = "li2";
+				}
 			}
 		} else {
 			name = parts[startIndex+1];

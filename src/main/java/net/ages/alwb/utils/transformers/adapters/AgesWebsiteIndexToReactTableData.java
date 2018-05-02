@@ -41,6 +41,7 @@ public class AgesWebsiteIndexToReactTableData {
 	private String agesOcmcIndex = "customindex.html";
 	private String readingsIndex = agesOcmcBaseUrl + agesOcmcIndex;
 	private String theophanyUrl = Constants.LIML_URL + Constants.LIML_STATIC + "theophany.html";
+	private String basilUrl = Constants.LIML_URL + Constants.LIML_STATIC + "bk.liturgy.basil.html";
 	
 	private boolean printPretty = false;
 
@@ -117,6 +118,12 @@ public class AgesWebsiteIndexToReactTableData {
 			theophany.setDate("m01/d06");
 			theophany.setUrl(theophanyUrl);
 			result.addRow(theophany);
+			AgesIndexTableRowData basil = new AgesIndexTableRowData(printPretty);
+			theophany.setDayOfWeek("any");
+			theophany.setType("Divine Liturgy of St. Basil");
+			theophany.setDate("any");
+			theophany.setUrl(basilUrl);
+			result.addRow(basil);
 		} catch (Exception e) {
 			ErrorUtils.report(logger, e);
 		}

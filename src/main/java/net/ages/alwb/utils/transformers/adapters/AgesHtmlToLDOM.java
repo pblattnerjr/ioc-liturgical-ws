@@ -206,7 +206,9 @@ public class AgesHtmlToLDOM {
 	        	}
 	        	if (addValue) {
         			ldom.addValue(idManager.getId(), value, false);
-	    			if (idManager.getTopic().equals("calendar")) {
+	    			if (idManager.getTopic().equals("calendar")
+	    					|| idManager.getTopic().equals("template.titles") 
+	    					) {
 						ldom.addValue(idManager.getId() + ".doc", value, false);
 						ldom.addValue(idManager.getId() + ".toc", value, false);
 						ldom.addValue(idManager.getId() + ".header", value, false);
@@ -286,7 +288,7 @@ public class AgesHtmlToLDOM {
 		        	String value = "";
 
 		        	if (! idManager.getKey().equals("version.designation")) {
-		        		if (idManager.getTopic().equals("calendar")) {
+		        		if (idManager.getTopic().equals("calendar") || idManager.getTopic().equals("template.titles")) {
 			        		value = this.getValue(idManager.getId());
 			        		if (value == null || value.length() == 0) {
 			        			// try the fallback library using the in-memory values
@@ -315,7 +317,7 @@ public class AgesHtmlToLDOM {
 		        	ldom.addDomain(domain);
 		        	ldom.addTopicKey(topicKey);
 		        	ldom.addValue(idManager.getId(), value, false);
-		        	if (idManager.getTopic().equals("calendar")) {
+		        	if (idManager.getTopic().equals("calendar") || idManager.getTopic().equals("template.titles")) {
 		        		IdManager temp = new IdManager(idManager.getLibrary(), idManager.getTopic(), idManager.getKey() + ".doc");
 			        	ldom.addValue(temp.getId(), value, false);
 		        		temp = new IdManager(idManager.getLibrary(), idManager.getTopic(), idManager.getKey() + ".toc");

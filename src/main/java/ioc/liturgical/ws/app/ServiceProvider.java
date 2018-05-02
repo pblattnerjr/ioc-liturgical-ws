@@ -137,6 +137,8 @@ public class ServiceProvider {
 	public static String staticExternalFileLocation = null;
 	
 	public static boolean synchEnabled = false; // can be overridden by serviceProvider.config
+	public static boolean synchPullEnabled = false; // can be overridden by serviceProvider.config
+	public static boolean synchPushEnabled = false; // can be overridden by serviceProvider.config
 	public static String synchDomain = "";  // can be overridden by serviceProvider.config
 	public static String synchBoltPort = "";  // can be overridden by serviceProvider.config
 	public static String synchDomainWithPort = "";
@@ -229,8 +231,8 @@ public class ServiceProvider {
 
 			logAllQueries = toBoolean(logAllQueries, prop.getProperty("logQueries"));
 			String envLogAllQueries  = System.getenv("WS_LOG_ALL_QUERIES");
-			if (envLogAllQueries != null && envLogAllQueries.startsWith("true")) {
-				logAllQueries = true;
+			if (envLogAllQueries != null) {
+				logAllQueries = envLogAllQueries.startsWith("true");
 			}
 			logger.info("logQueries: " + logAllQueries);
 
@@ -302,11 +304,14 @@ public class ServiceProvider {
 			} catch (Exception e) {
 				logger.error("Property maxInactiveInterval missing or not a number.");
 			}
-			
-			
+						
 			messagingEnabled = toBoolean(messagingEnabled, prop.getProperty("messaging_enabled"));
+			String envMessagingEnabled  = System.getenv("MESSAGING_ENABLED");
+			if (envMessagingEnabled != null) {
+				messagingEnabled = envMessagingEnabled.startsWith("true");
+			}
 			logger.info("messaging_enabled: " + messagingEnabled);
-			
+
 			if (messagingEnabled) {
 				try {
 					messagingToken = System.getenv("MESSAGING_TOKEN");
@@ -319,9 +324,22 @@ public class ServiceProvider {
 				}
 			}
 
-			synchEnabled = toBoolean(synchEnabled, prop.getProperty("synch_enabled"));
-			logger.info("synch_enabled: " + synchEnabled);
+			synchPullEnabled = toBoolean(synchPullEnabled, prop.getProperty("synch_pull_enabled"));
+			String envSynchPullEnabled  = System.getenv("SYNCH_PULL_ENABLED");
+			if (envSynchPullEnabled != null) { 
+					synchPullEnabled = envSynchPullEnabled.startsWith("true");
+			}
+			logger.info("synch_pull_enabled: " + synchPullEnabled);
 
+			synchPushEnabled = toBoolean(synchPushEnabled, prop.getProperty("synch_push_enabled"));
+			String envSynchPushEnabled  = System.getenv("SYNCH_PUSH_ENABLED");
+			if (envSynchPushEnabled != null) { 
+					synchPushEnabled = envSynchPushEnabled.startsWith("true");
+			}
+			logger.info("synch_push_enabled: " + synchPushEnabled);
+
+			synchEnabled = synchPullEnabled || synchPushEnabled;
+			
 			if (synchEnabled) {
 				synchDomain = prop.getProperty("synch_domain");
 				logger.info("synch_domain: " + synchDomain );
@@ -402,16 +420,19 @@ public class ServiceProvider {
 				if (synchEnabled && synchManager != null) {
 					
 					docService.setSynchManager(synchManager);
-					executorService.scheduleAtFixedRate(
-							new SynchPushTask(
-									ExternalDbManager.neo4jManager
-									, synchManager
-									)
-							, 10
-							, 10
-							, TimeUnit.SECONDS
-							);
+					if (synchPushEnabled) {
+						executorService.scheduleAtFixedRate(
+								new SynchPushTask(
+										ExternalDbManager.neo4jManager
+										, synchManager
+										)
+								, 10
+								, 10
+								, TimeUnit.SECONDS
+								);
+					}
 					
+					if (synchPullEnabled) {
 					executorService.scheduleAtFixedRate(
 							new SynchPullTask(
 									ExternalDbManager.neo4jManager
@@ -422,6 +443,7 @@ public class ServiceProvider {
 							, 10
 							, TimeUnit.SECONDS
 							);
+					}
 				}
 			} else {
 				docService = null;
@@ -895,7 +917,6 @@ public class ServiceProvider {
 	    });
 	}
 	
-	 
 	  public static String getNeo4jUrl() {
 	        String urlVar = System.getenv("NEO4J_URL_VAR");
 	        if (urlVar==null) urlVar = "NEO4J_URL";

@@ -24,8 +24,15 @@ public class AgesHtmlToOslwSwitch {
 	 * @return
 	 */
 	public static String getOslw(String command) {
+		String strCommand = command;
+		String parts[] = strCommand.split("kvp"); // throw away 'kvp readonly'
+		try {
+			strCommand = parts[0].trim();
+		} catch (Exception e) {
+			// ignore
+		}
 		String result = "";
-		switch (command) {
+		switch (strCommand) {
 		case "-key": {
 		//  (http://www.agesinitiatives.com/dcs/public/dcs/h/b/greatwaterblessing/gr-en/index.html)
 			result = "Undefined";
@@ -714,7 +721,7 @@ public class AgesHtmlToOslwSwitch {
 			break;
 		}
 		case "p-hymn-versiondesignation": {
-			result = "HymnVersion";
+			result = "Hymn";
 			break;
 		}
 		case "p-hymnlinefirst": {
@@ -723,6 +730,11 @@ public class AgesHtmlToOslwSwitch {
 			break;
 		}
 		case "p-hymnlinelast": {
+		// {ho.s07}{hoLI.TonStavronSou3.text}{ho.s07}{hoLI.TonStavronSou4.text} (http://www.agesinitiatives.com/dcs/public/dcs/h/s/2017/08/01/li/gr-en/index.html)
+			result = "Hymn";
+			break;
+		}
+		case "p-hymnlinelast-versiondesignation": {
 		// {ho.s07}{hoLI.TonStavronSou3.text}{ho.s07}{hoLI.TonStavronSou4.text} (http://www.agesinitiatives.com/dcs/public/dcs/h/s/2017/08/01/li/gr-en/index.html)
 			result = "Hymn";
 			break;

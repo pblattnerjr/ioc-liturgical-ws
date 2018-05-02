@@ -281,7 +281,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		String query = "create constraint on (p:" + label + ") assert p." + property + " is unique"; 
 		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			neoResult = session.run(query);
-	    	this.insert(new Transaction(query, hostName));
+	    	this.insertTransaction(new Transaction(query, hostName));
 		} catch (Exception e) {
 			ErrorUtils.report(logger, e);
 		}
@@ -326,7 +326,13 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			if (count > 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.CREATED.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.CREATED.message + ": created " + doc.getId());
-		    	this.insert(new Transaction(query, doc, hostName));
+		    	this.insertTransaction(new Transaction(
+		    			this.getMergeQuery(
+		    					doc.getId()
+		    					, doc.fetchOntologyLabels()
+		    					)
+		    			, doc, hostName)
+		      );
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + "  " + doc.getId());
@@ -369,7 +375,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		return hostName;
 	}
 	
-	public RequestStatus insert(Transaction doc) throws DbException {
+	public RequestStatus insertTransaction(Transaction doc) throws DbException {
 		RequestStatus result = new RequestStatus();
 		int count = 0;
 		setIdConstraint("Transaction");
@@ -524,7 +530,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			if (count == 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + "   " + doc.getId());
-		    	this.insert(new Transaction(query, doc, hostName));
+		    	this.insertTransaction(new Transaction(query, doc, hostName));
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.CREATED.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.CREATED.message + ": created " + doc.getId());
@@ -621,17 +627,32 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 						)
 				);
 	}
+	
+	public String getMergeQuery(String id, String labels) {
+		String result = null;
+		try {
+			result = new StringBuffer()
+					.append("merge (n:")
+					.append(labels)
+					.append(" {id: \"")
+					.append(id)
+					.append("\" }) set n = {props}  return count(n);")
+					.toString();
+		} catch (Exception e) {
+			
+		}
+		return result;
+	}
+
 
 	public RequestStatus mergeWhereEqual(LTKDb doc) throws DbException {
 		RequestStatus result = new RequestStatus();
 		int count = 0;
 		setIdConstraint(doc.toSchemaAsLabel());
-		String query = 
-				"match (n:" + TOPICS.ROOT.label + ") where n.id = \"" 
-				+ doc.getId() 
-		        + "\" on create set n = {props} "
-		        + "\" on merge set n = {props} "
-		        + "return count(n)";
+		String query = this.getMergeQuery(
+    					doc.getId()
+    					, doc.fetchOntologyLabels()
+				);
 		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
 			StatementResult neoResult = session.run(query, props);
@@ -639,7 +660,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			if (count > 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": updated " + doc.getId());
-		    	this.insert(new Transaction(query, doc, hostName));
+		    	this.insertTransaction(new Transaction(query, doc, hostName));
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + " " + doc.getId());
@@ -750,7 +771,13 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			if (count > 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": updated " + doc.getId());
-		    	this.insert(new Transaction(query, doc, hostName));
+		    	this.insertTransaction(new Transaction(
+		    			this.getMergeQuery(
+		    					doc.getId()
+		    					, doc.fetchOntologyLabels()
+		    					)
+		    			, doc, hostName)
+		      );
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + " " + doc.getId());
@@ -779,7 +806,13 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			if (count > 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": updated " + doc.getId());
-		    	this.insert(new Transaction(query, doc, hostName));
+		    	this.insertTransaction(new Transaction(
+		    			this.getMergeQuery(
+		    					currentId
+		    					, doc.fetchOntologyLabels()
+		    					)
+		    			, doc, hostName)
+		      );
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + " " + doc.getId());
@@ -807,7 +840,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			if (count > 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": updated " + doc.getId());
-		    	this.insert(new Transaction(query, doc, hostName));
+		    	this.insertTransaction(new Transaction(query, doc, hostName));
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + " " + doc.getId());
@@ -850,7 +883,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			if (count > 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": deleted " + id);
-		    	this.insert(new Transaction(query, hostName));
+		    	this.insertTransaction(new Transaction(query, hostName));
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message + " " + id);
@@ -983,7 +1016,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			if (count > 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": deleted " + id);
-		    	this.insert(new Transaction(query, hostName));
+		    	this.insertTransaction(new Transaction(query, hostName));
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message + " " + id);
@@ -1054,7 +1087,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			if (count > 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": deleted " + id);
-		    	this.insert(new Transaction(query, hostName));
+		    	this.insertTransaction(new Transaction(query, hostName));
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message + " " + id);
@@ -1089,7 +1122,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			if (count > 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": deleted " + id);
-		    	this.insert(new Transaction(query, hostName));
+		    	this.insertTransaction(new Transaction(query, hostName));
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message + " " + id);
@@ -1117,7 +1150,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		    	result.setCode(HTTP_RESPONSE_CODES.CONFLICT.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.CONFLICT.message);
 			} else {
-		    	this.insert(new Transaction(query, hostName));
+		    	this.insertTransaction(new Transaction(query, hostName));
 			}
 		} catch (Exception e){
 			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);

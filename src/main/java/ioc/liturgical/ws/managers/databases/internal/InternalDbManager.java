@@ -1060,6 +1060,17 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			domain.setType(DOMAIN_TYPES.COLLECTIVE);
 			addDomain(wsAdmin, domain.toJsonString());
 
+			// add domain for Metropolis of Asia and South East Asia
+			domain = new DomainCreateForm();
+			domain.setLanguageCode("zh");
+			domain.setCountryCode("hk");
+			domain.setRealm("omhksea");
+			domain.setDescription("Translations in Chinese for Metropolis of Hong Kong and Southeast Asia");
+			labels = new ArrayList<String>();
+			labels.add("Liturgical");
+			domain.setLabels(labels);
+			addDomain(wsAdmin, domain.toJsonString());
+
 			// add domain for Fr. Ephrem Lash of Blessed Memory
 			domain = new DomainCreateForm();
 			domain.setLanguageCode("en");
