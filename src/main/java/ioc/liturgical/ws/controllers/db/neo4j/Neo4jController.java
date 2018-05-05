@@ -61,6 +61,23 @@ public class Neo4jController {
         			));
 		});
 
+		// GET generate Text downloads for specified parameters
+		path = ENDPOINTS_DB_API.LITURGICAL_TEXT_DOWNLOADS.toLibraryTopicPath();
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			String id = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
+			String includePersonalNotes = request.queryParams("ip")  ;
+        	return gson.toJson(
+        			externalManager.createDownloads(
+        					requestor
+        					, id
+        					, includePersonalNotes
+        					)
+        			);
+		});
+
 		// GET template by ID
 		path = ENDPOINTS_DB_API.TEMPLATES.toLibraryTopicKeyPath();
 		ControllerUtils.reportPath(logger, "GET", path);
@@ -102,7 +119,7 @@ public class Neo4jController {
 			} catch (Exception e) {
 				requestor = "*";
 			}
-
+	//		JsonObject test = externalManager.getTextInformation(requestor, "gr_gr_cog" + request.queryParams("q"), true);
         	return gson.toJson(externalManager.search(
         			requestor
         			, request.queryParams("t")  // doc type (e.g. Liturgical, Biblical)
@@ -424,7 +441,7 @@ public class Neo4jController {
 		});
 
 		// GET PDF generated from an AGES HTML file using the specified url parameter
-		path = ENDPOINTS_DB_API.AGES_PDF.pathname;
+		path = ENDPOINTS_DB_API.PDF.pathname;
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			  try {
@@ -470,7 +487,7 @@ public class Neo4jController {
 		});
 
 		// GET TEX generated from an AGES HTML file using the specified url parameter
-		path = ENDPOINTS_DB_API.AGES_TEX.pathname;
+		path = ENDPOINTS_DB_API.TEX.pathname;
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			  try {

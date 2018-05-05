@@ -109,6 +109,7 @@ import net.ages.alwb.tasks.DependencyNodesCreateTask;
 import net.ages.alwb.tasks.OntologyTagsUpdateTask;
 import net.ages.alwb.tasks.PdfGenerationTask;
 import net.ages.alwb.tasks.PerseusTreebankDataCreateTask;
+import net.ages.alwb.tasks.TextDownloadsGenerationTask;
 import net.ages.alwb.tasks.WordAnalysisCreateTask;
 import org.ocmc.ioc.liturgical.schemas.models.DropdownArray;
 import org.ocmc.ioc.liturgical.schemas.models.DropdownItem;
@@ -420,6 +421,100 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  return queryResult;
 	  }
 
+	  public ResultJsonObjectArray createDownloads(
+			  String requestor
+			  , String id
+			  , String includeUserNotes
+			  ) {
+		  ResultJsonObjectArray result = new ResultJsonObjectArray(true);
+		  boolean includeNotesForUser = false;
+		  if (includeUserNotes.equals("true")) {
+			  includeNotesForUser = true;
+		  }
+		  // get the data we need for this text
+		  JsonObject data = this.getTextInformation(requestor, id, includeNotesForUser);
+		  
+			// create a thread that will generate a PDF
+			ExecutorService executorService = Executors.newSingleThreadExecutor();
+			String pdfId = this.createId(requestor);
+			executorService.execute(
+					new TextDownloadsGenerationTask(
+							data
+							, pdfId
+							, id
+							)
+					);
+			executorService.shutdown();
+
+			JsonObject pdfIdObject = new JsonObject();
+			pdfIdObject.addProperty("pdfId", pdfId);
+			List<JsonObject> list = new ArrayList<JsonObject>();
+			list.add(pdfIdObject);
+			result.setResult(list);
+			result.setQuery("prepare downloads for " + id);
+			// delay a bit to all the PDF to be generated before user clicks link in browser
+        	long millis =  10000; // 60000 = 1 minute
+    		try {
+				Thread.sleep(millis);
+			} catch (InterruptedException e) {
+				// ignore
+			}
+
+		  return result;
+	  }
+	  
+	  /**
+	   * 
+	   * @param requestor
+	   * @param id
+	   * @param includeUserNotes
+	   * @return a JsonObject that contains the versions of the text, notes about the Greek, and grammar.
+	   */
+	  public JsonObject getTextInformation(
+			  String requestor
+			  , String id
+			  , boolean includeUserNotes
+			  ) {
+		  JsonObject result = new JsonObject();
+		  IdManager idManager = new IdManager(id);
+		  ResultJsonObjectArray temp = this.search(
+				  requestor
+				  , "Liturgical"
+				  , "*"
+				  , "*"
+				  , "*"
+				  , idManager.getTopicKey()
+				  , "id"
+				  , "ew"
+				  );
+		  result.add("versions", temp.getValuesAsJsonArray());
+		  temp = this.searchNotes(
+				  requestor
+				  , "*"
+				  , idManager.getTopicKey()
+				  , "topic"
+				  , "ew"
+				  , ""
+				  , "any"
+				  );
+		  result.add("textNotes", temp.getValuesAsJsonArray());
+		  if (includeUserNotes) {
+			  temp = this.searchNotes(
+					  requestor
+					  , "NoteUser"
+					  , idManager.getTopicKey()
+					  , "topic"
+					  , "ew"
+					  , ""
+					  , "any"
+					  );
+			  result.add("userNotes", temp.getValuesAsJsonArray());
+		  }
+		  temp = this.getWordGrammarAnalyses(requestor, id);
+		  result.add("grammar", temp.getValuesAsJsonArray());
+		  return result;
+	  }
+	  
 	  public ExternalDbManager(
 			  String neo4jDomain
 			  , String synchDomain
