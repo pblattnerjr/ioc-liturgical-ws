@@ -2884,6 +2884,20 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		return result;
 	}
 
+	public Map<String,String> getDomainDescriptionMap() {
+		Map<String,String> result = new TreeMap<String,String>();
+		List<String> domains = this.getDomains();
+		for (String domain : domains) {
+			JsonArray domainRecords = getWhereLike(SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.toId(domain)).get("values").getAsJsonArray();
+			if (domainRecords.size() > 0) {
+				JsonObject domainObject = domainRecords.get(0).getAsJsonObject();
+				String key = domainObject.get("key").getAsString();
+				String description = domainObject.get("value").getAsJsonObject().get("description").getAsString();
+				result.put(key, description);
+			}
+		}
+		return result;
+	}
 	/**
 	 * Get a JsonArray of the domains the user can administer
 	 * The values of the JsonArrays are domains.

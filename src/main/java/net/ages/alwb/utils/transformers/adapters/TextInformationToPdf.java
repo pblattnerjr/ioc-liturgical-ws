@@ -3,11 +3,13 @@ package net.ages.alwb.utils.transformers.adapters;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import org.ocmc.ioc.liturgical.schemas.constants.NOTE_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.nlp.DEPENDENCY_LABELS;
 import org.ocmc.ioc.liturgical.schemas.constants.nlp.GRAMMAR_ABBREVIATIONS;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.TokenAnalysis;
@@ -69,15 +71,18 @@ public class TextInformationToPdf {
 	private JsonArray tokens = null;
 	private Map<String,String> abbr = new TreeMap<String,String>();
 	private Map<String,String> usedAbbreviations = new TreeMap<String,String>();
-	private Map<String,List<TextualNote>> textNoteMapByType = new TreeMap<String,List<TextualNote>>();
-	private Map<String,List<TextualNote>> textNoteMapByScope = new TreeMap<String,List<TextualNote>>();
+	private List<TextualNote> notesList = new ArrayList<TextualNote>();
+	private List<TextualNote> summaryList = new ArrayList<TextualNote>();
+	private Map<String,String> domainMap = null;
 	
 	public TextInformationToPdf (
 			JsonObject jsonObject
 			, String textId
+			, Map<String,String> domainMap
 			)   throws JsonParseException {
 		this.jsonObject = jsonObject;
 		this.textId = textId;
+		this.domainMap =  domainMap;
 		this.process();
 	}
 	
@@ -92,14 +97,13 @@ public class TextInformationToPdf {
 		
 		this.texFileSb.append("\\begin{document}%\n");
 		this.texFileSb.append("\\mainmatter%\n");
-//		this.texFileSb.append("\\linenumbers");
 
 		this.loadAbbreviations();
 		this.loadGrammar();
+		this.loadNotes();
 		
 		// add the values for the titles
 		String title = this.tokens.get(0).getAsString() + " " + this.tokens.get(1).getAsString();
-		String subtitle = idManager.getTopic() + " " + idManager.getKey();
 		this.texFileSb.append(OslwUtils.getOslwTitleResources(
 				idManager.getLibrary()
 				, title
@@ -159,15 +163,18 @@ public class TextInformationToPdf {
 		sb.append("\\section{Interlinear Text}\n");
 		sb.append("This section provides information about the grammar of words (that is, the morphology). The Greek words appear in the same order as they do in the source text.\n\n");
 		sb.append(this.nodesToInterlinear());
+		sb.append("\\sectionline");
 		return sb.toString();
 	}
 
 	public String getDependencyDiagramAsLatex() {
 		StringBuffer sb = new StringBuffer();
+		sb.append("\\vfill\n\\newpage\n");
 		sb.append("\\section{Dependency Diagram}\n");
-		sb.append("This section uses a dependency diagram to show the syntactic structure of the text.  \\textit{Syntax} means \\textit{the way words are put together to create phrases and clauses and sentences}.  This diagram shows the structure using dependencies instead of constituency.  It is based on dependency grammar. The order of each Greek word in the diagram is based on the word it depends on. It appears indented and after the word it depends on. The first word to appear in the diagram is the root of the structure.\n");
+		sb.append("This section uses a dependency diagram to show the syntactic structure of the text.  \\textit{Syntax} means \\textit{the grammatical relationship between words}, that is, \\textit{the way words are put together to create phrases and clauses and sentences}.  This diagram shows the structure based on a type of grammar theory called dependency grammar. The order of each Greek word in the diagram is based on the word it depends on. It appears indented and after the word it depends on. The first word to appear in the diagram is the root of the structure.\n");
 		sb.append("\\newline");
 		sb.append(this.processNode(null, new StringBuffer()));
+		sb.append("\\sectionline");
 		return sb.toString();
 	}
 	
@@ -348,144 +355,151 @@ public class TextInformationToPdf {
 	 */
 	public String getNotesAsLatex() {
 		StringBuffer sb = new StringBuffer();
+		sb.append("\\vfill%\n");
+		sb.append("\\clearpage%\n");
 		sb.append("\\section{Summary}\n");
+		for (TextualNote note : this.summaryList) {
+			sb.append(note.getValue());
+			sb.append("\n");
+		}
 		sb.append("\\section{Discussion}\n");
+		sb.append(this.processNotesByType());
+		sb.append("\\sectionline");
 //		this.groupNotes();
-	//	sb.append(this.processNotesByType());
+//		sb.append(this.processNotesByType());
 		return sb.toString();
 	}
 	
-	private void groupNotes() {
+	private void loadNotes() {
 		for (JsonElement e : this.jsonObject.get("textNotes").getAsJsonArray()) {
-			TextualNote note = this.gson.fromJson(e, TextualNote.class);
-			List<TextualNote> list = null;
-			String key = note.getNoteType().name();
-			if (this.textNoteMapByType.containsKey(key)) {
-				list = this.textNoteMapByType.get(key);
+			TextualNote note = this.gson.fromJson(
+					e.getAsJsonObject().get("properties(to)").getAsJsonObject()
+					, TextualNote.class
+					);
+			if (note.getNoteType() == NOTE_TYPES.UNIT) {
+				this.summaryList.add(note);
 			} else {
-				list = new ArrayList<TextualNote>();
+				this.notesList.add(note);
 			}
-			list.add(note);
-			this.textNoteMapByType.put(key, list);
-			list = null;
-			key = note.getLiturgicalScope().trim();
-			if (this.textNoteMapByScope.containsKey(key)) {
-				list = this.textNoteMapByScope.get(key);
-			} else {
-				list = new ArrayList<TextualNote>();
-			}
-			list.add(note);
-			this.textNoteMapByScope.put(key, list);
 		}
 	}
 	
+
 	private String processNotesByType() {
 		StringBuffer sb = new StringBuffer();
-		for (Entry<String, List<TextualNote>> entry : this.textNoteMapByType.entrySet()) {
-			String type = entry.getKey();
-			List<TextualNote> list = entry.getValue();
-			switch (type) {
-			case ("ADVICE_FOR_TRANSLATORS") : {
-				break;
+		NOTE_TYPES currentType = null;
+		Collections.sort(
+				this.notesList
+				, TextualNote.noteTypeLiturgicalScopeComparator);
+		for (TextualNote note : this.notesList) {
+			NOTE_TYPES type = note.getNoteType();
+			if (currentType != type) {
+				sb.append("\n\\subsection{");
+				sb.append(type.fullname);
+				sb.append("}\n");
+				currentType = type;
 			}
-			case ("ADVICE_FOR_TRANSLATION_CHECKERS") : {
-				break;
-			}
-			case ("CULTURE") : {
-				break;
-			}
-			case ("GENERAL") : {
-				break;
-			}
-			case ("GEOGRAPHY") : {
-				break;
-			}
-			case ("GRAMMAR") : {
-				break;
-			}
-			case ("LEMMA") : {
-				break;
-			}
-			case ("HISTORY") : {
-				break;
-			}
-			case ("LITURGICAL_USAGE") : {
-				break;
-			}
-			case ("MEANING") : {
-				for (TextualNote note : list) {
-					sb.append("\\noteLexical{");
-					sb.append(note.liturgicalScope);
-					sb.append(note.liturgicalLemma);
-					sb.append("} ");
-					if (note.noteTitle.length() > 0) {
-						sb.append(note.noteTitle);
-						sb.append(" ");
-					}
-					sb.append("\\noteMeaning{");
-					sb.append(note.value);
-					sb.append("}\n");
-				}
-				break;
-			}
-			case ("REF_TO_ANIMAL") : {
-				break;
-			}
-			case ("REF_TO_BEING") : {
-				break;
-			}
-			case ("REF_TO_BIBLE") : {
-				break;
-			}
-			case ("REF_TO_CONCEPT") : {
-				break;
-			}
-			case ("REF_TO_EVENT") : {
-				break;
-			}
-			case ("REF_TO_GOD") : {
-				break;
-			}
-			case ("REF_TO_GROUP") : {
-				break;
-			}
-			case ("REF_TO_HUMAN") : {
-				break;
-			}
-			case ("REF_TO_MYSTERY") : {
-				break;
-			}
-			case ("REF_TO_OBJECT") : {
-				break;
-			}
-			case ("REF_TO_PLACE") : {
-				break;
-			}
-			case ("REF_TO_PLANT") : {
-				break;
-			}
-			case ("REF_TO_ROLE") : {
-				break;
-			}
-			case ("TRANSLATORS_NOTE") : {
-				break;
-			}
-			case ("UNIT") : {
-				break;
-			}
-			case ("VOCABULARY") : {
-				break;
-			}
+			if (type == NOTE_TYPES.REF_TO_BIBLE) {
+				sb.append(this.getNoteAsLatexForBibleRef(note));
+			} else if (type.name().startsWith("REF_TO")){
+				sb.append(
+						this.getNoteAsLatexRefersTo(
+							note
+						)
+				);
+			} else {
+				sb.append(
+						this.getNoteAsLatexForNonRef(
+							note
+							, true
+						)
+				);
 			}
 		}
 		return sb.toString();
 	}
 
+
+	private String getNoteAsLatexForBibleRef(
+			TextualNote note
+			) {
+		StringBuffer sb = new StringBuffer();
+		if (note.noteTitle.trim().length() > 0) {
+			sb.append("\\noteLexicalRefToBibleTitle{");
+			sb.append(note.liturgicalScope);
+			sb.append("}{");
+			sb.append(note.liturgicalLemma);
+			sb.append("}{");
+			sb.append(note.biblicalScope);
+			sb.append("}{");
+			sb.append(note.biblicalLemma);
+			sb.append("}{");
+			sb.append(note.noteTitle);
+			sb.append("}{");
+		} else {
+			sb.append("\\noteLexicalRefToBible{");
+			sb.append(note.liturgicalScope);
+			sb.append("}{");
+			sb.append(note.liturgicalLemma);
+			sb.append("}{");
+			sb.append(note.biblicalScope);
+			sb.append("}{");
+			sb.append(note.biblicalLemma);
+			sb.append("}{");
+		}
+		sb.append(note.value);
+		sb.append("}\n\n");
+
+		return sb.toString();
+	}
+	private String getNoteAsLatexRefersTo(
+			TextualNote note
+			) {
+		StringBuffer sb = new StringBuffer();
+		sb.append("\\noteRefersTo{");
+		sb.append(note.liturgicalScope);
+		sb.append("}{");
+		sb.append(note.liturgicalLemma);
+		sb.append("}{");
+		sb.append(note.noteTitle);
+		sb.append("}{");
+		sb.append(note.value);
+		sb.append("}\n\n");
+
+		return sb.toString();
+	}
+	private String getNoteAsLatexForNonRef(
+			TextualNote note
+			, boolean lexical
+			) {
+		StringBuffer sb = new StringBuffer();
+		if (note.getNoteTitle().trim().length() > 0) {
+			sb.append("\\noteLexicalTitleText{");
+			sb.append(note.liturgicalScope);
+			sb.append("}{");
+			sb.append(note.liturgicalLemma);
+			sb.append("}{");
+			sb.append(note.noteTitle);
+			sb.append("}{");
+		} else {
+			sb.append("\\noteLexicalText{");
+			sb.append(note.liturgicalScope);
+			sb.append("}{");
+			sb.append(note.liturgicalLemma);
+			sb.append("}{");
+		}
+		sb.append(note.value);
+		sb.append("}\n\n");
+
+		return sb.toString();
+	}
 	public String getVersionsAsLatex() {
 		StringBuffer transSb = new StringBuffer();
 		StringBuffer result = new StringBuffer();
+		boolean hasScansion = false;
 		
 		String greekLibrary = "gr_gr_cog";
+		String libraryLatex = "";
 		String greekValue = "";
 		transSb.append("\\section{Translations}\n");
 		transSb.append("\\setlength{\\arrayrulewidth}{1mm}");
@@ -496,24 +510,52 @@ public class TextInformationToPdf {
 			JsonObject o = e.getAsJsonObject();
 			String library = o.get("library").getAsString();
 			IdManager idManager = new IdManager(o.get("id").getAsString());
+			StringBuffer lf  = new StringBuffer();
+			lf.append(idManager.getLibraryLanguage());
+			lf.append("\\textunderscore ");
+			lf.append(idManager.getLibraryCountry());
+			lf.append("\\textunderscore ");
+			lf.append(idManager.getLibraryRealm());
+			libraryLatex = lf.toString();
+			
 			String value = o.get("value").getAsString();
 			if (value != null && value.trim().length() > 0) {
+				// check for scansion but don't bother if we already found a text with it...
+				if (!hasScansion) {
+					if (value.contains("*") || value.contains("/")) {
+						if (! hasScansion) {
+							hasScansion = true;
+						}
+					}
+				}
 				if (library.equals(greekLibrary)) {
 					greekValue = value;
 				} else {
-					transSb.append(idManager.getLibraryLanguage());
-					transSb.append("\\textunderscore ");
-					transSb.append(idManager.getLibraryCountry());
-					transSb.append("\\textunderscore ");
-					transSb.append(idManager.getLibraryRealm());
+					transSb.append(libraryLatex);
 					transSb.append(" & ");
 					transSb.append(value);
 					transSb.append(" \\\\ ");
 					transSb.append("\n\\hline\n");
 				}
+				// add the version (library) to the list of those used
+				if (! this.usedAbbreviations.containsKey(libraryLatex)) {
+					String description = "";
+					if (this.domainMap.containsKey(idManager.getLibrary())) {
+						description = this.domainMap.get(idManager.getLibrary());
+						if (idManager.getId().equals(description)) { // this means the description is missing
+							description = "";
+						}
+					} else {
+						description = "";
+					}
+					this.usedAbbreviations.put(libraryLatex, description);
+				}
 			}
 		}
 		transSb.append("\n\\hline\n\\end{tabular}\n\n\n");
+		if (hasScansion) {
+			transSb.append("Note: some liturgical hymns originally used punctuation marks to indicate the boundary of metric feet. They do not have a grammatical role.  They are called \\textit{scansion} symbols. In the modern version of source text or translations you might see asterisks (*) or forward slashes (/) used as scansion symbols.\n");
+		}
 
 		if (greekValue.length() > 0) {
 			result.append("\\section{Source Text}\n");
@@ -521,12 +563,12 @@ public class TextInformationToPdf {
 			result.append("\\setlength{\\tabcolsep}{18pt}");
 			result.append("\\renewcommand{\\arraystretch}{1.5}");
 			result.append("\\begin{tabular}{ |p{3cm}|p{12cm}| }\n\\hline\n");
-			result.append("gr\\textunderscore gr\\textunderscore cog");
+			result.append(libraryLatex);
 			result.append(" & ");
 			result.append(greekValue);
 			result.append(" \\\\ ");
 			result.append("\n");
-			result.append("\n\\hline\n\\end{tabular}\n\n\n");
+			result.append("\n\\hline\n\\end{tabular}\n\n");
 		}
 		result.append(transSb.toString());
 		return result.toString();

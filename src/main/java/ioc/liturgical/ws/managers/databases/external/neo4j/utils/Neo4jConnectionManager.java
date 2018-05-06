@@ -530,10 +530,10 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			if (count == 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + "   " + doc.getId());
-		    	this.insertTransaction(new Transaction(query, doc, hostName));
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.CREATED.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.CREATED.message + ": created " + doc.getId());
+		    	this.insertTransaction(new Transaction(query, doc, hostName));
 			}
 		} catch (Exception e){
 			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);

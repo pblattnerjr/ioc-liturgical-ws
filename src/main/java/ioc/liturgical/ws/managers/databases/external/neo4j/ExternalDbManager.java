@@ -433,7 +433,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  }
 		  // get the data we need for this text
 		  JsonObject data = this.getTextInformation(requestor, id, includeNotesForUser);
-		  
+		  Map<String,String> domainMap = internalManager.getDomainDescriptionMap();
+
 			// create a thread that will generate a PDF
 			ExecutorService executorService = Executors.newSingleThreadExecutor();
 			String pdfId = this.createId(requestor);
@@ -442,6 +443,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 							data
 							, pdfId
 							, id
+							, domainMap
 							)
 					);
 			executorService.shutdown();
@@ -496,6 +498,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				  , "ew"
 				  , ""
 				  , "any"
+				  , true
 				  );
 		  result.add("textNotes", temp.getValuesAsJsonArray());
 		  if (includeUserNotes) {
@@ -507,6 +510,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					  , "ew"
 					  , ""
 					  , "any"
+					  , true
 					  );
 			  result.add("userNotes", temp.getValuesAsJsonArray());
 		  }
@@ -966,6 +970,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, String matcher
 				, String tags // tags to match
 				, String operator // for tags, e.g. AND, OR
+				, boolean returnAllProps
 				) {
 			ResultJsonObjectArray result = null;
 
@@ -978,6 +983,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 							, matcher
 							, tags 
 							, operator
+							, returnAllProps
 							)
 					, true
 					, true
@@ -1319,6 +1325,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, String matcher
 				, String tags // tags to match
 				, String operator // for tags, e.g. AND, OR
+				, boolean returnAllProps
 				) {
 			boolean prefixProps = false;
 			String theLabel = "";
@@ -1384,25 +1391,33 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			builder.TAGS(tags);
 			builder.TAG_OPERATOR(operator);
 			if (type.equals(TOPICS.NOTE_USER.label)) {
-				builder.RETURN("from.value as text, to.id as id, to.library as library, to.topic as topic, to.key as key, to.value as value, to.tags as tags, to._valueSchemaId as _valueSchemaId");
+				if (returnAllProps) {
+					builder.RETURN("properties(from)");
+				} else {
+					builder.RETURN("from.value as text, to.id as id, to.library as library, to.topic as topic, to.key as key, to.value as value, to.tags as tags, to._valueSchemaId as _valueSchemaId");
+				}
 			} else {
-				StringBuffer sb = new StringBuffer();
-				sb.append("from.value as text");
-				sb.append(", to.id as id");
-				sb.append(", to.library as library");
-				sb.append(", to.topic as topic");
-				sb.append(", to.key as key");
-				sb.append(", to.value as value");
-				sb.append(", to.valueFormatted as valueFormatted");
-				sb.append(", to.noteType as type");
-				sb.append(", to.noteTitle as title");
-				sb.append(", to.liturgicalScope as liturgicalScope");
-				sb.append(", to.liturgicalLemma as liturgicalLemma");
-				sb.append(", to.biblicalLemma as biblicalLemma");
-				sb.append(", to.biblicalScope as biblicalScope");
-				sb.append(", to.tags as tags");
-				sb.append(", to._valueSchemaId as _valueSchemaId");
-				builder.RETURN(sb.toString());
+				if (returnAllProps) {
+					builder.RETURN("properties(to)");
+				} else {
+					StringBuffer sb = new StringBuffer();
+					sb.append("from.value as text");
+					sb.append(", to.id as id");
+					sb.append(", to.library as library");
+					sb.append(", to.topic as topic");
+					sb.append(", to.key as key");
+					sb.append(", to.value as value");
+					sb.append(", to.valueFormatted as valueFormatted");
+					sb.append(", to.noteType as type");
+					sb.append(", to.noteTitle as title");
+					sb.append(", to.liturgicalScope as liturgicalScope");
+					sb.append(", to.liturgicalLemma as liturgicalLemma");
+					sb.append(", to.biblicalLemma as biblicalLemma");
+					sb.append(", to.biblicalScope as biblicalScope");
+					sb.append(", to.tags as tags");
+					sb.append(", to._valueSchemaId as _valueSchemaId");
+					builder.RETURN(sb.toString());
+				}
 			}
 			builder.ORDER_BY("to.seq"); // 
 

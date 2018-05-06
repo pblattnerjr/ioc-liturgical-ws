@@ -194,6 +194,7 @@ public class Neo4jController {
         			, request.queryParams("m") // matcher (e.g. contains, starts with, regex)
         			, request.queryParams("l") // tags (~labels)
         			, request.queryParams("o") // operator
+        			, false // do not return all properties
         			));
 		});
 

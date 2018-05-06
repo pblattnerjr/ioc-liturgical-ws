@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import ioc.liturgical.ws.constants.Constants;
@@ -32,6 +33,7 @@ public class TextDownloadsGenerationTask implements Runnable {
 	String pdfId = "";
 	String textId = "";
 	String dockerPath = "/usr/local/bin/";
+	Map<String,String> domainMap = null;
 	
 	/**
 	 * 
@@ -42,16 +44,22 @@ public class TextDownloadsGenerationTask implements Runnable {
 			JsonObject jsonObject
 			, String pdfId
 			, String textId
+			, Map<String,String> domainMap
 			) {
 		this.jsonObject = jsonObject;
 		this.pdfId = pdfId;
 		this.textId = textId;
+		this.domainMap = domainMap;
 	}
 	
 	@Override
 	public void run() {
 //		String command = this.dockerPath + "docker run --rm -v " + Constants.PDF_FOLDER + ":/data macolburn/xelatex:1.0.0 make";
-		TextInformationToPdf textInfoToPdf = new TextInformationToPdf(this.jsonObject, this.textId);
+		TextInformationToPdf textInfoToPdf = new TextInformationToPdf(
+				this.jsonObject
+				, this.textId
+				, this.domainMap
+				);
 		FileUtils.writeFile(Constants.PDF_FOLDER + "/" + this.pdfId + ".tex", textInfoToPdf.getTexFileContent().toString());
 		List<String> commands = new ArrayList<String>();
 		String command = "cd " + Constants.PDF_FOLDER + " && xelatex " + this.pdfId + ".tex";
