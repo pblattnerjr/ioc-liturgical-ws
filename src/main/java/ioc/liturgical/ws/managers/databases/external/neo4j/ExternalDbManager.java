@@ -1,12 +1,9 @@
 package ioc.liturgical.ws.managers.databases.external.neo4j;
 
 import java.text.Normalizer;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -37,7 +34,10 @@ import ioc.liturgical.ws.managers.synch.SynchManager;
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.calendar.DateGenerator;
 
+import org.ocmc.ioc.liturgical.schemas.constants.ABBREVIATION_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.BIBLICAL_BOOKS;
+import org.ocmc.ioc.liturgical.schemas.constants.BIBTEX_ENTRY_TYPES;
+
 import ioc.liturgical.ws.constants.Constants;
 
 import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
@@ -59,11 +59,13 @@ import org.ocmc.ioc.liturgical.schemas.iso.lang.LocaleDate;
 
 import ioc.liturgical.ws.managers.databases.external.neo4j.constants.MATCHERS;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryBuilderForDocs;
+import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryBuilderForGeneric;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryBuilderForLinks;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryBuilderForNotes;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryBuilderForTemplates;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryBuilderForTreebanks;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryForDocs;
+import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryForGeneric;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryForLinks;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryForNotes;
 import ioc.liturgical.ws.managers.databases.external.neo4j.cypher.CypherQueryForTemplates;
@@ -113,6 +115,7 @@ import net.ages.alwb.tasks.TextDownloadsGenerationTask;
 import net.ages.alwb.tasks.WordAnalysisCreateTask;
 import org.ocmc.ioc.liturgical.schemas.models.DropdownArray;
 import org.ocmc.ioc.liturgical.schemas.models.DropdownItem;
+import org.ocmc.ioc.liturgical.schemas.models.bibliography.BibEntryReference;
 
 import net.ages.alwb.utils.core.datastores.json.exceptions.MissingSchemaIdException;
 import net.ages.alwb.utils.core.generics.MultiMapWithList;
@@ -169,9 +172,19 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  JsonObject dropdownItemsForSearchingText = new JsonObject();
 	  JsonArray noteTypesArray = new JsonArray();
 	  JsonObject noteTypesProperties = new JsonObject();
+
+	  JsonArray abbreviationTypesArray = new JsonArray();
+	  JsonObject abbreviationTypesProperties = new JsonObject();
+	  JsonArray abbreviationTypesDropdown = ABBREVIATION_TYPES.toDropdownJsonArray(true);
+	  
+	  JsonArray bibliographyTypesArray = new JsonArray();
+	  JsonObject bibliographyTypesProperties = new JsonObject();
+	  JsonArray bibliographyTypesDropdown = BIBTEX_ENTRY_TYPES.toDropdownJsonArray(true);
+	  
 	  JsonArray ontologyTypesArray = new JsonArray();
 	  JsonObject ontologyTypesProperties = new JsonObject();
 	  JsonObject ontologyTags = new JsonObject();
+	  
 	  JsonArray relationshipTypesArray = new JsonArray();
 	  JsonObject relationshipTypesProperties = new JsonObject();
 	  JsonArray templateTypesArray = new JsonArray();
@@ -248,6 +261,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  // this.fixWordAnalysis(); // I think this was a one-off fix.
 
 		  if (neo4jManager.isConnectionOK()) {
+			  buildAbbreviationDropdownMaps();
+			  buildBibliographyDropdownMaps();
 			  buildNotesDropdownMaps();
 			  buildOntologyDropdownMaps();
 			  buildTemplatesDropdownMaps();
@@ -255,6 +270,9 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			  initializeOntology();
 			  if (! this.existsWordAnalyses("ἀβλαβεῖς")) {
 				  this.loadTheophanyGrammar();
+			  }
+			  if (! this.existsBibliographyEntries()) {
+				  this.createBibliographyEntries();
 			  }
 //			  logger.info("Creating calendars");
 //			  this.createCalendars(Calendar.getInstance().get(Calendar.YEAR));
@@ -273,6 +291,14 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  return getWordAnalyses(word).getResultCount() > 0;
 	  }
 	  
+	  public boolean existsBibliographyEntries() {
+		  return this.existsUnique(
+				  "en_us_mcolburn~" 
+		  + org.ocmc.ioc.liturgical.schemas.constants.Constants.TOPIC_BIBLIOGRAPHY_ENTRY 
+		  + "~Lampe"
+		  );
+	  }
+
 	  /**
 	   * Quick and dirty to fix the properties of a word analysis.
 	   * Look at the initialization of ExternalDbManager to find the commented
@@ -479,7 +505,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			  ) {
 		  JsonObject result = new JsonObject();
 		  IdManager idManager = new IdManager(id);
-		  ResultJsonObjectArray temp = this.search(
+		  ResultJsonObjectArray temp = this.searchText(
 				  requestor
 				  , "Liturgical"
 				  , "*"
@@ -542,6 +568,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  this.logAllQueries = logQueries;
 		  this.logQueriesWithNoMatches = logQueriesWithNoMatches;
 		  if (buildDomainMap) {
+			  buildAbbreviationDropdownMaps();
+			  buildBibliographyDropdownMaps();
 			  buildDomainTopicMap();
 			  buildNotesDropdownMaps();
 			  buildOntologyDropdownMaps();
@@ -683,6 +711,14 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  noteTypesArray = SCHEMA_CLASSES.noteTypesJson();
 	  }
 
+	  public void buildAbbreviationDropdownMaps() {
+		  abbreviationTypesProperties = SCHEMA_CLASSES.abbreviationPropertyJson();
+		  abbreviationTypesArray = SCHEMA_CLASSES.abbreviationTypesJson();
+	  }
+	  public void buildBibliographyDropdownMaps() {
+		  bibliographyTypesProperties = SCHEMA_CLASSES.bibliographyPropertyJson();
+		  bibliographyTypesArray = SCHEMA_CLASSES.bibliographyTypesJson();
+	  }
 	  public void buildTemplatesDropdownMaps() {
 		  templateTypesProperties = SCHEMA_CLASSES.templatePropertyJson();
 		  templateTypesArray = SCHEMA_CLASSES.templateTypesJson();
@@ -905,7 +941,20 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  }
 		  return addWherePublic;
 	  }
-		public ResultJsonObjectArray search(
+	  
+	  /**
+	   * Search Text of type Biblical or Liturgical
+	   * @param requestor person who submitted the search request
+	   * @param type of search (Biblical or Liturgical)
+	   * @param domain the library to use
+	   * @param book the name of the book
+	   * @param chapter the chapter (if biblical)
+	   * @param query the query parameters
+	   * @param property the property we will search
+	   * @param matcher the match requirement
+	   * @return
+	   */
+		public ResultJsonObjectArray searchText(
 				String requestor
 				, String type
 				, String domain
@@ -991,6 +1040,126 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
+		/**
+		 * Search the database for notes that match the supplied parameters.
+		 * At this time, only known to work for type NoteUser.
+		 * TODO: test for other note types when added.
+		 * @param requestor
+		 * @param type
+		 * @param query
+		 * @param property
+		 * @param matcher
+		 * @param tags
+		 * @param operator
+		 * @return
+		 */
+		public ResultJsonObjectArray searchGeneric(
+				String requestor
+				, String type
+				, String library
+				, String query
+				, String property
+				, String matcher
+				, String tags // tags to match
+				, String operator // for tags, e.g. AND, OR
+				, String returnProperties
+				) {
+			ResultJsonObjectArray result = null;
+			if (type.equals("*")) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage("Wildcard generic search is not permitted.");
+			} else {
+				result = getForQuery(
+						getCypherQueryForGenericSearch(
+								requestor
+								, type
+								, library
+								, GeneralUtils.toNfc(query)
+								, property
+								, matcher
+								, tags 
+								, operator
+								, returnProperties
+								)
+						, true
+						, true
+						);
+			}
+			return result;
+		}
+
+		/**
+		 * checks to see if a record exists for this ID
+		 * @param requestor
+		 * @param library
+		 * @param topic
+		 * @param key
+		 * @return empty list if not found.  Will include the record contents if was found
+		 */
+		public ResultJsonObjectArray genericIdCheck(
+				String requestor
+				, String library
+				, String topic
+				, String key
+				) {
+			ResultJsonObjectArray result = new ResultJsonObjectArray(false);
+			List<JsonObject> list = new ArrayList<JsonObject>();
+			IdManager idManager = new IdManager(library, topic, key);
+			if (internalManager.authorized(requestor, VERBS.POST, library)) {
+				ResultJsonObjectArray json = this.getForId(idManager.getId());
+				if (json.valueCount > 0) {
+					list.add(json.getFirstObject());
+				}
+			} else {
+				result.setStatusCode(HTTP_RESPONSE_CODES.UNAUTHORIZED.code);
+				result.setStatusMessage(HTTP_RESPONSE_CODES.UNAUTHORIZED.message);
+			}
+			result.setResult(list);
+			result.setQuery("ID exists in database");
+			return result;
+		}
+
+		/**
+		 * Search the database for notes that match the supplied parameters.
+		 * At this time, only known to work for type NoteUser.
+		 * TODO: test for other note types when added.
+		 * @param requestor
+		 * @param type
+		 * @param query
+		 * @param property
+		 * @param matcher
+		 * @param tags
+		 * @param operator
+		 * @return
+		 */
+		public ResultJsonObjectArray searchBibliography(
+				String requestor
+				, String type
+				, String query
+				, String property
+				, String matcher
+				, String tags // tags to match
+				, String operator // for tags, e.g. AND, OR
+				, boolean returnAllProps
+				) {
+			ResultJsonObjectArray result = null;
+
+			result = getForQuery(
+					getCypherQueryForNotesSearch(
+							requestor
+							, type
+							, GeneralUtils.toNfc(query)
+							, property
+							, matcher
+							, tags 
+							, operator
+							, returnAllProps
+							)
+					, true
+					, true
+					);
+			return result;
+		}
 		/**
 		 * Search the database for notes that match the supplied parameters.
 		 * At this time, only known to work for type NoteUser.
@@ -1425,6 +1594,87 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return q.toString();
 		}
 		
+		/**
+		 * Build Cypher query for a generic search. 
+		 * @param requestor - the user who requested the search
+		 * @param type - the node label to use (comes from the SchemaTypes enum)
+		 * @param query - the value to search for
+		 * @param property - the field (property) to search
+		 * @param matcher - the type of match requested
+		 * @param tags - tags to look for
+		 * @param operator - tag operator, e.g. And vs Or
+		 * @return the database query to use
+		 */
+		private String getCypherQueryForGenericSearch(
+				String requestor
+				, String type
+				, String library
+				, String query
+				, String property
+				, String matcher
+				, String tags // tags to match
+				, String operator // for tags, e.g. AND, OR
+				, String returnProperties
+				) {
+			boolean prefixProps = false;
+			String theLabel = "";
+			if (type.equals("*")) {
+				theLabel = "Root";
+			} else {
+				theLabel = type;
+			}
+			String theProperty = property;
+			String theQuery = GeneralUtils.toNfc(query);
+			CypherQueryBuilderForGeneric builder = null;
+			boolean addWherePublic = this.addWherePublic(library, requestor);
+				builder = new CypherQueryBuilderForGeneric(
+						prefixProps
+						, addWherePublic
+						)
+						.REQUESTOR(requestor)
+						.MATCH()
+						.LABEL(theLabel)
+						.WHERE(theProperty)
+						.RETURN(returnProperties)
+						;
+			
+			MATCHERS matcherEnum = MATCHERS.forLabel(matcher);
+			
+			switch (matcherEnum) {
+			case STARTS_WITH: {
+				builder.STARTS_WITH(theQuery);
+				break;
+			}
+			case ENDS_WITH: {
+				builder.ENDS_WITH(theQuery);
+				break;
+			}
+			case REG_EX: {
+				builder.MATCHES_PATTERN(theQuery);
+				break;
+			} 
+			default: {
+				builder.CONTAINS(theQuery);
+				break;
+			}
+			}
+			builder.TAGS(tags);
+			builder.TAG_OPERATOR(operator);
+			if (returnProperties.equals("*")) {
+				builder.RETURN("properties(n)");
+			} else {
+				if (returnProperties.contains("_valueSchemaId as _valueSchemaId")) {
+					builder.RETURN(returnProperties);
+				} else {
+					builder.RETURN("n._valueSchemaId as _valueSchemaId, " + returnProperties);
+				}
+			}
+			builder.ORDER_BY("n.seq"); // 
+
+			CypherQueryForGeneric q = builder.build();
+			return q.toString();
+		}
+
 		/**
 		 * Build Cypher query for searching notes.  Currently only set to work for NoteUser.
 		 * TODO: test for other types of notes when they are added.
@@ -2972,6 +3222,27 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				JsonObject jsonDropdown = new JsonObject();
 				jsonDropdown.add("dropdown", values);
 
+
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+
+		public ResultJsonObjectArray getDropdownsForSearchingAbbreviations(String requestor) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
+				String library = this.getUserDomain(requestor);
+				JsonObject values = new JsonObject();
+				values.add("typeList", this.abbreviationTypesArray);
+				values.add("typeProps", this.abbreviationTypesProperties);
+				values.add("typeTags", getAbbreviationTagsForAllTypes(library));
+				values.add("tagOperators", tagOperatorsDropdown);
+				values.add("objectTypes", this.abbreviationTypesDropdown);
+				JsonObject jsonDropdown = new JsonObject();
+				jsonDropdown.add("dropdown", values);
+
 				List<JsonObject> list = new ArrayList<JsonObject>();
 				list.add(jsonDropdown);
 
@@ -2984,7 +3255,6 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			}
 			return result;
 		}
-
 		public ResultJsonObjectArray getTemplatesSearchDropdown() {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
@@ -3008,6 +3278,33 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			}
 			return result;
 		}
+		
+		public ResultJsonObjectArray getDropdownsForSearchingBibliographies(String requestor) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
+				String library = this.getUserDomain(requestor);
+				JsonObject values = new JsonObject();
+				values.add("typeList", this.bibliographyTypesArray);
+				values.add("typeProps", this.bibliographyTypesProperties);
+				values.add("typeTags", getBibliographyTagsForAllTypes(library));
+				values.add("tagOperators", tagOperatorsDropdown);
+				values.add("objectTypes", this.bibliographyTypesDropdown);
+				JsonObject jsonDropdown = new JsonObject();
+				jsonDropdown.add("dropdown", values);
+
+				List<JsonObject> list = new ArrayList<JsonObject>();
+				list.add(jsonDropdown);
+
+				result.setResult(list);
+				result.setQuery("get dropdowns for bibliography search");
+
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+
 		public ResultJsonObjectArray getTreebanksSearchDropdown() {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
@@ -3545,8 +3842,42 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				ErrorUtils.report(logger, e);
 			}
 			return result;
-			
 		}
+		
+		public JsonObject getBibliographyTagsForAllTypes(String library) {
+			JsonObject result  = new JsonObject();
+			try {
+				for (TOPICS t : TOPICS.values()) {
+					if (
+							t == TOPICS.BIBLIOGRAPHY
+							) {
+						JsonArray value = getTags(library, t.label);
+						result.add(t.label, value);
+					}
+				}
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+			return result;
+		}
+
+		public JsonObject getAbbreviationTagsForAllTypes(String library) {
+			JsonObject result  = new JsonObject();
+			try {
+				for (TOPICS t : TOPICS.values()) {
+					if (
+							t == TOPICS.ABBREVIATION
+							) {
+						JsonArray value = getTags(library, t.label);
+						result.add(t.label, value);
+					}
+				}
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+			return result;
+		}
+
 		public JsonObject getTemplatesTagsForAllTypes() {
 			JsonObject result  = new JsonObject();
 			try {
@@ -4690,6 +5021,28 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					formsMap.put(form.get(Constants.VALUE_SCHEMA_ID).getAsString(), form);
 				}
 				result.setResult(formsMap);
+				List<JsonObject> schemaEditorResults = new ArrayList<JsonObject>();
+				boolean hasOntology = false;
+				boolean hasBibliography = false;
+				for (org.ocmc.ioc.liturgical.schemas.constants.NEW_FORM_CLASSES_DB_API e : NEW_FORM_CLASSES_DB_API.values()) {
+					if (internalManager.userAuthorizedForThisForm(requestor, e.restriction)) {
+						if (e.includeForSchemaEditor) {
+							result.addSchemaEditorForm(new DropdownItem(e.name, e.obj.schemaIdAsString()));
+							schemaEditorResults.add(e.obj.toJsonObject());
+							if (! hasOntology) {
+								hasOntology = e.pureOntology;
+							} else if (! hasBibliography) {
+								hasBibliography = e.name.toLowerCase().contains("bibliography");
+							}
+						}
+					}
+				}
+				if (hasOntology) {
+					result.addSchemaEditorForm(new DropdownItem("Ontology Entities (All)", "OntologyRoot:1.1"));
+				}
+				if (hasBibliography) {
+					result.addSchemaEditorForm(new DropdownItem("Bibliography Entries (All)", "Bibliography:1.1"));
+				}
 			} catch (Exception e) {
 				result.setStatusCode(HTTP_RESPONSE_CODES.SERVER_ERROR.code);
 				result.setStatusMessage(e.getMessage());
@@ -4698,7 +5051,25 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result.toJsonObject();
 		}
 
-		
+		private void createBibliographyEntries() {
+			try {
+				BibEntryReference r = new BibEntryReference(
+						"en_us_mcolburn"
+						, "Lampe"
+						);
+				r.setEditor("Lampe, G. W.");
+				r.setTitle("A Patristic Greek Lexicon");
+				r.setDate("1961");
+				r.setPublisher("Oxford University Press");
+				r.setLocation("Oxford");
+    			RequestStatus status = this.addLTKDbObject("mcolburn", r.toJsonString());
+    			if (status.getCode() != 201) {
+    				System.out.print("");
+    			}
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+		}
 		private void loadTheophanyGrammar() {
 		    Set<String> tokens = getTopicUniqueTokens(
 		    		"gr_gr_cog"

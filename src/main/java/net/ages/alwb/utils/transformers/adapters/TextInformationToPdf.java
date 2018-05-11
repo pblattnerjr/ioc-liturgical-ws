@@ -90,8 +90,8 @@ public class TextInformationToPdf {
 		IdManager idManager = new IdManager(this.textId);
 		this.texFileSb.append("\\documentclass[extrafontsizes,12pt]{memoir}\n");
 		this.texFileSb.append("\\usepackage{multicol}%\n");
-		this.texFileSb.append("\\usepackage[hyphenate]{system/ocmc-liturgical-text}%\n");
 		this.texFileSb.append("\\usepackage{system/ocmc-grammar}%\n");
+		this.texFileSb.append("\\usepackage[hyphenate]{system/ocmc-liturgical-text}%\n");
 		this.texFileSb.append("\\input{system/control} %\n");
 		this.texFileSb.append("\\usepackage[defaultlines=4,all]{nowidow}%\n");
 		
@@ -137,7 +137,7 @@ public class TextInformationToPdf {
 				"\n\n\\tiny\\textit{Generated ");
 		this.texFileSb.append(ZonedDateTime.now(ZoneOffset.UTC));
 		this.texFileSb.append(" (Universal Time)  using liturgical software from the Orthodox Christian Mission Center (OCMC), St. Augustine, FL, USA.}%\n");
-		this.texFileSb.append("\\vfill%\n");
+		this.texFileSb.append("\n\\vfill%\n");
 		this.texFileSb.append("\\pagebreak%\n");
 		this.texFileSb.append("\\end{document}%\n");
 	}
@@ -159,22 +159,22 @@ public class TextInformationToPdf {
 	
 	public String getInterlinearAsLatex() {
 		StringBuffer sb = new StringBuffer();
-		sb.append("\\vfill\n\\newpage\n");
+		sb.append("\n\\vfill\n\\newpage\n");
 		sb.append("\\section{Interlinear Text}\n");
 		sb.append("This section provides information about the grammar of words (that is, the morphology). The Greek words appear in the same order as they do in the source text.\n\n");
 		sb.append(this.nodesToInterlinear());
-		sb.append("\\sectionline");
+		sb.append("\n\\sectionline\n");
 		return sb.toString();
 	}
 
 	public String getDependencyDiagramAsLatex() {
 		StringBuffer sb = new StringBuffer();
-		sb.append("\\vfill\n\\newpage\n");
+		sb.append("\n\\vfill\n\\newpage\n");
 		sb.append("\\section{Dependency Diagram}\n");
 		sb.append("This section uses a dependency diagram to show the syntactic structure of the text.  \\textit{Syntax} means \\textit{the grammatical relationship between words}, that is, \\textit{the way words are put together to create phrases and clauses and sentences}.  This diagram shows the structure based on a type of grammar theory called dependency grammar. The order of each Greek word in the diagram is based on the word it depends on. It appears indented and after the word it depends on. The first word to appear in the diagram is the root of the structure.\n");
 		sb.append("\\newline");
 		sb.append(this.processNode(null, new StringBuffer()));
-		sb.append("\\sectionline");
+		sb.append("\n\\sectionline\n");
 		return sb.toString();
 	}
 	
@@ -364,7 +364,7 @@ public class TextInformationToPdf {
 		}
 		sb.append("\\section{Discussion}\n");
 		sb.append(this.processNotesByType());
-		sb.append("\\sectionline");
+		sb.append("\n\\sectionline\n");
 //		this.groupNotes();
 //		sb.append(this.processNotesByType());
 		return sb.toString();
@@ -376,6 +376,8 @@ public class TextInformationToPdf {
 					e.getAsJsonObject().get("properties(to)").getAsJsonObject()
 					, TextualNote.class
 					);
+//			note.setValueFormatted(note.getValueFormatted());
+			note.setValueFormatted(this.htmlToLatex(note.getValueFormatted()));
 			if (note.getNoteType() == NOTE_TYPES.UNIT) {
 				this.summaryList.add(note);
 			} else {
@@ -383,7 +385,6 @@ public class TextInformationToPdf {
 			}
 		}
 	}
-	
 
 	private String processNotesByType() {
 		StringBuffer sb = new StringBuffer();
@@ -392,6 +393,9 @@ public class TextInformationToPdf {
 				this.notesList
 				, TextualNote.noteTypeLiturgicalScopeComparator);
 		for (TextualNote note : this.notesList) {
+			if (note.getValue().contains("opposing the people of Israel were")) {
+				System.out.print("");
+			}
 			NOTE_TYPES type = note.getNoteType();
 			if (currentType != type) {
 				sb.append("\n\\subsection{");
@@ -425,7 +429,7 @@ public class TextInformationToPdf {
 			) {
 		StringBuffer sb = new StringBuffer();
 		if (note.noteTitle.trim().length() > 0) {
-			sb.append("\\noteLexicalRefToBibleTitle{");
+			sb.append("\n\\noteLexicalRefToBibleTitle{");
 			sb.append(note.liturgicalScope);
 			sb.append("}{");
 			sb.append(note.liturgicalLemma);
@@ -448,7 +452,7 @@ public class TextInformationToPdf {
 			sb.append("}{");
 		}
 		sb.append(note.value);
-		sb.append("}\n\n");
+		sb.append("}\n");
 
 		return sb.toString();
 	}
@@ -456,7 +460,7 @@ public class TextInformationToPdf {
 			TextualNote note
 			) {
 		StringBuffer sb = new StringBuffer();
-		sb.append("\\noteRefersTo{");
+		sb.append("\n\\noteRefersTo{");
 		sb.append(note.liturgicalScope);
 		sb.append("}{");
 		sb.append(note.liturgicalLemma);
@@ -464,9 +468,22 @@ public class TextInformationToPdf {
 		sb.append(note.noteTitle);
 		sb.append("}{");
 		sb.append(note.value);
-		sb.append("}\n\n");
+		sb.append("}\n");
 
 		return sb.toString();
+	}
+	
+	private String htmlToLatex(String html) {
+		html = html.replaceAll("<p>", "");
+		html = html.replaceAll("</p>", "\n");
+		html = html.replaceAll("<em>", "\\\\textit{");
+		html = html.replaceAll("</em>", "}");
+		html = html.replaceAll("<strong>", "\\\\textbf{");
+		html = html.replaceAll("</strong>", "}");
+		html = html.replaceAll("<ins>", "\\\\underline{");
+		html = html.replaceAll("</ins>", "}");
+		html = html.replaceAll("&nbsp;", " ");
+		return html;
 	}
 	private String getNoteAsLatexForNonRef(
 			TextualNote note
@@ -547,6 +564,9 @@ public class TextInformationToPdf {
 						}
 					} else {
 						description = "";
+					}
+					if (description.contains("_")) {
+						description = "(description unavailable)";
 					}
 					this.usedAbbreviations.put(libraryLatex, description);
 				}

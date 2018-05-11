@@ -1,5 +1,7 @@
 package net.ages.alwb.utils.transformers.adapters;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map.Entry;
 
 import org.jsoup.Connection;
@@ -32,6 +34,7 @@ public class AgesWebsiteIndexToReactTableData {
 	private static final Logger logger = LoggerFactory.getLogger(AgesWebsiteIndexToReactTableData.class);
 	
 	private String baseUrl = "http://www.agesinitiatives.com/dcs/public/dcs/";
+	private String booksPath = "h/b/";
 	private String servicesIndex = baseUrl + "servicesindex.html";
 	private String booksIndex = baseUrl + "booksindex.html";
 	private String jsonservicesIndex = baseUrl + "servicesindex.json";
@@ -42,14 +45,37 @@ public class AgesWebsiteIndexToReactTableData {
 	private String readingsIndex = agesOcmcBaseUrl + agesOcmcIndex;
 	private String theophanyUrl = Constants.LIML_URL + Constants.LIML_STATIC + "theophany.html";
 	private String basilUrl = Constants.LIML_URL + Constants.LIML_STATIC + "bk.liturgy.basil.html";
-	
+	private List<AgesIndexTableRowData> additionalAgesBookRows = new ArrayList<AgesIndexTableRowData>();
 	private boolean printPretty = false;
 
 	public AgesWebsiteIndexToReactTableData() {
-		
+		this.addAdditionalUrls();
 	}
 	public AgesWebsiteIndexToReactTableData(boolean printPretty) {
 		this.printPretty = printPretty;
+		this.addAdditionalUrls();
+	}
+	
+	private void addAdditionalUrls() {
+		String base = this.baseUrl + this.booksPath;
+		AgesIndexTableRowData row = new AgesIndexTableRowData(printPretty);
+		row.setDayOfWeek("any");
+		row.setType("Service of Preparation for Holy Communion (Ἀκολουθία τῆς Θείας Μεταλήψεως)");
+		row.setDate("any");
+		row.setUrl(base + "ho/s21/gr-en/index.html");		
+		this.additionalAgesBookRows.add(row);
+		row = new AgesIndexTableRowData(printPretty);
+		row.setDayOfWeek("any");
+		row.setType("Service of Small Paraklesis (Ἀκολουθία τοῦ Μικροῦ Παρακλητικοῦ Κανόνος)");
+		row.setDate("any");
+		row.setUrl(base + "ho/s23/gr-en/index.html");		
+		this.additionalAgesBookRows.add(row);
+		row = new AgesIndexTableRowData(printPretty);
+		row.setDayOfWeek("any");
+		row.setType("Service of Great Paraklesis (Ἀκολουθία τοῦ Μεγάλου Παρακλητικοῦ Κανόνος)");
+		row.setDate("any");
+		row.setUrl(base + "ho/s24/gr-en/index.html");		
+		this.additionalAgesBookRows.add(row);
 	}
 	
 	public AgesIndexTableData  toReactTableDataFromOlwBooksHtml() throws Exception {
@@ -74,11 +100,29 @@ public class AgesWebsiteIndexToReactTableData {
 					row.setDayOfWeek("any");
 					row.setUrl(olwBaseUrl + href);
 					switch (bookType) {
+					// TODO
+					case ("ho"): {
+						String [] dateParts = hrefParts[4].split("_");
+						String date = hrefParts[3] + "/" + dateParts[0];
+						row.setDate(date);
+						row.setType("Horologion (τό ῾Ωρλόγιον)");
+						result.addRow(row);
+						break;
+					}
 					case ("me"): {
 						String [] dateParts = hrefParts[4].split("_");
 						String date = hrefParts[3] + "/" + dateParts[0];
 						row.setDate(date);
 						row.setType("Menaion (τά Μηναῖα)");
+						result.addRow(row);
+						break;
+					}
+					// TODO
+					case ("oc"): {
+						String [] dateParts = hrefParts[4].split("_");
+						String date = hrefParts[3] + "/" + dateParts[0];
+						row.setDate(date);
+						row.setType("Octoechos (ἡ Παρακλητική)");
 						result.addRow(row);
 						break;
 					}
@@ -90,6 +134,15 @@ public class AgesWebsiteIndexToReactTableData {
 						}
 						row.setDate(date);
 						row.setType("Pentecostarion (τό Πεντηκοστάριον)");
+						result.addRow(row);
+						break;
+					}
+					// TODO
+					case ("psalter"): {
+						String [] dateParts = hrefParts[4].split("_");
+						String date = hrefParts[3] + "/" + dateParts[0];
+						row.setDate(date);
+						row.setType("Psalterion (τό Ψαλτήριον)");
 						result.addRow(row);
 						break;
 					}
@@ -109,6 +162,9 @@ public class AgesWebsiteIndexToReactTableData {
 						result.addRow(row);
 						break;
 					}
+					default: {
+						logger.info("Missing switch for OLW Daily Readings book " + bookType);
+					}
 					}
 				}
 			}
@@ -124,6 +180,9 @@ public class AgesWebsiteIndexToReactTableData {
 			basil.setDate("any");
 			basil.setUrl(basilUrl);
 			result.addRow(basil);
+			for (AgesIndexTableRowData row : this.additionalAgesBookRows) {
+				result.addRow(row);
+			}
 		} catch (Exception e) {
 			ErrorUtils.report(logger, e);
 		}

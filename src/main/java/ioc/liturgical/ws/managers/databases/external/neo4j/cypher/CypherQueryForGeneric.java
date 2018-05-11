@@ -18,8 +18,8 @@ import org.ocmc.ioc.liturgical.utils.ErrorUtils;
  *
  */
 
-public class CypherQueryForNotes {
-	private static final Logger logger = LoggerFactory.getLogger(CypherQueryForNotes.class);
+public class CypherQueryForGeneric {
+	private static final Logger logger = LoggerFactory.getLogger(CypherQueryForGeneric.class);
 
 	private String MATCH = "";
 	private String TYPE = "";
@@ -40,7 +40,7 @@ public class CypherQueryForNotes {
 	private String REQUESTOR = "";
 	private boolean addWherePublic = false;
 	
-	public CypherQueryForNotes(
+	public CypherQueryForGeneric(
 			String MATCH
 			, String TYPE
 			, String EXCLUDE_TYPE
@@ -83,25 +83,21 @@ public class CypherQueryForNotes {
 
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("MATCH (from:Text)-[link");
-		if (TYPE.length() >0) {
-			sb.append(TYPE);
-		}
-		sb.append("]->(to:");
+		sb.append("MATCH (n:");
 		sb.append(LABEL);
 		sb.append(") ");
 
 		StringBuffer whereClause = new StringBuffer();
 		if (STARTS_WITH.length() > 0) {
-			whereClause.append("WHERE to." + WHERE + " STARTS WITH '" + STARTS_WITH + "' ");
+			whereClause.append("WHERE n." + WHERE + " STARTS WITH '" + STARTS_WITH + "' ");
 		} else if (EQUALS.length() > 0 ) {
-			whereClause.append("WHERE to." + WHERE + " = '" + EQUALS + "' ");
+			whereClause.append("WHERE n." + WHERE + " = '" + EQUALS + "' ");
 		} else 	if (ENDS_WITH.length() > 0) {
-			whereClause.append("WHERE to." + WHERE + " ENDS WITH '" + ENDS_WITH + "' ");
+			whereClause.append("WHERE n." + WHERE + " ENDS WITH '" + ENDS_WITH + "' ");
 		} else if (CONTAINS.length() > 0) {
-			whereClause.append("WHERE to." + WHERE + " CONTAINS '" + CONTAINS + "' ");
+			whereClause.append("WHERE n." + WHERE + " CONTAINS '" + CONTAINS + "' ");
 		} else if (MATCHES_PATTERN.length() > 0) {
-			whereClause.append("WHERE to." + WHERE + " =~ '" + MATCHES_PATTERN + "' ");
+			whereClause.append("WHERE n." + WHERE + " =~ '" + MATCHES_PATTERN + "' ");
 		} 
 		if (LIBRARY.length() > 0) {
 			if (whereClause.length() > 0) {
@@ -117,7 +113,7 @@ public class CypherQueryForNotes {
 			} else {
 				whereClause.append(" WHERE ");
 			}
-			whereClause.append(tagMatcher("to.tags", TAGS, TAG_OPERATOR));
+			whereClause.append(tagMatcher("n.tags", TAGS, TAG_OPERATOR));
 		}
 		
 		if (addWherePublic) {
@@ -127,13 +123,13 @@ public class CypherQueryForNotes {
 				whereClause.append(" WHERE");
 			}
 			if (this.REQUESTOR.length() > 0 && (! this.REQUESTOR.startsWith("*"))) {
-				whereClause.append(" (to.visibility = 'PUBLIC' or to.createdBy = '");
+				whereClause.append(" (n.visibility = 'PUBLIC' or n.createdBy = '");
 				whereClause.append(this.REQUESTOR);
-				whereClause.append("' or to.assignedTo = '");
+				whereClause.append("' or n.assignedTo = '");
 				whereClause.append(this.REQUESTOR);
 				whereClause.append("') ");
 			} else {
-				whereClause.append(" to.visibility = 'PUBLIC' ");
+				whereClause.append(" n.visibility = 'PUBLIC' ");
 			}
 		}
 
@@ -143,22 +139,11 @@ public class CypherQueryForNotes {
 			} else {
 				whereClause.append(" WHERE NOT ");
 			}
-			whereClause.append("type(to) = '" + EXCLUDE_TYPE + "' ");
+			whereClause.append("type(n) = '" + EXCLUDE_TYPE + "' ");
 		}
 
 		if (whereClause.length() > 0) {
 			sb.append(whereClause);
-		}
-
-		if (NOTE_TYPE != null && NOTE_TYPE.length() > 0) {
-			if (! NOTE_TYPE.startsWith("*")) {
-				if (whereClause.length() > 0) {
-					sb.append(" AND ");
-				} else {
-					sb.append(" WHERE  ");
-				}
-				sb.append("to.noteType = '" + NOTE_TYPE + "' ");
-			} 
 		}
 		
 		sb.append(" RETURN " + RETURN);

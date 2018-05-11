@@ -62,7 +62,7 @@ public class Neo4jController {
 		});
 
 		// GET generate Text downloads for specified parameters
-		path = ENDPOINTS_DB_API.LITURGICAL_TEXT_DOWNLOADS.toLibraryTopicPath();
+		path = ENDPOINTS_DB_API.LITURGICAL_TEXT_DOWNLOADS.toLibraryTopicKeyPath();
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
@@ -93,6 +93,16 @@ public class Neo4jController {
 			}
 			return json.toJsonString();
 		});
+		
+		// GET system table by id 
+		path = ENDPOINTS_DB_API.TABLES.toLibraryTopicKeyPath();
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String id = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
+        	return externalManager.getForId(id).toJsonString();
+		});
+
 
 		path = ENDPOINTS_DB_API.DOCS.toLibraryTopicKeyPath();
 		ControllerUtils.reportPath(logger, "GET", path);
@@ -108,7 +118,7 @@ public class Neo4jController {
 			return json.toJsonString();
 		});
 
-		// GET docs for specified parameters
+		// GET Biblical or Liturgical Texts for specified parameters
 		path = ENDPOINTS_DB_API.DOCS.pathname;
 		ControllerUtils.reportPath(logger, "GET", path);
 		get(path, (request, response) -> {
@@ -119,8 +129,7 @@ public class Neo4jController {
 			} catch (Exception e) {
 				requestor = "*";
 			}
-	//		JsonObject test = externalManager.getTextInformation(requestor, "gr_gr_cog" + request.queryParams("q"), true);
-        	return gson.toJson(externalManager.search(
+        	return gson.toJson(externalManager.searchText(
         			requestor
         			, request.queryParams("t")  // doc type (e.g. Liturgical, Biblical)
         			, request.queryParams("d")  // domain
@@ -129,6 +138,49 @@ public class Neo4jController {
         			, request.queryParams("q")  // query
         			, request.queryParams("p") // property of the doc (e.g. the ID, the value)
         			, request.queryParams("m") // matcher (e.g. contains, starts with, regex)
+        			));
+		});
+
+		// GET results of a generic record existence check
+		path = ENDPOINTS_DB_API.EXISTS.pathname;
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = "*";
+			try {
+				requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			} catch (Exception e) {
+				requestor = "*";
+			}
+        	return gson.toJson(externalManager.genericIdCheck(
+        			requestor
+        			, request.queryParams("d")  // domain aka library
+        			, request.queryParams("t")  // topic
+        			, request.queryParams("k")  // key
+        			));
+		});
+
+		// GET results of a generic search using the specified parameters
+		path = ENDPOINTS_DB_API.GENERIC.pathname;
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = "*";
+			try {
+				requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			} catch (Exception e) {
+				requestor = "*";
+			}
+        	return gson.toJson(externalManager.searchGeneric(
+        			requestor
+        			, request.queryParams("t")  // node type (the schema label)
+        			, request.queryParams("d")  // domain aka library
+        			, request.queryParams("q")  // query
+        			, request.queryParams("p") // property of the doc (e.g. the ID, the value)
+        			, request.queryParams("m") // matcher (e.g. contains, starts with, regex)
+        			, request.queryParams("l") // tags (~labels)
+        			, request.queryParams("o") // tag operator (i.e. And vs Or)
+        			, request.queryParams("r") // properties to be returned
         			));
 		});
 
@@ -321,6 +373,24 @@ public class Neo4jController {
         			).toJsonString();
 		});
 
+		// GET dropdowns for searching abbreviations
+		path = ENDPOINTS_DB_API.DROPDOWNS_ABBREVIATIONS.pathname;
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+        	return externalManager.getDropdownsForSearchingAbbreviations(requestor).toJsonString();
+		});
+
+		// GET dropdowns for searching bibliographies
+		path = ENDPOINTS_DB_API.DROPDOWNS_BIBLIOGRAPHY.pathname;
+		ControllerUtils.reportPath(logger, "GET", path);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+        	return externalManager.getDropdownsForSearchingBibliographies(requestor).toJsonString();
+		});
+
 		// GET dropdowns for searching notes
 		path = ENDPOINTS_DB_API.DROPDOWNS_NOTES.pathname;
 		ControllerUtils.reportPath(logger, "GET", path);
@@ -344,14 +414,6 @@ public class Neo4jController {
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
         	return externalManager.getTreebanksSearchDropdown().toJsonString();
-		});
-
-		// GET data for a react-bootstrap-table
-		path = ENDPOINTS_DB_API.TABLES.toLibraryPath();
-		ControllerUtils.reportPath(logger, "GET", path);
-		get(path, (request, response) -> {
-			response.type(Constants.UTF_JSON);
-        	return externalManager.getForId(SINGLETON_KEYS.TABLE_OALD_SENSES.toId()).toJsonString();
 		});
 
 		// GET dropdowns for searching relationship properties
