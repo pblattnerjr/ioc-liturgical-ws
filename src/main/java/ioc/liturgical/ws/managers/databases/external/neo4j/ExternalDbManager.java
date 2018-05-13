@@ -4,6 +4,7 @@ import java.text.Normalizer;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -3020,6 +3021,41 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return getForIdStartsWith(library + "~" + topic);
 		}
 		
+		public ResultJsonObjectArray getSuggestions(String requestor, String library) {
+			ResultJsonObjectArray result = new ResultJsonObjectArray(this.printPretty);
+			try {
+				if (internalManager.authorized(
+						requestor
+						, VERBS.GET
+						, library
+						)) {
+					ResultJsonObjectArray abbreviations = this.getForIdStartsWith(
+							library 
+							+ Constants.ID_DELIMITER 
+							+ org.ocmc.ioc.liturgical.schemas.constants.Constants.TOPIC_ABBREVIATION
+							);
+					ResultJsonObjectArray bibliography = this.getForIdStartsWith(
+							library 
+							+ Constants.ID_DELIMITER 
+							+ org.ocmc.ioc.liturgical.schemas.constants.Constants.TOPIC_BIBLIOGRAPHY_ENTRY
+							);
+					JsonObject json = new JsonObject();
+					json.add("abbreviations", abbreviations.getValuesAsJsonArray());
+					result.addValue(json);
+					json = new JsonObject();
+					json.add("bibliography", bibliography.getValuesAsJsonArray());
+					result.addValue(json);
+				} else {
+					result.setStatusCode(HTTP_RESPONSE_CODES.UNAUTHORIZED.code);
+					result.setStatusMessage(HTTP_RESPONSE_CODES.UNAUTHORIZED.message);
+				}
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+		
 		/**
 		 * Reads all the records for the specified libary and topic
 		 * and returns them as a string, that is formatted 
@@ -5021,14 +5057,13 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					formsMap.put(form.get(Constants.VALUE_SCHEMA_ID).getAsString(), form);
 				}
 				result.setResult(formsMap);
-				List<JsonObject> schemaEditorResults = new ArrayList<JsonObject>();
+				List<DropdownItem> schemaEditorFormDropdown = new ArrayList<DropdownItem>();
 				boolean hasOntology = false;
 				boolean hasBibliography = false;
 				for (org.ocmc.ioc.liturgical.schemas.constants.NEW_FORM_CLASSES_DB_API e : NEW_FORM_CLASSES_DB_API.values()) {
 					if (internalManager.userAuthorizedForThisForm(requestor, e.restriction)) {
 						if (e.includeForSchemaEditor) {
-							result.addSchemaEditorForm(new DropdownItem(e.name, e.obj.schemaIdAsString()));
-							schemaEditorResults.add(e.obj.toJsonObject());
+							schemaEditorFormDropdown.add(new DropdownItem(e.name, e.obj.schemaIdAsString()));
 							if (! hasOntology) {
 								hasOntology = e.pureOntology;
 							} else if (! hasBibliography) {
@@ -5038,10 +5073,14 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					}
 				}
 				if (hasOntology) {
-					result.addSchemaEditorForm(new DropdownItem("Ontology Entities (All)", "OntologyRoot:1.1"));
+					schemaEditorFormDropdown.add(new DropdownItem("Any Ontology Entity", "OntologyRoot:1.1"));
 				}
 				if (hasBibliography) {
-					result.addSchemaEditorForm(new DropdownItem("Bibliography Entries (All)", "Bibliography:1.1"));
+					schemaEditorFormDropdown.add(new DropdownItem("Any Bibliography Entry", "Bibliography:1.1"));
+				}
+				Collections.sort(schemaEditorFormDropdown);
+				for (DropdownItem d : schemaEditorFormDropdown) {
+					result.addSchemaEditorForm(d);
 				}
 			} catch (Exception e) {
 				result.setStatusCode(HTTP_RESPONSE_CODES.SERVER_ERROR.code);

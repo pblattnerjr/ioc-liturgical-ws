@@ -47,9 +47,11 @@ public class Neo4jController {
 	 */
 	public Neo4jController(ExternalDbManager externalManager) {
 	
+		int pCnt = 0;
 		// GET analyses for treebank matching specified parameters
 		String path = ENDPOINTS_DB_API.TREEBANKS.toLibraryTopicPath();
-		ControllerUtils.reportPath(logger, "GET", path);
+		pCnt++;
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
@@ -61,9 +63,24 @@ public class Neo4jController {
         			));
 		});
 
+		// GET suggestions, e.g. Abbreviations and Bibliography entries
+		pCnt++;
+		path = ENDPOINTS_DB_API.SUGGESTIONS.pathname;
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+        	return gson.toJson(
+        			externalManager.getSuggestions(
+        					requestor
+        					, request.queryParams("d")
+        					)
+        			);
+		});
 		// GET generate Text downloads for specified parameters
+		pCnt++;
 		path = ENDPOINTS_DB_API.LITURGICAL_TEXT_DOWNLOADS.toLibraryTopicKeyPath();
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
@@ -79,8 +96,9 @@ public class Neo4jController {
 		});
 
 		// GET template by ID
+		pCnt++;
 		path = ENDPOINTS_DB_API.TEMPLATES.toLibraryTopicKeyPath();
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
@@ -95,8 +113,9 @@ public class Neo4jController {
 		});
 		
 		// GET system table by id 
+		pCnt++;
 		path = ENDPOINTS_DB_API.TABLES.toLibraryTopicKeyPath();
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String id = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
@@ -104,23 +123,10 @@ public class Neo4jController {
 		});
 
 
-		path = ENDPOINTS_DB_API.DOCS.toLibraryTopicKeyPath();
-		ControllerUtils.reportPath(logger, "GET", path);
-		get(path, (request, response) -> {
-			response.type(Constants.UTF_JSON);
-			String id = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
-			ResultJsonObjectArray json = externalManager.getForId(id);
-			if (json.valueCount > 0) {
-				response.status(HTTP_RESPONSE_CODES.OK.code);
-			} else {
-				response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
-			}
-			return json.toJsonString();
-		});
-
 		// GET Biblical or Liturgical Texts for specified parameters
+		pCnt++;
 		path = ENDPOINTS_DB_API.DOCS.pathname;
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String requestor = "*";
@@ -142,8 +148,9 @@ public class Neo4jController {
 		});
 
 		// GET results of a generic record existence check
+		pCnt++;
 		path = ENDPOINTS_DB_API.EXISTS.pathname;
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String requestor = "*";
@@ -161,8 +168,9 @@ public class Neo4jController {
 		});
 
 		// GET results of a generic search using the specified parameters
+		pCnt++;
 		path = ENDPOINTS_DB_API.GENERIC.pathname;
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String requestor = "*";
@@ -185,8 +193,9 @@ public class Neo4jController {
 		});
 
 		// GET ontology entries for specified parameters
+		pCnt++;
 		path = ENDPOINTS_DB_API.ONTOLOGY.pathname;
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String requestor = "*";
@@ -208,8 +217,9 @@ public class Neo4jController {
 		});
 
 		// GET text analysis for specified ID
+		pCnt++;
 		path = ENDPOINTS_DB_API.TEXT_ANALYSIS.toLibraryPath();
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
@@ -218,8 +228,9 @@ public class Neo4jController {
 		});
 
 		// GET all notes for a user
+		pCnt++;
 		path = ENDPOINTS_DB_API.NOTES.toLibraryPath();
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
@@ -233,8 +244,9 @@ public class Neo4jController {
 		});
 
 		// GET notes matching specified parameters
+		pCnt++;
 		path = ENDPOINTS_DB_API.NOTES.pathname;
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
@@ -251,8 +263,9 @@ public class Neo4jController {
 		});
 
 		// GET template or template sections matching specified parameters
+		pCnt++;
 		path = ENDPOINTS_DB_API.TEMPLATES.pathname;
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
@@ -268,8 +281,9 @@ public class Neo4jController {
 		});
 
 		// GET analyses for treebank matching specified parameters
+		pCnt++;
 		path = ENDPOINTS_DB_API.TREEBANKS.pathname;
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
@@ -288,8 +302,9 @@ public class Neo4jController {
 		 * provides a list of available REST endpoints (i.e. resources)
 		 * @param storeManager
 		 */
+		pCnt++;
 		path = ENDPOINTS_DB_API.NEW.toLibraryPath();
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
@@ -304,8 +319,9 @@ public class Neo4jController {
 		});
 
 		// GET domain dropdown lists for specified user
+		pCnt++;
 		path = Constants.EXTERNAL_DATASTORE_API_PATH  + "/dropdowns/domains/*";
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String user = request.splat()[0];
@@ -313,16 +329,18 @@ public class Neo4jController {
 		});
 
 		// GET domains as a dropdown list
+		pCnt++;
 		path = Constants.EXTERNAL_DATASTORE_API_PATH  + "/dropdowns/domains";
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
         	return externalManager.getDropdownItemsForSearchingText().toString();
 		});
 
 		// GET gr_gr_cog topics as a dropdown list
-		path = ENDPOINTS_DB_API.DROPDOWNS_GR_LIB_TOPICS.pathname;
-		ControllerUtils.reportPath(logger, "GET", path);
+		pCnt++;
+	path = ENDPOINTS_DB_API.DROPDOWNS_GR_LIB_TOPICS.pathname;
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
         	return externalManager.getTopicsDropdown().toJsonString();
@@ -330,8 +348,9 @@ public class Neo4jController {
 
 		// GET keys and values for specified topic and specified libraries
 		// Used by client side Parallel Column Text Editor (ParaColTextEditor)
+		pCnt++;
 		path = ENDPOINTS_DB_API.VIEW_TOPIC.toLibraryPath();
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String[] libraries = null;
@@ -348,24 +367,27 @@ public class Neo4jController {
 		});
 
 		// GET dropdowns for searching docs of type text
+		pCnt++;
 		path = ENDPOINTS_DB_API.DROPDOWNS_TEXTS.pathname;
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
         	return externalManager.getDropdownItemsForSearchingText().toString();
 		});
 
 		// GET dropdowns for searching ontology properties
-		path = ENDPOINTS_DB_API.DROPDOWNS_ONTOLOGY.pathname;
-		ControllerUtils.reportPath(logger, "GET", path);
+		pCnt++;
+	path = ENDPOINTS_DB_API.DROPDOWNS_ONTOLOGY.pathname;
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
         	return externalManager.getOntologySearchDropdown().toJsonString();
 		});
 
 		// GET dropdowns for searching ontology properties
+		pCnt++;
 		path = ENDPOINTS_DB_API.DROPDOWNS_ONTOLOGY_ENTITIES.pathname;
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
         	return externalManager.getOntologyEntitiesDropdown(
@@ -374,8 +396,9 @@ public class Neo4jController {
 		});
 
 		// GET dropdowns for searching abbreviations
+		pCnt++;
 		path = ENDPOINTS_DB_API.DROPDOWNS_ABBREVIATIONS.pathname;
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
@@ -383,8 +406,9 @@ public class Neo4jController {
 		});
 
 		// GET dropdowns for searching bibliographies
+		pCnt++;
 		path = ENDPOINTS_DB_API.DROPDOWNS_BIBLIOGRAPHY.pathname;
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
@@ -392,8 +416,9 @@ public class Neo4jController {
 		});
 
 		// GET dropdowns for searching notes
+		pCnt++;
 		path = ENDPOINTS_DB_API.DROPDOWNS_NOTES.pathname;
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
@@ -401,32 +426,36 @@ public class Neo4jController {
 		});
 
 		// GET dropdowns for searching templates
+		pCnt++;
 		path = ENDPOINTS_DB_API.DROPDOWNS_TEMPLATES.pathname;
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
         	return externalManager.getTemplatesSearchDropdown().toJsonString();
 		});
 
 		// GET dropdowns for searching treebank
+		pCnt++;
 		path = ENDPOINTS_DB_API.DROPDOWNS_TREEBANKS.pathname;
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
         	return externalManager.getTreebanksSearchDropdown().toJsonString();
 		});
 
 		// GET dropdowns for searching relationship properties
+		pCnt++;
 		path = ENDPOINTS_DB_API.DROPDOWNS_RELATIONSHIPS.pathname;
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
         	return externalManager.getRelationshipSearchDropdown().toJsonString();
 		});
 
 		// GET link (relationships) for specified /library/topic/key
+		pCnt++;
 		path = ENDPOINTS_DB_API.LINKS.toLibraryTopicKeyPath();
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
 			String library = request.splat()[0];
@@ -442,8 +471,9 @@ public class Neo4jController {
 		});
 
 		// GET links (relationships) for specified parameters
+		pCnt++;
 		path = ENDPOINTS_DB_API.LINKS.pathname;
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String requestor = "*";
@@ -466,17 +496,19 @@ public class Neo4jController {
 		});
 
 		// GET AGES index table data
+		pCnt++;
 		path = ENDPOINTS_DB_API.AGES_INDEX.pathname;
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
         	return externalManager.getAgesIndexTableData(
         			).toJsonString();
 		});
 
-		// GET AGES template created from the specified url parameter
-		path = ENDPOINTS_DB_API.AGES_REACT_TEMPLATE.toLibraryPath();
-		ControllerUtils.reportPath(logger, "GET", path);
+		// GET AGES AGES REACT TEMPLATE 
+		pCnt++;
+		path = ENDPOINTS_DB_API.AGES_REACT_TEMPLATE.pathname;
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
         	return externalManager.getAgesLDOM(
@@ -486,8 +518,9 @@ public class Neo4jController {
 		});
 
 		// GET AGES read only template created from the specified url parameter
+		pCnt++;
 		path = ENDPOINTS_DB_API.AGES_READ_ONLY_TEMPLATE.toLibraryPath();
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
@@ -504,8 +537,9 @@ public class Neo4jController {
 		});
 
 		// GET PDF generated from an AGES HTML file using the specified url parameter
+		pCnt++;
 		path = ENDPOINTS_DB_API.PDF.pathname;
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			  try {
       				String id = request.queryParams("id");
@@ -550,8 +584,9 @@ public class Neo4jController {
 		});
 
 		// GET TEX generated from an AGES HTML file using the specified url parameter
+		pCnt++;
 		path = ENDPOINTS_DB_API.TEX.pathname;
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			  try {
       				String id = request.queryParams("id");
@@ -580,8 +615,9 @@ public class Neo4jController {
 		});
 
 		// GET the user's personal library as a json string
+		pCnt++;
 		path = ENDPOINTS_DB_API.USER_DOCS.pathname;
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
@@ -589,8 +625,9 @@ public class Neo4jController {
 		});
 
 		// GET LDOM
+		pCnt++;
 		path = ENDPOINTS_DB_API.LITURGICAL_DOCUMENT_OBJECT_MODEL.toLibraryPath();
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
@@ -608,8 +645,9 @@ public class Neo4jController {
 		});
 
 		// Get forms for creating new instances of nodes and relationships
+		pCnt++;
 		path = ENDPOINTS_DB_API.NEW.toLibraryPath();
-		ControllerUtils.reportPath(logger, "GET", path);
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
@@ -621,6 +659,21 @@ public class Neo4jController {
 				response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 			}
 			return json.toString();
+		});
+
+		pCnt++;
+		path = ENDPOINTS_DB_API.DOCS.toLibraryTopicKeyPath();
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String id = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
+			ResultJsonObjectArray json = externalManager.getForId(id);
+			if (json.valueCount > 0) {
+				response.status(HTTP_RESPONSE_CODES.OK.code);
+			} else {
+				response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
+			}
+			return json.toJsonString();
 		});
 
 		// DELETE relationship for parameter id, where id is the id of the properties in the relationship itself.

@@ -1004,8 +1004,6 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			UserStatistics stats = new UserStatistics();
 			addUserStats(user.getUsername(),stats);
 
-			// TODO delete the following
-
 			// add domain for Commonly Used Greek text
 			DomainCreateForm domain = new DomainCreateForm();
 			domain.setLanguageCode("gr");
@@ -1185,8 +1183,33 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			domain.setCountryCode("sys");
 			domain.setRealm("linguistics");
 			domain.setDescription("System linguistics entries");
+			labels = new ArrayList<String>();
+			labels.add("System");
 			domain.setLabels(labels);
 			domain.setType(DOMAIN_TYPES.COLLECTIVE);
+			addDomain(wsAdmin, domain.toJsonString());
+			
+			// add domain for system abbreviations
+			domain = new DomainCreateForm();
+			domain.setLanguageCode("en");
+			domain.setCountryCode("sys");
+			domain.setRealm("abbreviations");
+			domain.setDescription("System abbreviations");
+			labels = new ArrayList<String>();
+			labels.add("System");
+			domain.setLabels(labels);
+			addDomain(wsAdmin, domain.toJsonString());
+
+
+			// add domain for system Bibliography entries
+			domain = new DomainCreateForm();
+			domain.setLanguageCode("en");
+			domain.setCountryCode("sys");
+			domain.setRealm("bibliography");
+			domain.setDescription("System bibliography entries");
+			labels = new ArrayList<String>();
+			labels.add("System");
+			domain.setLabels(labels);
 			addDomain(wsAdmin, domain.toJsonString());
 
 			logger.info("domains added");
@@ -1196,7 +1219,6 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			String linguisticsDomain = "en_sys_linguistics";
 			String ontologyDomain = "en_sys_ontology";
 			String ocmcDomain = "en_us_ocmc";
-			String greekDomain = "gr_gr_cog";
 			
 			// add Fr. Pentiuc if he is not in the database
 			String username = "frepentiuc";
