@@ -44,14 +44,9 @@ public class PdfGenerationTask implements Runnable {
 	
 	@Override
 	public void run() {
-//		String command = this.dockerPath + "docker run --rm -v " + Constants.PDF_FOLDER + ":/data macolburn/xelatex:1.0.0 make";
 		MetaTemplateToPdf metaTemplateToPdf = new MetaTemplateToPdf(this.template);
 		FileUtils.writeFile(Constants.PDF_FOLDER + "/" + this.pdfId + ".tex", metaTemplateToPdf.getTexFileContent().toString());
-		List<String> commands = new ArrayList<String>();
-		String command = "cd " + Constants.PDF_FOLDER + " && xelatex " + this.pdfId + ".tex";
-		commands.add(command);
-		String result = this.executeCommandProcessor(Constants.PDF_FOLDER + "/makepdf", this.pdfId + ".tex", Constants.PDF_FOLDER);
-	//	result = this.executeCommandProcessor(Constants.PDF_FOLDER + "/makepdf", this.pdfId + ".tex", Constants.PDF_FOLDER);
+		String result = this.executeCommandProcessor(Constants.PDF_FOLDER + "/makepdf", this.pdfId, Constants.PDF_FOLDER);
 		if (result != null && result.length() > 0) {
 			System.out.println(result);
 		}

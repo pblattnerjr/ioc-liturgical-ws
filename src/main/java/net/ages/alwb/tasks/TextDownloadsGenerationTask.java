@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import ioc.liturgical.ws.constants.Constants;
+import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import org.ocmc.ioc.liturgical.utils.FileUtils;
@@ -17,9 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonObject;
 
-import net.ages.alwb.utils.transformers.adapters.MetaTemplateToPdf;
 import net.ages.alwb.utils.transformers.adapters.TextInformationToPdf;
-import net.ages.alwb.utils.transformers.adapters.models.LDOM;
 
 /**
  * Runs a task (separate thread) to generate the Xelatex content for
@@ -34,6 +33,7 @@ public class TextDownloadsGenerationTask implements Runnable {
 	String textId = "";
 	String dockerPath = "/usr/local/bin/";
 	Map<String,String> domainMap = null;
+	ExternalDbManager dbManager = null;
 	
 	/**
 	 * 
@@ -45,11 +45,13 @@ public class TextDownloadsGenerationTask implements Runnable {
 			, String pdfId
 			, String textId
 			, Map<String,String> domainMap
+			, ExternalDbManager dbManager
 			) {
 		this.jsonObject = jsonObject;
 		this.pdfId = pdfId;
 		this.textId = textId;
 		this.domainMap = domainMap;
+		this.dbManager = dbManager;
 	}
 	
 	@Override
@@ -59,16 +61,24 @@ public class TextDownloadsGenerationTask implements Runnable {
 				this.jsonObject
 				, this.textId
 				, this.domainMap
+				, this.dbManager
+				, this.pdfId
 				);
+		if (textInfoToPdf.hasBibliography()) {
+			FileUtils.writeFile(Constants.PDF_FOLDER + "/" + this.pdfId + ".bib", textInfoToPdf.getBibtexFileSb().toString());
+		}
 		FileUtils.writeFile(Constants.PDF_FOLDER + "/" + this.pdfId + ".tex", textInfoToPdf.getTexFileContent().toString());
-		List<String> commands = new ArrayList<String>();
-		String command = "cd " + Constants.PDF_FOLDER + " && xelatex " + this.pdfId + ".tex";
-		commands.add(command);
-		String result = this.executeCommandProcessor(Constants.PDF_FOLDER + "/makepdf", this.pdfId + ".tex", Constants.PDF_FOLDER);
-	//	result = this.executeCommandProcessor(Constants.PDF_FOLDER + "/makepdf", this.pdfId + ".tex", Constants.PDF_FOLDER);
+		String command = Constants.PDF_FOLDER;
+		if (textInfoToPdf.hasBibliography()) {
+			command = command + "/makepdfwithbib";
+		} else {
+			command = command + "/makepdf";
+		}
+		 String result = this.executeCommandProcessor(command, this.pdfId, Constants.PDF_FOLDER); 
 		if (result != null && result.length() > 0) {
 			System.out.println(result);
 		}
+		
 	}
 	
 	private synchronized String executeCommandProcessor(String command, String file, String dir) {

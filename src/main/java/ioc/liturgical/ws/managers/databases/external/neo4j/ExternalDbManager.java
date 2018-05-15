@@ -471,6 +471,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 							, pdfId
 							, id
 							, domainMap
+							, this
 							)
 					);
 			executorService.shutdown();
@@ -5073,7 +5074,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					}
 				}
 				if (hasOntology) {
-					schemaEditorFormDropdown.add(new DropdownItem("Any Ontology Entity", "OntologyRoot:1.1"));
+					schemaEditorFormDropdown.add(new DropdownItem("Any Ontology Entity", "en_sys_ontology"));
 				}
 				if (hasBibliography) {
 					schemaEditorFormDropdown.add(new DropdownItem("Any Bibliography Entry", "Bibliography:1.1"));

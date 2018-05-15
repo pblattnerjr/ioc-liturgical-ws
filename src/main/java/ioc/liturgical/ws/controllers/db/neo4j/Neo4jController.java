@@ -519,7 +519,7 @@ public class Neo4jController {
 
 		// GET AGES read only template created from the specified url parameter
 		pCnt++;
-		path = ENDPOINTS_DB_API.AGES_READ_ONLY_TEMPLATE.toLibraryPath();
+		path = ENDPOINTS_DB_API.AGES_READ_ONLY_TEMPLATE.pathname;
 		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);

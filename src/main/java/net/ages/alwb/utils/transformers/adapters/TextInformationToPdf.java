@@ -1,5 +1,6 @@
 package net.ages.alwb.utils.transformers.adapters;
 
+import java.net.URL;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -9,11 +10,22 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.select.Elements;
 import org.ocmc.ioc.liturgical.schemas.constants.NOTE_TYPES;
+import org.ocmc.ioc.liturgical.schemas.constants.SCHEMA_CLASSES;
 import org.ocmc.ioc.liturgical.schemas.constants.nlp.DEPENDENCY_LABELS;
 import org.ocmc.ioc.liturgical.schemas.constants.nlp.GRAMMAR_ABBREVIATIONS;
+import org.ocmc.ioc.liturgical.schemas.models.abbreviations.Abbreviation;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.TokenAnalysis;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.notes.TextualNote;
+import org.ocmc.ioc.liturgical.schemas.models.supers.BibliographyEntry;
+import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDb;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,39 +35,16 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
+import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 import net.ages.alwb.utils.oslw.OslwUtils;
 
 /**
- * Liturgical books and services are provided by AGES Initiatives as
- * html and PDF files, and by OSLW as PDF files.
- * 
- * For both AGES and OSLW, template files are created that specify
- * the order of information and its formatting.  The information is 
- * retrieved using the combination of a domain, topic, and key.
- * 
- * A meta template can be created from the AGES HTML files, or from the OSLO tex files.
- *  
- * Such a meta template is used by this class to create a PDF file.
- *  
- * This class reads a json string encoding the meta Template for a liturgical book or service,
- * generates OSLO files from the metadata,
- * calls Xelatex to generate a PDF file
- * and returns the path to the file.
- * 
- * The generated PDF can have one, two, or three columns.
- * If one column, there is only a left library to be used.
- * If two columns, there is a left and right library to be used.
- * If three columns, there is a left, center, and right library to be used.
- * There are also 'fallback' libraries that can be specified.  That is,
- * if a specified library does not contain the required topic/key, then
- * the fallback library will be searched.
- * 
- * If the language = English, if the fallback is not found, it will default to AGES_ENGLISH,
- * i.e. en_us_dedes.
- * 
- * Otherwise, if the fallback is not found, it will use gr_gr_cog.
- * 
+ * This class creates a .tex file and a .bib file (if there are citations) to be
+ * written to disk and then processed by Xelatex.  Since there could be
+ * a bibliography, it is necessary to run xelatex, then biber, then xelatex again.
+ * These are all combined in the script makepdf, which is placed in the data
+ * directory where the .tex and .bib files are written to. 
  */
 
 public class TextInformationToPdf {
@@ -65,29 +54,88 @@ public class TextInformationToPdf {
 	private String textId = "";
 	private JsonObject jsonObject = null;
 	private StringBuffer texFileSb = new StringBuffer(); // latex tex file content
+	private StringBuffer bibtexFileSb = new StringBuffer(); // latex tex file content
 	private Gson gson = new Gson();
 	private Map<String,List<TokenAnalysis>> map = new TreeMap<String,List<TokenAnalysis>>();
 	private JsonArray nodes = null;
 	private JsonArray tokens = null;
 	private Map<String,String> abbr = new TreeMap<String,String>();
+	private Map<String,JsonObject> abbrJsonStrings = new TreeMap<String,JsonObject>();
+	private Map<String,JsonObject> biblioJsonStrings = new TreeMap<String,JsonObject>();
 	private Map<String,String> usedAbbreviations = new TreeMap<String,String>();
 	private List<TextualNote> notesList = new ArrayList<TextualNote>();
 	private List<TextualNote> summaryList = new ArrayList<TextualNote>();
+	private List<Abbreviation> notesAbbreviationList = new ArrayList<Abbreviation>();
+	private List<BibliographyEntry> notesBibliographyList = new ArrayList<BibliographyEntry>();
 	private Map<String,String> domainMap = null;
+	private ExternalDbManager dbManager = null;
+	private String fileId = "";
+	private boolean hasBibliography = false;
 	
 	public TextInformationToPdf (
 			JsonObject jsonObject
 			, String textId
 			, Map<String,String> domainMap
+			, ExternalDbManager dbManager
+			, String fileId
 			)   throws JsonParseException {
 		this.jsonObject = jsonObject;
 		this.textId = textId;
 		this.domainMap =  domainMap;
+		this.dbManager = dbManager;
+		this.fileId = fileId;
 		this.process();
 	}
 	
+	private String getBibResource() {
+		StringBuffer sb = new StringBuffer();
+		sb.append("\\begin{filecontents}{refs.bib}\n");
+		for (JsonObject json: this.biblioJsonStrings.values()) {
+			try {
+				BibliographyEntry record = 
+						 (BibliographyEntry) gson.fromJson(
+						json.toString()
+						, SCHEMA_CLASSES
+							.classForSchemaName(
+									json.get("_valueSchemaId").getAsString())
+									.ltkDb.getClass()
+				);
+				String bibTex = record.toBibtex();
+				sb.append(bibTex);
+				sb.append("%\n");
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+		}
+		sb.append("\\end{filecontents}%\n\n");
+		return sb.toString();
+	}
+	
+	private String createBibFileContent() {
+		StringBuffer sb = new StringBuffer();
+		for (JsonObject json: this.biblioJsonStrings.values()) {
+			try {
+				BibliographyEntry record = 
+						 (BibliographyEntry) gson.fromJson(
+						json.toString()
+						, SCHEMA_CLASSES
+							.classForSchemaName(
+									json.get("_valueSchemaId").getAsString())
+									.ltkDb.getClass()
+				);
+				String bibTex = record.toBibtex();
+				sb.append(bibTex);
+				sb.append("\n");
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+		}
+		return sb.toString();
+	}
+
 	public void process() {
 		IdManager idManager = new IdManager(this.textId);
+
 		this.texFileSb.append("\\documentclass[extrafontsizes,12pt]{memoir}\n");
 		this.texFileSb.append("\\usepackage{multicol}%\n");
 		this.texFileSb.append("\\usepackage{system/ocmc-grammar}%\n");
@@ -95,13 +143,24 @@ public class TextInformationToPdf {
 		this.texFileSb.append("\\input{system/control} %\n");
 		this.texFileSb.append("\\usepackage[defaultlines=4,all]{nowidow}%\n");
 		
-		this.texFileSb.append("\\begin{document}%\n");
-		this.texFileSb.append("\\mainmatter%\n");
-
 		this.loadAbbreviations();
 		this.loadGrammar();
 		this.loadNotes();
 		
+		this.hasBibliography = this.biblioJsonStrings.size() > 0;
+		if (this.hasBibliography) {
+			this.hasBibliography = true;
+			this.texFileSb.append("\\addbibresource{");
+			this.texFileSb.append(this.fileId);
+			this.texFileSb.append(".bib}%\n\n");
+			this.bibtexFileSb.append(this.createBibFileContent());
+//			this.texFileSb.append(this.getBibResource());
+		}
+		
+		this.texFileSb.append("\\begin{document}%\n");
+		this.texFileSb.append("\\mainmatter%\n");
+		this.texFileSb.append("\\selectlanguage{english}\n");
+
 		// add the values for the titles
 		String title = this.tokens.get(0).getAsString() + " " + this.tokens.get(1).getAsString();
 		this.texFileSb.append(OslwUtils.getOslwTitleResources(
@@ -132,11 +191,18 @@ public class TextInformationToPdf {
 		this.texFileSb.append(this.getDependencyDiagramAsLatex());
 		this.texFileSb.append(this.getAbbreviationsAsLatex());
 		
+		if (this.hasBibliography) {
+			this.texFileSb.append("\n\\vfill%\n");
+			this.texFileSb.append("\\pagebreak%\n");
+			this.texFileSb.append("\\chapter*{Bibliography}\n\n");
+			this.texFileSb.append("\\selectlanguage{english}\n");
+			this.texFileSb.append("\\printbibliography[heading=bibempty]\n");
+			}
 		// close out the generation
 		this.texFileSb.append(
 				"\n\n\\tiny\\textit{Generated ");
 		this.texFileSb.append(ZonedDateTime.now(ZoneOffset.UTC));
-		this.texFileSb.append(" (Universal Time)  using liturgical software from the Orthodox Christian Mission Center (OCMC), St. Augustine, FL, USA.}%\n");
+		this.texFileSb.append(" (Universal Time)  using liturgical software from the Orthodox Christian Mission Center (OCMC), St. Augustine, FL, USA. Glory to God! Δόξα σοι, ὁ Θεὸς ἡμῶν· δόξα σοι! }%\n");
 		this.texFileSb.append("\n\\vfill%\n");
 		this.texFileSb.append("\\pagebreak%\n");
 		this.texFileSb.append("\\end{document}%\n");
@@ -474,17 +540,69 @@ public class TextInformationToPdf {
 	}
 	
 	private String htmlToLatex(String html) {
-		html = html.replaceAll("<p>", "");
-		html = html.replaceAll("</p>", "\n");
-		html = html.replaceAll("<em>", "\\\\textit{");
-		html = html.replaceAll("</em>", "}");
-		html = html.replaceAll("<strong>", "\\\\textbf{");
-		html = html.replaceAll("</strong>", "}");
-		html = html.replaceAll("<ins>", "\\\\underline{");
-		html = html.replaceAll("</ins>", "}");
-		html = html.replaceAll("&nbsp;", " ");
+		try {
+			// process the anchors, which represent an abbreviation or a citation
+			Document doc = Jsoup.parse(html);
+			Elements anchors = doc.select("a");
+			for (Element anchor : anchors) {
+				String id = anchor.attr("href");
+				if (id.startsWith("http")) {
+					URL url = new URL(id);
+					id = url.getPath().substring(1);
+				}
+				String dataValue = anchor.attr("data-value");
+				IdManager idManager = new IdManager(id);
+				switch (idManager.getTopic()) {
+				case ("abbreviation"): {
+					if (! this.abbrJsonStrings.containsKey(id)) {
+						try {
+							ResultJsonObjectArray queryResult = this.dbManager.getForId(id);
+							if (queryResult.valueCount > 0) {
+								this.abbrJsonStrings.put(id, queryResult.getFirstObjectValueAsObject());
+							}
+						} catch (Exception e) {
+							ErrorUtils.report(logger, e, id + " not found");
+						}
+					}
+					break;
+				}
+				case ("biblioentry"): {
+					if (! this.biblioJsonStrings.containsKey(id)) {
+						try {
+							ResultJsonObjectArray queryResult = this.dbManager.getForId(id);
+							if (queryResult.valueCount > 0) {
+								this.biblioJsonStrings.put(id, queryResult.getFirstObjectValueAsObject());
+							}
+						} catch (Exception e) {
+							ErrorUtils.report(logger, e, id + " not found");
+						}
+					}
+					break;
+				}
+				default: {
+					// TODO
+				}
+				}
+				// convert to latex citation
+				anchor.tagName("span");
+				anchor.text("\\cite{" + dataValue + "}");
+			}
+			html = doc.html();
+			html = html.replaceAll("<p>", "");
+			html = html.replaceAll("</p>", "\n");
+			html = html.replaceAll("<em>", "\\\\textit{");
+			html = html.replaceAll("</em>", "}");
+			html = html.replaceAll("<strong>", "\\\\textbf{");
+			html = html.replaceAll("</strong>", "}");
+			html = html.replaceAll("<ins>", "\\\\underline{");
+			html = html.replaceAll("</ins>", "}");
+			html = html.replaceAll("&nbsp;", " ");
+		} catch (Exception e) {
+			ErrorUtils.report(logger, e);
+		}
 		return html;
 	}
+	
 	private String getNoteAsLatexForNonRef(
 			TextualNote note
 			, boolean lexical
@@ -620,6 +738,22 @@ public class TextInformationToPdf {
 
 	public void setTexFileContent(StringBuffer resFileSb) {
 		this.texFileSb = resFileSb;
+	}
+
+	public boolean hasBibliography() {
+		return hasBibliography;
+	}
+
+	public void setHasBibliography(boolean hasBibliography) {
+		this.hasBibliography = hasBibliography;
+	}
+
+	public StringBuffer getBibtexFileSb() {
+		return bibtexFileSb;
+	}
+
+	public void setBibtexFileSb(StringBuffer bibtexFileSb) {
+		this.bibtexFileSb = bibtexFileSb;
 	}
 
 
