@@ -87,6 +87,57 @@ public class TextInformationToPdf {
 		this.process();
 	}
 	
+	public List<TextualNote> sortNotes(List<TextualNote> list) {
+		List<TextualNote> result = new ArrayList<TextualNote>();
+		Map<String, List<String>> noteFollowers = new TreeMap<String,List<String>>();
+		Map<String, TextualNote> noteMap = new TreeMap<String,TextualNote>();
+		
+		// create the maps
+		for (TextualNote note : list) {
+			noteMap.put(note.id, note);
+			String follows = "Root";
+			if (note.followsNoteId.length() > 0) {
+				follows = note.followsNoteId;
+			}
+			List<String> followers = new ArrayList<String>();
+			if (noteFollowers.containsKey(follows)) {
+				followers = noteFollowers.get(follows);
+			}
+			followers.add(note.getId());
+			noteFollowers.put(follows, followers);
+		}
+		// create the sorted result
+		List<String> followers = this.getFollowers("Root", noteFollowers);
+		int counter = 1;
+		for (String id : followers) {
+			TextualNote note = noteMap.get(id);
+			note.adhocSortKey = String.format("%03d", counter);
+			result.add(note);
+			counter++;
+		}
+		return result;
+	}
+	
+	// makes a recursive call
+	public List<String> getFollowers(String forId, Map<String,List<String>> map) {
+		List<String> result = new ArrayList<String>();
+		if (map.containsKey(forId)) {
+			List<String> followers = map.get(forId);
+			if (followers != null) {
+				for (String follower : followers) {
+					if (! result.contains(follower)) { // just in case this is cyclical instead of a linked list
+						result.add(follower);
+						List<String> moreFollowers = this.getFollowers(follower, map);
+						for (String id : moreFollowers) {
+							result.add(id);
+						}
+					}
+				}
+			}
+		}
+		return result;
+	}
+
 	private String getBibResource() {
 		StringBuffer sb = new StringBuffer();
 		sb.append("\\begin{filecontents}{refs.bib}\n");
@@ -437,19 +488,20 @@ public class TextInformationToPdf {
 	}
 	
 	private void loadNotes() {
+		List<TextualNote> list = new ArrayList<TextualNote>();
 		for (JsonElement e : this.jsonObject.get("textNotes").getAsJsonArray()) {
 			TextualNote note = this.gson.fromJson(
 					e.getAsJsonObject().get("properties(to)").getAsJsonObject()
 					, TextualNote.class
 					);
-//			note.setValueFormatted(note.getValueFormatted());
 			note.setValueFormatted(this.htmlToLatex(note.getValueFormatted()));
 			if (note.getNoteType() == NOTE_TYPES.UNIT) {
 				this.summaryList.add(note);
 			} else {
-				this.notesList.add(note);
+				list.add(note);
 			}
 		}
+		this.notesList = this.sortNotes(list); // sorts using the followsNoteId property
 	}
 
 	private String processNotesByType() {
@@ -457,7 +509,7 @@ public class TextInformationToPdf {
 		NOTE_TYPES currentType = null;
 		Collections.sort(
 				this.notesList
-				, TextualNote.noteTypeLiturgicalScopeComparator);
+				, TextualNote.noteTypeAdHocComparator);
 		for (TextualNote note : this.notesList) {
 			if (note.getValue().contains("opposing the people of Israel were")) {
 				System.out.print("");

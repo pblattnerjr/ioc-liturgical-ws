@@ -3,12 +3,15 @@ package net.ages.alwb.tasks;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import ioc.liturgical.ws.constants.Constants;
+import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 
+import org.ocmc.ioc.liturgical.schemas.models.generation.GenerationStatus;
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import org.ocmc.ioc.liturgical.utils.FileUtils;
 import org.slf4j.Logger;
@@ -44,11 +47,20 @@ public class PdfGenerationTask implements Runnable {
 	
 	@Override
 	public void run() {
-		MetaTemplateToPdf metaTemplateToPdf = new MetaTemplateToPdf(this.template);
-		FileUtils.writeFile(Constants.PDF_FOLDER + "/" + this.pdfId + ".tex", metaTemplateToPdf.getTexFileContent().toString());
-		String result = this.executeCommandProcessor(Constants.PDF_FOLDER + "/makepdf", this.pdfId, Constants.PDF_FOLDER);
-		if (result != null && result.length() > 0) {
-			System.out.println(result);
+		try {
+			GenerationStatus genStatus = new GenerationStatus(this.pdfId, GenerationStatus.TYPE.PDF);
+			genStatus.setStart(Instant.now().toString());
+			ExternalDbManager.GENERATOR_STATUS.put(this.pdfId, genStatus);
+			MetaTemplateToPdf metaTemplateToPdf = new MetaTemplateToPdf(this.template);
+			FileUtils.writeFile(Constants.PDF_FOLDER + "/" + this.pdfId + ".tex", metaTemplateToPdf.getTexFileContent().toString());
+			String result = this.executeCommandProcessor(Constants.PDF_FOLDER + "/makepdf", this.pdfId, Constants.PDF_FOLDER);
+			if (result != null && result.length() > 0) {
+				System.out.println(result);
+				genStatus.setFinish(Instant.now().toString());
+				ExternalDbManager.GENERATOR_STATUS.put(this.pdfId, genStatus);
+			}
+		} catch (Exception e) {
+			ErrorUtils.report(logger, e);
 		}
 	}
 	

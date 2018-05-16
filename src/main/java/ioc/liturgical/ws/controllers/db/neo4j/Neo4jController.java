@@ -63,6 +63,20 @@ public class Neo4jController {
         			));
 		});
 
+		// GET Generation status
+		pCnt++;
+		path = ENDPOINTS_DB_API.GENERATION_STATUS.pathname;
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+        	return gson.toJson(
+        			externalManager.getGenerationStatus(
+        					requestor
+        					, request.queryParams("i")
+        					)
+        			);
+		});
 		// GET suggestions, e.g. Abbreviations and Bibliography entries
 		pCnt++;
 		path = ENDPOINTS_DB_API.SUGGESTIONS.pathname;
@@ -546,7 +560,7 @@ public class Neo4jController {
 			        Path filePath = Paths.get(Constants.PDF_FOLDER + "/" + id + ".pdf");
 			        File file = new File(Constants.PDF_FOLDER + "/" + id + ".pdf");
 			        if (! file.exists()) { // wait because the pdf still might be generating
-			        	long millis =  15000; // 60000 = 1 minute
+			        	long millis =  30000; // 60000 = 1 minute
 			        	for (int i = 0; i < 5; i++) {
 			        		Thread.sleep(millis);
 			        		if (file.exists()) {
@@ -593,7 +607,7 @@ public class Neo4jController {
 			        Path filePath = Paths.get(Constants.PDF_FOLDER + "/" + id + ".tex");
 			        File file = new File(Constants.PDF_FOLDER + "/" + id + ".tex");
 			        if (! file.exists()) { // wait because the pdf still might be generating
-			        	long millis =  15000; // 60000 = 1 minute
+			        	long millis =  30000; // 60000 = 1 minute
 			        	for (int i = 0; i < 5; i++) {
 			        		Thread.sleep(millis);
 			        		if (file.exists()) {

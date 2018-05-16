@@ -90,6 +90,7 @@ import org.ocmc.ioc.liturgical.schemas.models.db.docs.templates.Template;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.templates.TemplateNode;
 import org.ocmc.ioc.liturgical.schemas.models.db.internal.LTKVJsonObject;
 import org.ocmc.ioc.liturgical.schemas.models.forms.ontology.TextLiturgicalTranslationCreateForm;
+import org.ocmc.ioc.liturgical.schemas.models.generation.GenerationStatus;
 import org.ocmc.ioc.liturgical.schemas.models.messaging.Message;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTK;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDb;
@@ -166,6 +167,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	private String runningUtilityName = "";
 	public Gson gson = new Gson();
 	private String adminUserId = "";
+	
+	public static Map<String, GenerationStatus> GENERATOR_STATUS = new TreeMap<String,GenerationStatus>();
 
 	  JsonParser parser = new JsonParser();
 	  Pattern punctPattern = Pattern.compile("[˙·,.;!?(){}\\[\\]<>%]"); // punctuation 
@@ -3020,6 +3023,51 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		 */
 		public ResultJsonObjectArray getTopic(String library, String topic) {
 			return getForIdStartsWith(library + "~" + topic);
+		}
+		
+		public ResultJsonObjectArray getGenerationStatus(
+				String requestor
+				, String genId) {
+			ResultJsonObjectArray result = new ResultJsonObjectArray(this.printPretty);
+			result.setStatusCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
+			result.setStatusMessage("Generation did not complete.");
+			try {
+				GenerationStatus genStatus = null;
+				boolean generationFinished = false;
+				if (ExternalDbManager.GENERATOR_STATUS.containsKey(genId)) {
+					genStatus = ExternalDbManager.GENERATOR_STATUS.get(genId);
+					generationFinished = genStatus.getFinish().length() > 0;
+				}
+		        if (!generationFinished) { // wait because the pdf still might be generating
+		        	long millis =  5000; //1000 = 1 sec
+		        	for (int i = 0; i < 49; i++) { // for four minutes, check every 5 seconds
+		        		Thread.sleep(millis);
+						if (ExternalDbManager.GENERATOR_STATUS.containsKey(genId)) {
+							genStatus = ExternalDbManager.GENERATOR_STATUS.get(genId);
+							generationFinished = genStatus.getFinish().length() > 0;
+						}
+		        		if (generationFinished) {
+		        			break;
+		        		}
+		        	}
+		        }
+		        if (generationFinished) {
+        			result.setStatusCode(HTTP_RESPONSE_CODES.OK.code);
+        			result.setStatusMessage("Generation completed.");
+		        }
+		        try {
+		        	if (ExternalDbManager.GENERATOR_STATUS.containsKey(genId)) {
+		        		ExternalDbManager.GENERATOR_STATUS.remove(genId);
+		        	}
+		        } catch (Exception inner) {
+		        	// ignore
+		        }
+		        
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
 		}
 		
 		public ResultJsonObjectArray getSuggestions(String requestor, String library) {
