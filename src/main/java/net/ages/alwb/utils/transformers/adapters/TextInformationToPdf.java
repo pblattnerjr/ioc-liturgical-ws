@@ -13,17 +13,15 @@ import java.util.TreeMap;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
 import org.jsoup.select.Elements;
 import org.ocmc.ioc.liturgical.schemas.constants.NOTE_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.SCHEMA_CLASSES;
 import org.ocmc.ioc.liturgical.schemas.constants.nlp.DEPENDENCY_LABELS;
 import org.ocmc.ioc.liturgical.schemas.constants.nlp.GRAMMAR_ABBREVIATIONS;
-import org.ocmc.ioc.liturgical.schemas.models.abbreviations.Abbreviation;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.TokenAnalysis;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.notes.TextualNote;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.notes.UserNote;
 import org.ocmc.ioc.liturgical.schemas.models.supers.BibliographyEntry;
-import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDb;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import org.slf4j.Logger;
@@ -36,6 +34,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
+import net.ages.alwb.utils.core.generics.MultiMapWithList;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 import net.ages.alwb.utils.oslw.OslwUtils;
 
@@ -59,18 +58,23 @@ public class TextInformationToPdf {
 	private Map<String,List<TokenAnalysis>> map = new TreeMap<String,List<TokenAnalysis>>();
 	private JsonArray nodes = null;
 	private JsonArray tokens = null;
+	private Map<String, Map<NOTE_TYPES, List<TextualNote>>> bigMap = new TreeMap<String,Map<NOTE_TYPES,List<TextualNote>>>();
 	private Map<String,String> abbr = new TreeMap<String,String>();
 	private Map<String,JsonObject> abbrJsonStrings = new TreeMap<String,JsonObject>();
 	private Map<String,JsonObject> biblioJsonStrings = new TreeMap<String,JsonObject>();
 	private Map<String,String> usedAbbreviations = new TreeMap<String,String>();
 	private List<TextualNote> notesList = new ArrayList<TextualNote>();
 	private List<TextualNote> summaryList = new ArrayList<TextualNote>();
-	private List<Abbreviation> notesAbbreviationList = new ArrayList<Abbreviation>();
-	private List<BibliographyEntry> notesBibliographyList = new ArrayList<BibliographyEntry>();
+	private List<TextualNote> adviceList = new ArrayList<TextualNote>();
+	private List<UserNote> userList = new ArrayList<UserNote>();
 	private Map<String,String> domainMap = null;
 	private ExternalDbManager dbManager = null;
 	private String fileId = "";
 	private boolean hasBibliography = false;
+	private boolean includeAdviceNotes = false;
+	private boolean includeGrammar = false;
+	private boolean includePersonalNotes = false;
+	private boolean combineNotes = false;
 	
 	public TextInformationToPdf (
 			JsonObject jsonObject
@@ -78,12 +82,20 @@ public class TextInformationToPdf {
 			, Map<String,String> domainMap
 			, ExternalDbManager dbManager
 			, String fileId
+			, boolean includePersonalNotes
+			, boolean includeAdviceNotes
+			, boolean includeGrammar
+			, boolean combineNotes
 			)   throws JsonParseException {
 		this.jsonObject = jsonObject;
 		this.textId = textId;
 		this.domainMap =  domainMap;
 		this.dbManager = dbManager;
 		this.fileId = fileId;
+		this.includeAdviceNotes = includeAdviceNotes;
+		this.includePersonalNotes = includePersonalNotes;
+		this.includeGrammar = includeGrammar;
+		this.combineNotes = combineNotes;
 		this.process();
 	}
 	
@@ -138,29 +150,6 @@ public class TextInformationToPdf {
 		return result;
 	}
 
-	private String getBibResource() {
-		StringBuffer sb = new StringBuffer();
-		sb.append("\\begin{filecontents}{refs.bib}\n");
-		for (JsonObject json: this.biblioJsonStrings.values()) {
-			try {
-				BibliographyEntry record = 
-						 (BibliographyEntry) gson.fromJson(
-						json.toString()
-						, SCHEMA_CLASSES
-							.classForSchemaName(
-									json.get("_valueSchemaId").getAsString())
-									.ltkDb.getClass()
-				);
-				String bibTex = record.toBibtex();
-				sb.append(bibTex);
-				sb.append("%\n");
-			} catch (Exception e) {
-				ErrorUtils.report(logger, e);
-			}
-		}
-		sb.append("\\end{filecontents}%\n\n");
-		return sb.toString();
-	}
 	
 	private String createBibFileContent() {
 		StringBuffer sb = new StringBuffer();
@@ -195,7 +184,19 @@ public class TextInformationToPdf {
 		this.texFileSb.append("\\usepackage[defaultlines=4,all]{nowidow}%\n");
 		
 		this.loadAbbreviations();
-		this.loadGrammar();
+		if (this.includeGrammar) {
+			this.loadGrammar();
+			// add the values for the titles
+			String title = this.tokens.get(0).getAsString() + " " + this.tokens.get(1).getAsString();
+			this.texFileSb.append(OslwUtils.getOslwTitleResources(
+					idManager.getLibrary()
+					, title
+					, title
+					, title
+					, ""
+					)
+			);
+		}
 		this.loadNotes();
 		
 		this.hasBibliography = this.biblioJsonStrings.size() > 0;
@@ -205,23 +206,12 @@ public class TextInformationToPdf {
 			this.texFileSb.append(this.fileId);
 			this.texFileSb.append(".bib}%\n\n");
 			this.bibtexFileSb.append(this.createBibFileContent());
-//			this.texFileSb.append(this.getBibResource());
 		}
 		
 		this.texFileSb.append("\\begin{document}%\n");
 		this.texFileSb.append("\\mainmatter%\n");
 		this.texFileSb.append("\\selectlanguage{english}\n");
 
-		// add the values for the titles
-		String title = this.tokens.get(0).getAsString() + " " + this.tokens.get(1).getAsString();
-		this.texFileSb.append(OslwUtils.getOslwTitleResources(
-				idManager.getLibrary()
-				, title
-				, title
-				, title
-				, ""
-				)
-		);
 
 		// set the name of the template
 		this.texFileSb.append("\\ltChapter{pdf}{title}\n");
@@ -238,39 +228,48 @@ public class TextInformationToPdf {
 		// process the content
 		this.texFileSb.append(this.getVersionsAsLatex());
 		this.texFileSb.append(this.getNotesAsLatex());
-		this.texFileSb.append(this.getInterlinearAsLatex());
-		this.texFileSb.append(this.getDependencyDiagramAsLatex());
+		if (this.includeGrammar) {
+			this.texFileSb.append(this.getInterlinearAsLatex());
+			this.texFileSb.append(this.getDependencyDiagramAsLatex());
+		}
 		this.texFileSb.append(this.getAbbreviationsAsLatex());
 		
 		if (this.hasBibliography) {
-			this.texFileSb.append("\n\\vfill%\n");
-			this.texFileSb.append("\\pagebreak%\n");
-			this.texFileSb.append("\\chapter*{Bibliography}\n\n");
+			this.texFileSb.append("\\section*{Bibliography}\n\n");
 			this.texFileSb.append("\\selectlanguage{english}\n");
 			this.texFileSb.append("\\printbibliography[heading=bibempty]\n");
-			}
+		}
+		if (this.includePersonalNotes) {
+			this.texFileSb.append(this.getUserNotesAsLatex());
+		}
 		// close out the generation
 		this.texFileSb.append(
 				"\n\n\\tiny\\textit{Generated ");
 		this.texFileSb.append(ZonedDateTime.now(ZoneOffset.UTC));
 		this.texFileSb.append(" (Universal Time)  using liturgical software from the Orthodox Christian Mission Center (OCMC), St. Augustine, FL, USA. Glory to God! Δόξα σοι, ὁ Θεὸς ἡμῶν· δόξα σοι! }%\n");
-		this.texFileSb.append("\n\\vfill%\n");
-		this.texFileSb.append("\\pagebreak%\n");
 		this.texFileSb.append("\\end{document}%\n");
 	}
 	
-	/**
-	 * TODO:
-	 * 1. Iterate through all text notes, find occurrences of \cite.
-	 * 2. If the cite key is not in the referenceMap, add it along with the reference data.
-	 * 3. Get the reference data from the database??  
-	 * 4. Add the references as an inline file.
-	 * 5. If after the iteration the referenceMap is empty, we will want to suppress 
-	 * printing the bibliography.
-	 * @return
-	 */
-	private String getBibresource() {
+	public String getUserNotesAsLatex() {
 		StringBuffer sb = new StringBuffer();
+		sb.append("\n\\vfill%\n");
+		sb.append("\\pagebreak%\n");
+		this.texFileSb.append("\\section{Your Personal Notes}\n\n");
+		if (this.userList.size() > 0) {
+			for (UserNote note : this.userList) {
+				if (note.getValue() != null) {
+					sb.append("\n");
+					sb.append(note.getValue());
+					if (note.getTags().size() > 0) {
+						sb.append(" Tags: ");
+						sb.append(note.getTags().toString());
+					}
+					sb.append("\n\n");
+				}
+			}
+		} else {
+			sb.append("No personal notes found for this text.");
+		}
 		return sb.toString();
 	}
 	
@@ -432,32 +431,34 @@ public class TextInformationToPdf {
 	}
 	public String getAbbreviationsAsLatex() {
 		StringBuffer sb = new StringBuffer();
-		sb.append("\\vfill\\newpage\n");
-		sb.append("\\section{List of Abbreviations and Acronymns}\n");
-		sb.append("\\begin{tabular}{ r | l }\n");
-		int i = 0;
-		for (Entry<String,String> entry : this.usedAbbreviations.entrySet()) {
-			String key = entry.getKey();
-			String value = entry.getValue();
-			if (! value.startsWith("empty")) {
-		        if (key.endsWith("_CO")) {
-		            key = key.replace("_", "\\textunderscore ");
-		    }
-			sb.append(key);
-			sb.append(" & ");
-			sb.append(entry.getValue());
-			sb.append("\\\\");
-			sb.append("\n");
-			i++;
-			if (i == 25) {
-				sb.append("\\end{tabular}\n");
-				sb.append("\\vfill\\newpage\n");
-				sb.append("\\begin{tabular}{ r | l }\n");
-				i = 0;
+		if (this.usedAbbreviations.size() > 0) {
+			sb.append("\\vfill\\newpage\n");
+			sb.append("\\section{List of Abbreviations and Acronymns}\n");
+			sb.append("\\begin{tabular}{ r | l }\n");
+			int i = 0;
+			for (Entry<String,String> entry : this.usedAbbreviations.entrySet()) {
+				String key = entry.getKey();
+				String value = entry.getValue();
+				if (! value.startsWith("empty")) {
+			        if (key.endsWith("_CO")) {
+			            key = key.replace("_", "\\textunderscore ");
+			    }
+				sb.append(key);
+				sb.append(" & ");
+				sb.append(entry.getValue());
+				sb.append("\\\\");
+				sb.append("\n");
+				i++;
+				if (i == 25) {
+					sb.append("\\end{tabular}\n");
+					sb.append("\\vfill\\newpage\n");
+					sb.append("\\begin{tabular}{ r | l }\n");
+					i = 0;
+				}
+				}
 			}
-			}
+			sb.append("\\end{tabular}\n");
 		}
-		sb.append("\\end{tabular}\n");
 		return sb.toString();
 	}
 	
@@ -480,15 +481,181 @@ public class TextInformationToPdf {
 			sb.append("\n");
 		}
 		sb.append("\\section{Discussion}\n");
-		sb.append(this.processNotesByType());
+		if (this.combineNotes) {
+			sb.append(this.combineNotes());
+		} else {
+			sb.append(this.processNotesByType());
+			if (this.includeAdviceNotes) {
+				sb.append("\\section{Advice for Translators and Translation Checkers}\n");
+				sb.append(this.processAdviceNotes());
+			}
+		}
 		sb.append("\n\\sectionline\n");
-//		this.groupNotes();
-//		sb.append(this.processNotesByType());
+		return sb.toString();
+	}
+	
+	private void addListToBigMap(List<TextualNote> listToAdd) {
+		for (TextualNote note : listToAdd) {
+			String scope = note.getLiturgicalScope() + note.getLiturgicalLemma();
+			Map<NOTE_TYPES, List<TextualNote>> multi = new TreeMap<NOTE_TYPES,List<TextualNote>>();
+			if (this.bigMap.containsKey(scope)) {
+				multi = this.bigMap.get(scope);
+			}
+			List<TextualNote> list = new ArrayList<TextualNote>();
+			if (multi.containsKey(note.getNoteType())) {
+				list = multi.get(note.getNoteType());
+			}
+			list.add(note);
+			multi.put(note.getNoteType(), list);
+			this.bigMap.put(scope, multi);
+		}
+	}
+
+	private String getNoteAsGenericLatex(TextualNote note) {
+		StringBuffer sb = new StringBuffer();
+		sb.append("\\noteGeneric{");
+		sb.append(note.getNoteType().notename);
+		sb.append("}{");
+		if (note.getNoteTitle().trim().length() > 0) {
+			sb.append(note.getNoteTitle());
+			sb.append("}{");
+		}
+		sb.append(note.getValue());
+		sb.append("}");
+		return sb.toString();
+	}
+
+	private String getNotesAsGenericLatex(List<TextualNote> list) {
+		StringBuffer sb = new StringBuffer();
+		for (TextualNote note : list) {
+			sb.append(this.getNoteAsGenericLatex(note));
+		}
+		return sb.toString();
+	}
+	
+	private String getNoteAsReferenceLatex(TextualNote note) {
+		StringBuffer sb = new StringBuffer();
+		sb.append("\\noteRefersTo{");
+		sb.append(note.getNoteType().notename);
+		sb.append("}{");
+		if (note.getNoteTitle().trim().length() > 0) {
+			sb.append(note.getNoteTitle());
+			sb.append("}{");
+		}
+		sb.append(note.getValue());
+		sb.append("}");
+		return sb.toString();
+	}
+
+	private String getNotesAsReferencesLatex(List<TextualNote> list) {
+		StringBuffer sb = new StringBuffer();
+		for (TextualNote note : list) {
+			sb.append(this.getNoteAsReferenceLatex(note));
+		}
+		return sb.toString();
+	}
+	private String combineNotes() {
+		StringBuffer sb = new StringBuffer();
+		// load the big Map
+		this.addListToBigMap(this.notesList);
+		if (this.includeAdviceNotes) {
+			this.addListToBigMap(this.adviceList);
+		}
+		// process the notes grouped by scope
+		for (String scopeAndLemma : this.bigMap.keySet()) {
+			StringBuffer combo = new StringBuffer();
+			Map<NOTE_TYPES, List<TextualNote>> scopeMap = this.bigMap.get(scopeAndLemma);
+			NOTE_TYPES sampleKey = null;
+			for (NOTE_TYPES t : scopeMap.keySet()) {
+				sampleKey = t;
+				break;
+			}
+			TextualNote sample = scopeMap.get(sampleKey).get(0);
+			String scope = sample.getLiturgicalScope();
+			String lemma = sample.getLiturgicalLemma();
+			combo.append("\n\n\\noteLexical{");
+			combo.append(scope);
+			combo.append("}{");
+			combo.append(lemma);
+			combo.append("} ");
+			// we need to strictly control the order for some types of notes
+			if (scopeMap.containsKey(NOTE_TYPES.MEANING)) {
+				combo.append(this.getNotesAsGenericLatex(scopeMap.get(NOTE_TYPES.MEANING)));
+			}
+			if (scopeMap.containsKey(NOTE_TYPES.GRAMMAR)) {
+				combo.append(this.getNotesAsGenericLatex(scopeMap.get(NOTE_TYPES.GRAMMAR)));
+			}
+			
+			for (Entry<NOTE_TYPES, List<TextualNote>> entry : scopeMap.entrySet()) {
+				NOTE_TYPES key = entry.getKey();
+				if (key == NOTE_TYPES.REF_TO_BIBLE) {
+					for (TextualNote note : scopeMap.get(key)) {
+						combo.append("\\noteRefToBible{");
+						combo.append(note.biblicalScope);
+						combo.append("}{");
+						combo.append(note.biblicalLemma);
+						if (note.noteTitle.trim().length() > 0) {
+							combo.append("}{");
+							combo.append(note.noteTitle);
+						}
+						if (note.getValue().trim().length() > 0) {
+							combo.append("}{");
+							combo.append(note.getValue());
+						} else {
+							combo.append(".");
+						}
+						combo.append("}");
+					}
+				} else if (key.name().startsWith("REF_TO")) {
+					combo.append(this.getNotesAsReferencesLatex(scopeMap.get(key)));
+				} else {
+					if (key == NOTE_TYPES.MEANING
+							|| key == NOTE_TYPES.GRAMMAR
+							|| key == NOTE_TYPES.ADVICE_FOR_TRANSLATION_CHECKERS
+							|| key == NOTE_TYPES.ADVICE_FOR_TRANSLATORS
+							|| key == NOTE_TYPES.CHECK_YOUR_BIBLE
+							) {
+						// ignore
+					} else {
+						combo.append(this.getNotesAsGenericLatex(scopeMap.get(key)));
+					}
+				}
+			}
+			if (this.includeAdviceNotes) {
+				if (scopeMap.containsKey(NOTE_TYPES.ADVICE_FOR_TRANSLATORS)) {
+					combo.append(this.getNotesAsGenericLatex(scopeMap.get(NOTE_TYPES.ADVICE_FOR_TRANSLATORS)));
+				}
+				if (scopeMap.containsKey(NOTE_TYPES.ADVICE_FOR_TRANSLATION_CHECKERS)) {
+					combo.append(this.getNotesAsGenericLatex(scopeMap.get(NOTE_TYPES.ADVICE_FOR_TRANSLATION_CHECKERS)));
+				}
+				if (scopeMap.containsKey(NOTE_TYPES.CHECK_YOUR_BIBLE)) {
+					for (TextualNote note : scopeMap.get(NOTE_TYPES.CHECK_YOUR_BIBLE)) {
+						combo.append("\\noteCheckYourBible{");
+						combo.append(note.biblicalScope);
+						combo.append("}{");
+						combo.append(note.biblicalLemma);
+						if (note.noteTitle.trim().length() > 0) {
+							combo.append("}{");
+							combo.append(note.noteTitle);
+						}
+						if (note.getValue().trim().length() > 0) {
+							combo.append("}{");
+							combo.append(note.getValue());
+						} else {
+							combo.append(".");
+						}
+						combo.append("}");
+					}
+				}
+			}
+			sb.append(combo.toString());
+		}
 		return sb.toString();
 	}
 	
 	private void loadNotes() {
-		List<TextualNote> list = new ArrayList<TextualNote>();
+		List<TextualNote> tempAdviceList = new ArrayList<TextualNote>();
+		List<TextualNote> tempTopicsList = new ArrayList<TextualNote>();
 		for (JsonElement e : this.jsonObject.get("textNotes").getAsJsonArray()) {
 			TextualNote note = this.gson.fromJson(
 					e.getAsJsonObject().get("properties(to)").getAsJsonObject()
@@ -497,11 +664,29 @@ public class TextInformationToPdf {
 			note.setValueFormatted(this.htmlToLatex(note.getValueFormatted()));
 			if (note.getNoteType() == NOTE_TYPES.UNIT) {
 				this.summaryList.add(note);
+			} else 	if (note.getNoteType() == NOTE_TYPES.ADVICE_FOR_TRANSLATION_CHECKERS
+					|| note.getNoteType() == NOTE_TYPES.ADVICE_FOR_TRANSLATORS
+					) {
+					tempAdviceList.add(note);
 			} else {
-				list.add(note);
+				tempTopicsList.add(note);
 			}
 		}
-		this.notesList = this.sortNotes(list); // sorts using the followsNoteId property
+		if (this.includeAdviceNotes) {
+			this.adviceList = this.sortNotes(tempAdviceList); // sorts using the followsNoteId property
+		}
+		this.notesList = this.sortNotes(tempTopicsList); // sorts using the followsNoteId property
+		if (this.includePersonalNotes) {
+			if (this.jsonObject.has("userNotes")) {
+				for (JsonElement e : this.jsonObject.get("userNotes").getAsJsonArray()) {
+					UserNote note = this.gson.fromJson(
+							e.getAsJsonObject().get("properties(to)").getAsJsonObject()
+							, UserNote.class
+							);
+					this.userList.add(note);
+				}
+			}
+		}
 	}
 
 	private String processNotesByType() {
@@ -511,9 +696,6 @@ public class TextInformationToPdf {
 				this.notesList
 				, TextualNote.noteTypeAdHocComparator);
 		for (TextualNote note : this.notesList) {
-			if (note.getValue().contains("opposing the people of Israel were")) {
-				System.out.print("");
-			}
 			NOTE_TYPES type = note.getNoteType();
 			if (currentType != type) {
 				sb.append("\n\\subsection{");
@@ -541,12 +723,26 @@ public class TextInformationToPdf {
 		return sb.toString();
 	}
 
+	private String processAdviceNotes() {
+		StringBuffer sb = new StringBuffer();
+		Collections.sort(
+				this.notesList
+				, TextualNote.noteTypeAdHocComparator);
+		for (TextualNote note : this.adviceList) {
+			sb.append(
+					this.getNoteAsLatexForNonRef(
+						note
+						, true
+					)
+			);
+		}
+		return sb.toString();
+	}
 
 	private String getNoteAsLatexForBibleRef(
 			TextualNote note
 			) {
 		StringBuffer sb = new StringBuffer();
-		if (note.noteTitle.trim().length() > 0) {
 			sb.append("\n\\noteLexicalRefToBibleTitle{");
 			sb.append(note.liturgicalScope);
 			sb.append("}{");
@@ -555,25 +751,19 @@ public class TextInformationToPdf {
 			sb.append(note.biblicalScope);
 			sb.append("}{");
 			sb.append(note.biblicalLemma);
-			sb.append("}{");
-			sb.append(note.noteTitle);
-			sb.append("}{");
-		} else {
-			sb.append("\\noteLexicalRefToBible{");
-			sb.append(note.liturgicalScope);
-			sb.append("}{");
-			sb.append(note.liturgicalLemma);
-			sb.append("}{");
-			sb.append(note.biblicalScope);
-			sb.append("}{");
-			sb.append(note.biblicalLemma);
-			sb.append("}{");
-		}
-		sb.append(note.value);
+			if (note.noteTitle.trim().length() > 0) {
+				sb.append("}{");
+				sb.append(note.noteTitle);
+			}
+			if (note.value.trim().length() > 0) {
+				sb.append("}{");
+				sb.append(note.value);
+			}
 		sb.append("}\n");
 
 		return sb.toString();
 	}
+	
 	private String getNoteAsLatexRefersTo(
 			TextualNote note
 			) {
@@ -637,7 +827,9 @@ public class TextInformationToPdf {
 				}
 				// convert to latex citation
 				anchor.tagName("span");
-				anchor.text("\\cite{" + dataValue + "}");
+				// TODO: language selection should be automatic in Babel but not working.
+				// it is printing και for and, as in Louw και Nida.  So, for now, force it to be English
+				anchor.text("\\selectlanguage{english}\\cite{" + dataValue + "}");
 			}
 			html = doc.html();
 			html = html.replaceAll("<p>", "");
@@ -660,22 +852,18 @@ public class TextInformationToPdf {
 			, boolean lexical
 			) {
 		StringBuffer sb = new StringBuffer();
+		sb.append("\\noteLexicalTitleText{");
+		sb.append(note.liturgicalScope);
+		sb.append("}{");
+		sb.append(note.liturgicalLemma);
 		if (note.getNoteTitle().trim().length() > 0) {
-			sb.append("\\noteLexicalTitleText{");
-			sb.append(note.liturgicalScope);
-			sb.append("}{");
-			sb.append(note.liturgicalLemma);
 			sb.append("}{");
 			sb.append(note.noteTitle);
-			sb.append("}{");
-		} else {
-			sb.append("\\noteLexicalText{");
-			sb.append(note.liturgicalScope);
-			sb.append("}{");
-			sb.append(note.liturgicalLemma);
-			sb.append("}{");
 		}
-		sb.append(note.value);
+		if (note.value.trim().length() > 0) {
+			sb.append("}{");
+			sb.append(note.value);
+		}
 		sb.append("}\n\n");
 
 		return sb.toString();

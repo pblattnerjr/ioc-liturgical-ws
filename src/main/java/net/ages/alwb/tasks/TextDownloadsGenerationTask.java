@@ -34,6 +34,10 @@ public class TextDownloadsGenerationTask implements Runnable {
 	String dockerPath = "/usr/local/bin/";
 	Map<String,String> domainMap = null;
 	ExternalDbManager dbManager = null;
+	boolean includeAdviceNotes = false;
+	boolean includePersonalNotes = false;
+	boolean includeGrammar  = false;
+	boolean combineNotes = false;
 	
 	/**
 	 * 
@@ -46,12 +50,20 @@ public class TextDownloadsGenerationTask implements Runnable {
 			, String textId
 			, Map<String,String> domainMap
 			, ExternalDbManager dbManager
+			, boolean includePersonalNotes
+			, boolean includeAdviceNotes
+			, boolean includeGrammar
+			, boolean combineNotes
 			) {
 		this.jsonObject = jsonObject;
 		this.pdfId = pdfId;
 		this.textId = textId;
 		this.domainMap = domainMap;
 		this.dbManager = dbManager;
+		this.includeAdviceNotes = includeAdviceNotes;
+		this.includePersonalNotes = includePersonalNotes;
+		this.includeGrammar = includeGrammar;
+		this.combineNotes = combineNotes;
 	}
 	
 	@Override
@@ -63,6 +75,10 @@ public class TextDownloadsGenerationTask implements Runnable {
 				, this.domainMap
 				, this.dbManager
 				, this.pdfId
+				, this.includePersonalNotes
+				, this.includeAdviceNotes
+				, this.includeGrammar
+				, this.combineNotes
 				);
 		if (textInfoToPdf.hasBibliography()) {
 			FileUtils.writeFile(Constants.PDF_FOLDER + "/" + this.pdfId + ".bib", textInfoToPdf.getBibtexFileSb().toString());

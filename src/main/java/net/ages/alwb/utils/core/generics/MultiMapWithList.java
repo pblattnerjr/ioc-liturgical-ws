@@ -67,6 +67,10 @@ public class MultiMapWithList <T1, T2>{
 		this.mapSimple = resultWordList;
 	}
 	
+	public List<T2> getListForKey(String key) {
+		return mapWithLists.get(key);
+	}
+	
 	public Map<String, List<T2>> getMapWithLists() {
 		return mapWithLists;
 	}
@@ -87,8 +91,8 @@ public class MultiMapWithList <T1, T2>{
 	public void addValueToMapWithLists(String key, T2 value) {
 		List<T2> list = null;
 		if (maxListSize > 0) {
-			if (mapWithLists.containsKey(key)) {
-				list = mapWithLists.get(key);
+			if (this.mapWithLists.containsKey(key)) {
+				list = this.mapWithLists.get(key);
 				if (list.size() <= maxListSize) {
 					list.add(value);
 				}
@@ -96,8 +100,30 @@ public class MultiMapWithList <T1, T2>{
 				list = new ArrayList<T2>();
 				list.add(value);
 			}
-			mapWithLists.put(key, list);
+			this.mapWithLists.put(key, list);
 		}
+	}
+	
+	public T2 getFirstValueFromMapList() {
+		if (mapWithLists.size() > 0) {
+			String key = "";
+			for (String k : mapWithLists.keySet()) {
+				key = k;
+				break;
+			}
+			return this.getFirstValueFromMapList(key);
+		} else {
+			return null;
+		}
+	}
+	
+	public T2 getFirstValueFromMapList(String key) {
+		if (mapWithLists.size() > 0) {
+			if (mapWithLists.containsKey(key)) {
+				return mapWithLists.get(key).get(0);
+			} 
+		}
+		return null;
 	}
 	
 	/**

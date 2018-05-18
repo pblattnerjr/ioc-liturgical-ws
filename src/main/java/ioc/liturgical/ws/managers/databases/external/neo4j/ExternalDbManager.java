@@ -1,5 +1,6 @@
 package ioc.liturgical.ws.managers.databases.external.neo4j;
 
+import java.io.File;
 import java.text.Normalizer;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -455,14 +456,35 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			  String requestor
 			  , String id
 			  , String includeUserNotes
+			  , String includeAdviceNotes
+			  , String includeGrammar
+			  , String combineNotes
 			  ) {
 		  ResultJsonObjectArray result = new ResultJsonObjectArray(true);
 		  boolean includeNotesForUser = false;
 		  if (includeUserNotes.equals("true")) {
 			  includeNotesForUser = true;
 		  }
+		  boolean doIncludeAdviceNotes = false;
+		  if (includeAdviceNotes.equals("true")) {
+			  doIncludeAdviceNotes = true;
+		  }
+		  boolean doIncludeGrammar = false;
+		  if (includeGrammar.equals("true")) {
+			  doIncludeGrammar = true;
+		  }
+		  boolean doCombineNotes = false;
+		  if (combineNotes.equals("true")) {
+			  doCombineNotes = true;
+		  }
 		  // get the data we need for this text
-		  JsonObject data = this.getTextInformation(requestor, id, includeNotesForUser);
+		  JsonObject data = this.getTextInformation(
+				  requestor
+				  , id
+				  , includeNotesForUser
+				  , doIncludeAdviceNotes
+				  , doIncludeGrammar
+				  );
 		  Map<String,String> domainMap = internalManager.getDomainDescriptionMap();
 
 			// create a thread that will generate a PDF
@@ -475,6 +497,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 							, id
 							, domainMap
 							, this
+							, includeNotesForUser
+							, doIncludeAdviceNotes
+							, doIncludeGrammar
+							, doCombineNotes
 							)
 					);
 			executorService.shutdown();
@@ -507,6 +533,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			  String requestor
 			  , String id
 			  , boolean includeUserNotes
+			  , boolean includeAdviceNotes
+			  , boolean includeGrammar
 			  ) {
 		  JsonObject result = new JsonObject();
 		  IdManager idManager = new IdManager(id);
@@ -545,8 +573,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					  );
 			  result.add("userNotes", temp.getValuesAsJsonArray());
 		  }
-		  temp = this.getWordGrammarAnalyses(requestor, id);
-		  result.add("grammar", temp.getValuesAsJsonArray());
+		  if (includeGrammar) {
+			  temp = this.getWordGrammarAnalyses(requestor, id);
+			  result.add("grammar", temp.getValuesAsJsonArray());
+		  }
 		  return result;
 	  }
 	  
@@ -1566,7 +1596,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			builder.TAG_OPERATOR(operator);
 			if (type.equals(TOPICS.NOTE_USER.label)) {
 				if (returnAllProps) {
-					builder.RETURN("properties(from)");
+					builder.RETURN("properties(to)");
 				} else {
 					builder.RETURN("from.value as text, to.id as id, to.library as library, to.topic as topic, to.key as key, to.value as value, to.tags as tags, to._valueSchemaId as _valueSchemaId");
 				}
@@ -3025,7 +3055,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return getForIdStartsWith(library + "~" + topic);
 		}
 		
-		public ResultJsonObjectArray getGenerationStatus(
+		public ResultJsonObjectArray getGenerationStatusUsingSemiphore(
 				String requestor
 				, String genId) {
 			ResultJsonObjectArray result = new ResultJsonObjectArray(this.printPretty);
@@ -3070,6 +3100,44 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 		
+		public ResultJsonObjectArray getGenerationStatus(
+				String requestor
+				, String genId) {
+			ResultJsonObjectArray result = new ResultJsonObjectArray(this.printPretty);
+			result.setStatusCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
+			result.setStatusMessage("Generation did not complete.");
+			try {
+				boolean generationFinished = false;
+		        if (!generationFinished) { // wait because the pdf still might be generating
+		        	long millis =  5000; //1000 = 1 sec
+		        	for (int i = 0; i < 49; i++) { // for four minutes, check every 5 seconds
+		        		Thread.sleep(millis);
+		        		File genFile = new File(Constants.PDF_FOLDER + "/" + genId + ".finished");
+						generationFinished = genFile.exists();
+		        		if (generationFinished) {
+		        			break;
+		        		}
+		        	}
+		        }
+		        if (generationFinished) {
+        			result.setStatusCode(HTTP_RESPONSE_CODES.OK.code);
+        			result.setStatusMessage("Generation completed.");
+		        }
+		        try {
+		        	if (ExternalDbManager.GENERATOR_STATUS.containsKey(genId)) {
+		        		ExternalDbManager.GENERATOR_STATUS.remove(genId);
+		        	}
+		        } catch (Exception inner) {
+		        	// ignore
+		        }
+		        
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+
 		public ResultJsonObjectArray getSuggestions(String requestor, String library) {
 			ResultJsonObjectArray result = new ResultJsonObjectArray(this.printPretty);
 			try {

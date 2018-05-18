@@ -100,11 +100,17 @@ public class Neo4jController {
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
 			String id = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
 			String includePersonalNotes = request.queryParams("ip")  ;
+			String includeAdviceNotes = request.queryParams("ia")  ;
+			String includeGrammar = request.queryParams("ig")  ;
+			String combineNotes = request.queryParams("cn")  ;
         	return gson.toJson(
         			externalManager.createDownloads(
         					requestor
         					, id
         					, includePersonalNotes
+        					, includeAdviceNotes
+        					, includeGrammar
+        					, combineNotes
         					)
         			);
 		});
