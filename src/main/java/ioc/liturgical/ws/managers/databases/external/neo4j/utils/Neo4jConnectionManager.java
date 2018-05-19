@@ -874,9 +874,11 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		RequestStatus result = new RequestStatus();
 		int count = 0;
 		String query = 
-				"match (n) where n.id = \"" 
+				"match (n:Root) where n.id = \"" 
 				+ id 
-		        + "\" delete n";
+		        + "\" "
+		        + "optional match (n)<-[r]-(:Root) "
+		        + "delete n, r";
 		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			StatementResult neoResult = session.run(query);
 			count = neoResult.consume().counters().nodesDeleted();

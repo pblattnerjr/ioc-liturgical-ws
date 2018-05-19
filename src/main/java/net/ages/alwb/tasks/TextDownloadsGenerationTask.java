@@ -38,6 +38,7 @@ public class TextDownloadsGenerationTask implements Runnable {
 	boolean includePersonalNotes = false;
 	boolean includeGrammar  = false;
 	boolean combineNotes = false;
+	String alignmentLibrary = "";
 	
 	/**
 	 * 
@@ -54,6 +55,7 @@ public class TextDownloadsGenerationTask implements Runnable {
 			, boolean includeAdviceNotes
 			, boolean includeGrammar
 			, boolean combineNotes
+			, String alignmentLibrary
 			) {
 		this.jsonObject = jsonObject;
 		this.pdfId = pdfId;
@@ -64,6 +66,7 @@ public class TextDownloadsGenerationTask implements Runnable {
 		this.includePersonalNotes = includePersonalNotes;
 		this.includeGrammar = includeGrammar;
 		this.combineNotes = combineNotes;
+		this.alignmentLibrary = alignmentLibrary;
 	}
 	
 	@Override
@@ -79,6 +82,7 @@ public class TextDownloadsGenerationTask implements Runnable {
 				, this.includeAdviceNotes
 				, this.includeGrammar
 				, this.combineNotes
+				, this.alignmentLibrary
 				);
 		if (textInfoToPdf.hasBibliography()) {
 			FileUtils.writeFile(Constants.PDF_FOLDER + "/" + this.pdfId + ".bib", textInfoToPdf.getBibtexFileSb().toString());

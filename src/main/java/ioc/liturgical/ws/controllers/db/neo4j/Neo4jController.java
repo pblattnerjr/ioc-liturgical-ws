@@ -103,6 +103,7 @@ public class Neo4jController {
 			String includeAdviceNotes = request.queryParams("ia")  ;
 			String includeGrammar = request.queryParams("ig")  ;
 			String combineNotes = request.queryParams("cn")  ;
+			String alignmentLibrary = request.queryParams("al")  ;
         	return gson.toJson(
         			externalManager.createDownloads(
         					requestor
@@ -111,6 +112,7 @@ public class Neo4jController {
         					, includeAdviceNotes
         					, includeGrammar
         					, combineNotes
+        					, alignmentLibrary
         					)
         			);
 		});
@@ -710,7 +712,7 @@ public class Neo4jController {
 		
 	   // TODO: add a delete for a relationship between two nodes where there is no specific ID in the properties of the relationship
 
-		// DELETE doc for parameter id
+		// DELETE doc for /library/topic/key in path
 		path = Constants.EXTERNAL_DATASTORE_API_PATH 	+ Constants.PATH_LIBRARY_TOPIC_KEY_WILDCARD;
 		ControllerUtils.reportPath(logger, "DELETE", path);
 		delete(path, (request, response) -> {
@@ -722,6 +724,22 @@ public class Neo4jController {
 			return requestStatus.toJsonString();
 		});
 		
+		// DELETE doc for library, topic, key as parms
+		path = Constants.EXTERNAL_DATASTORE_API_PATH 	+ Constants.PATH_DELETE;
+		ControllerUtils.reportPath(logger, "DELETE", path);
+		delete(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			RequestStatus requestStatus = externalManager.deleteForId(
+					requestor
+        			, request.queryParams("l")  // library
+        			, request.queryParams("t")  // topic
+        			, request.queryParams("k")  // key
+					);
+			response.status(requestStatus.getCode());
+			return requestStatus.toJsonString();
+		});
+
 		/**
 		 * POST controllers
 		 */

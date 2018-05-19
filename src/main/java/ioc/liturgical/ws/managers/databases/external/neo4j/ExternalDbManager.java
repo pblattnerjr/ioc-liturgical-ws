@@ -169,8 +169,6 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	public Gson gson = new Gson();
 	private String adminUserId = "";
 	
-	public static Map<String, GenerationStatus> GENERATOR_STATUS = new TreeMap<String,GenerationStatus>();
-
 	  JsonParser parser = new JsonParser();
 	  Pattern punctPattern = Pattern.compile("[˙·,.;!?(){}\\[\\]<>%]"); // punctuation 
 	  DomainTopicMapBuilder domainTopicMapbuilder = new DomainTopicMapBuilder();
@@ -452,13 +450,14 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  return queryResult;
 	  }
 
-	  public ResultJsonObjectArray createDownloads(
+	  public synchronized ResultJsonObjectArray createDownloads(
 			  String requestor
 			  , String id
 			  , String includeUserNotes
 			  , String includeAdviceNotes
 			  , String includeGrammar
 			  , String combineNotes
+			  , String alignmentLibrary
 			  ) {
 		  ResultJsonObjectArray result = new ResultJsonObjectArray(true);
 		  boolean includeNotesForUser = false;
@@ -501,6 +500,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 							, doIncludeAdviceNotes
 							, doIncludeGrammar
 							, doCombineNotes
+							, alignmentLibrary
 							)
 					);
 			executorService.shutdown();
@@ -512,13 +512,23 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			result.setResult(list);
 			result.setQuery("prepare downloads for " + id);
 			// delay a bit to all the PDF to be generated before user clicks link in browser
-        	long millis =  10000; // 60000 = 1 minute
-    		try {
-				Thread.sleep(millis);
-			} catch (InterruptedException e) {
-				// ignore
+			try {
+				boolean generationFinished = false;
+				String finishFile = Constants.PDF_FOLDER + "/" + pdfId + ".finished";
+		        if (!generationFinished) { // wait because the pdf still might be generating
+		        	long millis =  5000; //1000 = 1 sec
+		        	for (int i = 0; i < 49; i++) { // for four minutes, check every 5 seconds
+		        		Thread.sleep(millis);
+		        		File genFile = new File(finishFile);
+						generationFinished = genFile.exists();
+		        		if (generationFinished) {
+		        			break;
+		        		}
+		        	}
+		        }
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
 			}
-
 		  return result;
 	  }
 	  
@@ -2198,15 +2208,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 								, SCHEMA_CLASSES
 									.classForSchemaName(
 											form.get_valueSchemaId())
-									.ltkDb.getClass()
-);
-//							if (record.getVisibility() != VISIBILITY.PUBLIC) {
-//								if (record.getLibrary().equals(this.getUserDomain(requestor))) {
-//									record.setVisibility(VISIBILITY.PERSONAL);
-//								} else {
-//										record.setVisibility(VISIBILITY.PRIVATE);
-//								}
-//							}
+									.ltkDb.getClass());
 						    record.setValue(record.getValueFormatted());
 							record.setSubClassProperties(json);
 							record.setActive(true);
@@ -3055,50 +3057,6 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return getForIdStartsWith(library + "~" + topic);
 		}
 		
-		public ResultJsonObjectArray getGenerationStatusUsingSemiphore(
-				String requestor
-				, String genId) {
-			ResultJsonObjectArray result = new ResultJsonObjectArray(this.printPretty);
-			result.setStatusCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
-			result.setStatusMessage("Generation did not complete.");
-			try {
-				GenerationStatus genStatus = null;
-				boolean generationFinished = false;
-				if (ExternalDbManager.GENERATOR_STATUS.containsKey(genId)) {
-					genStatus = ExternalDbManager.GENERATOR_STATUS.get(genId);
-					generationFinished = genStatus.getFinish().length() > 0;
-				}
-		        if (!generationFinished) { // wait because the pdf still might be generating
-		        	long millis =  5000; //1000 = 1 sec
-		        	for (int i = 0; i < 49; i++) { // for four minutes, check every 5 seconds
-		        		Thread.sleep(millis);
-						if (ExternalDbManager.GENERATOR_STATUS.containsKey(genId)) {
-							genStatus = ExternalDbManager.GENERATOR_STATUS.get(genId);
-							generationFinished = genStatus.getFinish().length() > 0;
-						}
-		        		if (generationFinished) {
-		        			break;
-		        		}
-		        	}
-		        }
-		        if (generationFinished) {
-        			result.setStatusCode(HTTP_RESPONSE_CODES.OK.code);
-        			result.setStatusMessage("Generation completed.");
-		        }
-		        try {
-		        	if (ExternalDbManager.GENERATOR_STATUS.containsKey(genId)) {
-		        		ExternalDbManager.GENERATOR_STATUS.remove(genId);
-		        	}
-		        } catch (Exception inner) {
-		        	// ignore
-		        }
-		        
-			} catch (Exception e) {
-				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-				result.setStatusMessage(e.getMessage());
-			}
-			return result;
-		}
 		
 		public ResultJsonObjectArray getGenerationStatus(
 				String requestor
@@ -3123,14 +3081,6 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
         			result.setStatusCode(HTTP_RESPONSE_CODES.OK.code);
         			result.setStatusMessage("Generation completed.");
 		        }
-		        try {
-		        	if (ExternalDbManager.GENERATOR_STATUS.containsKey(genId)) {
-		        		ExternalDbManager.GENERATOR_STATUS.remove(genId);
-		        	}
-		        } catch (Exception inner) {
-		        	// ignore
-		        }
-		        
 			} catch (Exception e) {
 				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 				result.setStatusMessage(e.getMessage());
@@ -3291,6 +3241,27 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return this.internalManager.getUserDomain(requestor);
 		}
 		
+		public RequestStatus deleteForId(
+				String requestor
+				, String library
+				, String topic
+				, String key
+				) {
+			IdManager idManager = new IdManager(library, topic, key);
+			RequestStatus result = new RequestStatus();
+			if (internalManager.authorized(
+					requestor
+					, VERBS.DELETE
+					, library
+					)) {
+		    	result = deleteForId(idManager.getId());
+			} else {
+				result.setCode(HTTP_RESPONSE_CODES.UNAUTHORIZED.code);
+				result.setMessage(HTTP_RESPONSE_CODES.UNAUTHORIZED.message);
+			}
+			return result;
+		}
+
 		public RequestStatus deleteForId(String requestor, String id) {
 			RequestStatus result = new RequestStatus();
 			IdManager idManager = new IdManager(id);

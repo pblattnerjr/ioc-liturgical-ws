@@ -99,9 +99,6 @@ public class SynchPullTask implements Runnable {
 											if (this.printpretty) {
 												logger.info("Ran transaction " + trans.getId() + " against local database.");
 											}
-											log.setLastUsedSynchTimestamp(trans.getKey());
-											log.recordSynchTime();
-											dbManager.recordSynch(log);
 										} else {
 											String message = "Could not run transaction " + trans.getId() 
 												+ " against local database. " 
@@ -111,20 +108,18 @@ public class SynchPullTask implements Runnable {
 											logger.error(message);
 											if (this.messagingEnabled) {
 												ServiceProvider.sendMessage(message);
-//												MessageUtils.sendMessage(this.messagingToken, message);
 											}
 										}
-									} else {
-										log.setLastUsedSynchTimestamp(trans.getKey());
-										log.recordSynchTime();
-										dbManager.recordSynch(log);
 									}
+									log.setLastUsedSynchTimestamp(trans.getKey());
+									log.recordSynchTime();
+									dbManager.recordSynch(log);
 								} catch (Exception e) {
 									String message = "Could not run transaction against local database: " + o.toString();
 									ErrorUtils.report(logger, e);
 									MessageUtils.sendMessage(this.messagingToken, message);
 								}
-							}
+							} 
 						}
 					} catch (Exception e) {
 						ServiceProvider.sendMessage("SynchPullTask error " + e.getStackTrace().toString());
@@ -137,5 +132,4 @@ public class SynchPullTask implements Runnable {
 			ErrorUtils.report(logger, e);
 		}
 	}
-	
 }

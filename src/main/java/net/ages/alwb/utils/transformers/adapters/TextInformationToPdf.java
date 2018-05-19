@@ -4,10 +4,13 @@ import java.net.URL;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.jsoup.Jsoup;
@@ -21,6 +24,7 @@ import org.ocmc.ioc.liturgical.schemas.constants.nlp.GRAMMAR_ABBREVIATIONS;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.TokenAnalysis;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.notes.TextualNote;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.notes.UserNote;
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.ontology.TextLiturgical;
 import org.ocmc.ioc.liturgical.schemas.models.supers.BibliographyEntry;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
@@ -75,6 +79,9 @@ public class TextInformationToPdf {
 	private boolean includeGrammar = false;
 	private boolean includePersonalNotes = false;
 	private boolean combineNotes = false;
+	private String alignmentLibrary = "";
+	private String alignmentLibraryLatex = "";
+	private String alignmentText = "";
 	
 	public TextInformationToPdf (
 			JsonObject jsonObject
@@ -86,6 +93,7 @@ public class TextInformationToPdf {
 			, boolean includeAdviceNotes
 			, boolean includeGrammar
 			, boolean combineNotes
+			, String alignmentLibrary
 			)   throws JsonParseException {
 		this.jsonObject = jsonObject;
 		this.textId = textId;
@@ -96,6 +104,7 @@ public class TextInformationToPdf {
 		this.includePersonalNotes = includePersonalNotes;
 		this.includeGrammar = includeGrammar;
 		this.combineNotes = combineNotes;
+		this.alignmentLibrary = alignmentLibrary;
 		this.process();
 	}
 	
@@ -218,11 +227,12 @@ public class TextInformationToPdf {
 
 		// provide the topic and key we are using
 		this.texFileSb.append("\\begin{center}\n");
+		this.texFileSb.append("\\tiny{");
 		this.texFileSb.append("AGES Topic\\textasciitilde Key: ");
 		this.texFileSb.append(idManager.getTopic());
 		this.texFileSb.append("\\textasciitilde ");
 		this.texFileSb.append(idManager.getKey());
-		this.texFileSb.append("\n");
+		this.texFileSb.append("}\n");
 		this.texFileSb.append("\\end{center}\n");
 		
 		// process the content
@@ -462,15 +472,6 @@ public class TextInformationToPdf {
 		return sb.toString();
 	}
 	
-	/**
-	 * This is what you need to do:
-	 * 1. See if you can create a map of notes, where the key = the scope
-	 * 2. If that is successful, then output the notes grouped by the scope
-	 *     but, you will need to determine the correct order in which they should
-	 *     appear based on the GEV-SOT.
-	 *  3. If the scope is not using GEV-SOT, then just group them by the note type.
-	 * @return
-	 */
 	public String getNotesAsLatex() {
 		StringBuffer sb = new StringBuffer();
 		sb.append("\\vfill%\n");
@@ -482,6 +483,9 @@ public class TextInformationToPdf {
 		}
 		sb.append("\\section{Discussion}\n");
 		if (this.combineNotes) {
+			sb.append("\nThe notes are sorted based the order of words in the ");
+			sb.append(this.alignmentLibraryLatex);
+			sb.append(" version of the text.\n");
 			sb.append(this.combineNotes());
 		} else {
 			sb.append(this.processNotesByType());
@@ -496,7 +500,7 @@ public class TextInformationToPdf {
 	
 	private void addListToBigMap(List<TextualNote> listToAdd) {
 		for (TextualNote note : listToAdd) {
-			String scope = note.getLiturgicalScope() + note.getLiturgicalLemma();
+			String scope = note.getLiturgicalScope().trim();
 			Map<NOTE_TYPES, List<TextualNote>> multi = new TreeMap<NOTE_TYPES,List<TextualNote>>();
 			if (this.bigMap.containsKey(scope)) {
 				multi = this.bigMap.get(scope);
@@ -554,6 +558,60 @@ public class TextInformationToPdf {
 		}
 		return sb.toString();
 	}
+	
+	private Map<Integer, String> getAlignmentList() {
+		Map<String, List<String>> indexMap = new TreeMap<String, List<String>>();
+		TextLiturgical dummy = new TextLiturgical("en_us_system", "a", "b");
+//		dummy.setValue("Never align");
+		dummy.setValue(this.alignmentText);
+		String nnp = " " + dummy.getNnp() + " ";
+		List<String> notFound = new ArrayList<String>();
+		for (String scope : this.bigMap.keySet()) {
+			scope = scope.trim();
+			dummy.setValue(scope);
+			String scopeNnp = " " + dummy.getNnp() + " ";
+			int i = 0;
+			if (nnp.contains(scopeNnp)) {
+				while (i > -1) {
+					i = nnp.indexOf(scopeNnp, i);
+					if (i > -1) {
+						List<String> list = new ArrayList<String>();
+						if (indexMap.containsKey(scope)) {
+							list = indexMap.get(scope);
+						}
+						String s = Integer.toString(i);
+						if (! list.contains(i)) {
+							list.add(Integer.toString(i));
+						}
+						indexMap.put(scope, list);
+						i++;
+					}
+				}
+			} else {
+				notFound.add(scope);
+			}
+		}
+		Map<Integer, String> sortedScopes = new TreeMap<Integer,String>();
+		Integer index = 0;
+		for (Entry<String,List<String>> entry : indexMap.entrySet()) {
+			List<String> list = entry.getValue();
+			for (String s : list) {
+				index = Integer.parseInt(s);
+				if (sortedScopes.containsKey(index)) {
+					index++;
+				}
+				sortedScopes.put(index, entry.getKey());
+			}
+		}
+		// add any that we could not align
+		Collections.sort(notFound);
+		for (String scope : notFound) {
+			index++;
+			sortedScopes.put(index, scope);
+		}
+		return sortedScopes;
+	}
+
 	private String combineNotes() {
 		StringBuffer sb = new StringBuffer();
 		// load the big Map
@@ -561,10 +619,20 @@ public class TextInformationToPdf {
 		if (this.includeAdviceNotes) {
 			this.addListToBigMap(this.adviceList);
 		}
+		
+		// create the alignment index
+		Collection<String> scopeCollection = null;
+		if (this.alignmentText.length() > 0) {
+			scopeCollection = this.getAlignmentList().values();
+		}
+		if (scopeCollection == null || scopeCollection.size() == 0) {
+			scopeCollection = this.bigMap.keySet();
+		}
+		
 		// process the notes grouped by scope
-		for (String scopeAndLemma : this.bigMap.keySet()) {
+		for (String bigMapKey : scopeCollection) {
 			StringBuffer combo = new StringBuffer();
-			Map<NOTE_TYPES, List<TextualNote>> scopeMap = this.bigMap.get(scopeAndLemma);
+			Map<NOTE_TYPES, List<TextualNote>> scopeMap = this.bigMap.get(bigMapKey);
 			NOTE_TYPES sampleKey = null;
 			for (NOTE_TYPES t : scopeMap.keySet()) {
 				sampleKey = t;
@@ -874,8 +942,16 @@ public class TextInformationToPdf {
 		boolean hasScansion = false;
 		
 		String greekLibrary = "gr_gr_cog";
+		String greekLatex = "";
 		String libraryLatex = "";
 		String greekValue = "";
+		StringBuffer lf  = new StringBuffer();
+		lf.append("gr");
+		lf.append("\\textunderscore ");
+		lf.append("gr");
+		lf.append("\\textunderscore ");
+		lf.append("cog");
+		greekLatex = lf.toString();
 		transSb.append("\\section{Translations}\n");
 		transSb.append("\\setlength{\\arrayrulewidth}{1mm}");
 		transSb.append("\\setlength{\\tabcolsep}{18pt}");
@@ -885,7 +961,7 @@ public class TextInformationToPdf {
 			JsonObject o = e.getAsJsonObject();
 			String library = o.get("library").getAsString();
 			IdManager idManager = new IdManager(o.get("id").getAsString());
-			StringBuffer lf  = new StringBuffer();
+			lf  = new StringBuffer();
 			lf.append(idManager.getLibraryLanguage());
 			lf.append("\\textunderscore ");
 			lf.append(idManager.getLibraryCountry());
@@ -895,6 +971,10 @@ public class TextInformationToPdf {
 			
 			String value = o.get("value").getAsString();
 			if (value != null && value.trim().length() > 0) {
+				if (idManager.getLibrary().equals(this.alignmentLibrary)) {
+					this.alignmentText = value; // we will use this later if we are aligning notes
+					this.alignmentLibraryLatex = lf.toString();
+				}
 				// check for scansion but don't bother if we already found a text with it...
 				if (!hasScansion) {
 					if (value.contains("*") || value.contains("/")) {
@@ -941,7 +1021,7 @@ public class TextInformationToPdf {
 			result.append("\\setlength{\\tabcolsep}{18pt}");
 			result.append("\\renewcommand{\\arraystretch}{1.5}");
 			result.append("\\begin{tabular}{ |p{3cm}|p{12cm}| }\n\\hline\n");
-			result.append(libraryLatex);
+			result.append(greekLatex);
 			result.append(" & ");
 			result.append(greekValue);
 			result.append(" \\\\ ");

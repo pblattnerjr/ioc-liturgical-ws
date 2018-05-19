@@ -50,14 +50,12 @@ public class PdfGenerationTask implements Runnable {
 		try {
 			GenerationStatus genStatus = new GenerationStatus(this.pdfId, GenerationStatus.TYPE.PDF);
 			genStatus.setStart(Instant.now().toString());
-			ExternalDbManager.GENERATOR_STATUS.put(this.pdfId, genStatus);
 			MetaTemplateToPdf metaTemplateToPdf = new MetaTemplateToPdf(this.template);
 			FileUtils.writeFile(Constants.PDF_FOLDER + "/" + this.pdfId + ".tex", metaTemplateToPdf.getTexFileContent().toString());
 			String result = this.executeCommandProcessor(Constants.PDF_FOLDER + "/makepdf", this.pdfId, Constants.PDF_FOLDER);
 			if (result != null && result.length() > 0) {
 				System.out.println(result);
 				genStatus.setFinish(Instant.now().toString());
-				ExternalDbManager.GENERATOR_STATUS.put(this.pdfId, genStatus);
 			}
 		} catch (Exception e) {
 			ErrorUtils.report(logger, e);
