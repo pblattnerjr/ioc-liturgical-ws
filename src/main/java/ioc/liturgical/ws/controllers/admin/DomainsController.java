@@ -17,12 +17,16 @@ import com.google.gson.JsonObject;
 import ioc.liturgical.ws.app.ServiceProvider;
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.managers.auth.AuthDecoder;
+import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 import ioc.liturgical.ws.managers.databases.internal.InternalDbManager;
 
 public class DomainsController {
 	private static final Logger logger = LoggerFactory.getLogger(DomainsController.class);
 	
-	public DomainsController(InternalDbManager storeManager) {
+	public DomainsController(
+			InternalDbManager storeManager
+			, ExternalDbManager externalDbManager
+			) {
 
 		/**
 		 * GET controllers
@@ -96,6 +100,7 @@ public class DomainsController {
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
 			RequestStatus requestStatus = storeManager.addDomain(requestor,request.body());
 			response.status(requestStatus.getCode());
+			externalDbManager.updateDropdownItemsForSearchingText();
 			return requestStatus.toJsonString();
 		});
 
@@ -110,6 +115,7 @@ public class DomainsController {
 			String key = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
 			RequestStatus requestStatus = storeManager.updateDomain(requestor, key, request.body());
 			response.status(requestStatus.getCode());
+			externalDbManager.updateDropdownItemsForSearchingText();
 			return requestStatus.toJsonString();
 		});
 

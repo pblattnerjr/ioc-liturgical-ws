@@ -111,6 +111,7 @@ import org.ocmc.ioc.liturgical.schemas.models.db.returns.ResultNewForms;
 
 import ioc.liturgical.ws.nlp.Utils;
 import net.ages.alwb.tasks.DependencyNodesCreateTask;
+import net.ages.alwb.tasks.DomainDropdownsUpdateTask;
 import net.ages.alwb.tasks.OntologyTagsUpdateTask;
 import net.ages.alwb.tasks.PdfGenerationTask;
 import net.ages.alwb.tasks.PerseusTreebankDataCreateTask;
@@ -171,8 +172,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	
 	  JsonParser parser = new JsonParser();
 	  Pattern punctPattern = Pattern.compile("[˙·,.;!?(){}\\[\\]<>%]"); // punctuation 
-	  DomainTopicMapBuilder domainTopicMapbuilder = new DomainTopicMapBuilder();
-	  JsonObject dropdownItemsForSearchingText = new JsonObject();
+	  public DomainTopicMapBuilder domainTopicMapbuilder = new DomainTopicMapBuilder();
+	  private JsonObject dropdownItemsForSearchingText = new JsonObject();
 	  JsonArray noteTypesArray = new JsonArray();
 	  JsonObject noteTypesProperties = new JsonObject();
 
@@ -211,7 +212,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  JsonArray templateWhenModeOfWeekCasesDropdown = TEMPLATE_NODE_TYPES.toModesDropdownJsonArray();
 	  JsonArray templateWhenMonthNameCasesDropdown = TEMPLATE_NODE_TYPES.toMonthsDropdownJsonArray();
 	  public static Neo4jConnectionManager neo4jManager = null;
-	  InternalDbManager internalManager = null;
+	  public static InternalDbManager internalManager = null;
 	  SynchManager synchManager = null;
 	  
 	  public ExternalDbManager(
@@ -458,6 +459,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			  , String includeGrammar
 			  , String combineNotes
 			  , String alignmentLibrary
+			  , String pdfTitle
+			  , String pdfSubTitle
 			  ) {
 		  ResultJsonObjectArray result = new ResultJsonObjectArray(true);
 		  boolean includeNotesForUser = false;
@@ -501,6 +504,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 							, doIncludeGrammar
 							, doCombineNotes
 							, alignmentLibrary
+							, pdfTitle
+							, pdfSubTitle
 							)
 					);
 			executorService.shutdown();
@@ -794,7 +799,11 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  }
 	  
 	  public void buildDomainTopicMap() {
-		 dropdownItemsForSearchingText = domainTopicMapbuilder.getDropdownItems();
+		  Map<String, DropdownItem> filter = 
+				  ExternalDbManager.internalManager.getCollectiveLiturgicalDropdownDomainMap();
+		  this.setDropdownItemsForSearchingText(
+				  this.domainTopicMapbuilder.getDropdownItems(filter)
+				  );
 	  }
 	  
 	  /**
@@ -1993,10 +2002,18 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			
 			return q.toString();
 		}
-
-
-		public JsonObject getDropdownItemsForSearchingText() {
-			return dropdownItemsForSearchingText;
+		
+		public void updateDropdownItemsForSearchingText() {
+			try {
+				ExecutorService executorService = Executors.newSingleThreadExecutor();
+				executorService.execute(
+						new DomainDropdownsUpdateTask(this)
+						);
+				executorService.shutdown();
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+			
 		}
 
 		@Override
@@ -3346,6 +3363,11 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				JsonObject jsonDropdown = new JsonObject();
 				jsonDropdown.add("dropdown", values);
 
+				List<JsonObject> list = new ArrayList<JsonObject>();
+				list.add(jsonDropdown);
+
+				result.setResult(list);
+				result.setQuery("get dropdowns for notes search");
 
 			} catch (Exception e) {
 				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
@@ -3371,7 +3393,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				list.add(jsonDropdown);
 
 				result.setResult(list);
-				result.setQuery("get dropdowns for notes search");
+				result.setQuery("get dropdowns for abbreviation search");
 
 			} catch (Exception e) {
 				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
@@ -5149,7 +5171,15 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				boolean hasOntology = false;
 				boolean hasBibliography = false;
 				for (org.ocmc.ioc.liturgical.schemas.constants.NEW_FORM_CLASSES_DB_API e : NEW_FORM_CLASSES_DB_API.values()) {
-					if (internalManager.userAuthorizedForThisForm(requestor, e.restriction)) {
+					boolean authorized = false;
+					if (e.pureOntology) {
+						if (internalManager.isLibAdmin("en_sys_ontology", requestor) || internalManager.isLibAuthor("en_sys_ontology", requestor)) {
+							authorized = true;
+						}
+					} else if (internalManager.userAuthorizedForThisForm(requestor, e.restriction)){
+						authorized = true;
+					}
+					if (authorized) {
 						if (e.includeForSchemaEditor) {
 							schemaEditorFormDropdown.add(new DropdownItem(e.name, e.obj.schemaIdAsString()));
 							if (! hasOntology) {
@@ -5565,6 +5595,14 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 
 		public void setSynchManager(SynchManager synchManager) {
 			this.synchManager = synchManager;
+		}
+
+		public JsonObject getDropdownItemsForSearchingText() {
+			return this.dropdownItemsForSearchingText;
+		}
+
+		public void setDropdownItemsForSearchingText(JsonObject dropdownItemsForSearchingText) {
+			this.dropdownItemsForSearchingText = dropdownItemsForSearchingText;
 		}
 
 }

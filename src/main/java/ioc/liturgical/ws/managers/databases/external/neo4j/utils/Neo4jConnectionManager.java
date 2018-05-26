@@ -281,7 +281,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		String query = "create constraint on (p:" + label + ") assert p." + property + " is unique"; 
 		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			neoResult = session.run(query);
-	    	this.insertTransaction(new Transaction(query, hostName));
+	    	this.insertTransaction(new Transaction(query, "constraint", hostName));
 		} catch (Exception e) {
 			ErrorUtils.report(logger, e);
 		}
@@ -885,7 +885,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			if (count > 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": deleted " + id);
-		    	this.insertTransaction(new Transaction(query, hostName));
+		    	this.insertTransaction(new Transaction(query, id, hostName));
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message + " " + id);
@@ -1018,7 +1018,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			if (count > 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": deleted " + id);
-		    	this.insertTransaction(new Transaction(query, hostName));
+		    	this.insertTransaction(new Transaction(query, id, hostName));
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message + " " + id);
@@ -1089,7 +1089,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			if (count > 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": deleted " + id);
-		    	this.insertTransaction(new Transaction(query, hostName));
+		    	this.insertTransaction(new Transaction(query, id, hostName));
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message + " " + id);
@@ -1124,7 +1124,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			if (count > 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": deleted " + id);
-		    	this.insertTransaction(new Transaction(query, hostName));
+		    	this.insertTransaction(new Transaction(query, id, hostName));
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message + " " + id);
@@ -1152,7 +1152,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		    	result.setCode(HTTP_RESPONSE_CODES.CONFLICT.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.CONFLICT.message);
 			} else {
-		    	this.insertTransaction(new Transaction(query, hostName));
+		    	this.insertTransaction(new Transaction(query, "constraint", hostName));
 			}
 		} catch (Exception e){
 			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);

@@ -846,7 +846,7 @@ public class AgesHtmlToOslwSwitch {
 		}
 		case "p-mixed-mode-rubric": {
 		// {misc}{Mode2}{titles}{ITisEvdomados} (http://www.agesinitiatives.com/dcs/public/dcs/h/s/2017/08/13/ma2/gr-en/index.html)
-			result = "Undefined";
+			result = "Designation";
 			break;
 		}
 		case "p-mixed-red": {

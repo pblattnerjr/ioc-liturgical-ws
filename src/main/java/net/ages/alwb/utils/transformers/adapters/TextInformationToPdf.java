@@ -8,11 +8,13 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.apache.commons.lang3.LocaleUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -71,6 +73,7 @@ public class TextInformationToPdf {
 	private List<TextualNote> summaryList = new ArrayList<TextualNote>();
 	private List<TextualNote> adviceList = new ArrayList<TextualNote>();
 	private List<UserNote> userList = new ArrayList<UserNote>();
+	private List<String> noteIds = new ArrayList<String>();
 	private Map<String,String> domainMap = null;
 	private ExternalDbManager dbManager = null;
 	private String fileId = "";
@@ -79,9 +82,12 @@ public class TextInformationToPdf {
 	private boolean includeGrammar = false;
 	private boolean includePersonalNotes = false;
 	private boolean combineNotes = false;
+	private String pdfTitle = "";
+	private String pdfSubTitle = "";
 	private String alignmentLibrary = "";
 	private String alignmentLibraryLatex = "";
 	private String alignmentText = "";
+	private String greekValueFirstChar = "";
 	
 	public TextInformationToPdf (
 			JsonObject jsonObject
@@ -94,6 +100,8 @@ public class TextInformationToPdf {
 			, boolean includeGrammar
 			, boolean combineNotes
 			, String alignmentLibrary
+			, String pdfTitle
+			, String pdfSubTitle
 			)   throws JsonParseException {
 		this.jsonObject = jsonObject;
 		this.textId = textId;
@@ -105,6 +113,14 @@ public class TextInformationToPdf {
 		this.includeGrammar = includeGrammar;
 		this.combineNotes = combineNotes;
 		this.alignmentLibrary = alignmentLibrary;
+		this.pdfTitle = pdfTitle;
+		this.pdfSubTitle = pdfSubTitle;
+		if (pdfTitle.equals("undefined")) {
+			this.pdfTitle = "";
+		}
+		if (pdfSubTitle.equals("undefined")) {
+			this.pdfSubTitle = "";
+		}
 		this.process();
 	}
 	
@@ -117,7 +133,7 @@ public class TextInformationToPdf {
 		for (TextualNote note : list) {
 			noteMap.put(note.id, note);
 			String follows = "Root";
-			if (note.followsNoteId.length() > 0) {
+			if (note.followsNoteId.length() > 0 && this.noteIds.contains(note.followsNoteId)) {
 				follows = note.followsNoteId;
 			}
 			List<String> followers = new ArrayList<String>();
@@ -196,16 +212,29 @@ public class TextInformationToPdf {
 		if (this.includeGrammar) {
 			this.loadGrammar();
 			// add the values for the titles
-			String title = this.tokens.get(0).getAsString() + " " + this.tokens.get(1).getAsString();
-			this.texFileSb.append(OslwUtils.getOslwTitleResources(
-					idManager.getLibrary()
-					, title
-					, title
-					, title
-					, ""
-					)
-			);
+			if (this.pdfTitle.length() == 0) {
+				this.pdfTitle = this.tokens.get(0).getAsString() + " " + this.tokens.get(1).getAsString();
+			}
 		}
+		try {
+			String firstChar = this.pdfTitle.substring(0, 1).toLowerCase();
+			if (firstChar.matches("[α-ω]")) {
+				TextLiturgical dummy = new TextLiturgical("en_us_system", "a", "b");
+				dummy.setValue(this.pdfTitle);
+				this.pdfTitle = dummy.getNnp().toUpperCase();
+			}
+		} catch (Exception e) {
+			ErrorUtils.report(logger, e, this.pdfTitle);
+		}
+		this.texFileSb.append(OslwUtils.getOslwTitleResources(
+				idManager.getLibrary()
+				, this.pdfTitle
+				, this.pdfTitle
+				, this.pdfTitle
+				, ""
+				)
+		);
+
 		this.loadNotes();
 		
 		this.hasBibliography = this.biblioJsonStrings.size() > 0;
@@ -221,26 +250,43 @@ public class TextInformationToPdf {
 		this.texFileSb.append("\\mainmatter%\n");
 		this.texFileSb.append("\\selectlanguage{english}\n");
 
-
-		// set the name of the template
+		// set the title for the pdf
 		this.texFileSb.append("\\ltChapter{pdf}{title}\n");
-
+//		this.texFileSb.append("\n\\titleborder\n");
+		if (this.pdfSubTitle.length() > 0) {
+			this.texFileSb.append("\\begin{center}\n");
+			this.texFileSb.append("\n\\textbf{");
+			this.texFileSb.append(this.pdfSubTitle);
+			this.texFileSb.append("}\n\n");
+			this.texFileSb.append("\\end{center}\n");
+		}
 		// provide the topic and key we are using
-		this.texFileSb.append("\\begin{center}\n");
-		this.texFileSb.append("\\tiny{");
-		this.texFileSb.append("AGES Topic\\textasciitilde Key: ");
-		this.texFileSb.append(idManager.getTopic());
-		this.texFileSb.append("\\textasciitilde ");
-		this.texFileSb.append(idManager.getKey());
-		this.texFileSb.append("}\n");
-		this.texFileSb.append("\\end{center}\n");
+		StringBuffer ages = new StringBuffer();
+		ages.append("\\begin{center}\n");
+		ages.append("\\tiny{");
+		ages.append("\nAGES Topic\\textasciitilde Key: ");
+		ages.append(idManager.getTopic());
+		ages.append("\\textasciitilde ");
+		ages.append(idManager.getKey());
+		ages.append("}\n");
+		String description = idManager.getTopicDescription();
+		if (description.length() > 0) {
+			ages.append("\n\n\\color{red}");
+			ages.append(description);
+			ages.append("\\color{black}\n");
+		}
+		ages.append("\\end{center}\n");
+		
 		
 		// process the content
-		this.texFileSb.append(this.getVersionsAsLatex());
+		this.texFileSb.append(this.getVersionsAsLatex(ages.toString()));
 		this.texFileSb.append(this.getNotesAsLatex());
+		this.texFileSb.append("\\vfill");
 		if (this.includeGrammar) {
 			this.texFileSb.append(this.getInterlinearAsLatex());
+			this.texFileSb.append("\\vfill");
 			this.texFileSb.append(this.getDependencyDiagramAsLatex());
+			this.texFileSb.append("\\vfill");
 		}
 		this.texFileSb.append(this.getAbbreviationsAsLatex());
 		
@@ -256,14 +302,18 @@ public class TextInformationToPdf {
 		this.texFileSb.append(
 				"\n\n\\tiny\\textit{Generated ");
 		this.texFileSb.append(ZonedDateTime.now(ZoneOffset.UTC));
-		this.texFileSb.append(" (Universal Time)  using liturgical software from the Orthodox Christian Mission Center (OCMC), St. Augustine, FL, USA. Glory to God! Δόξα σοι, ὁ Θεὸς ἡμῶν· δόξα σοι! }%\n");
+		this.texFileSb.append(" (Universal Time)  using the OCMC Online Liturgical Workstation at ");
+		this.texFileSb.append("\\url{https://olw.ocmc.org}");
+		this.texFileSb.append(". Glory to God! Δόξα σοι, ὁ Θεὸς ἡμῶν· δόξα σοι! }%\n");
+//		this.texFileSb.append(" (Universal Time)  using liturgical software from the Orthodox Christian Mission Center (OCMC), St. Augustine, FL, USA. Glory to God! Δόξα σοι, ὁ Θεὸς ἡμῶν· δόξα σοι! }%\n");
+		this.texFileSb.append("\\vfill");
 		this.texFileSb.append("\\end{document}%\n");
 	}
 	
 	public String getUserNotesAsLatex() {
 		StringBuffer sb = new StringBuffer();
-		sb.append("\n\\vfill%\n");
-		sb.append("\\pagebreak%\n");
+//		sb.append("\n\\vfill%\n");
+//		sb.append("\\pagebreak%\n");
 		this.texFileSb.append("\\section{Your Personal Notes}\n\n");
 		if (this.userList.size() > 0) {
 			for (UserNote note : this.userList) {
@@ -285,7 +335,7 @@ public class TextInformationToPdf {
 	
 	public String getInterlinearAsLatex() {
 		StringBuffer sb = new StringBuffer();
-		sb.append("\n\\vfill\n\\newpage\n");
+//		sb.append("\n\\vfill\n\\newpage\n");
 		sb.append("\\section{Interlinear Text}\n");
 		sb.append("This section provides information about the grammar of words (that is, the morphology). The Greek words appear in the same order as they do in the source text.\n\n");
 		sb.append(this.nodesToInterlinear());
@@ -295,7 +345,7 @@ public class TextInformationToPdf {
 
 	public String getDependencyDiagramAsLatex() {
 		StringBuffer sb = new StringBuffer();
-		sb.append("\n\\vfill\n\\newpage\n");
+//		sb.append("\n\\vfill\n\\newpage\n");
 		sb.append("\\section{Dependency Diagram}\n");
 		sb.append("This section uses a dependency diagram to show the syntactic structure of the text.  \\textit{Syntax} means \\textit{the grammatical relationship between words}, that is, \\textit{the way words are put together to create phrases and clauses and sentences}.  This diagram shows the structure based on a type of grammar theory called dependency grammar. The order of each Greek word in the diagram is based on the word it depends on. It appears indented and after the word it depends on. The first word to appear in the diagram is the root of the structure.\n");
 		sb.append("\\newline");
@@ -442,7 +492,7 @@ public class TextInformationToPdf {
 	public String getAbbreviationsAsLatex() {
 		StringBuffer sb = new StringBuffer();
 		if (this.usedAbbreviations.size() > 0) {
-			sb.append("\\vfill\\newpage\n");
+//			sb.append("\\vfill\\newpage\n");
 			sb.append("\\section{List of Abbreviations and Acronymns}\n");
 			sb.append("\\begin{tabular}{ r | l }\n");
 			int i = 0;
@@ -469,13 +519,12 @@ public class TextInformationToPdf {
 			}
 			sb.append("\\end{tabular}\n");
 		}
+		sb.append("\n\\sectionline\n");
 		return sb.toString();
 	}
 	
 	public String getNotesAsLatex() {
 		StringBuffer sb = new StringBuffer();
-		sb.append("\\vfill%\n");
-		sb.append("\\clearpage%\n");
 		sb.append("\\section{Summary}\n");
 		for (TextualNote note : this.summaryList) {
 			sb.append(note.getValue());
@@ -495,6 +544,7 @@ public class TextInformationToPdf {
 			}
 		}
 		sb.append("\n\\sectionline\n");
+		sb.append("\\vfill%\n");
 		return sb.toString();
 	}
 	
@@ -639,7 +689,7 @@ public class TextInformationToPdf {
 				break;
 			}
 			TextualNote sample = scopeMap.get(sampleKey).get(0);
-			String scope = sample.getLiturgicalScope();
+			String scope = sample.getLiturgicalScope().trim();
 			String lemma = sample.getLiturgicalLemma();
 			combo.append("\n\n\\noteLexical{");
 			combo.append(scope);
@@ -729,6 +779,7 @@ public class TextInformationToPdf {
 					e.getAsJsonObject().get("properties(to)").getAsJsonObject()
 					, TextualNote.class
 					);
+			this.noteIds.add(note.getId());
 			note.setValueFormatted(this.htmlToLatex(note.getValueFormatted()));
 			if (note.getNoteType() == NOTE_TYPES.UNIT) {
 				this.summaryList.add(note);
@@ -743,7 +794,13 @@ public class TextInformationToPdf {
 		if (this.includeAdviceNotes) {
 			this.adviceList = this.sortNotes(tempAdviceList); // sorts using the followsNoteId property
 		}
-		this.notesList = this.sortNotes(tempTopicsList); // sorts using the followsNoteId property
+//		if (! this.combineNotes) {
+//			this.notesList = this.sortNotes(tempTopicsList); // sorts using the followsNoteId property
+//		} else {
+//			this.notesList = tempTopicsList;
+//		}
+		Collections.sort(tempTopicsList);
+		this.notesList = tempTopicsList;
 		if (this.includePersonalNotes) {
 			if (this.jsonObject.has("userNotes")) {
 				for (JsonElement e : this.jsonObject.get("userNotes").getAsJsonArray()) {
@@ -762,7 +819,10 @@ public class TextInformationToPdf {
 		NOTE_TYPES currentType = null;
 		Collections.sort(
 				this.notesList
-				, TextualNote.noteTypeAdHocComparator);
+				, TextualNote.noteTypeLiturgicalScopeComparator);
+//		Collections.sort(
+//				this.notesList
+//				, TextualNote.noteTypeAdHocComparator);
 		for (TextualNote note : this.notesList) {
 			NOTE_TYPES type = note.getNoteType();
 			if (currentType != type) {
@@ -794,8 +854,12 @@ public class TextInformationToPdf {
 	private String processAdviceNotes() {
 		StringBuffer sb = new StringBuffer();
 		Collections.sort(
-				this.notesList
-				, TextualNote.noteTypeAdHocComparator);
+				this.adviceList
+				, TextualNote.noteLiturgicalScopeComparator);
+		// the noteTypeAdHocComparator is used if we use the dependency sort
+//		Collections.sort(
+//				this.adviceList
+//				, TextualNote.noteTypeAdHocComparator);
 		for (TextualNote note : this.adviceList) {
 			sb.append(
 					this.getNoteAsLatexForNonRef(
@@ -812,7 +876,7 @@ public class TextInformationToPdf {
 			) {
 		StringBuffer sb = new StringBuffer();
 			sb.append("\n\\noteLexicalRefToBibleTitle{");
-			sb.append(note.liturgicalScope);
+			sb.append(note.liturgicalScope.trim());
 			sb.append("}{");
 			sb.append(note.liturgicalLemma);
 			sb.append("}{");
@@ -837,7 +901,7 @@ public class TextInformationToPdf {
 			) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("\n\\noteRefersTo{");
-		sb.append(note.liturgicalScope);
+		sb.append(note.liturgicalScope.trim());
 		sb.append("}{");
 		sb.append(note.liturgicalLemma);
 		sb.append("}{");
@@ -921,7 +985,7 @@ public class TextInformationToPdf {
 			) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("\\noteLexicalTitleText{");
-		sb.append(note.liturgicalScope);
+		sb.append(note.liturgicalScope.trim());
 		sb.append("}{");
 		sb.append(note.liturgicalLemma);
 		if (note.getNoteTitle().trim().length() > 0) {
@@ -936,27 +1000,33 @@ public class TextInformationToPdf {
 
 		return sb.toString();
 	}
-	public String getVersionsAsLatex() {
+	public String getVersionsAsLatex(
+			String ages
+			) {
 		StringBuffer transSb = new StringBuffer();
 		StringBuffer result = new StringBuffer();
 		boolean hasScansion = false;
 		
 		String greekLibrary = "gr_gr_cog";
 		String greekLatex = "";
-		String libraryLatex = "";
 		String greekValue = "";
+		String gevLibrary = "en_uk_gev";
+		String gevLatex = "";
+		String gevValue = "";
+		String gevMotLibrary = "en_uk_gemot";
+		String gevMotLatex = "";
+		String gevMotValue = "";
+		String gevSotLibrary = "en_uk_gesot";
+		String gevSotLatex = "";
+		String gevSotValue = "";
+		String libraryLatex = "";
 		StringBuffer lf  = new StringBuffer();
-		lf.append("gr");
-		lf.append("\\textunderscore ");
-		lf.append("gr");
-		lf.append("\\textunderscore ");
-		lf.append("cog");
 		greekLatex = lf.toString();
-		transSb.append("\\section{Translations}\n");
-		transSb.append("\\setlength{\\arrayrulewidth}{1mm}");
+
+		transSb.append("\\setlength{\\arrayrulewidth}{0.4pt}");
 		transSb.append("\\setlength{\\tabcolsep}{18pt}");
 		transSb.append("\\renewcommand{\\arraystretch}{1.5}");
-		transSb.append("\\begin{tabular}{ |p{3cm}|p{12cm}| }\n\\hline\n");
+		transSb.append("\\begin{tabular}{ |p{3cm}|p{10cm}| }\n\\hline\n");
 		for (JsonElement e : this.jsonObject.get("versions").getAsJsonArray()) {
 			JsonObject o = e.getAsJsonObject();
 			String library = o.get("library").getAsString();
@@ -985,6 +1055,16 @@ public class TextInformationToPdf {
 				}
 				if (library.equals(greekLibrary)) {
 					greekValue = value;
+					greekLatex = lf.toString();
+				} else if (library.equals(gevLibrary)) {
+					gevValue = value;
+					gevLatex = lf.toString();
+				} else if (library.equals(gevMotLibrary)) {
+					gevMotValue = value;
+					gevMotLatex = lf.toString();
+				} else if (library.equals(gevSotLibrary)) {
+					gevSotValue = value;
+					gevSotLatex = lf.toString();
 				} else {
 					transSb.append(libraryLatex);
 					transSb.append(" & ");
@@ -1017,16 +1097,55 @@ public class TextInformationToPdf {
 
 		if (greekValue.length() > 0) {
 			result.append("\\section{Source Text}\n");
-			result.append("\\setlength{\\arrayrulewidth}{1mm}");
+			result.append(ages);
+			result.append("\\setlength{\\arrayrulewidth}{0.4pt}");
 			result.append("\\setlength{\\tabcolsep}{18pt}");
 			result.append("\\renewcommand{\\arraystretch}{1.5}");
-			result.append("\\begin{tabular}{ |p{3cm}|p{12cm}| }\n\\hline\n");
+			result.append("\\begin{tabular}{ |m{3cm}|p{10cm}| }\n\\hline\n");
 			result.append(greekLatex);
 			result.append(" & ");
 			result.append(greekValue);
 			result.append(" \\\\ ");
 			result.append("\n");
 			result.append("\n\\hline\n\\end{tabular}\n\n");
+		}
+		if (this.includeAdviceNotes && (gevValue.length() > 0 || gevSotValue.length() > 0 || gevMotValue.length() > 0) ) {
+			result.append("\\section{Global English Translations}\n");
+			result.append("\\setlength{\\arrayrulewidth}{0.4pt}");
+			result.append("\\setlength{\\tabcolsep}{18pt}");
+			result.append("\\renewcommand{\\arraystretch}{1.5}");
+			result.append("\\begin{tabular}{ |p{3cm}|p{10cm}| }\n\\hline\n");
+			if (gevSotValue.length() > 0) {
+				result.append("Structure Oriented (");
+				result.append(gevSotLatex);
+				result.append(")");
+				result.append(" & ");
+				result.append(gevSotValue);
+				result.append(" \\\\ ");
+				result.append("\n\\hline\n");
+			}
+			if (gevValue.length() > 0) {
+				result.append("Model (");
+				result.append(gevLatex);
+				result.append(")");
+				result.append(" & ");
+				result.append(gevValue);
+				result.append(" \\\\ ");
+				result.append("\n\\hline\n");
+			}
+			if (gevMotValue.length() > 0) {
+				result.append("Meaning Oriented (");
+				result.append(gevMotLatex);
+				result.append(")");
+				result.append(" & ");
+				result.append(gevMotValue);
+				result.append(" \\\\ ");
+				result.append("\n\\hline\n");
+			}
+			result.append("\n\\hline\n\\end{tabular}\n\n");
+			result.append("\\section{Other Translations}\n");
+		} else {
+			result.append("\\section{Translations}\n");
 		}
 		result.append(transSb.toString());
 		return result.toString();

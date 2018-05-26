@@ -230,6 +230,8 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 						id = json.get("link").getAsJsonObject().get("properties").getAsJsonObject().get(Constants.VALUE_SCHEMA_ID).getAsJsonObject().get("val").getAsString();
 					}
 				}
+			} else if (json.has("properties(to)")) {
+				id = json.get("properties(to)").getAsJsonObject().get(Constants.VALUE_SCHEMA_ID).getAsString();
 			}
 			if (id != null) {
 				try {
@@ -842,6 +844,107 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			list.add(user.getAsJsonObject().get("_id").getAsString());
 		}
 		return list;
+	}
+	
+	public List<Domain> getDomainObjects() {
+		List<Domain> domains = new ArrayList<Domain>();
+		for (String id : getDomainIds()) {
+			try {
+				IdManager idManager = new IdManager(id);
+				domains.add(this.getDomain(idManager.getKey()));
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+		}
+		return domains;
+	}
+
+	public List<JsonObject> getDomainJsonObjects() {
+		List<JsonObject> domains = new ArrayList<JsonObject>();
+		for (String id : getDomainIds()) {
+			try {
+				IdManager idManager = new IdManager(id);
+				domains.add(this.getDomain(idManager.getKey()).toJsonObject());
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+		}
+		return domains;
+	}
+	
+	public JsonArray getDomainObjectArray() {
+		JsonArray result = new JsonArray();
+		for (JsonObject json : this.getDomainJsonObjects()) {
+			result.add(json);
+		}
+		return result;
+	}
+
+	public JsonObject getDomainsGroupedByType() {
+		JsonObject result = new JsonObject();
+		JsonObject collective = new JsonObject();
+		JsonObject collectiveLiturgical = new JsonObject();
+		JsonObject collectiveBiblical = new JsonObject();
+		JsonObject user = new JsonObject();
+		for (Domain domain : this.getDomainObjects()) {
+			if (domain.getType() == DOMAIN_TYPES.COLLECTIVE) {
+				collective.add(domain.getDomain(), domain.toJsonObject());
+				if (domain.getLabels().contains("Liturgical")) {
+					collectiveLiturgical.add(domain.getDomain(), domain.toJsonObject());
+				} else if (domain.getLabels().contains("Biblical")) {
+					collectiveBiblical.add(domain.getDomain(), domain.toJsonObject());
+				}
+			} else {
+				user.add(domain.getDomain(), domain.toJsonObject());
+			}
+		}
+		result.add("collective", collective);
+		result.add("collectiveBiblical", collectiveBiblical);
+		result.add("collectiveLiturgical", collectiveLiturgical);
+		result.add("user", user);
+		return result;
+	}
+
+	public List<String> getDomainsThatAreCollectiveLiturgical() {
+		List<String> result = new ArrayList<String>();
+		for (Domain domain : this.getDomainObjects()) {
+			if (domain.getType() == DOMAIN_TYPES.COLLECTIVE) {
+				if (domain.getLabels().contains("Liturgical")) {
+					result.add(domain.getDomain());
+				}
+			}
+		}
+		return result;
+	}
+
+	public List<Domain> getDomainsObjectsThatAreCollectiveLiturgical() {
+		List<Domain> result = new ArrayList<Domain>();
+		for (Domain domain : this.getDomainObjects()) {
+			if (domain.getType() == DOMAIN_TYPES.COLLECTIVE) {
+				if (domain.getLabels().contains("Liturgical")) {
+					result.add(domain);
+				}
+			}
+		}
+		return result;
+	}
+
+	public Map<String, DropdownItem> getCollectiveLiturgicalDropdownDomainMap() {
+		Map<String, DropdownItem> result = new TreeMap<String, DropdownItem>();
+		for (Domain domain : this.getDomainObjects()) {
+			if (domain.getType() == DOMAIN_TYPES.COLLECTIVE) {
+				if (domain.getLabels().contains("Liturgical")) {
+					String label = domain.getDescription().trim();
+					if (label.length() == 0 || label.equals(domain.getDomain())) {
+						label = domain.getDomain();
+					} else {
+						label = domain.getDomain() + " - " + domain.getDescription();
+					}
+					result.put(domain.getDomain(), new DropdownItem(label, domain.getDomain()));
+				}
+			}
+		}
+		return result;
 	}
 
 	/**
@@ -1603,6 +1706,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 									+ " "
 									+ userForm.getLastname()
 					);
+					domain.labels.add("Liturgical");
 					addDomain(requestor, domain.toJsonString());
 					
 					// make the user an admin for his/her personal domain
@@ -2760,6 +2864,13 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		if (json.get("valueCount").getAsInt() > 0) {
 			result = json.get("values").getAsJsonArray();
 		}
+		for (Domain domain : this.getDomainsObjectsThatAreCollectiveLiturgical()) {
+			try {
+				result.add(domain.toJsonObject());
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+		}
 		return result;
 	}
 	
@@ -2795,7 +2906,13 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 				}
 			}
 			for (JsonElement e : reads) {
-				String domain = e.getAsJsonObject().get("topic").getAsString();
+				JsonObject eAsObject = e.getAsJsonObject();
+				String domain = "";
+				if (eAsObject.has("topic")) {
+					domain = e.getAsJsonObject().get("topic").getAsString();
+				} else if (eAsObject.has("domain")) {
+					domain = e.getAsJsonObject().get("domain").getAsString();
+				}
 				if (! domains.contains(domain)) {
 					domains.add(domain);
 				}
@@ -2834,40 +2951,108 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	 */
 	public JsonArray getDropdownOfDomainsForWhichTheUserIsAReader(String username) {
 		JsonArray result = new JsonArray();
-		List<String> domains = new ArrayList<String>();
-		if (isDbAdmin(username)) {
-			domains = getDomains();
-		} else {
-			for (JsonElement value : this.getDomainsUserCanAdminister(username)) {
-				String domain = value.getAsJsonObject().get("topic").getAsString();
-				domains.add(domain);
-			}
-			for (JsonElement value : this.getDomainsUserCanAuthor(username)) {
-				String domain = value.getAsJsonObject().get("topic").getAsString();
-				if (! domains.contains(domain)) {
+		try {
+			List<String> domains = new ArrayList<String>();
+			if (isDbAdmin(username)) {
+				domains = getDomains();
+			} else {
+				for (JsonElement value : this.getDomainsUserCanAdminister(username)) {
+					String domain = value.getAsJsonObject().get("topic").getAsString();
 					domains.add(domain);
 				}
-			}
-			for (JsonElement value : this.getDomainsUserCanRead(username)) {
-				String domain = value.getAsJsonObject().get("topic").getAsString();
-				if (! domains.contains(domain)) {
-					domains.add(domain);
+				for (JsonElement value : this.getDomainsUserCanAuthor(username)) {
+					String domain = value.getAsJsonObject().get("topic").getAsString();
+					if (! domains.contains(domain)) {
+						domains.add(domain);
+					}
+				}
+				for (JsonElement value : this.getDomainsUserCanRead(username)) {
+					JsonObject valueObject = value.getAsJsonObject();
+					String domain = "";
+					if (valueObject.has("topic")) {
+						domain = value.getAsJsonObject().get("topic").getAsString();
+					} else if (valueObject.has("domain")) {
+						domain = value.getAsJsonObject().get("domain").getAsString();
+					}
+					if (! domains.contains(domain)) {
+						domains.add(domain);
+					}
 				}
 			}
-		}
-		Collections.sort(domains);
-		for (String domain : domains) {
-			JsonArray domainRecords = getWhereLike(SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.toId(domain)).get("values").getAsJsonArray();
-			if (domainRecords.size() > 0) {
-				JsonObject domainObject = domainRecords.get(0).getAsJsonObject();
-				String key = domainObject.get("key").getAsString();
-				String description = domainObject.get("value").getAsJsonObject().get("description").getAsString();
-				result.add(new DropdownItem(key + ": " + description, key).toJsonObject());
+			Collections.sort(domains);
+			for (String domain : domains) {
+				JsonArray domainRecords = getWhereLike(SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.toId(domain)).get("values").getAsJsonArray();
+				if (domainRecords.size() > 0) {
+					JsonObject domainObject = domainRecords.get(0).getAsJsonObject();
+					String key = domainObject.get("key").getAsString();
+					String description = domainObject.get("value").getAsJsonObject().get("description").getAsString();
+					result.add(new DropdownItem(key + ": " + description, key).toJsonObject());
+				}
 			}
+		} catch (Exception e) {
+			ErrorUtils.report(logger, e);
 		}
 		return result;
 	}
 
+	public JsonArray getDropdownOfLiturgicalDomainsTheUserCanSearch(String username) {
+		JsonArray result = new JsonArray();
+		try {
+			List<String> domains = new ArrayList<String>();
+			if (isDbAdmin(username)) {
+				domains = getDomains();
+			} else {
+				for (JsonElement value : this.getDomainsUserCanAdminister(username)) {
+					String domain = value.getAsJsonObject().get("topic").getAsString();
+					domains.add(domain);
+				}
+				for (JsonElement value : this.getDomainsUserCanAuthor(username)) {
+					String domain = value.getAsJsonObject().get("topic").getAsString();
+					if (! domains.contains(domain)) {
+						domains.add(domain);
+					}
+				}
+				for (JsonElement value : this.getDomainsUserCanRead(username)) {
+					try {
+						String domain = "";
+						JsonObject valueObject = value.getAsJsonObject();
+						if (valueObject.has("topic")) {
+							domain = value.getAsJsonObject().get("topic").getAsString();
+						} else if (valueObject.has("domain")) {
+							domain = value.getAsJsonObject().get("domain").getAsString();
+						}
+						if (! domains.contains(domain)) {
+							domains.add(domain);
+						}
+					} catch (Exception e) {
+						ErrorUtils.report(logger, e);
+					}
+				}
+			}
+			Collections.sort(domains);
+			for (String json : domains) {
+				try {
+					JsonArray domainRecords = getWhereLike(SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.toId(json)).get("values").getAsJsonArray();
+					if (domainRecords.size() > 0) {
+						Domain domain = (Domain) gson.fromJson(
+								domainRecords.get(0).getAsJsonObject().get("value").getAsJsonObject()
+								, Domain.class
+						);
+							if (domain.labels.contains("Liturgical")) {
+								String key = domain.getDomain();
+								String description = domain.getDescription();
+								result.add(new DropdownItem(key + ": " + description, key).toJsonObject());
+							}
+					}
+				} catch (Exception e) {
+					ErrorUtils.report(logger, e);
+				}
+			}
+		} catch (Exception e) {
+			ErrorUtils.report(logger, e);
+		}
+		return result;
+	}
 	/**
 	 * Get a JsonArray of the domains the user can author
 	 * The values of the JsonArrays are domains.
@@ -2877,31 +3062,35 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	 */
 	public JsonArray getDropdownOfDomainsForWhichTheUserIsAnAuthor(String username) {
 		JsonArray result = new JsonArray();
-		List<String> domains = new ArrayList<String>();
-		if (isDbAdmin(username)) {
-			domains = getDomains();
-		} else {
-			for (JsonElement value : this.getDomainsUserCanAdminister(username)) {
-				String domain = value.getAsJsonObject().get("topic").getAsString();
-				if (! domains.contains(domain)) {
-					domains.add(domain);
+		try {
+			List<String> domains = new ArrayList<String>();
+			if (isDbAdmin(username)) {
+				domains = getDomains();
+			} else {
+				for (JsonElement value : this.getDomainsUserCanAdminister(username)) {
+					String domain = value.getAsJsonObject().get("topic").getAsString();
+					if (! domains.contains(domain)) {
+						domains.add(domain);
+					}
+				}
+				for (JsonElement value : this.getDomainsUserCanAuthor(username)) {
+					String domain = value.getAsJsonObject().get("topic").getAsString();
+					if (! domains.contains(domain)) {
+						domains.add(domain);
+					}
 				}
 			}
-			for (JsonElement value : this.getDomainsUserCanAuthor(username)) {
-				String domain = value.getAsJsonObject().get("topic").getAsString();
-				if (! domains.contains(domain)) {
-					domains.add(domain);
+			for (String domain : domains) {
+				JsonArray domainRecords = getWhereLike(SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.toId(domain)).get("values").getAsJsonArray();
+				if (domainRecords.size() > 0) {
+					JsonObject domainObject = domainRecords.get(0).getAsJsonObject();
+					String key = domainObject.get("key").getAsString();
+					String description = domainObject.get("value").getAsJsonObject().get("description").getAsString();
+					result.add(new DropdownItem(key + ": " + description, key).toJsonObject());
 				}
 			}
-		}
-		for (String domain : domains) {
-			JsonArray domainRecords = getWhereLike(SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.toId(domain)).get("values").getAsJsonArray();
-			if (domainRecords.size() > 0) {
-				JsonObject domainObject = domainRecords.get(0).getAsJsonObject();
-				String key = domainObject.get("key").getAsString();
-				String description = domainObject.get("value").getAsJsonObject().get("description").getAsString();
-				result.add(new DropdownItem(key + ": " + description, key).toJsonObject());
-			}
+		} catch (Exception e) {
+			ErrorUtils.report(logger, e);
 		}
 		return result;
 	}
@@ -2929,27 +3118,31 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	 */
 	public JsonArray getDropdownOfDomainsForWhichTheUserIsAnAdmin(String username) {
 		JsonArray result = new JsonArray();
-		List<String> domains = new ArrayList<String>();
-		if (isDbAdmin(username)) {
-			domains = getDomains();
-		} else {
-			JsonObject json = getWhereLike(ROLES.ADMIN.keyname + "%" + username);
-			if (json.get("valueCount").getAsInt() > 0) {
-				for (JsonElement value : json.get("values").getAsJsonArray()) {
-					String domain = value.getAsJsonObject().get("topic").getAsString();
-					domains.add(domain);
+		try {
+			List<String> domains = new ArrayList<String>();
+			if (isDbAdmin(username)) {
+				domains = getDomains();
+			} else {
+				JsonObject json = getWhereLike(ROLES.ADMIN.keyname + "%" + username);
+				if (json.get("valueCount").getAsInt() > 0) {
+					for (JsonElement value : json.get("values").getAsJsonArray()) {
+						String domain = value.getAsJsonObject().get("topic").getAsString();
+						domains.add(domain);
+					}
 				}
 			}
-		}
-		Collections.sort(domains);
-		for (String domain : domains) {
-			JsonArray domainRecords = getWhereLike(SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.toId(domain)).get("values").getAsJsonArray();
-			if (domainRecords.size() > 0) {
-				JsonObject domainObject = domainRecords.get(0).getAsJsonObject();
-				String key = domainObject.get("key").getAsString();
-				String description = domainObject.get("value").getAsJsonObject().get("description").getAsString();
-				result.add(new DropdownItem(key + ": " + description, key).toJsonObject());
+			Collections.sort(domains);
+			for (String domain : domains) {
+				JsonArray domainRecords = getWhereLike(SYSTEM_MISC_LIBRARY_TOPICS.DOMAINS.toId(domain)).get("values").getAsJsonArray();
+				if (domainRecords.size() > 0) {
+					JsonObject domainObject = domainRecords.get(0).getAsJsonObject();
+					String key = domainObject.get("key").getAsString();
+					String description = domainObject.get("value").getAsJsonObject().get("description").getAsString();
+					result.add(new DropdownItem(key + ": " + description, key).toJsonObject());
+				}
 			}
+		} catch (Exception e) {
+			ErrorUtils.report(logger, e);
 		}
 		return result;
 	}
@@ -2973,6 +3166,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		result.add("admin", this.getDropdownOfDomainsForWhichTheUserIsAnAdmin(username));
 		result.add("author", this.getDropdownOfDomainsForWhichTheUserIsAnAuthor(username));
 		result.add("reader", this.getDropdownOfDomainsForWhichTheUserIsAReader(username));
+		result.add("liturgicalSearch", this.getDropdownOfLiturgicalDomainsTheUserCanSearch(username));
 		return result;
 	}
 

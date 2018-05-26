@@ -468,6 +468,12 @@ public class ServiceProvider {
 								request.pathInfo().toLowerCase().endsWith("/docs") && request.requestMethod().equals("GET")
 							)
 						|| (
+								request.pathInfo().toLowerCase().endsWith("/tables/en_sys_tables/LexiconTable/OALD")
+							)
+						|| (
+								request.pathInfo().toLowerCase().startsWith("/db/api/v1/nlp/text/analysis")
+							)
+						|| (
 								request.pathInfo().toLowerCase().startsWith("/ldp/api")
 							)
 						|| (
@@ -541,7 +547,7 @@ public class ServiceProvider {
 			 * In such cases, they will use the get handlers in this class. 
 			 */
 			new AuthorizationsController(storeManager);
-			new DomainsController(storeManager);
+			new DomainsController(storeManager, docService);
 			new LabelsController(storeManager);
 			new LoginController(storeManager);
 			new NewFormsController(storeManager);

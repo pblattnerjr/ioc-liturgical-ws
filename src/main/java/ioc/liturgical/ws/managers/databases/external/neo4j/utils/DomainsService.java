@@ -1,7 +1,9 @@
 package ioc.liturgical.ws.managers.databases.external.neo4j.utils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.ocmc.ioc.liturgical.schemas.models.DropdownArray;
 import org.ocmc.ioc.liturgical.schemas.models.DropdownItem;
@@ -22,11 +24,11 @@ public class DomainsService {
 	String textDomains = "match (n:Text) return distinct split(n.id,'~')[0]";
 
 	DropdownArray getBiblicalDomains() {
-		return getDomainsFor(DOMAIN_QUERIES.BIBLICAL);
+		return getDomainsDropdownArrayFor(DOMAIN_QUERIES.BIBLICAL, null);
 	}
 	
-	DropdownArray getLiturgicalDomains() {
-		return getDomainsFor(DOMAIN_QUERIES.LITURGICAL);
+	DropdownArray getLiturgicalDomains(Map<String, DropdownItem> filter) {
+		return getDomainsDropdownArrayFor(DOMAIN_QUERIES.LITURGICAL, filter);
 	}
 	
 	String getLabelFor(DOMAIN_QUERIES subject, String key) {
@@ -46,28 +48,37 @@ public class DomainsService {
 		return label;
 	}
 	
-	DropdownArray getDomainsFor(DOMAIN_QUERIES subject) {
-		List<DropdownItem> theDomains = new ArrayList<DropdownItem>();
-		theDomains.add(new DropdownItem("Any","*"));
+	JsonArray getDomainsAsJsonArrayFor(DOMAIN_QUERIES subject) {
+		JsonArray result = new JsonArray();
 		JsonObject json = ExternalDbManager
 				.neo4jManager
 				.getForQuery(subject.query)
 				.toJsonObject();
-		JsonArray values = json.get("values").getAsJsonArray();
+		result = json.get("values").getAsJsonArray();
+		return result;
+	}
+
+	DropdownArray getDomainsDropdownArrayFor(
+			DOMAIN_QUERIES subject
+			, Map<String, DropdownItem> filter // can be null
+			) {
+		List<DropdownItem> theDomains = new ArrayList<DropdownItem>();
+		theDomains.add(new DropdownItem("Any","*"));
+		JsonArray values = this.getDomainsAsJsonArrayFor(subject);
 		for (int i=0; i < values.size(); i++) {
 			JsonElement e = values.get(i);
 			String domain = e.getAsJsonObject().get(splitter).getAsString().trim();
-			String label = getLabelFor(subject, domain);
-			theDomains.add(new DropdownItem(label,domain));
+			if (filter == null) {
+				theDomains.add(new DropdownItem(this.getLabelFor(subject, domain), domain));
+			} else if (filter.containsKey(domain)) {
+				theDomains.add(filter.get(domain));
+			}
 		}
+		Collections.sort(theDomains);
 		DropdownArray array = new DropdownArray("domains");
 		array.setItems(theDomains);
 		return array;
 	}
-	public static void main(String[] args) {
-		DomainsService db = new DomainsService();
-		System.out.println(db.getBiblicalDomains());
-		System.out.println(db.getLiturgicalDomains());
-	}
+
 
 }

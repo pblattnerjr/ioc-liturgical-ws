@@ -104,6 +104,8 @@ public class Neo4jController {
 			String includeGrammar = request.queryParams("ig")  ;
 			String combineNotes = request.queryParams("cn")  ;
 			String alignmentLibrary = request.queryParams("al")  ;
+			String pdfTitle = request.queryParams("mt")  ;
+			String pdfSubTitle = request.queryParams("st")  ;
         	return gson.toJson(
         			externalManager.createDownloads(
         					requestor
@@ -113,6 +115,8 @@ public class Neo4jController {
         					, includeGrammar
         					, combineNotes
         					, alignmentLibrary
+        					, pdfTitle
+        					, pdfSubTitle
         					)
         			);
 		});
@@ -371,7 +375,7 @@ public class Neo4jController {
 		// GET keys and values for specified topic and specified libraries
 		// Used by client side Parallel Column Text Editor (ParaColTextEditor)
 		pCnt++;
-		path = ENDPOINTS_DB_API.VIEW_TOPIC.toLibraryPath();
+		path = ENDPOINTS_DB_API.VIEW_TOPIC.pathname;
 		ControllerUtils.reportPath(logger, "GET", path, pCnt);
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);

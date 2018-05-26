@@ -16,6 +16,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
+import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
+
 import org.ocmc.ioc.liturgical.schemas.constants.DROPDOWN_VALUES;
 import org.ocmc.ioc.liturgical.schemas.constants.LITURGICAL_BOOKS;
 
@@ -86,7 +88,7 @@ public class DomainTopicMapBuilder {
     }
 
 
-	public JsonObject getDropdownItems() {
+	public JsonObject getDropdownItems(Map<String, DropdownItem> filter) {
 		ResultJsonObjectArray result = new ResultJsonObjectArray(true);
 		try  {
 			DomainsService domainsService = new DomainsService();
@@ -95,7 +97,8 @@ public class DomainTopicMapBuilder {
 			types.add("Liturgical");
 
 			DropdownArray biblicalDomains = domainsService.getBiblicalDomains();
-			DropdownArray liturgicalDomains = domainsService.getLiturgicalDomains();
+			DropdownArray liturgicalDomains = 
+					domainsService.getLiturgicalDomains(filter);
 
 			List<JsonObject> list = new ArrayList<JsonObject>();
 			
@@ -134,6 +137,9 @@ public class DomainTopicMapBuilder {
 				}
 				}
 			}
+	    	JsonObject domainInfo = new JsonObject();
+	    	domainInfo.add("domainInfo", ExternalDbManager.internalManager.getDomainsGroupedByType());
+	    	list.add(domainInfo);
 	    	result.setResult(list);
 		} catch (Exception e) {
 			result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
@@ -187,35 +193,10 @@ public class DomainTopicMapBuilder {
 	public JsonObject getGenericLiturgicalBooksDropdownItems() {
 		ResultJsonObjectArray result = new ResultJsonObjectArray(true);
 		try  {
-//			LabelsService labelsService = new LabelsService();
 			List<JsonObject> list = new ArrayList<JsonObject>();
-//			List<String> topics = labelsService.getLabelsFor("Liturgical");
-//			Map<String, DropdownItem> bookMap = new TreeMap<String,DropdownItem>();
 	    	JsonObject json = new JsonObject();
-//	    	for (String topic : topics) {
-//	    		String[] parts = topic.split(",");
-//	    		for (int i=0; i < parts.length; i++) {
-//	    			String key = parts[i].trim();
-//	    			if (key.equals("le")) {
-//	    				String leKey = "le.ep";
-//    					bookMap.put(leKey, new DropdownItem(LITURGICAL_BOOKS.getLabel(leKey), leKey));
-//    					leKey = "le.go";
-//    					bookMap.put(leKey, new DropdownItem(LITURGICAL_BOOKS.getLabel(leKey), leKey));
-//    					leKey = "le.pr";
-//    					bookMap.put(leKey, new DropdownItem(LITURGICAL_BOOKS.getLabel(leKey), leKey));
-//	    			} else {
-//		    			if (LITURGICAL_BOOKS.containsKey(key)) {
-//		    				if (! bookMap.containsKey(key)) {
-//		    					bookMap.put(key, new DropdownItem(LITURGICAL_BOOKS.getLabel(key), key));
-//		    				}
-//		    			}
-//	    			}
-//	    		}
-//	        }
 	    	DropdownArray booksArray = new DropdownArray();
 	    	booksArray.setItems(LITURGICAL_BOOKS.toDropdownList());
-//	    	booksArray.add(new DropdownItem("Any", "*"));
-//	    	booksArray.setItems(bookMap);
 	    	json.add("books", booksArray.toJsonObject().get("items").getAsJsonArray());
 	    	list.add(json);
 	    	result.setResult(list);

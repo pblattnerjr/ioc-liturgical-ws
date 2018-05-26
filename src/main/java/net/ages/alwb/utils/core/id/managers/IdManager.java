@@ -14,6 +14,15 @@ import com.google.common.base.Joiner;
 
 import ioc.liturgical.ws.constants.Constants;
 import iso.IsoLangThreeToTwo;
+
+import org.ocmc.ioc.liturgical.schemas.constants.DAYS_OF_PENTECOSTARION;
+import org.ocmc.ioc.liturgical.schemas.constants.DAYS_OF_TRIODION;
+import org.ocmc.ioc.liturgical.schemas.constants.HEIRMOI_TYPES;
+import org.ocmc.ioc.liturgical.schemas.constants.HIERATIKON_SECTIONS;
+import org.ocmc.ioc.liturgical.schemas.constants.HOROLOGION_SECTIONS;
+import org.ocmc.ioc.liturgical.schemas.constants.LITURGICAL_BOOKS;
+import org.ocmc.ioc.liturgical.schemas.constants.MODES;
+import org.ocmc.ioc.liturgical.schemas.constants.MONTHS_OF_YEAR_MAP;
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import org.ocmc.ioc.liturgical.utils.GeneralUtils;
 
@@ -650,6 +659,111 @@ public String getOslwSetDomain(COLUMNS column) {
 			ErrorUtils.report(logger, e);
 		}
 		return result;
+	}
+	
+	public String getTopicDescription() {
+		StringBuffer sb = new StringBuffer();
+		String bookKey = "";
+		String [] topicParts = this.getTopic().split("\\.");
+		if (LITURGICAL_BOOKS.containsKey(topicParts[0])) {
+			bookKey  = topicParts[0];
+			if (bookKey.equals("le")) {
+				bookKey = bookKey + "." + topicParts[1];
+			}
+			if (LITURGICAL_BOOKS.containsKey(bookKey)) {
+				sb.append(LITURGICAL_BOOKS.get(bookKey));
+				String sectionKey = "";
+				String p2 = "";
+				if (topicParts.length > 1) {
+					sectionKey = topicParts[1];
+					switch (bookKey) {
+					case ("he"): {
+							if (HEIRMOI_TYPES.containsKey(sectionKey)) {
+								p2 = HEIRMOI_TYPES.get(sectionKey);
+								if (p2.length() > 0) {
+									sb.append(", ");
+									sb.append(p2);
+									if (topicParts.length > 2) {
+										sectionKey = topicParts[2];
+										String p3 = "";
+										if (MODES.containsKey(sectionKey)) {
+											p3 = MODES.get(sectionKey);
+											if (p3.length() > 0) {
+												sb.append(", ");
+												sb.append(p3);
+											}
+											
+										}
+									}
+								}
+							}
+							break;
+						}
+					case ("hi"): {
+						if (HIERATIKON_SECTIONS.containsKey(sectionKey)) {
+							p2 = HIERATIKON_SECTIONS.get(sectionKey);
+							if (p2.length() > 0) {
+								sb.append(", ");
+								sb.append(p2);
+							}
+						}
+						break;
+					}
+					case ("ho"): {
+						if (HOROLOGION_SECTIONS.containsKey(sectionKey)) {
+							p2 = HOROLOGION_SECTIONS.get(sectionKey);
+							if (p2.length() > 0) {
+								sb.append(", ");
+								sb.append(p2);
+							}
+						}
+						break;
+					}
+					case ("me"): {
+						if (MONTHS_OF_YEAR_MAP.containsKey(sectionKey)) {
+							p2 = MONTHS_OF_YEAR_MAP.get(sectionKey);
+							if (p2.length() > 0) {
+								sb.append(", ");
+								sb.append(p2);
+							}
+						}
+						break;
+					}
+					case ("oc"): {
+						if (MODES.containsKey(sectionKey)) {
+							p2 = MODES.get(sectionKey);
+							if (p2.length() > 0) {
+								sb.append(", ");
+								sb.append(p2);
+							}
+						}
+						break;
+					}
+					case ("pe"): {
+						if (DAYS_OF_PENTECOSTARION.containsKey(sectionKey)) {
+							p2 = DAYS_OF_PENTECOSTARION.get(sectionKey);
+							if (p2.length() > 0) {
+								sb.append(", ");
+								sb.append(p2);
+							}
+						}
+						break;
+					}
+					case ("tr"): {
+						if (DAYS_OF_TRIODION.containsKey(sectionKey)) {
+							p2 = DAYS_OF_TRIODION.get(sectionKey);
+							if (p2.length() > 0) {
+								sb.append(", ");
+								sb.append(p2);
+							}
+						}
+						break;
+					}
+					}
+				}
+			}
+		}
+		return sb.toString();
 	}
 	
 }

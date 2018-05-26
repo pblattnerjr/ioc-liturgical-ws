@@ -84,6 +84,9 @@ public class SynchPullTask implements Runnable {
 							for (JsonObject o : transactions.values) {
 								try {
 									Transaction trans = gson.fromJson(o, Transaction.class);
+									log.setLastUsedSynchTimestamp(trans.getKey());
+									log.recordSynchTime();
+									dbManager.recordSynch(log);
 									if (! trans.requestingMac.equals(dbManager.macAddress)) { 
 										LTKDb ltkDb = gson.fromJson(trans.getJson(), LTKDb.class);
 										LTKDb record = 
@@ -111,9 +114,6 @@ public class SynchPullTask implements Runnable {
 											}
 										}
 									}
-									log.setLastUsedSynchTimestamp(trans.getKey());
-									log.recordSynchTime();
-									dbManager.recordSynch(log);
 								} catch (Exception e) {
 									String message = "Could not run transaction against local database: " + o.toString();
 									ErrorUtils.report(logger, e);
