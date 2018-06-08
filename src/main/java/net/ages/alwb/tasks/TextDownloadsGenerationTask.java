@@ -38,9 +38,14 @@ public class TextDownloadsGenerationTask implements Runnable {
 	boolean includePersonalNotes = false;
 	boolean includeGrammar  = false;
 	boolean combineNotes = false;
+	boolean createToc = false;
 	String alignmentLibrary = "";
 	String pdfTitle = "";
 	String pdfSubTitle = "";
+	String author  = "";
+	String authorTitle  = "";
+	String authorAffiliation  = "";
+	String citestyle = "";
 	
 	/**
 	 * 
@@ -57,9 +62,14 @@ public class TextDownloadsGenerationTask implements Runnable {
 			, boolean includeAdviceNotes
 			, boolean includeGrammar
 			, boolean combineNotes
+			, boolean createToc
 			, String alignmentLibrary
 			, String pdfTitle
 			, String pdfSubTitle
+			, String author
+			, String authorTitle
+			, String authorAffiliation
+			, String citestyle
 			) {
 		this.jsonObject = jsonObject;
 		this.pdfId = pdfId;
@@ -70,9 +80,14 @@ public class TextDownloadsGenerationTask implements Runnable {
 		this.includePersonalNotes = includePersonalNotes;
 		this.includeGrammar = includeGrammar;
 		this.combineNotes = combineNotes;
+		this.createToc = createToc;
 		this.alignmentLibrary = alignmentLibrary;
 		this.pdfTitle = pdfTitle;
 		this.pdfSubTitle = pdfSubTitle;
+		this.author = author;
+		this.authorAffiliation = authorAffiliation;
+		this.authorTitle = authorTitle;
+		this.citestyle = citestyle;
 	}
 	
 	@Override
@@ -88,9 +103,14 @@ public class TextDownloadsGenerationTask implements Runnable {
 				, this.includeAdviceNotes
 				, this.includeGrammar
 				, this.combineNotes
+				, this.createToc
 				, this.alignmentLibrary
 				, this.pdfTitle
 				, this.pdfSubTitle
+				, this.author
+				, this.authorTitle
+				, this.authorAffiliation
+				, this.citestyle
 				);
 		if (textInfoToPdf.hasBibliography()) {
 			FileUtils.writeFile(Constants.PDF_FOLDER + "/" + this.pdfId + ".bib", textInfoToPdf.getBibtexFileSb().toString());

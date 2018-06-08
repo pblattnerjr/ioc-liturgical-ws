@@ -103,9 +103,14 @@ public class Neo4jController {
 			String includeAdviceNotes = request.queryParams("ia")  ;
 			String includeGrammar = request.queryParams("ig")  ;
 			String combineNotes = request.queryParams("cn")  ;
+			String createToc = request.queryParams("toc")  ;
 			String alignmentLibrary = request.queryParams("al")  ;
 			String pdfTitle = request.queryParams("mt")  ;
 			String pdfSubTitle = request.queryParams("st")  ;
+			String author = request.queryParams("au")  ;
+			String authorTitle = request.queryParams("at")  ;
+			String authorAffiliation = request.queryParams("af")  ;
+			String citestyle = request.queryParams("cs")  ;
         	return gson.toJson(
         			externalManager.createDownloads(
         					requestor
@@ -114,9 +119,14 @@ public class Neo4jController {
         					, includeAdviceNotes
         					, includeGrammar
         					, combineNotes
+        					, createToc
         					, alignmentLibrary
         					, pdfTitle
         					, pdfSubTitle
+        					, author
+        					, authorTitle
+        					, authorAffiliation
+        					, citestyle
         					)
         			);
 		});

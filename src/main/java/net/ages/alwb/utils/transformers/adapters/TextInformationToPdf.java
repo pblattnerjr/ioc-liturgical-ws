@@ -15,6 +15,8 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.LocaleUtils;
+import org.joda.time.Instant;
+import org.joda.time.LocalDate;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -82,12 +84,17 @@ public class TextInformationToPdf {
 	private boolean includeGrammar = false;
 	private boolean includePersonalNotes = false;
 	private boolean combineNotes = false;
+	private boolean createToc = false;
 	private String pdfTitle = "";
 	private String pdfSubTitle = "";
 	private String alignmentLibrary = "";
 	private String alignmentLibraryLatex = "";
 	private String alignmentText = "";
 	private String greekValueFirstChar = "";
+	private String author = "";
+	private String authorTitle = "";
+	private String authorAffiliation = "";
+	private String citestyle = "authoryear";
 	
 	public TextInformationToPdf (
 			JsonObject jsonObject
@@ -99,9 +106,14 @@ public class TextInformationToPdf {
 			, boolean includeAdviceNotes
 			, boolean includeGrammar
 			, boolean combineNotes
+			, boolean createToc
 			, String alignmentLibrary
 			, String pdfTitle
 			, String pdfSubTitle
+			, String author
+			, String authorTitle
+			, String authorAffiliation
+			, String citestyle
 			)   throws JsonParseException {
 		this.jsonObject = jsonObject;
 		this.textId = textId;
@@ -112,14 +124,31 @@ public class TextInformationToPdf {
 		this.includePersonalNotes = includePersonalNotes;
 		this.includeGrammar = includeGrammar;
 		this.combineNotes = combineNotes;
+		this.createToc = createToc;
 		this.alignmentLibrary = alignmentLibrary;
-		this.pdfTitle = pdfTitle;
-		this.pdfSubTitle = pdfSubTitle;
+		this.pdfTitle = pdfTitle.trim();
+		this.pdfSubTitle = pdfSubTitle.trim();
 		if (pdfTitle.equals("undefined")) {
 			this.pdfTitle = "";
 		}
 		if (pdfSubTitle.equals("undefined")) {
 			this.pdfSubTitle = "";
+		}
+		this.author = author.trim();
+		if (author.equals("undefined")) {
+			this.author = "";
+		}
+		this.authorTitle = authorTitle.trim();
+		if (authorTitle.equals("undefined")) {
+			this.authorTitle = "";
+		}
+		this.authorAffiliation = authorAffiliation.trim();
+		if (authorAffiliation.equals("undefined")) {
+			this.authorAffiliation = "";
+		}
+		this.citestyle = citestyle;
+		if (citestyle.equals("undefined")) {
+			this.citestyle = "authoryear";
 		}
 		this.process();
 	}
@@ -198,16 +227,115 @@ public class TextInformationToPdf {
 		return sb.toString();
 	}
 
+	private String getTitle() {
+		StringBuffer sb = new StringBuffer();
+		sb.append("\\huge ");
+		sb.append("\\begin{center}");
+		sb.append(this.pdfTitle);
+		sb.append("\\end{center}");
+		sb.append("\\newline%\n");
+		if (this.pdfSubTitle.length() > 0) {
+			sb.append("{\\scshape\\Large ");
+			sb.append("\\begin{center}");
+			sb.append(this.pdfSubTitle);
+			sb.append("\\end{center}");
+			sb.append("}\\\\%\n");
+		}
+		sb.append("{\\scshape\\small\n");
+		sb.append("\\begin{center}");
+		if (this.author.length() > 0) {
+			sb.append(this.author);
+			sb.append("\\\\");
+		}
+		if (this.authorTitle.length() > 0) {
+			sb.append(this.authorTitle);
+			sb.append("\\\\");
+		}
+		if (this.authorAffiliation.length() > 0) {
+			sb.append(this.authorAffiliation);
+			sb.append("\\\\");
+		}
+		sb.append(LocalDate.now().toString());
+		sb.append("\n\\end{center}");
+		sb.append("}\\\\[\\baselineskip]%\n");
+		if (this.includeAdviceNotes && this.author.contains("Colburn")) {
+			sb.append("\\includegraphics[width=.5\\textwidth]{system/images/nicodemos.jpg}");
+			sb.append("{\\scshape\\footnotesize\n");
+			sb.append("\\begin{center}\n");
+			sb.append("O Lord, through the prayers of our Holy Fathers Kosmos the Poet, John of Damascus, and Nikodemos of the Holy Mountain, give us understanding and grace to create translations that are pleasing to You!");
+			sb.append("\n\\end{center}");
+			sb.append("}%\n");
+		}
+		sb.append("\\vfill%\n");
+		return sb.toString();
+	}
+	
+	private String getTableOfContents() {
+		StringBuffer sb = new StringBuffer();
+//		sb.append("\\pagebreak\n");
+		sb.append("\\tableofcontents*\n");
+		sb.append("\\vfill\n");
+//		sb.append("\\pagebreak\n");
+		return sb.toString();
+	}
+	
+	private String getTitlePage() {
+		StringBuffer sb = new StringBuffer();
+		sb.append("\\begin{titlingpage}%\n");
+		sb.append("\\openup .5em%\n");
+		sb.append("\\begin{center}%\n");
+		sb.append("\\begin{minipage}{25em}%\n");
+		sb.append("\\begin{center}%\n");
+		sb.append("\\linespread{2}%\n");
+		sb.append(this.getTitle());
+		sb.append("\\end{center}%\n");
+		sb.append("\\end{minipage}%\n");
+		sb.append("\\end{center}%\n");
+		sb.append("\\end{titlingpage}%\n");
+		return sb.toString();
+	}
+	
+	private String getTitle2() {
+		StringBuffer sb = new StringBuffer();
+		sb.append("\\title");
+		sb.append(this.pdfTitle);
+		sb.append("}%\n");
+		if (this.author.trim().length() > 0) {
+			sb.append("\\author{");
+			sb.append(this.author.trim());
+			sb.append("}%\n");
+		}
+		sb.append("\\date{");
+		sb.append(LocalDate.now().toString());
+		sb.append("}%\n");
+		sb.append("\\maketitle%\n");
+		return sb.toString();
+	}
+
 	public void process() {
 		IdManager idManager = new IdManager(this.textId);
 
-		this.texFileSb.append("\\documentclass[extrafontsizes,12pt]{memoir}\n");
+		this.texFileSb.append("\\documentclass[extrafontsizes,openany,12pt]{memoir}\n");
 		this.texFileSb.append("\\usepackage{multicol}%\n");
 		this.texFileSb.append("\\usepackage{system/ocmc-grammar}%\n");
 		this.texFileSb.append("\\usepackage[hyphenate]{system/ocmc-liturgical-text}%\n");
 		this.texFileSb.append("\\input{system/control} %\n");
 		this.texFileSb.append("\\usepackage[defaultlines=4,all]{nowidow}%\n");
-		
+		boolean sbl = false; // note working yet
+		if (sbl) {
+			this.texFileSb.append(this.getBiblatexSblPackage());
+		} else {
+			this.texFileSb.append(this.getBiblatexPackage(
+					this.citestyle // bibstyle
+					, this.citestyle // citestyle
+					, "nyt" // sorting
+					, "true" // sortcites
+					, "true" // autopunct
+					, "hyphen" // babel
+					, "true" // hyperref
+					, "false" // abbreviate
+					));
+		}
 		this.loadAbbreviations();
 		if (this.includeGrammar) {
 			this.loadGrammar();
@@ -245,22 +373,21 @@ public class TextInformationToPdf {
 			this.texFileSb.append(".bib}%\n\n");
 			this.bibtexFileSb.append(this.createBibFileContent());
 		}
-		
 		this.texFileSb.append("\\begin{document}%\n");
+		this.texFileSb.append("\\parskip=12pt");
+		this.texFileSb.append(this.getTitlePage());
+		if (this.createToc) {
+			this.texFileSb.append(this.getTableOfContents());
+		}
+		this.texFileSb.append("\n");
 		this.texFileSb.append("\\mainmatter%\n");
+		this.texFileSb.append("\\nopartblankpage");
 		this.texFileSb.append("\\selectlanguage{english}\n");
 
-		// set the title for the pdf
-		this.texFileSb.append("\\ltChapter{pdf}{title}\n");
-//		this.texFileSb.append("\n\\titleborder\n");
-		if (this.pdfSubTitle.length() > 0) {
-			this.texFileSb.append("\\begin{center}\n");
-			this.texFileSb.append("\n\\textbf{");
-			this.texFileSb.append(this.pdfSubTitle);
-			this.texFileSb.append("}\n\n");
-			this.texFileSb.append("\\end{center}\n");
-		}
-		// provide the topic and key we are using
+		// set the title for the pdf 
+	    this.texFileSb.append("\\ltChapter{pdf}{title}\n"); 
+	    
+	    // provide the topic and key we are using
 		StringBuffer ages = new StringBuffer();
 		ages.append("\\begin{center}\n");
 		ages.append("\\tiny{");
@@ -277,12 +404,13 @@ public class TextInformationToPdf {
 		}
 		ages.append("\\end{center}\n");
 		
-		
 		// process the content
 		this.texFileSb.append(this.getVersionsAsLatex(ages.toString()));
+		this.texFileSb.append("\\vfill");
 		this.texFileSb.append(this.getNotesAsLatex());
 		this.texFileSb.append("\\vfill");
 		if (this.includeGrammar) {
+			this.texFileSb.append("\\section{Grammar}");
 			this.texFileSb.append(this.getInterlinearAsLatex());
 			this.texFileSb.append("\\vfill");
 			this.texFileSb.append(this.getDependencyDiagramAsLatex());
@@ -291,7 +419,7 @@ public class TextInformationToPdf {
 		this.texFileSb.append(this.getAbbreviationsAsLatex());
 		
 		if (this.hasBibliography) {
-			this.texFileSb.append("\\section*{Bibliography}\n\n");
+			this.texFileSb.append("\\section{Bibliography}\n\n");
 			this.texFileSb.append("\\selectlanguage{english}\n");
 			this.texFileSb.append("\\printbibliography[heading=bibempty]\n");
 		}
@@ -336,21 +464,21 @@ public class TextInformationToPdf {
 	public String getInterlinearAsLatex() {
 		StringBuffer sb = new StringBuffer();
 //		sb.append("\n\\vfill\n\\newpage\n");
-		sb.append("\\section{Interlinear Text}\n");
+		sb.append("\\subsection{Interlinear Text}\n");
 		sb.append("This section provides information about the grammar of words (that is, the morphology). The Greek words appear in the same order as they do in the source text.\n\n");
 		sb.append(this.nodesToInterlinear());
-		sb.append("\n\\sectionline\n");
+		sb.append("\n\\subsectionline\n");
 		return sb.toString();
 	}
 
 	public String getDependencyDiagramAsLatex() {
 		StringBuffer sb = new StringBuffer();
 //		sb.append("\n\\vfill\n\\newpage\n");
-		sb.append("\\section{Dependency Diagram}\n");
+		sb.append("\\subsection{Dependency Diagram}\n");
 		sb.append("This section uses a dependency diagram to show the syntactic structure of the text.  \\textit{Syntax} means \\textit{the grammatical relationship between words}, that is, \\textit{the way words are put together to create phrases and clauses and sentences}.  This diagram shows the structure based on a type of grammar theory called dependency grammar. The order of each Greek word in the diagram is based on the word it depends on. It appears indented and after the word it depends on. The first word to appear in the diagram is the root of the structure.\n");
 		sb.append("\\newline");
 		sb.append(this.processNode(null, new StringBuffer()));
-		sb.append("\n\\sectionline\n");
+		sb.append("\n\\subsectionline\n");
 		return sb.toString();
 	}
 	
@@ -382,16 +510,17 @@ public class TextInformationToPdf {
 			String gloss = node.getGloss();
 			gloss = gloss.replaceAll("\\[", "{[}");
 			gloss = gloss.replaceAll("\\]", "{]}");
+			sb.append("\\color{burgundy}");
 			sb.append(i+1);
-			sb.append("[");
+			sb.append("[\\color{blue}\\textbf{");
 			sb.append(node.getToken());
-			sb.append("/");
+			sb.append("}/\\color{burgundy}");
 			sb.append(gloss);
 			sb.append("/");
 			sb.append(node.getGrammar());
-			sb.append("/");
+			sb.append("/\\color{blue}");
 			sb.append(node.getLemma());
-			sb.append("]\n");
+			sb.append("\\color{black}]\n");
 			this.addGrammarAbbreviations(node.getGrammar());
 		}
 		sb.append("\\endgl\n\\vfill\n");
@@ -413,6 +542,47 @@ public class TextInformationToPdf {
 		} catch (Exception e) {
 			// ignore
 		}
+	}
+
+	private String getBiblatexPackage(
+			String bibstyle
+			, String citestyle
+			, String sorting
+			, String sortcites
+			, String autopunct
+			, String babel
+			, String hyperref
+			, String abbreviate
+			
+			) {
+		StringBuffer sb = new StringBuffer();
+		sb.append("\\usepackage[bibstyle=");
+		sb.append(bibstyle);
+		sb.append(",citestyle=");
+		sb.append(citestyle);
+		sb.append(",sorting=");
+		sb.append(sorting);
+		sb.append(",sortcites=");
+		sb.append(sortcites);
+		sb.append(",autopunct=");
+		sb.append(autopunct);
+		sb.append(",babel=");
+		sb.append(babel);
+		sb.append(",hyperref=");
+		sb.append(hyperref);
+		sb.append(",abbreviate=");
+		sb.append(abbreviate);
+		sb.append(",backref=true,bibencoding=utf8, backend=biber]{biblatex}%\n");
+		sb.append("\\defbibheading{bibempty}{}%\n");
+		return sb.toString();
+	}
+	
+	private String getBiblatexSblPackage(
+			) {
+		StringBuffer sb = new StringBuffer();
+		sb.append("\\usepackage{biblatex-sbl}%\n");
+		sb.append("\\usepackage[style=sbl]{biblatex}%\n");
+		return sb.toString();
 	}
 
 	private void addSyntacticLabel(String key) {
@@ -492,8 +662,7 @@ public class TextInformationToPdf {
 	public String getAbbreviationsAsLatex() {
 		StringBuffer sb = new StringBuffer();
 		if (this.usedAbbreviations.size() > 0) {
-//			sb.append("\\vfill\\newpage\n");
-			sb.append("\\section{List of Abbreviations and Acronymns}\n");
+			sb.append("\\section{Abbreviations}\n");
 			sb.append("\\begin{tabular}{ r | l }\n");
 			int i = 0;
 			for (Entry<String,String> entry : this.usedAbbreviations.entrySet()) {
@@ -519,18 +688,19 @@ public class TextInformationToPdf {
 			}
 			sb.append("\\end{tabular}\n");
 		}
-		sb.append("\n\\sectionline\n");
+		sb.append("\n\\subsectionline\n");
 		return sb.toString();
 	}
 	
 	public String getNotesAsLatex() {
 		StringBuffer sb = new StringBuffer();
-		sb.append("\\section{Summary}\n");
+		sb.append("\\section{Notes About the Text}");
+		sb.append("\\subsection{Summary}\n");
 		for (TextualNote note : this.summaryList) {
 			sb.append(note.getValue());
 			sb.append("\n");
 		}
-		sb.append("\\section{Discussion}\n");
+		sb.append("\\subsection{Discussion}\n");
 		if (this.combineNotes) {
 			sb.append("\nThe notes are sorted based the order of words in the ");
 			sb.append(this.alignmentLibraryLatex);
@@ -539,11 +709,11 @@ public class TextInformationToPdf {
 		} else {
 			sb.append(this.processNotesByType());
 			if (this.includeAdviceNotes) {
-				sb.append("\\section{Advice for Translators and Translation Checkers}\n");
+				sb.append("\\subsection{Advice for Translators and Translation Checkers}\n");
 				sb.append(this.processAdviceNotes());
 			}
 		}
-		sb.append("\n\\sectionline\n");
+		sb.append("\n\\subsectionline\n");
 		sb.append("\\vfill%\n");
 		return sb.toString();
 	}
@@ -826,7 +996,7 @@ public class TextInformationToPdf {
 		for (TextualNote note : this.notesList) {
 			NOTE_TYPES type = note.getNoteType();
 			if (currentType != type) {
-				sb.append("\n\\subsection{");
+				sb.append("\n\\subsubsection{");
 				sb.append(type.fullname);
 				sb.append("}\n");
 				currentType = type;
@@ -1095,9 +1265,10 @@ public class TextInformationToPdf {
 			transSb.append("Note: some liturgical hymns originally used punctuation marks to indicate the boundary of metric feet. They do not have a grammatical role.  They are called \\textit{scansion} symbols. In the modern version of source text or translations you might see asterisks (*) or forward slashes (/) used as scansion symbols.\n");
 		}
 
+		result.append("\\section{The Text and Translations}");
+		result.append(ages);
 		if (greekValue.length() > 0) {
-			result.append("\\section{Source Text}\n");
-			result.append(ages);
+			result.append("\\subsection{Source Text}\n");
 			result.append("\\setlength{\\arrayrulewidth}{0.4pt}");
 			result.append("\\setlength{\\tabcolsep}{18pt}");
 			result.append("\\renewcommand{\\arraystretch}{1.5}");
@@ -1107,10 +1278,11 @@ public class TextInformationToPdf {
 			result.append(greekValue);
 			result.append(" \\\\ ");
 			result.append("\n");
-			result.append("\n\\hline\n\\end{tabular}\n\n");
+			result.append("\n\\hline\n\\end{tabular}\n");
+			result.append("\\vfill\n");
 		}
 		if (this.includeAdviceNotes && (gevValue.length() > 0 || gevSotValue.length() > 0 || gevMotValue.length() > 0) ) {
-			result.append("\\section{Global English Translations}\n");
+			result.append("\\subsection{Global English Translations}\n");
 			result.append("\\setlength{\\arrayrulewidth}{0.4pt}");
 			result.append("\\setlength{\\tabcolsep}{18pt}");
 			result.append("\\renewcommand{\\arraystretch}{1.5}");
@@ -1143,11 +1315,13 @@ public class TextInformationToPdf {
 				result.append("\n\\hline\n");
 			}
 			result.append("\n\\hline\n\\end{tabular}\n\n");
-			result.append("\\section{Other Translations}\n");
+			result.append("\\vfill\n");
+			result.append("\\subsection{Other Translations}\n");
 		} else {
-			result.append("\\section{Translations}\n");
+			result.append("\\subsection{Translations}\n");
 		}
 		result.append(transSb.toString());
+		result.append("\\vfill");
 		return result.toString();
 	}
 	public String getBasePath() {

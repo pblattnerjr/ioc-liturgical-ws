@@ -458,9 +458,14 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			  , String includeAdviceNotes
 			  , String includeGrammar
 			  , String combineNotes
+			  , String createToc
 			  , String alignmentLibrary
 			  , String pdfTitle
 			  , String pdfSubTitle
+			  , String author
+			  , String authorTitle
+			  , String authorAffiliation
+			  , String citestyle
 			  ) {
 		  ResultJsonObjectArray result = new ResultJsonObjectArray(true);
 		  boolean includeNotesForUser = false;
@@ -478,6 +483,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  boolean doCombineNotes = false;
 		  if (combineNotes.equals("true")) {
 			  doCombineNotes = true;
+		  }
+		  boolean doCreateToc = false;
+		  if (createToc.equals("true")) {
+			  doCreateToc = true;
 		  }
 		  // get the data we need for this text
 		  JsonObject data = this.getTextInformation(
@@ -503,9 +512,14 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 							, doIncludeAdviceNotes
 							, doIncludeGrammar
 							, doCombineNotes
+							, doCreateToc
 							, alignmentLibrary
 							, pdfTitle
 							, pdfSubTitle
+							, author
+							, authorTitle
+							, authorAffiliation
+							, citestyle
 							)
 					);
 			executorService.shutdown();
