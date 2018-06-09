@@ -32,6 +32,7 @@ import org.ocmc.ioc.liturgical.schemas.models.ws.db.User;
 import org.ocmc.ioc.liturgical.schemas.models.ws.db.UserAuth;
 import org.ocmc.ioc.liturgical.schemas.models.ws.db.UserContact;
 import org.ocmc.ioc.liturgical.schemas.models.ws.db.UserHash;
+import org.ocmc.ioc.liturgical.schemas.models.ws.db.UserPreferences;
 import org.ocmc.ioc.liturgical.schemas.models.ws.db.UserStatistics;
 import org.ocmc.ioc.liturgical.schemas.models.ws.db.Utility;
 import org.ocmc.ioc.liturgical.schemas.models.ws.db.ValueSchema;
@@ -1989,6 +1990,51 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
     	return result;
     }
 
+	public RequestStatus addUserPreferences(String key, String json) {
+		RequestStatus result = new RequestStatus();
+		UserPreferences prefs = new UserPreferences();
+		prefs = (UserPreferences) prefs.fromJsonString(json);
+		String validation = prefs.validate(json);
+		if (validation.length() == 0) {
+			try {
+				result = addUserPreferences(key, prefs);
+			} catch (Exception e) {
+				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+			}
+		} else {
+			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setMessage(validation);
+		}
+		return result;
+	}
+	
+	public RequestStatus addUserPreferences(
+			String key
+			, UserPreferences prefs
+			) throws BadIdException {
+		RequestStatus result = new RequestStatus();
+		try {
+			result = addLTKVJsonObject(
+					USER_TOPICS.PREFERENCES.lib
+					, USER_TOPICS.PREFERENCES.topic
+					, key
+					, prefs.schemaIdAsString()
+					, prefs.toJsonObject()
+					);
+			UserStatistics stats = new UserStatistics();
+			addUserStats(key,stats);
+		} catch (MissingSchemaIdException e) {
+			ErrorUtils.report(logger, e);
+			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+		} catch (Exception e) {
+			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+		}
+    	return result;
+    }
+
 	public void addUserHash(
 			String requestor
 			, String key
@@ -2183,6 +2229,31 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		return result;
 	}
 	
+	public RequestStatus updateUserPreferences(
+			String requestor
+			, String key
+			, String json
+			) {
+		RequestStatus result = new RequestStatus();
+		UserPreferences prefs = new UserPreferences();
+		String validation = prefs.validate(json);
+		if (validation.length() == 0) {
+			try {
+				prefs = (UserPreferences) prefs.fromJsonString(json);
+				prefs.setModifiedBy(requestor);
+				prefs.setModifiedWhen(getTimestamp());
+				result = updateUserPreferences(key, prefs);
+			} catch (Exception e) {
+				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+			}
+		} else {
+			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setMessage(validation);
+		}
+		return result;
+	}
+
 	private RequestStatus updateUserContact(String key, UserContact user) {
 		RequestStatus result = new RequestStatus();
 		try {
@@ -2203,9 +2274,30 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			result.setMessage(e.getMessage());
 		}
 		return result;
-
 	}
 	
+	private RequestStatus updateUserPreferences(String key, UserPreferences prefs) {
+		RequestStatus result = new RequestStatus();
+		try {
+
+	    	result = updateLTKVJsonObject(
+	    			USER_TOPICS.PREFERENCES.lib
+	    			, USER_TOPICS.PREFERENCES.topic
+	    			, key
+	    			, prefs.schemaIdAsString()
+	    			, prefs.toJsonObject()
+	    			);
+		} catch (MissingSchemaIdException e) {
+			ErrorUtils.report(logger, e);
+			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+		} catch (Exception e) {
+			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setMessage(e.getMessage());
+		}
+		return result;
+	}
+
 	private RequestStatus updateUserStats(String key, UserStatistics user) {
 		RequestStatus result = new RequestStatus();
 		try {
@@ -2545,6 +2637,25 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		}
 	}
 	
+	public UserPreferences getUserPreferences(String username) {
+		try {			
+			ResultJsonObjectArray obj = getForId(USER_TOPICS.PREFERENCES.toId(username));
+			Long count = obj.getCount();
+			if (count != 1) {
+				return new UserPreferences();
+			} else {
+				UserPreferences prefs = (UserPreferences) gson.fromJson(
+						obj.getFirstObjectValueAsObject()
+						, UserPreferences.class
+				);
+				return prefs;
+			}
+		} catch (Exception e) {
+			ErrorUtils.report(logger, e);
+			return null;
+		}
+	}
+
 	public UserHash getUserHash(String username) {
 		try {			
 			ResultJsonObjectArray obj = getForId(USER_TOPICS.HASH.toId(username));

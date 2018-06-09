@@ -33,6 +33,7 @@ import ioc.liturgical.ws.controllers.admin.LoginController;
 import ioc.liturgical.ws.controllers.admin.NewFormsController;
 import ioc.liturgical.ws.controllers.admin.ResourcesController;
 import ioc.liturgical.ws.controllers.admin.UsersContactController;
+import ioc.liturgical.ws.controllers.admin.UsersPreferencesController;
 import ioc.liturgical.ws.controllers.admin.UsersPasswordController;
 import ioc.liturgical.ws.controllers.admin.UtilitiesController;
 import ioc.liturgical.ws.controllers.db.neo4j.Neo4jController;
@@ -555,6 +556,7 @@ public class ServiceProvider {
 			new ReferencesController(docService);
 			new ResourcesController(storeManager);
 			new UsersContactController(storeManager);
+			new UsersPreferencesController(storeManager);
 			new UsersPasswordController(storeManager);
 			new LdpController(ldpManager);
 			new UtilitiesController(docService);

@@ -4,18 +4,13 @@ import java.net.URL;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.TreeMap;
 
-import org.apache.commons.lang3.LocaleUtils;
-import org.joda.time.Instant;
 import org.joda.time.LocalDate;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -42,7 +37,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
-import net.ages.alwb.utils.core.generics.MultiMapWithList;
 import net.ages.alwb.utils.core.id.managers.IdManager;
 import net.ages.alwb.utils.oslw.OslwUtils;
 
@@ -90,11 +84,11 @@ public class TextInformationToPdf {
 	private String alignmentLibrary = "";
 	private String alignmentLibraryLatex = "";
 	private String alignmentText = "";
-	private String greekValueFirstChar = "";
 	private String author = "";
 	private String authorTitle = "";
 	private String authorAffiliation = "";
 	private String citestyle = "authoryear";
+	private StringBuffer textFile = new StringBuffer();
 	
 	public TextInformationToPdf (
 			JsonObject jsonObject
@@ -227,36 +221,46 @@ public class TextInformationToPdf {
 		return sb.toString();
 	}
 
+	private void appendText(String text) {
+		this.textFile.append(text);
+		this.textFile.append("\n");
+	}
+	
 	private String getTitle() {
 		StringBuffer sb = new StringBuffer();
-		sb.append("\\huge ");
-		sb.append("\\begin{center}");
+		sb.append("\\Large ");
+		sb.append("\\begin{center}\n\\textbf{");
 		sb.append(this.pdfTitle);
-		sb.append("\\end{center}");
+		this.appendText(this.pdfTitle);
+		sb.append("}\n\\end{center}");
 		sb.append("\\newline%\n");
 		if (this.pdfSubTitle.length() > 0) {
-			sb.append("{\\scshape\\Large ");
+			sb.append("{\\scshape\\large ");
 			sb.append("\\begin{center}");
 			sb.append(this.pdfSubTitle);
+			this.appendText(this.pdfSubTitle);
 			sb.append("\\end{center}");
 			sb.append("}\\\\%\n");
 		}
 		sb.append("{\\scshape\\small\n");
-		sb.append("\\begin{center}");
+		sb.append("\\begin{center}\n\\textit{");
 		if (this.author.length() > 0) {
 			sb.append(this.author);
+			this.appendText(this.author);
 			sb.append("\\\\");
 		}
 		if (this.authorTitle.length() > 0) {
 			sb.append(this.authorTitle);
+			this.appendText(this.authorTitle);
 			sb.append("\\\\");
 		}
 		if (this.authorAffiliation.length() > 0) {
 			sb.append(this.authorAffiliation);
+			this.appendText(this.authorAffiliation);
 			sb.append("\\\\");
 		}
 		sb.append(LocalDate.now().toString());
-		sb.append("\n\\end{center}");
+		sb.append("}\n\\end{center}");
 		sb.append("}\\\\[\\baselineskip]%\n");
 		if (this.includeAdviceNotes && this.author.contains("Colburn")) {
 			sb.append("\\includegraphics[width=.5\\textwidth]{system/images/nicodemos.jpg}");
@@ -272,10 +276,8 @@ public class TextInformationToPdf {
 	
 	private String getTableOfContents() {
 		StringBuffer sb = new StringBuffer();
-//		sb.append("\\pagebreak\n");
 		sb.append("\\tableofcontents*\n");
 		sb.append("\\vfill\n");
-//		sb.append("\\pagebreak\n");
 		return sb.toString();
 	}
 	
@@ -295,23 +297,6 @@ public class TextInformationToPdf {
 		return sb.toString();
 	}
 	
-	private String getTitle2() {
-		StringBuffer sb = new StringBuffer();
-		sb.append("\\title");
-		sb.append(this.pdfTitle);
-		sb.append("}%\n");
-		if (this.author.trim().length() > 0) {
-			sb.append("\\author{");
-			sb.append(this.author.trim());
-			sb.append("}%\n");
-		}
-		sb.append("\\date{");
-		sb.append(LocalDate.now().toString());
-		sb.append("}%\n");
-		sb.append("\\maketitle%\n");
-		return sb.toString();
-	}
-
 	public void process() {
 		IdManager idManager = new IdManager(this.textId);
 
@@ -354,11 +339,12 @@ public class TextInformationToPdf {
 		} catch (Exception e) {
 			ErrorUtils.report(logger, e, this.pdfTitle);
 		}
+		String title = this.pdfTitle.replaceAll("\\\\", " ");
 		this.texFileSb.append(OslwUtils.getOslwTitleResources(
 				idManager.getLibrary()
 				, this.pdfTitle
-				, this.pdfTitle
-				, this.pdfTitle
+				, title
+				, title
 				, ""
 				)
 		);
@@ -799,7 +785,6 @@ public class TextInformationToPdf {
 						if (indexMap.containsKey(scope)) {
 							list = indexMap.get(scope);
 						}
-						String s = Integer.toString(i);
 						if (! list.contains(i)) {
 							list.add(Integer.toString(i));
 						}
@@ -1124,7 +1109,6 @@ public class TextInformationToPdf {
 					break;
 				}
 				default: {
-					// TODO
 				}
 				}
 				// convert to latex citation
@@ -1266,9 +1250,11 @@ public class TextInformationToPdf {
 		}
 
 		result.append("\\section{The Text and Translations}");
+		this.appendText("The Text and Translations");
 		result.append(ages);
 		if (greekValue.length() > 0) {
 			result.append("\\subsection{Source Text}\n");
+			this.appendText("Source Text");
 			result.append("\\setlength{\\arrayrulewidth}{0.4pt}");
 			result.append("\\setlength{\\tabcolsep}{18pt}");
 			result.append("\\renewcommand{\\arraystretch}{1.5}");
@@ -1276,6 +1262,7 @@ public class TextInformationToPdf {
 			result.append(greekLatex);
 			result.append(" & ");
 			result.append(greekValue);
+			this.appendText(greekValue);
 			result.append(" \\\\ ");
 			result.append("\n");
 			result.append("\n\\hline\n\\end{tabular}\n");
@@ -1367,6 +1354,14 @@ public class TextInformationToPdf {
 
 	public void setBibtexFileSb(StringBuffer bibtexFileSb) {
 		this.bibtexFileSb = bibtexFileSb;
+	}
+
+	public StringBuffer getTextFile() {
+		return textFile;
+	}
+
+	public void setTextFile(StringBuffer textFile) {
+		this.textFile = textFile;
 	}
 
 

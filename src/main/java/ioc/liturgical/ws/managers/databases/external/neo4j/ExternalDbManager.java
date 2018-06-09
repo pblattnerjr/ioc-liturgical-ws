@@ -39,6 +39,7 @@ import ioc.liturgical.ws.calendar.DateGenerator;
 import org.ocmc.ioc.liturgical.schemas.constants.ABBREVIATION_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.BIBLICAL_BOOKS;
 import org.ocmc.ioc.liturgical.schemas.constants.BIBTEX_ENTRY_TYPES;
+import org.ocmc.ioc.liturgical.schemas.constants.BIBTEX_STYLES;
 
 import ioc.liturgical.ws.constants.Constants;
 
@@ -98,6 +99,7 @@ import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDb;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDbNote;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDbOntologyEntry;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTKLink;
+import org.ocmc.ioc.liturgical.schemas.models.ws.db.UserPreferences;
 import org.ocmc.ioc.liturgical.schemas.models.ws.db.Utility;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
@@ -204,6 +206,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  List<DropdownItem> biblicalVerseNumbersDropdown = new ArrayList<DropdownItem>();
 	  List<DropdownItem> biblicalVerseSubVersesDropdown = new ArrayList<DropdownItem>();
 	  List<DropdownItem> liturgicalBookNamesDropdown = new ArrayList<DropdownItem>();
+	  JsonArray bibTexStylesDropdowns = BIBTEX_STYLES.toDropdownJsonArray();
 	  JsonArray templateNewTemplateDropdown = TEMPLATE_NODE_TYPES.toNewTemplateDropdownJsonArray();
 	  JsonArray templatePartsDropdown = TEMPLATE_NODE_TYPES.toDropdownJsonArray();
 	  JsonArray templateWhenDayNameCasesDropdown = TEMPLATE_NODE_TYPES.toDaysOfWeekDropdownJsonArray();
@@ -498,6 +501,23 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				  );
 		  Map<String,String> domainMap = internalManager.getDomainDescriptionMap();
 
+		  // save the pdf preferences the user just gave us
+		  UserPreferences prefs = internalManager.getUserPreferences(requestor);
+		  if (prefs == null) {
+			  prefs = new UserPreferences();
+			  internalManager.addUserPreferences(requestor, prefs.toJsonString());
+		  }
+		  prefs.author = author;
+		  prefs.authorAffiliation = authorAffiliation;
+		  prefs.authorTitle = authorTitle;
+		  prefs.bibLatexStyle = BIBTEX_STYLES.getEnumForName(citestyle);
+		  prefs.combineNotes = doCombineNotes;
+		  prefs.createToc = doCreateToc;
+		  prefs.includeGrammar = doIncludeGrammar;
+		  prefs.includeNotesTransAdvice = doIncludeAdviceNotes;
+		  prefs.includeNotesUser = includeNotesForUser;
+		  internalManager.updateUserPreferences(requestor, requestor, prefs.toJsonString());
+		  
 			// create a thread that will generate a PDF
 			ExecutorService executorService = Executors.newSingleThreadExecutor();
 			String pdfId = this.createId(requestor);
@@ -519,7 +539,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 							, author
 							, authorTitle
 							, authorAffiliation
-							, citestyle
+							, prefs.bibLatexStyle.keyname
 							)
 					);
 			executorService.shutdown();

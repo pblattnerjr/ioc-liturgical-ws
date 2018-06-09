@@ -2,10 +2,19 @@ package ioc.liturgical.ws.controllers.admin;
 
 import static spark.Spark.get;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.AbstractResponse;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.Login;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
+import org.ocmc.ioc.liturgical.schemas.models.ws.db.UserPreferences;
+import org.ocmc.ioc.liturgical.schemas.models.ws.db.UserContact;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.gson.JsonObject;
 
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.managers.auth.AuthDecoder;
@@ -33,9 +42,15 @@ public class LoginController {
 		get(path, (request, response) -> {
 			response.type(Constants.UTF_JSON);
 			AuthDecoder authDecoder = new AuthDecoder(request.headers("Authorization"));
-			return storeManager.getUserContact(authDecoder.getUsername()).toJsonString();
+			ResultJsonObjectArray json = new ResultJsonObjectArray(false);
+			List<JsonObject> list = new ArrayList<JsonObject>();
+			UserContact userContact = storeManager.getUserContact(authDecoder.getUsername());
+			list.add(userContact.toJsonObject());
+			UserPreferences prefs = storeManager.getUserPreferences(authDecoder.getUsername());
+			list.add(prefs.toJsonObject());
+			json.setResult(list);
+			return json.toJsonString();
 		});
-
 	}
 
 }
