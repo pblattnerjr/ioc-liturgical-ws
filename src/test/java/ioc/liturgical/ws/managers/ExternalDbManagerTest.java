@@ -404,7 +404,7 @@ public class ExternalDbManagerTest {
 
 	@Test
 	   public void testGetNewForms() {
-			JsonObject result = externalManager.getNewDocForms(TestUsers.WS_ADMIN.id , "get new forms");
+			JsonObject result = externalManager.getUserDropdowns(TestUsers.WS_ADMIN.id , "get new forms");
 			assertNotNull(result);
 	    }
 

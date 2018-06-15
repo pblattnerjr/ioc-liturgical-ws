@@ -77,6 +77,7 @@ public class Neo4jController {
         					)
         			);
 		});
+		
 		// GET suggestions, e.g. Abbreviations and Bibliography entries
 		pCnt++;
 		path = ENDPOINTS_DB_API.SUGGESTIONS.pathname;
@@ -91,6 +92,34 @@ public class Neo4jController {
         					)
         			);
 		});
+		
+		// GET User Interface Labels (UI_LABELS)
+		pCnt++;
+		path = ENDPOINTS_DB_API.UI_LABELS.pathname;
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			String[] libraries = null;
+			try {
+				libraries = request.queryParams("l").split(",");
+			} catch (Exception e) {
+				libraries = new String[]{"en_sys_ilr", "el_sys_ilr"};
+			}
+        	return externalManager.getTopicValuesForParaColLabelsEditor(
+        			request.queryParams("e") // english system library
+        			, libraries
+        			).toJsonString();
+//
+//        	return gson.toJson(
+//        			externalManager.getUiLabels(
+//        					requestor
+//        					, request.queryParams("s")
+//        					, libraries
+//        				)
+//        			);
+		});
+
 		// GET generate Text downloads for specified parameters
 		pCnt++;
 		path = ENDPOINTS_DB_API.LITURGICAL_TEXT_DOWNLOADS.toLibraryTopicKeyPath();
@@ -334,10 +363,7 @@ public class Neo4jController {
         			));
 		});
 
-		/**
-		 * provides a list of available REST endpoints (i.e. resources)
-		 * @param storeManager
-		 */
+		// Get forms for creating new instances of nodes and relationships and ui labels and dropdowns
 		pCnt++;
 		path = ENDPOINTS_DB_API.NEW.toLibraryPath();
 		ControllerUtils.reportPath(logger, "GET", path, pCnt);
@@ -345,7 +371,7 @@ public class Neo4jController {
 			response.type(Constants.UTF_JSON);
 			String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
-			JsonObject json = externalManager.getNewDocForms(requestor, query);
+			JsonObject json = externalManager.getUserDropdowns(requestor, query);
 			if (json.get("valueCount").getAsInt() > 0) {
 				response.status(HTTP_RESPONSE_CODES.OK.code);
 			} else {
@@ -353,6 +379,26 @@ public class Neo4jController {
 			}
 			return json.toString();
 		});
+
+//		/**
+//		 * provides a list of available REST endpoints (i.e. resources)
+//		 * @param storeManager
+//		 */
+//		pCnt++;
+//		path = ENDPOINTS_DB_API.NEW.toLibraryPath();
+//		ControllerUtils.reportPath(logger, "GET", path, pCnt);
+//		get(path, (request, response) -> {
+//			response.type(Constants.UTF_JSON);
+//			String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
+//			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+//			JsonObject json = externalManager.getUserDropdowns(requestor, query);
+//			if (json.get("valueCount").getAsInt() > 0) {
+//				response.status(HTTP_RESPONSE_CODES.OK.code);
+//			} else {
+//				response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
+//			}
+//			return json.toString();
+//		});
 
 		// GET domain dropdown lists for specified user
 		pCnt++;
@@ -393,7 +439,7 @@ public class Neo4jController {
 			try {
 				libraries = request.queryParams("l").split(",");
 			} catch (Exception e) {
-				
+				// ignore
 			}
         	return externalManager.getTopicValuesForParaColTextEditor(
         			"gr_gr_cog" // for now.  In future, support other source texts
@@ -680,23 +726,6 @@ public class Neo4jController {
         			).toJsonString();
 		});
 
-		// Get forms for creating new instances of nodes and relationships
-		pCnt++;
-		path = ENDPOINTS_DB_API.NEW.toLibraryPath();
-		ControllerUtils.reportPath(logger, "GET", path, pCnt);
-		get(path, (request, response) -> {
-			response.type(Constants.UTF_JSON);
-			String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
-			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
-			JsonObject json = externalManager.getNewDocForms(requestor, query);
-			if (json.get("valueCount").getAsInt() > 0) {
-				response.status(HTTP_RESPONSE_CODES.OK.code);
-			} else {
-				response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
-			}
-			return json.toString();
-		});
-
 		pCnt++;
 		path = ENDPOINTS_DB_API.DOCS.toLibraryTopicKeyPath();
 		ControllerUtils.reportPath(logger, "GET", path, pCnt);
@@ -827,6 +856,24 @@ public class Neo4jController {
 			String body = request.body();
 
 			RequestStatus requestStatus = externalManager.updateValueOfLiturgicalText(
+					requestor
+					, id
+					, body
+			);
+			response.status(requestStatus.getCode());
+			return requestStatus.toJsonString();
+		});
+
+		// put (update) the value of a user interface label
+		path = ENDPOINTS_DB_API.UI_LABELS.toLibraryPath();
+		ControllerUtils.reportPath(logger, "PUT", path);
+		put(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			String id = request.queryParams("i");
+			String body = request.body();
+
+			RequestStatus requestStatus = externalManager.updateValueOfUiLabel(
 					requestor
 					, id
 					, body

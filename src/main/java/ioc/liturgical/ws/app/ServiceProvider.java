@@ -50,6 +50,7 @@ import net.ages.alwb.tasks.SynchPushTask;
 import net.ages.alwb.utils.core.datastores.json.manager.JsonObjectStoreManager;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.ocmc.ioc.liturgical.schemas.constants.ENDPOINTS_DB_API;
 import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
 import org.ocmc.ioc.liturgical.schemas.models.messaging.Message;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
@@ -479,6 +480,9 @@ public class ServiceProvider {
 							)
 						|| (
 								request.pathInfo().toLowerCase().contains("dropdowns")
+							)
+						|| (
+								request.pathInfo().toLowerCase().endsWith(ENDPOINTS_DB_API.UI_LABELS.pathname)
 							)
 						|| (
 								request.requestMethod().toLowerCase().startsWith("options")

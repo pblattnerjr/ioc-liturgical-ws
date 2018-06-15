@@ -31,6 +31,7 @@ import com.google.gson.JsonPrimitive;
 
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import org.ocmc.ioc.liturgical.utils.FileUtils;
+
 import ioc.liturgical.ws.managers.interfaces.HighLevelDataStoreInterface;
 import ioc.liturgical.ws.managers.synch.SynchManager;
 import ioc.liturgical.ws.app.ServiceProvider;
@@ -54,6 +55,8 @@ import org.ocmc.ioc.liturgical.schemas.constants.SINGLETON_KEYS;
 import org.ocmc.ioc.liturgical.schemas.constants.TEMPLATE_CONFIG_MODELS;
 import org.ocmc.ioc.liturgical.schemas.constants.TEMPLATE_NODE_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.TOPICS;
+import org.ocmc.ioc.liturgical.schemas.constants.USER_INTERFACE_DOMAINS;
+import org.ocmc.ioc.liturgical.schemas.constants.USER_INTERFACE_SYSTEMS;
 import org.ocmc.ioc.liturgical.schemas.constants.UTILITIES;
 import org.ocmc.ioc.liturgical.schemas.constants.VERBS;
 import org.ocmc.ioc.liturgical.schemas.constants.VISIBILITY;
@@ -93,14 +96,17 @@ import org.ocmc.ioc.liturgical.schemas.models.db.docs.templates.TemplateNode;
 import org.ocmc.ioc.liturgical.schemas.models.db.internal.LTKVJsonObject;
 import org.ocmc.ioc.liturgical.schemas.models.forms.ontology.TextLiturgicalTranslationCreateForm;
 import org.ocmc.ioc.liturgical.schemas.models.generation.GenerationStatus;
+import org.ocmc.ioc.liturgical.schemas.models.labels.UiLabel;
 import org.ocmc.ioc.liturgical.schemas.models.messaging.Message;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTK;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDb;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDbNote;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDbOntologyEntry;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTKLink;
+import org.ocmc.ioc.liturgical.schemas.models.ws.db.Domain;
 import org.ocmc.ioc.liturgical.schemas.models.ws.db.UserPreferences;
 import org.ocmc.ioc.liturgical.schemas.models.ws.db.Utility;
+import org.ocmc.ioc.liturgical.schemas.models.ws.forms.DomainCreateForm;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.column.editor.KeyArraysCollection;
@@ -108,8 +114,7 @@ import org.ocmc.ioc.liturgical.schemas.models.ws.response.column.editor.KeyArray
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.column.editor.LibraryTopicKeyValue;
 import org.ocmc.ioc.liturgical.schemas.models.db.links.LinkRefersToBiblicalText;
 import org.ocmc.ioc.liturgical.schemas.models.db.returns.LinkRefersToTextToTextTableRow;
-//import org.ocmc.ioc.liturgical.schemas.models.db.returns.ResultNewForms;
-import org.ocmc.ioc.liturgical.schemas.models.db.returns.ResultNewForms;
+import org.ocmc.ioc.liturgical.schemas.models.db.returns.ResultDropdowns;
 
 import ioc.liturgical.ws.nlp.Utils;
 import net.ages.alwb.tasks.DependencyNodesCreateTask;
@@ -134,6 +139,7 @@ import net.ages.alwb.utils.nlp.fetchers.PerseusMorph;
 import net.ages.alwb.utils.nlp.models.GevLexicon;
 import net.ages.alwb.utils.nlp.utils.NlpUtils;
 import net.ages.alwb.utils.transformers.adapters.AgesHtmlToLDOM;
+import net.ages.alwb.utils.transformers.SystemJsonLabels;
 import net.ages.alwb.utils.transformers.adapters.AgesHtmlToEditableLDOM;
 import net.ages.alwb.utils.transformers.adapters.AgesWebsiteIndexToReactTableData;
 import net.ages.alwb.utils.transformers.adapters.TemplateNodeCompiler;
@@ -229,6 +235,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			  ) {
 		  this.adminUserId = ServiceProvider.ws_usr;
 		  this.internalManager = internalManager; 
+		  initializeUiLibraries();
 		  this.readOnly = readOnly;
 		  // in case the database is not yet initialized, we will wait 
 		  // try again for maxTries, after waiting for 
@@ -286,6 +293,39 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 //			  logger.info("Calendars created");
 		  } else {
 			  ServiceProvider.sendMessage("Could not connect to Neo4j Database at " + neo4jDomain + ". ");
+		  }
+	  }
+	  
+	  /**
+	   * Make sure that every UI Domain has a database record
+	   * and if not, clone one from the English.
+	   */
+	  private void cloneUiLabels() {
+		  for (String domainId : USER_INTERFACE_DOMAINS.getMap().keySet()) {
+			  if (! domainId.startsWith("en")) {
+				  Domain  domain = ExternalDbManager.internalManager.getDomain(domainId);
+				  if (domain.isActive()) {
+					  this.cloneUiLabels(domainId);
+				  }
+			  }
+		  }
+	  }
+
+	  private void cloneUiLabels(String toLibrary) {
+		  List<UiLabel> labelsToClone = new ArrayList<UiLabel>();
+		  for (String domainId : USER_INTERFACE_SYSTEMS.toDomainsForLanguage("en")) {
+			  for (JsonObject labelJson : this.getUiLabels(domainId).getValues()) {
+				  UiLabel label = gson.fromJson(labelJson, UiLabel.class);
+				  labelsToClone.add(label);
+			  }
+		  }
+		  for (UiLabel label : labelsToClone) {
+			  IdManager idManager = new IdManager(label.getId());
+			  idManager.setLibrary(toLibrary);
+			  label.setLibrary(idManager.getLibrary());
+			  if (! this.existsUnique(label.getId())) {
+				  this.addLTKDbObject("wsadmin", label.toJsonString());
+			  }
 		  }
 	  }
 	  
@@ -550,7 +590,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			list.add(pdfIdObject);
 			result.setResult(list);
 			result.setQuery("prepare downloads for " + id);
-			// delay a bit to all the PDF to be generated before user clicks link in browser
+			// delay a bit for all the PDF to be generated before user clicks link in browser
 			try {
 				boolean generationFinished = false;
 				String finishFile = Constants.PDF_FOLDER + "/" + pdfId + ".finished";
@@ -643,6 +683,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  this.adminUserId = adminUserId;
 		  this.readOnly = readOnly;
 		  this.internalManager = internalManager; 
+		  initializeUiLibraries();
 		  neo4jManager = new Neo4jConnectionManager(
 				  neo4jDomain
 				  , adminUserId
@@ -832,6 +873,18 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 	  }
 	  
+	  private void initializeUiLibraries() {
+		  // ensure the internal database knows about all the UI Libraries
+		  for (DomainCreateForm domain : USER_INTERFACE_DOMAINS.toDomainCreateForms()) {
+			  String library = domain.getLanguageCode() + Constants.DOMAIN_DELIMITER + domain.getCountryCode() + Constants.DOMAIN_DELIMITER + domain.getRealm();
+			  if (ExternalDbManager.internalManager.existsLibrary(library)) {
+				  ExternalDbManager.internalManager.updateDomain("wsadmin", library, domain.toJsonString());
+			  } else {
+				  domain.setActive(false); // we will active it online when some is ready to work on it.
+				  ExternalDbManager.internalManager.addDomain("wsadmin", domain.toJsonString());
+			  }
+		  }
+	  }
 	  public void buildDomainTopicMap() {
 		  Map<String, DropdownItem> filter = 
 				  ExternalDbManager.internalManager.getCollectiveLiturgicalDropdownDomainMap();
@@ -2442,6 +2495,35 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
+		public RequestStatus updateValueOfUiLabel(
+				String requestor
+				, String id
+				, String json
+				) throws BadIdException, DbException {
+			RequestStatus result = new RequestStatus();
+			JsonObject body = this.parser.parse(json).getAsJsonObject();
+			IdManager idManager = new IdManager(id);
+			RequestStatus status = null;
+			if (existsUnique(id)) {
+				ResultJsonObjectArray queryResult = this.getForId(id, TOPICS.UI_LABEL.label);
+				UiLabel label = gson.fromJson(queryResult.getFirstObject().toString(), UiLabel.class);
+				label.setValue(body.get("value").getAsString());
+				status = this.updateLTKDbObject(requestor, label.toJsonString());
+			} else {
+				UiLabel label = new UiLabel(
+						idManager.getLibrary()
+						, idManager.getTopic()
+						, idManager.getKey()
+						, ""
+						);
+				label.setValue(body.get("value").getAsString());
+				status = this.addLTKDbObject(requestor, label.toJsonString());
+			}
+			result.setCode(status.code);
+			result.setMessage(result.getUserMessage());
+			return result;
+		}
+
 		public RequestStatus updateLTKVDbObjectAsRelationship(
 				LTKDb json
 				) throws BadIdException, DbException, MissingSchemaIdException {
@@ -3174,6 +3256,88 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 		
+		public ResultJsonObjectArray getUiLabels(String library) {
+			ResultJsonObjectArray result = new ResultJsonObjectArray(this.printPretty);
+			try {
+				String query = "match (n:UiLabel) where n.library ends with '" 
+						+ library 
+						+ "' return n.id as id, n.value as value";
+				  ResultJsonObjectArray queryResult = this.getForQuery(
+						  query
+						  , false
+						  , false
+						  );
+					JsonObject json = new JsonObject();
+					json.add("labels", queryResult.getValuesAsJsonArray());
+					result.addValue(json);
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+
+		public List<String> getUiTemplateKeysList(String system) {
+			String query = "match (n:UiLabel) where n.library = 'en_sys_" + system + "' return distinct n.topic + '~' + n.key as topicKey";
+			ResultJsonObjectArray queryResult = this.getForQuery(
+					  query
+					  , false
+					  , false
+					  );
+			  List<String> templateKeys = new ArrayList<String>();
+			  for (JsonObject json : queryResult.getValues()) {
+				  String topicKey = json.get("topicKey").getAsString();
+				  templateKeys.add(topicKey);
+			  }
+			return templateKeys;
+		}
+		
+		public ResultJsonObjectArray getUiLabels(String requestor, String system, String [] libraries) {
+			ResultJsonObjectArray result = new ResultJsonObjectArray(this.printPretty);
+			JsonObject libraryKeyValues = new JsonObject();
+			List<String> templateKeysList = this.getUiTemplateKeysList(system);
+			try {
+				for (String library : libraries) {
+					JsonArray libraryKeyValuesArray = new JsonArray();
+					String query = "match (n:UiLabel) where n.library ends with '" 
+							+ library
+							+ "' return n.id as id, n.topic as topic, n.key as key, n.value as value order by n.id";
+					  ResultJsonObjectArray queryResult = this.getForQuery(
+							  query
+							  , false
+							  , false
+							  );
+					  for (JsonObject json : queryResult.getValues()) {
+						  String topicKey = json.get("topic").getAsString() + "~" + json.get("key").getAsString();
+						  JsonObject entry = new JsonObject();
+						  entry.addProperty("_id", topicKey);
+						  entry.addProperty("seq", "");
+						  entry.addProperty("value", json.get("value").getAsString());
+						  libraryKeyValuesArray.add(entry);
+					  }
+					  libraryKeyValues.add(library, libraryKeyValuesArray);
+				}
+				JsonArray templateKeys = new JsonArray();
+				Collections.sort(templateKeysList);
+				int count = 0;
+				for (String templateKey : templateKeysList) {
+					JsonObject tk = new JsonObject();
+					tk.addProperty("_id", "T" + String.format("%03d", count + 1));
+					tk.addProperty("key", templateKey);
+					tk.addProperty("libKeysIndex", count);
+					templateKeys.add(tk);
+					count++;
+				}
+				JsonObject json = new JsonObject();
+				json.add("libraryKeyValues", libraryKeyValues);
+				json.add("templateKeys", templateKeys);
+				result.addValue(json);
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
 		/**
 		 * Reads all the records for the specified libary and topic
 		 * and returns them as a string, that is formatted 
@@ -4718,16 +4882,20 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, String library
 				, String topic
 				) {
-			String query = "match (n:" +library + ") where n.id starts with '" 
+			String query = "match (n:" + library + ") where n.id starts with '" 
 					+ library 
 					+ Constants.ID_DELIMITER 
 					+ topic 
-					+ "' return n.key, n.value order by n.key "
+					+ "' return n.topic, n.key, n.value order by n.key "
 					;
 			ResultJsonObjectArray queryResult = this.getForQuery(query, false, false);
 			int i = 0;
 			for (JsonObject o : queryResult.getValues()) {
-				String topicKey = topic + Constants.ID_DELIMITER + o.get("n.key").getAsString();
+				String theTopic = topic;
+				if (theTopic.length() == 0) {
+					theTopic = o.get("n.topic").getAsString();
+				}
+				String topicKey = theTopic + Constants.ID_DELIMITER + o.get("n.key").getAsString();
 				String value = o.get("n.value").getAsString();
 				if (keymap.containsKey(topicKey)) {
 					LibraryTopicKeyValue ltkv = keymap.get(topicKey);
@@ -4752,7 +4920,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				) {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
-				KeyArraysCollection collection = this.getTopicCollection(library, topic.trim());
+				KeyArraysCollection collection = this.getTopicCollection(library, "Liturgical",  topic.trim());
 				for (String valuesLibrary : valueLibraries) {
 					if (! valuesLibrary.equals(library)) {
 						Collection<LibraryTopicKeyValue> ltkvCol = getLibraryTopicValues(
@@ -4770,6 +4938,37 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				list.add(collection.toJsonObject());
 				result.setResult(list);
 				result.setQuery("get Topic Values for Topic " + topic + " from library " + StringUtils.join(valueLibraries) + " for ParaColTextEditor");
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+
+		public ResultJsonObjectArray getTopicValuesForParaColLabelsEditor(
+				String library
+				, String [] valueLibraries
+				) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
+				KeyArraysCollection collection = this.getTopicCollection(library, "UiLabel", "");
+				for (String valuesLibrary : valueLibraries) {
+					if (! valuesLibrary.equals(library)) {
+						Collection<LibraryTopicKeyValue> ltkvCol = getLibraryTopicValues(
+								collection.getEmptyLtkvMap()
+								, valuesLibrary
+								, ""
+								);
+						collection.addLibraryKeyValues(
+								valuesLibrary
+								, ltkvCol
+								);
+					}
+				}
+				List<JsonObject> list = new ArrayList<JsonObject>();
+				list.add(collection.toJsonObject());
+				result.setResult(list);
+				result.setQuery("get Topic Values from library " + StringUtils.join(valueLibraries) + " for ParaColLabelEditor");
 			} catch (Exception e) {
 				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 				result.setStatusMessage(e.getMessage());
@@ -4808,6 +5007,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		
 		public KeyArraysCollection getTopicCollection(
 				String library
+				, String docLabel
 				, String topic 
 				) throws Exception {
 			KeyArraysCollectionBuilder b = new KeyArraysCollectionBuilder(
@@ -4816,24 +5016,34 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					, printPretty
 					);
 			try {
-				String query = "match (n:Liturgical) where n.id starts with '" 
+				String query = "match (n:" + docLabel + ") where n.id starts with '" 
 						+ library 
 						+ "~" 
 						+ topic 
-						+ "' return n.key, n.value, n.seq order by n.key"
+						+ "' return n.topic, n.key, n.value, n.seq order by n.key"
 				;
 				ResultJsonObjectArray queryResult = this.getForQuery(query, false, false);
 				for (JsonObject o : queryResult.getValues()) {
+					String theTopic = topic;
+					if (theTopic.trim().length() == 0) {
+						theTopic = o.get("n.topic").getAsString();
+					}
 					String key = o.get("n.key").getAsString();
 					String value = o.get("n.value").getAsString();
-					String seq = o.get("n.seq").getAsString();
-					b.addTemplateKey(topic, key, value, seq);
+					String seq = "";
+					try {
+						o.get("n.seq").getAsString();
+					} catch (Exception e) {
+						// ignore
+					}
+					b.addTemplateKey(theTopic, key, value, seq);
 				}
 			} catch (Exception e){
 				throw e;
 			}
 			return b.getCollection();
 		}
+		
 		public ResultJsonObjectArray getTopicForParaColTextEditor(
 				String library
 				, String topic
@@ -4841,7 +5051,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
 				List<JsonObject> list = new ArrayList<JsonObject>();
-				list.add(this.getTopicCollection(library, topic).toJsonObject());
+				list.add(this.getTopicCollection(library, "Liturgical", topic).toJsonObject());
 				result.setResult(list);
 				result.setQuery("get Topic " + topic + " for ParaColTextEditor");
 			} catch (Exception e) {
@@ -5115,7 +5325,43 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return neo4jManager.processConstraintQuery(query);
 		}
 		
+		public JsonObject getUiLabelsAsJsonObject(String system) {
+			JsonObject result = new JsonObject();
+			String query = "match (n:UiLabel) return distinct split(n.library, \"_\")[0] as item";
+			ResultJsonObjectArray queryResult = neo4jManager.getResultObjectForQuery(query);
+			List<String> languages = new ArrayList<String>();
+			for (JsonObject json : queryResult.values) {
+				languages.add(json.get("item").getAsString());
+			}
+			for (String language : languages) {
+				JsonObject langJson = new JsonObject();
+				String library = language + "_sys_" + system; 
+				query = "match (n:UiLabel) where n.library starts with '" + language + "' and n.library ends with '" +  system + "' return distinct n.topic as item";
+				ResultJsonObjectArray langQueryResult = neo4jManager.getResultObjectForQuery(query);
+				List<String> topics = new ArrayList<String>();
+				for (JsonObject json : langQueryResult.values) {
+					topics.add(json.get("item").getAsString());
+				}
+				for (String topic : topics) {
+					JsonObject topicsJson = new JsonObject();
+					query = "match (n:UiLabel) where n.library = '" + library +"' and n.topic = '" + topic + "' return distinct n.key as label, n.value as value";
+					ResultJsonObjectArray topicQueryResult = neo4jManager.getResultObjectForQuery(query);
+					for (JsonObject json : topicQueryResult.values) {
+						String label = json.get("label").getAsString();
+						String value = json.get("value").getAsString();
+						topicsJson.addProperty(label, value);
+					}
+					langJson.add(topic, topicsJson);
+				}
+				result.add(language, langJson);
+			}
+			return result;
+		}
+		
 		/**
+		 * This is normally called (through the controller) by a client
+		 * app after a user has successfully logged in.
+		 * 
 		 * Returns a JsonObject for dropdowns to
 		 * create new objects.  Since the library 
 		 * will be a domain, it also returns dropdowns for
@@ -5124,47 +5370,16 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		 * Also returns ontology instance dropdowns, with one dropdown
 		 * for each ontology type. 
 		 * 
-		 * {
-		 * domains: {
-		 *   	admin: [
-		 *   		{ value: "", label: "" }
-		 *   		, { value: "", label: "" }
-		 *   	]
-		 *   	, author: [
-		 *   		{ value: "", label: "" }
-		 *   		, { value: "", label: "" }
-		 *   	]
-		 *   	, reader: [
-		 *   		{ value: "", label: "" }
-		 *   		, { value: "", label: "" }
-		 *   	]
-		 * 		}
-		 * , ontologyDropdowns {
-		 *     Human: [
-		 *     	   {value: "", label: ""}
-		 *     , etc.
-		 *     ] 
-		 * }
-		 * , newforms: {
-		 *    dropdown: [
-		 *    		{ value: "", label: "" }
-		 *         , { value: "", label: ""  }
-		 *         , ...
-		 *    ]
-		 *    , valueSchemas:
-		 *    , values:  
-		 * }
-
-		 * }
 		 * @param requestor
 		 * @param query
 		 * @return
 		 */
-		public JsonObject getNewDocForms(String requestor, String query) {
+		public JsonObject getUserDropdowns(String requestor, String query) {
 			logger.info("Getting forms for new docs and dropdowns");
-			ResultNewForms result = new ResultNewForms(true);
+			ResultDropdowns result = new ResultDropdowns(true);
 			result.setQuery(query);
 			result.setDomains(internalManager.getDomainDropdownsForUser(requestor));
+			result.setUiLabels(this.getUiLabelsAsJsonObject("ilr"));
 			result.setOntologyTypesDropdown(
 					TOPICS.keyNamesTrueOntologyToDropdown()
 					); // for now just loading ontology schemas

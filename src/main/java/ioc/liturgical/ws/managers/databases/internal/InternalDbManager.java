@@ -102,6 +102,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	private String customerNumber = null;
 	private int maxInactiveMinutes = 10;
 	private List<String> agesDomains = new ArrayList<String>();
+	private List<String> publicSystemDomains = new ArrayList<String>();
 	
 	public H2ConnectionManager manager;
 	
@@ -495,6 +496,19 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		}
 	}
 
+	private void addPublicRoles(String user, ROLES role) {
+		for (String d : publicSystemDomains) {
+			if (! this.hasRole(role, d, user)) {
+				this.grantRole("wsadmin", role, d.toLowerCase(), user);
+			}
+		}
+	}
+	private void initializePublicSystemDomainsMap() {
+		publicSystemDomains.add("en_sys_ontology");
+		publicSystemDomains.add("en_sys_linguistics");
+		publicSystemDomains.add("en_sys_tables");
+	}
+	
 	private void initializeAgesDomainsMap() {
 		agesDomains.add("en_US_andronache");
 		agesDomains.add("en_US_barrett");
@@ -1034,6 +1048,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
         	}
         	
         	this.initializeAgesDomainsMap();
+        	this.initializePublicSystemDomainsMap();
         	
         	// check to see if table has values
            	List<JsonObject> jsonList = manager.queryForJson();  
@@ -1045,6 +1060,19 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
            	
            	// add descriptions of utilities.
            	this.createUtilityDescriptions();
+           	
+           	// make sure all users have access to read public domains
+           	for (String user : this.getUserIds()) {
+           		if (user.endsWith("wsadmin")) {
+           			// ignore
+           		} else {
+               		String [] parts = user.split(Constants.ID_SPLITTER);
+               		if (parts.length == 3) {
+                   		this.addAgesRoles(parts[2], ROLES.READER);
+                   		this.addPublicRoles(parts[2], ROLES.READER);
+               		}
+           		}
+           	}
            	
 		} catch (Exception e) {
 			ErrorUtils.report(logger, e);
@@ -1526,6 +1554,12 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		return authorized;
 	}
 	
+	public void grantGenericRoles(
+			String requestor
+			, ROLES role
+			, String user
+			) {
+	}
 	
 	public RequestStatus grantRole(
 			String requestor
@@ -1712,6 +1746,9 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 					
 					// make the user an admin for his/her personal domain
 					grantRole(requestor, ROLES.ADMIN, domain.getDomain(), userForm.getUsername());
+					// grant reader access to AGES and public system domains
+					this.addAgesRoles(userForm.getUsername(), ROLES.READER);
+					this.addPublicRoles(userForm.getUsername(), ROLES.READER);
 				}
 			}
 		} catch (Exception e) {
@@ -2640,16 +2677,17 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	public UserPreferences getUserPreferences(String username) {
 		try {			
 			ResultJsonObjectArray obj = getForId(USER_TOPICS.PREFERENCES.toId(username));
+			UserPreferences prefs = new UserPreferences();
 			Long count = obj.getCount();
 			if (count != 1) {
-				return new UserPreferences();
+				  this.addUserPreferences(username, prefs.toJsonString());
 			} else {
-				UserPreferences prefs = (UserPreferences) gson.fromJson(
+				prefs = (UserPreferences) gson.fromJson(
 						obj.getFirstObjectValueAsObject()
 						, UserPreferences.class
 				);
-				return prefs;
 			}
+			return prefs;
 		} catch (Exception e) {
 			ErrorUtils.report(logger, e);
 			return null;
@@ -2826,6 +2864,8 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 							|| library.equals("login")
 							|| library.equals("links")
 							|| library.equals("nlp")
+							|| library.equals("ontology")
+							|| library.equals("linguistics")
 							) {
 						isAuthorized = true;
 					}

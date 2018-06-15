@@ -4,12 +4,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import ioc.liturgical.ws.constants.Constants;
-import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 
 import org.ocmc.ioc.liturgical.schemas.models.generation.GenerationStatus;
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
