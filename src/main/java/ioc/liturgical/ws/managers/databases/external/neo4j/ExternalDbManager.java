@@ -30,7 +30,6 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
-import org.ocmc.ioc.liturgical.utils.FileUtils;
 
 import ioc.liturgical.ws.managers.interfaces.HighLevelDataStoreInterface;
 import ioc.liturgical.ws.managers.synch.SynchManager;
@@ -95,7 +94,6 @@ import org.ocmc.ioc.liturgical.schemas.models.db.docs.templates.Template;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.templates.TemplateNode;
 import org.ocmc.ioc.liturgical.schemas.models.db.internal.LTKVJsonObject;
 import org.ocmc.ioc.liturgical.schemas.models.forms.ontology.TextLiturgicalTranslationCreateForm;
-import org.ocmc.ioc.liturgical.schemas.models.generation.GenerationStatus;
 import org.ocmc.ioc.liturgical.schemas.models.labels.UiLabel;
 import org.ocmc.ioc.liturgical.schemas.models.messaging.Message;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTK;
@@ -3292,52 +3290,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return templateKeys;
 		}
 		
-		public ResultJsonObjectArray getUiLabels(String requestor, String system, String [] libraries) {
-			ResultJsonObjectArray result = new ResultJsonObjectArray(this.printPretty);
-			JsonObject libraryKeyValues = new JsonObject();
-			List<String> templateKeysList = this.getUiTemplateKeysList(system);
-			try {
-				for (String library : libraries) {
-					JsonArray libraryKeyValuesArray = new JsonArray();
-					String query = "match (n:UiLabel) where n.library ends with '" 
-							+ library
-							+ "' return n.id as id, n.topic as topic, n.key as key, n.value as value order by n.id";
-					  ResultJsonObjectArray queryResult = this.getForQuery(
-							  query
-							  , false
-							  , false
-							  );
-					  for (JsonObject json : queryResult.getValues()) {
-						  String topicKey = json.get("topic").getAsString() + "~" + json.get("key").getAsString();
-						  JsonObject entry = new JsonObject();
-						  entry.addProperty("_id", topicKey);
-						  entry.addProperty("seq", "");
-						  entry.addProperty("value", json.get("value").getAsString());
-						  libraryKeyValuesArray.add(entry);
-					  }
-					  libraryKeyValues.add(library, libraryKeyValuesArray);
-				}
-				JsonArray templateKeys = new JsonArray();
-				Collections.sort(templateKeysList);
-				int count = 0;
-				for (String templateKey : templateKeysList) {
-					JsonObject tk = new JsonObject();
-					tk.addProperty("_id", "T" + String.format("%03d", count + 1));
-					tk.addProperty("key", templateKey);
-					tk.addProperty("libKeysIndex", count);
-					templateKeys.add(tk);
-					count++;
-				}
-				JsonObject json = new JsonObject();
-				json.add("libraryKeyValues", libraryKeyValues);
-				json.add("templateKeys", templateKeys);
-				result.addValue(json);
-			} catch (Exception e) {
-				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-				result.setStatusMessage(e.getMessage());
-			}
-			return result;
-		}
+
 		/**
 		 * Reads all the records for the specified libary and topic
 		 * and returns them as a string, that is formatted 
@@ -5449,12 +5402,24 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				for (DropdownItem d : schemaEditorFormDropdown) {
 					result.addSchemaEditorForm(d);
 				}
+				result.setUiLabelTopics(this.getUiLabelTopics());
 			} catch (Exception e) {
 				result.setStatusCode(HTTP_RESPONSE_CODES.SERVER_ERROR.code);
 				result.setStatusMessage(e.getMessage());
 			}
 			logger.info("Done getting forms for new docs, and dropdowns");
 			return result.toJsonObject();
+		}
+		
+		public JsonObject getUiLabelTopics() {
+			JsonObject result = new JsonObject();
+			String query = "match (n:UiLabel) return distinct n.topic as topic";
+			ResultJsonObjectArray queryResult = neo4jManager.getResultObjectForQuery(query);
+			for (JsonObject topic : queryResult.getValues()) {
+				String theTopic = topic.get("topic").getAsString();
+				result.addProperty(theTopic, theTopic);
+			}
+			return result;
 		}
 
 		private void createBibliographyEntries() {
