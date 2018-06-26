@@ -78,6 +78,22 @@ public class Neo4jController {
         			);
 		});
 		
+		// GET User Activity
+		pCnt++;
+		path = "/db/api/v1/activity";
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+        	return gson.toJson(
+        			externalManager.getUserActivity(
+        					requestor
+        					, request.queryParams("f")
+        					, request.queryParams("t")
+        					)
+        			);
+		});
+
 		// GET suggestions, e.g. Abbreviations and Bibliography entries
 		pCnt++;
 		path = ENDPOINTS_DB_API.SUGGESTIONS.pathname;
@@ -110,14 +126,6 @@ public class Neo4jController {
         			request.queryParams("e") // english system library
         			, libraries
         			).toJsonString();
-//
-//        	return gson.toJson(
-//        			externalManager.getUiLabels(
-//        					requestor
-//        					, request.queryParams("s")
-//        					, libraries
-//        				)
-//        			);
 		});
 
 		// GET generate Text downloads for specified parameters

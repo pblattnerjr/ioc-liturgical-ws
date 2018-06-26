@@ -218,6 +218,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  JsonArray templateWhenDayOfSeasonCasesDropdown = TEMPLATE_NODE_TYPES.toDaysOfSeasonDropdownJsonArray();
 	  JsonArray templateWhenModeOfWeekCasesDropdown = TEMPLATE_NODE_TYPES.toModesDropdownJsonArray();
 	  JsonArray templateWhenMonthNameCasesDropdown = TEMPLATE_NODE_TYPES.toMonthsDropdownJsonArray();
+	  JsonArray ethnologue = new JsonArray();
+	  JsonArray isoCountries = new JsonArray();
 	  public static Neo4jConnectionManager neo4jManager = null;
 	  public static InternalDbManager internalManager = null;
 	  SynchManager synchManager = null;
@@ -286,6 +288,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			  if (! this.existsBibliographyEntries()) {
 				  this.createBibliographyEntries();
 			  }
+			  this.loadEthnologue();
+			  this.loadIsoCountries();
 //			  logger.info("Creating calendars");
 //			  this.createCalendars(Calendar.getInstance().get(Calendar.YEAR));
 //			  logger.info("Calendars created");
@@ -294,6 +298,32 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  }
 	  }
 	  
+	  private void loadEthnologue() {
+		  ResultJsonObjectArray result = new ResultJsonObjectArray(false);
+		  String query = "match (n:Ethnologue) return properties(n)";
+		  try {
+			  result = this.getForQuery(query, false, false);
+			  for (JsonObject obj : result.values) {
+				 this.ethnologue.add(obj.get("properties(n)").getAsJsonObject());
+			  }
+		  } catch (Exception e) {
+			  ErrorUtils.report(logger, e);
+		  }
+	  }
+	  
+	  private void loadIsoCountries() {
+		  ResultJsonObjectArray result = new ResultJsonObjectArray(false);
+		  String query = "match (n:IsoCountry) return properties(n)";
+		  try {
+			  result = this.getForQuery(query, false, false);
+			  for (JsonObject obj : result.values) {
+				  this.isoCountries.add(obj.get("properties(n)").getAsJsonObject());
+			  }
+		  } catch (Exception e) {
+			  ErrorUtils.report(logger, e);
+		  }
+	  }
+
 	  /**
 	   * Make sure that every UI Domain has a database record
 	   * and if not, clone one from the English.
@@ -3752,6 +3782,30 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
+		public ResultJsonObjectArray getUserActivity(
+				String requestor
+				, String from
+				, String to
+			) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			try {
+				String query = "match (n:Root) where n.modifiedWhen > '" 
+						+ from 
+						+ "' return n.modifiedBy as who, n.modifiedWhen as when, n.id as what order by n.modifiedWhen desc";
+				// use the commented out query if you decide to do a range.  For now, we will ignore the to parm.
+//				String query = "match (n:Root) where n.modifiedWhen > '" 
+//						+ from 
+//						+ "' and n.modifiedWhen < '" + to + "' return n.modifiedBy as who, n.modifiedWhen as when, n.id as what order by n.modifiedBy + n.modifiedWhen";
+				ResultJsonObjectArray queryResult  = ExternalDbManager.neo4jManager.getForQuery(query);
+				result.setValues(queryResult.getValues());
+				result.setQuery("get user activity from  " + from + " to " + to);
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+
 		/**
 		 * For the specified topic part of an ID and specified ontologyTopic,
 		 * gets the data needed to render a dependency tree.
@@ -4839,7 +4893,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					+ library 
 					+ Constants.ID_DELIMITER 
 					+ topic 
-					+ "' return n.topic, n.key, n.value order by n.key "
+					+ "' return n.topic, n.key, n.value, n.modifiedWhen order by n.key "
 					;
 			ResultJsonObjectArray queryResult = this.getForQuery(query, false, false);
 			int i = 0;
@@ -4850,9 +4904,11 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				}
 				String topicKey = theTopic + Constants.ID_DELIMITER + o.get("n.key").getAsString();
 				String value = o.get("n.value").getAsString();
+				String modifiedWhen = o.get("n.modifiedWhen").getAsString();
 				if (keymap.containsKey(topicKey)) {
 					LibraryTopicKeyValue ltkv = keymap.get(topicKey);
 					ltkv.setValue(value);
+					ltkv.setModifiedWhen(modifiedWhen);
 					keymap.put(topicKey, ltkv);
 				}
 			}
@@ -4973,7 +5029,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						+ library 
 						+ "~" 
 						+ topic 
-						+ "' return n.topic, n.key, n.value, n.seq order by n.key"
+						+ "' return n.topic, n.key, n.value, n.seq, n.modifiedWhen order by n.key"
 				;
 				ResultJsonObjectArray queryResult = this.getForQuery(query, false, false);
 				for (JsonObject o : queryResult.getValues()) {
@@ -4983,13 +5039,14 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					}
 					String key = o.get("n.key").getAsString();
 					String value = o.get("n.value").getAsString();
+					String modifiedWhen = o.get("n.modifiedWhen").getAsString();
 					String seq = "";
 					try {
 						o.get("n.seq").getAsString();
 					} catch (Exception e) {
 						// ignore
 					}
-					b.addTemplateKey(theTopic, key, value, seq);
+					b.addTemplateKey(theTopic, key, value, seq, modifiedWhen);
 				}
 			} catch (Exception e){
 				throw e;
@@ -5278,6 +5335,20 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return neo4jManager.processConstraintQuery(query);
 		}
 		
+		public JsonObject getUiLabelsAsJsonObject() {
+			JsonObject result = new JsonObject();
+			String query = "match (n:UiLabel) return distinct split(n.library, \"_\")[2] as item";
+			ResultJsonObjectArray queryResult = neo4jManager.getResultObjectForQuery(query);
+			List<String> systems = new ArrayList<String>();
+			for (JsonObject json : queryResult.values) {
+				systems.add(json.get("item").getAsString());
+			}
+			for (String system : systems) {
+				result.add(system, this.getUiLabelsAsJsonObject(system));
+			}
+			return result;
+		}
+		
 		public JsonObject getUiLabelsAsJsonObject(String system) {
 			JsonObject result = new JsonObject();
 			String query = "match (n:UiLabel) return distinct split(n.library, \"_\")[0] as item";
@@ -5332,7 +5403,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			ResultDropdowns result = new ResultDropdowns(true);
 			result.setQuery(query);
 			result.setDomains(internalManager.getDomainDropdownsForUser(requestor));
-			result.setUiLabels(this.getUiLabelsAsJsonObject("ilr"));
+			result.setUiLabels(this.getUiLabelsAsJsonObject());
 			result.setOntologyTypesDropdown(
 					TOPICS.keyNamesTrueOntologyToDropdown()
 					); // for now just loading ontology schemas
@@ -5353,6 +5424,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			result.setTemplateWhenDayOfSeasonCasesDropdown(this.templateWhenDayOfSeasonCasesDropdown);
 			result.setTemplateWhenModeOfWeekCasesDropdown(this.templateWhenModeOfWeekCasesDropdown);
 			result.setTemplateWhenMonthNameCasesDropdown(this.templateWhenMonthNameCasesDropdown);
+			result.setIsoCountries(this.isoCountries);
+			result.setIsoLanguages(this.ethnologue);
 			List<JsonObject> dbResults = new ArrayList<JsonObject>();
 			try {
 				for (org.ocmc.ioc.liturgical.schemas.constants.NEW_FORM_CLASSES_DB_API e : NEW_FORM_CLASSES_DB_API.values()) {

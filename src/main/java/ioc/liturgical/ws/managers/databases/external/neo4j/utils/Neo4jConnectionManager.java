@@ -37,6 +37,7 @@ import org.ocmc.ioc.liturgical.schemas.models.db.stats.QueryStatistics;
 import org.ocmc.ioc.liturgical.schemas.models.db.stats.SynchLog;
 import org.ocmc.ioc.liturgical.schemas.models.messaging.Message;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDb;
+import org.ocmc.ioc.liturgical.schemas.models.supers.LTKLite;
 import org.ocmc.ioc.liturgical.schemas.models.synch.Transaction;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
@@ -661,6 +662,34 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": updated " + doc.getId());
 		    	this.insertTransaction(new Transaction(query, doc, hostName));
+			} else {
+		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + " " + doc.getId());
+			}
+		} catch (Exception e){
+			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+			result.setDeveloperMessage(e.getMessage());
+		}
+    	recordQuery(query, result.getCode(), count);
+		return result;
+	}
+
+	public RequestStatus mergeWhereEqual(String labels, LTKLite doc) throws DbException {
+		RequestStatus result = new RequestStatus();
+		int count = 0;
+		setIdConstraint(doc.toSchemaAsLabel());
+		String query = this.getMergeQuery(
+    					doc.getId()
+    					, labels
+				);
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
+			Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
+			StatementResult neoResult = session.run(query, props);
+			count = neoResult.consume().counters().propertiesSet();
+			if (count > 0) {
+		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
+		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": updated " + doc.getId());
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + " " + doc.getId());

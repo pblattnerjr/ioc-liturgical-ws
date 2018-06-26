@@ -196,7 +196,7 @@ import org.ocmc.ioc.liturgical.utils.FileUtils;
 			String uid = System.getenv("uid");
 			String pwd = System.getenv("pwd");
 			String url= "localhost"; // "159.203.89.233";
-			String system = "ilr";
+			String system = "olw";
 			JsonLabelsToNeo4j labels2Neo = new JsonLabelsToNeo4j(path, url, uid, pwd, system);
 //				labels2Neo.verifyAndPrintResults();
 		}

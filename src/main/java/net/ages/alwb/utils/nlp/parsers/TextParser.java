@@ -52,6 +52,10 @@ public class TextParser {
 		String s2 = " Ἅπαντες πιστοί, ἐν ᾧ τὴν τελείωσιν ἐλάβομεν, θεολογοῦντες ἀσιγήτως, σὺν Ἀγγέλοις δοξάσωμεν, Πατέρα Υἱὸν καὶ Πνεῦμα Ἅγιον· τοῦτο γὰρ Τριὰς ὑποστάσεσιν ὁμοούσιος, εἷς δὲ Θεός, ᾧ καὶ ψάλλομεν· Ὁ τῶν Πατέρων Κύριος, καὶ Θεὸς εὐλογητὸς εἶ.";
 
 		TextParser p = new TextParser(s1);
+		System.out.println(p.getText());
+		for (String token : p.getTokens()) {
+			System.out.println(token);
+		}
 	}
 
 	public String getText() {

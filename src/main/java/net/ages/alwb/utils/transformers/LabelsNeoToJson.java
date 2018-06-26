@@ -5,6 +5,9 @@ package net.ages.alwb.utils.transformers;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.Map.Entry;
 
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
 import org.ocmc.ioc.liturgical.utils.FileUtils;
@@ -17,6 +20,7 @@ import com.google.gson.JsonObject;
 	/**
 	 * Reads the database for system labels and creates a json representation.
 	 * Also creates a javascript enum file for the label topics.
+	 * Writes these to the ioc-liturgical-react and olw projects
 	 * @author mac002
 	 *
 	 */
@@ -53,9 +57,18 @@ import com.google.gson.JsonObject;
 		
 		private void process(String system, String out) {
 			JsonObject result = new JsonObject();
+			
 			String topicsEnum = "";
-			String query = "match (n:UiLabel) return distinct split(n.library, \"_\")[0] as item";
+			String query = "match (n:UiLabel) return distinct n.topic as item";
 			ResultJsonObjectArray queryResult = dbManager.getResultObjectForQuery(query);
+			List<String> topics = new ArrayList<String>();
+			for (JsonObject json : queryResult.values) {
+				topics.add(json.get("item").getAsString());
+			}
+			topicsEnum = this.getTopicsEnum(topics);
+
+			query = "match (n:UiLabel) return distinct split(n.library, \"_\")[0] as item";
+			queryResult = dbManager.getResultObjectForQuery(query);
 			List<String> languages = new ArrayList<String>();
 			for (JsonObject json : queryResult.values) {
 				languages.add(json.get("item").getAsString());
@@ -65,11 +78,6 @@ import com.google.gson.JsonObject;
 				String library = language + "_sys_" + system; 
 				query = "match (n:UiLabel) where n.library starts with '" + language + "' and n.library ends with '" +  system + "' return distinct n.topic as item";
 				ResultJsonObjectArray langQueryResult = dbManager.getResultObjectForQuery(query);
-				List<String> topics = new ArrayList<String>();
-				for (JsonObject json : langQueryResult.values) {
-					topics.add(json.get("item").getAsString());
-				}
-				topicsEnum = this.getTopicsEnum(topics);
 				
 				for (String topic : topics) {
 					JsonObject topicsJson = new JsonObject();
@@ -88,17 +96,18 @@ import com.google.gson.JsonObject;
 			FileUtils.writeFile(out + "/LabelTopics.js", topicsEnum);
 		}
 		
-		
 		public static void main(String[] args) {
-			Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 			String reactPath = "/Users/mac002/Git/ocmc-translation-projects/ioc-liturgical-react/src/classes";
 			String olwPath = "/Users/mac002/Git/ocmc-translation-projects/ioc-tms-app/src/labels";
-			String path = reactPath;
 			String uid = System.getenv("uid");
 			String pwd = System.getenv("pwd");
 			String url= "localhost"; // "159.203.89.233";
-			String system = "ilr";
+			Map<String, String> systems = new TreeMap<String,String>();
+			systems.put("ilr", reactPath);
+			systems.put("olw", olwPath);
 			LabelsNeoToJson labels2Neo = new LabelsNeoToJson(url, uid, pwd);
-			labels2Neo.process("ilr", path);
+			for (Entry<String,String> system : systems.entrySet()) {
+				labels2Neo.process(system.getKey(), system.getValue());
+			}
 		}
 	}

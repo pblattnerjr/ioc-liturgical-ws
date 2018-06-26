@@ -49,6 +49,7 @@ import ioc.liturgical.ws.constants.Constants;
 import org.ocmc.ioc.liturgical.schemas.constants.DOMAIN_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.SYSTEM_MISC_LIBRARY_TOPICS;
 import org.ocmc.ioc.liturgical.schemas.constants.TEMPLATE_CONFIG_MODELS;
+import org.ocmc.ioc.liturgical.schemas.constants.USER_INTERFACE_DOMAINS;
 import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
 import org.ocmc.ioc.liturgical.schemas.constants.NEW_FORM_CLASSES_ADMIN_API;
 import org.ocmc.ioc.liturgical.schemas.constants.RESTRICTION_FILTERS;
@@ -3318,7 +3319,22 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		result.add("author", this.getDropdownOfDomainsForWhichTheUserIsAnAuthor(username));
 		result.add("reader", this.getDropdownOfDomainsForWhichTheUserIsAReader(username));
 		result.add("liturgicalSearch", this.getDropdownOfLiturgicalDomainsTheUserCanSearch(username));
+		result.addProperty("isSuperAdmin", this.isDbAdmin(username));
+		result.addProperty("isLabelEditor", this.isUiLabelsAuth(username));
 		return result;
+	}
+
+	public boolean isUiLabelsAuth(String username) {
+		for (String domain : USER_INTERFACE_DOMAINS.getMap().keySet()) {
+			if (this.isUiLabelsAuth(domain, username)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean isUiLabelsAuth(String library, String username) {
+		return isDbAdmin(username) || hasRole(ROLES.AUTHOR,library,username);
 	}
 
 	/**
