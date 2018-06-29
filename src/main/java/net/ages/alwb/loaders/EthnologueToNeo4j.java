@@ -31,6 +31,7 @@ import org.ocmc.ioc.liturgical.utils.FileUtils;
 		private Neo4jConnectionManager dbManager = null;
 		private Map<String,EthnologueCountry> countries = new TreeMap<String,EthnologueCountry>();
 		private Map<String,EthnologueLanguage> languages = new TreeMap<String,EthnologueLanguage>();
+		private Map<String,EthnologueLanguage> index = new TreeMap<String,EthnologueLanguage>();
 		private IsoCountries isoCountries = new IsoCountries();
 		
 		public EthnologueToNeo4j(
@@ -39,8 +40,9 @@ import org.ocmc.ioc.liturgical.utils.FileUtils;
 				, String pwd
 				, String pathToCountries
 				, String pathToLangs
+				, String pathToIndex
 				) {
-			this.process(server, uid, pwd, pathToCountries, pathToLangs);
+			this.process(server, uid, pwd, pathToCountries, pathToLangs, pathToIndex);
 		}
 		
 		
@@ -50,6 +52,7 @@ import org.ocmc.ioc.liturgical.utils.FileUtils;
 				, String pwd
 				, String pathToCountries
 				, String pathToLangs
+				, String pathToIndex
 				) {
 			  this.dbManager = new Neo4jConnectionManager(
 					  url
@@ -59,6 +62,7 @@ import org.ocmc.ioc.liturgical.utils.FileUtils;
 					  );
 			  this.loadCountries(pathToCountries);
 			  this.loadLanguages(pathToLangs);
+			  this.loadIndex(pathToIndex);
 //			this.updateDatabaseWithCountries();
 //			this.updateDatabaseWithLanguages();
 		}
@@ -81,7 +85,7 @@ import org.ocmc.ioc.liturgical.utils.FileUtils;
 			for (String line : FileUtils.linesFromFile(new File(path))) {
 				Locale locale = null;
 				String [] parts = line.split("\\t");
-				if (! parts[0].startsWith("LangId")) {
+				if (! parts[0].startsWith("LangID")) {
 					EthnologueLanguage lang = null;
 					if (parts.length == 4) {
 						if (parts[2].equals("L")) {
@@ -94,6 +98,37 @@ import org.ocmc.ioc.liturgical.utils.FileUtils;
 							lang.setLanguageName(parts[3]);
 							lang.setLanguageNameLocal(lang.getLanguageName());
 							this.languages.put(lang.getLanguageCode(), lang);
+						}
+					}
+				}
+			}
+		}
+		private void loadIndex(String path) {
+			for (String line : FileUtils.linesFromFile(new File(path))) {
+				Locale locale = null;
+				String [] parts = line.split("\\t");
+				if (! parts[0].startsWith("LangID")) {
+					EthnologueLanguage lang = null;
+					if (parts.length == 4) {
+						if (parts[2].equals("DP") || parts[2].equals("LP")) {
+							// ignore.  These are pejorative names for the language
+						} else {
+							lang = new EthnologueLanguage(parts[1], parts[0]);
+							EthnologueCountry country = this.countries.get(lang.getCountryCode());
+							EthnologueLanguage eLang = this.languages.get(lang.getLanguageCode());
+							if (eLang != null) {
+								lang.setCountryName(country.getCountryName());
+								lang.setCountryNameLocal(country.getCountryNameLocal());
+								lang.setArea(country.getArea());
+								lang.setLanguageCodeTwo(IsoLangThreeToTwo.threeToTwo(lang.getLanguageCode()));
+								try {
+									lang.setLanguageName(eLang.getLanguageName());
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+								lang.setLanguageNameLocal(parts[3]);
+								this.index.put(lang.getId(), lang);
+							}
 						}
 					}
 				}
@@ -118,10 +153,10 @@ import org.ocmc.ioc.liturgical.utils.FileUtils;
 		}
 		
 		private void updateDatabaseWithLanguages() {
-			System.out.println("Loading database for " + this.languages.size() + " languages");
+			System.out.println("Loading database for " + this.index.size() + " languages");
 			int count = 1;
-			int all =this.languages.size();
-			for (EthnologueLanguage lang :this.languages.values()) {
+			int all = this.index.size();
+			for (EthnologueLanguage lang : this.index.values()) {
 				try {
 					System.out.println(count + " of " + all + " " + lang.getId());
 					count++;
@@ -137,6 +172,7 @@ import org.ocmc.ioc.liturgical.utils.FileUtils;
 		public static void main(String[] args) {
 			String pathToLangs = "/Users/mac002/Git/ocmc-translation-projects/ethnologue/LanguageCodes.tab.txt";
 			String pathToCountries = "/Users/mac002/Git/ocmc-translation-projects/ethnologue/CountryCodes.tab.txt";
+			String pathToIndex = "/Users/mac002/Git/ocmc-translation-projects/ethnologue/LanguageIndex.tab.txt";
 			String uid = System.getenv("uid");
 			String pwd = System.getenv("pwd");
 			String url= "localhost"; // "159.203.89.233";
@@ -146,6 +182,7 @@ import org.ocmc.ioc.liturgical.utils.FileUtils;
 					, pwd
 					, pathToCountries
 					, pathToLangs
+					, pathToIndex
 					);
 			Locale locale = new Locale("ar","SA");
 			System.out.println(locale.getDisplayCountry(locale) + ": " + locale.getDisplayLanguage(locale));

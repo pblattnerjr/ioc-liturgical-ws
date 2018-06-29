@@ -933,6 +933,22 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		return result;
 	}
 
+	public JsonObject getDomainsThatAreCollectiveLiturgicalAsJson() {
+		ResultJsonObjectArray result = new ResultJsonObjectArray(prettyPrint);
+		result.setQuery("get domains that are liturgical and collective");
+		try {
+			List<JsonObject> list = new ArrayList<JsonObject>();
+			for (Domain domain : this.getDomainsObjectsThatAreCollectiveLiturgical()) {
+				list.add(domain.toJsonObject());
+			}
+			result.setResult(list);
+		} catch (Exception e) {
+			result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setStatusMessage(e.getMessage());
+		}
+		return result.toJsonObject();
+	}
+
 	public List<Domain> getDomainsObjectsThatAreCollectiveLiturgical() {
 		List<Domain> result = new ArrayList<Domain>();
 		for (Domain domain : this.getDomainObjects()) {
@@ -942,6 +958,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 				}
 			}
 		}
+		Collections.sort(result);
 		return result;
 	}
 

@@ -89,6 +89,19 @@ public class DomainsController {
 			}
 			return json.toString();
 		});
+		
+		path = ENDPOINTS_ADMIN_API.DOMAINS_COLLECTIVE.toLibraryPath();
+		ControllerUtils.reportPath(logger, "GET", path + " gets domains that are collective and liturgical");
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+			JsonObject json = storeManager.getDomainsThatAreCollectiveLiturgicalAsJson();
+			if (json.get("valueCount").getAsInt() > 0) {
+				response.status(HTTP_RESPONSE_CODES.OK.code);
+			} else {
+				response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
+			}
+			return json.toString();
+		});
 
 		/**
 		 * POST controllers
