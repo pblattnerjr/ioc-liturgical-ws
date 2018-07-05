@@ -350,6 +350,24 @@ public class AgesHtmlToOslwSwitch {
 			result = "Designation";
 			break;
 		}
+		case "p-designationdesignation": {
+			result = "Designation";
+			break;
+		}
+		case "p-designation-designation": {
+		// {eu.baptism}{euBAP.title} (http://www.agesinitiatives.com/dcs/public/dcs/h/b/baptism/gr-en/index.html)
+			result = "Designation";
+			break;
+		}
+		case "p-designation-designation-designation": {
+		// {eu.baptism}{euBAP.title} (http://www.agesinitiatives.com/dcs/public/dcs/h/b/baptism/gr-en/index.html)
+			result = "Designation";
+			break;
+		}
+		case "p-designationdesignationdesignation": {
+			result = "Designation";
+			break;
+		}
 		case "p-designation-key": {
 		//  (http://www.agesinitiatives.com/dcs/public/dcs/h/b/greatwaterblessing/gr-en/index.html)
 			result = "Undefined";
@@ -675,28 +693,38 @@ public class AgesHtmlToOslwSwitch {
 		}
 		case "p-heirmos": {
 		// {he.h.m1}{SouITropaiouchos.text} (http://www.agesinitiatives.com/dcs/public/dcs/h/s/2017/08/13/ma2/gr-en/index.html)
-			result = "Heirmos";
+			result = "Verse";
+			break;
+		}
+		case "p-heirmosheirmos": {
+			result = "Verse";
 			break;
 		}
 		case "p-heirmos-designation": {
-			result = "HeirmosDesignation";
+			result = "Designation";
 			break;
 		}
 		case "p-heirmos-red": {
-			result = "HiermosRubric";
+			result = "Rubric";
 			break;
 		}
 		case "p-heirmos-red-designation": {
-			result = "HiermosRubric";
+			result = "Designation";
 			break;
 		}
 		case "p-hymn": {
-		// {he.h.m8}{StavronCharaxasMosis.text} (http://www.agesinitiatives.com/dcs/public/dcs/h/b/baptism/gr-en/index.html)
+			result = "Hymn";
+			break;
+		}
+		case "p-hymnhymn": {
 			result = "Hymn";
 			break;
 		}
 		case "p-hymn-designation": {
-		// {he.h.m8}{StavronCharaxasMosis.text} (http://www.agesinitiatives.com/dcs/public/dcs/h/b/baptism/gr-en/index.html)
+			result = "HymnVersion";
+			break;
+		}
+		case "p-hymn designation": {
 			result = "HymnVersion";
 			break;
 		}
@@ -721,7 +749,7 @@ public class AgesHtmlToOslwSwitch {
 			break;
 		}
 		case "p-hymn-versiondesignation": {
-			result = "Hymn";
+			result = "HymnDesignation";
 			break;
 		}
 		case "p-hymnlinefirst": {
@@ -756,7 +784,12 @@ public class AgesHtmlToOslwSwitch {
 		}
 		case "p-melody": {
 		//  (http://www.agesinitiatives.com/dcs/public/dcs/h/b/greatwaterblessing/gr-en/index.html)
-			result = "Undefined";
+			result = "Melody";
+			break;
+		}
+		case "p-melodymelody": {
+		//  (http://www.agesinitiatives.com/dcs/public/dcs/h/b/greatwaterblessing/gr-en/index.html)
+			result = "Melody";
 			break;
 		}
 		case "p-melody-key": {
@@ -767,6 +800,27 @@ public class AgesHtmlToOslwSwitch {
 		case "p-mixed": {
 		// {prayers}{Doxa} (http://www.agesinitiatives.com/dcs/public/dcs/h/s/2017/08/01/ma/gr-en/index.html)
 			result = "Mixed";
+			break;
+		}
+		case "p-mixedmixed": {
+		// {prayers}{Doxa} (http://www.agesinitiatives.com/dcs/public/dcs/h/s/2017/08/01/ma/gr-en/index.html)
+			result = "Mixed";
+			break;
+		}
+		case "p-mixed-black": {
+			result = "BlackRedBoldRedItalic";
+			break;
+		}
+		case "p-mixed-black-designation": {
+			result = "BlackRedBoldRedItalic";
+			break;
+		}
+		case "p-mixed-black-designation-designation": {
+			result = "BlackRedBoldRedItalic";
+			break;
+		}
+		case "p-mixed-black-designation-melody": {
+			result = "BlackRedBoldRedItalic";
 			break;
 		}
 		case "p-mixed-boldred": {
@@ -781,7 +835,12 @@ public class AgesHtmlToOslwSwitch {
 		}
 		case "p-mixed-designation-designation": {
 		// {titles}{Apolytikion}{titles}{TouStavrou} (http://www.agesinitiatives.com/dcs/public/dcs/h/s/2017/08/01/li/gr-en/index.html)
-			result = "MixedDesignation";
+			result = "MixedDesignationDesignation";
+			break;
+		}
+		case "p-mixed-designation-designation-designation": {
+		// {titles}{Apolytikion}{titles}{TouStavrou} (http://www.agesinitiatives.com/dcs/public/dcs/h/s/2017/08/01/li/gr-en/index.html)
+			result = "MixedDesignationDesignation";
 			break;
 		}
 		case "p-mixed-designation-key~-mode-key~": {
@@ -801,7 +860,7 @@ public class AgesHtmlToOslwSwitch {
 		}
 		case "p-mixed-designation-mode-designation": {
 		// {misc}{Ode1}{misc}{Mode1}{misc}{Heirmos} (http://www.agesinitiatives.com/dcs/public/dcs/h/s/2017/08/13/ma2/gr-en/index.html)
-			result = "MixedDesignationModeDesignation";
+			result = "MixedDesignation";
 			break;
 		}
 		case "p-mixed-designation-mode-melody": {
@@ -810,6 +869,11 @@ public class AgesHtmlToOslwSwitch {
 			break;
 		}
 		case "p-mixed-italicsred": {
+		//  (http://www.agesinitiatives.com/dcs/public/dcs/h/b/baptism/gr-en/index.html)
+			result = "RubricItalics";
+			break;
+		}
+		case "p-mixed-italicsred-italicsred": {
 		//  (http://www.agesinitiatives.com/dcs/public/dcs/h/b/baptism/gr-en/index.html)
 			result = "RubricItalics";
 			break;
@@ -871,6 +935,18 @@ public class AgesHtmlToOslwSwitch {
 		case "p-mode-key": {
 		//  (http://www.agesinitiatives.com/dcs/public/dcs/h/b/greatwaterblessing/gr-en/index.html)
 			result = "Undefined";
+			break;
+		}
+		case "p-name": {
+			result = "Designation";
+			break;
+		}
+		case "p-namename": {
+			result = "Designation";
+			break;
+		}
+		case "p-namenamename": {
+			result = "Designation";
 			break;
 		}
 		case "p-prayer": {
@@ -1001,7 +1077,7 @@ public class AgesHtmlToOslwSwitch {
 		}
 		case "p-verse-boldred": {
 		// {misc}{vVerse}{ps}{psa26.v1b.text} (http://www.agesinitiatives.com/dcs/public/dcs/h/b/baptism/gr-en/index.html)
-			result = "VerseRedBold";
+			result = "VerseRedBoldItalics";
 			break;
 		}
 		case "p-verse-boldred-designation": {
@@ -1027,6 +1103,455 @@ public class AgesHtmlToOslwSwitch {
 		case "span": {
 		// {prayers}{DoxaSoiKyrie} (http://www.agesinitiatives.com/dcs/public/dcs/h/b/baptism/gr-en/index.html)
 			result = "Undefined";
+			break;
+		}
+		case "p-actor-italicsred": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-alttext-italicsred-italics": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-alttext-italicsred-italics-versiondesignation": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-alttext-versiondesignation": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode1_me_canon3": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode1_pa_canon": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode1_pe_canon1": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode1_pe_canon2": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode1_tr_canon1": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode3_me_canon3": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode3_pa_canon": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode3_pe_canon1": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode3_pe_canon2": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode3_tr_canon1": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode4_me_canon3": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode4_pa_canon": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode4_pe_canon1": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode4_pe_canon2": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode4_tr_canon1": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode5_me_canon3": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode5_pa_canon": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode5_pe_canon1": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode5_pe_canon2": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode5_tr_canon1": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode6_me_canon3": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode6_pa_canon": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode6_pe_canon1": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode6_pe_canon2": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode6_tr_canon1": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode7_me_canon3": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode7_pa_canon": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode7_pe_canon1": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode7_pe_canon2": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode7_tr_canon1": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode8_me_canon3": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode8_pa_canon": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode8_pe_canon1": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode8_pe_canon2": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode8_tr_canon1": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode9_me_canon3": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode9_pa_canon": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode9_pe_canon1": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode9_pe_canon2": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-bmc_ode9_tr_canon1": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-boldred-versiondesignation": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-chant-red-red": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-chant-red-red-versiondesignation": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-chant-versiondesignation": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-dialog-versiondesignation": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-heirmos-red-versiondesignation": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-heirmos-versiondesignation": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-hymn-bold": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-hymn-italics": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-hymn-red-versiondesignation": {
+			result = "HymnDesignation";
+			break;
+		}
+
+		case "p-mixed-bold": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-mixed-designation-designation-mode": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-mixed-designation-mode-designation-": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-mixed-designation-mode-melody-": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-mixed-melody": {
+			result = "Melody";
+			break;
+		}
+
+		case "p-mixed-mode-designation-": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-mixed-mode-mode": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-mixed-text": {
+			result = "Mixed";
+			break;
+		}
+
+		case "p-mixed-text-designation": {
+			result = "MixedTextDesignation";
+			break;
+		}
+
+		case "p-mixed-text-designation-designation": {
+			result = "MixedTextDesignation";
+			break;
+		}
+
+		case "p-mixed-text-designation-melody": {
+			result = "MixedTextDesignationMelody";
+			break;
+		}
+
+		case "p-mixed-text-melody": {
+			result = "MixedTextMelody";
+			break;
+		}
+
+		case "p-mixed-text-mode": {
+			result = "MixedTextModeMelody";
+			break;
+		}
+
+		case "p-mixed-text-mode-melody": {
+			result = "MixedTextModeMelody";
+			break;
+		}
+
+		case "p-mixed-text-rubric": {
+			result = "MixedTextRubric";
+			break;
+		}
+
+		case "p-mixed-text-text": {
+			result = "Mixed";
+			break;
+		}
+
+		case "p-mixed-text-text-designation": {
+			result = "MixedTextTextDesignation";
+			break;
+		}
+
+		case "p-mixed-text-text-mode": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-mixed-text-text-red-text": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-mixed-text-text-text": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-prayer-versiondesignation": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-prayerzero-versiondesignation": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-reading-anum-reference-versiondesignation": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-reading-red-versiondesignation": {
+			result = "ReadingVersion";
+			break;
+		}
+
+		case "p-reading-versiondesignation": {
+			result = "ReadingVersion";
+			break;
+		}
+
+		case "p-readingzero-versiondesignation": {
+			result = "ReadingVersion";
+			break;
+		}
+
+		case "p-rubric-": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-source1": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-verse-bolditalicsred": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-verse-bolditalicsred-versiondesignation": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-verse-boldred-rubric": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-verse-boldred-versiondesignation": {
+			result = "VerseRedBoldVersion";
+			break;
+		}
+
+		case "p-verse-italics": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-verse-italicsred": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-verse-italicsred-versiondesignation": {
+			result = "Undefined";
+			break;
+		}
+
+		case "p-verse-versiondesignation": {
+			result = "VerseVersion";
 			break;
 		}
 		default: {
