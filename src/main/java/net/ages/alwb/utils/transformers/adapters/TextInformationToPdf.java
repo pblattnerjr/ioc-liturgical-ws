@@ -233,14 +233,13 @@ public class TextInformationToPdf {
 		sb.append(this.pdfTitle);
 		this.appendText(this.pdfTitle);
 		sb.append("}\n\\end{center}");
-		sb.append("\\newline%\n");
 		if (this.pdfSubTitle.length() > 0) {
 			sb.append("{\\scshape\\large ");
 			sb.append("\\begin{center}");
 			sb.append(this.pdfSubTitle);
 			this.appendText(this.pdfSubTitle);
 			sb.append("\\end{center}");
-			sb.append("}\\\\%\n");
+			sb.append("}%\n");
 		}
 		sb.append("{\\scshape\\small\n");
 		sb.append("\\begin{center}\n\\textit{");
@@ -261,7 +260,7 @@ public class TextInformationToPdf {
 		}
 		sb.append(LocalDate.now().toString());
 		sb.append("}\n\\end{center}");
-		sb.append("}\\\\[\\baselineskip]%\n");
+		sb.append("}%\n");
 		if (this.includeAdviceNotes && this.author.contains("Colburn")) {
 			sb.append("\\includegraphics[width=.5\\textwidth]{system/images/nicodemos.jpg}");
 			sb.append("{\\scshape\\footnotesize\n");
@@ -396,7 +395,7 @@ public class TextInformationToPdf {
 		this.texFileSb.append(this.getNotesAsLatex());
 		this.texFileSb.append("\\vfill");
 		if (this.includeGrammar) {
-			this.texFileSb.append("\\section{Grammar}");
+			this.texFileSb.append("\n\\section{Grammar}");
 			this.texFileSb.append(this.getInterlinearAsLatex());
 			this.texFileSb.append("\\vfill");
 			this.texFileSb.append(this.getDependencyDiagramAsLatex());
@@ -405,7 +404,7 @@ public class TextInformationToPdf {
 		this.texFileSb.append(this.getAbbreviationsAsLatex());
 		
 		if (this.hasBibliography) {
-			this.texFileSb.append("\\section{Bibliography}\n\n");
+			this.texFileSb.append("\n\\section{Bibliography}\n\n");
 			this.texFileSb.append("\\selectlanguage{english}\n");
 			this.texFileSb.append("\\printbibliography[heading=bibempty]\n");
 		}
@@ -428,7 +427,7 @@ public class TextInformationToPdf {
 		StringBuffer sb = new StringBuffer();
 //		sb.append("\n\\vfill%\n");
 //		sb.append("\\pagebreak%\n");
-		this.texFileSb.append("\\section{Your Personal Notes}\n\n");
+		this.texFileSb.append("\n\\section{Your Personal Notes}\n\n");
 		if (this.userList.size() > 0) {
 			for (UserNote note : this.userList) {
 				if (note.getValue() != null) {
@@ -450,21 +449,21 @@ public class TextInformationToPdf {
 	public String getInterlinearAsLatex() {
 		StringBuffer sb = new StringBuffer();
 //		sb.append("\n\\vfill\n\\newpage\n");
-		sb.append("\\subsection{Interlinear Text}\n");
+		sb.append("\n\\subsection{Interlinear Text}\n");
 		sb.append("This section provides information about the grammar of words (that is, the morphology). The Greek words appear in the same order as they do in the source text.\n\n");
 		sb.append(this.nodesToInterlinear());
-		sb.append("\n\\subsectionline\n");
+		sb.append("\n\\sectionline\n");
 		return sb.toString();
 	}
 
 	public String getDependencyDiagramAsLatex() {
 		StringBuffer sb = new StringBuffer();
 //		sb.append("\n\\vfill\n\\newpage\n");
-		sb.append("\\subsection{Dependency Diagram}\n");
+		sb.append("\n\\subsection{Dependency Diagram}\n");
 		sb.append("This section uses a dependency diagram to show the syntactic structure of the text.  \\textit{Syntax} means \\textit{the grammatical relationship between words}, that is, \\textit{the way words are put together to create phrases and clauses and sentences}.  This diagram shows the structure based on a type of grammar theory called dependency grammar. The order of each Greek word in the diagram is based on the word it depends on. It appears indented and after the word it depends on. The first word to appear in the diagram is the root of the structure.\n");
 		sb.append("\\newline");
 		sb.append(this.processNode(null, new StringBuffer()));
-		sb.append("\n\\subsectionline\n");
+		sb.append("\n\\sectionline\n");
 		return sb.toString();
 	}
 	
@@ -674,7 +673,7 @@ public class TextInformationToPdf {
 			}
 			sb.append("\\end{tabular}\n");
 		}
-		sb.append("\n\\subsectionline\n");
+		sb.append("\n\\sectionline\n");
 		return sb.toString();
 	}
 	
@@ -699,7 +698,7 @@ public class TextInformationToPdf {
 				sb.append(this.processAdviceNotes());
 			}
 		}
-		sb.append("\n\\subsectionline\n");
+		sb.append("\n\\sectionline\n");
 		sb.append("\\vfill%\n");
 		return sb.toString();
 	}

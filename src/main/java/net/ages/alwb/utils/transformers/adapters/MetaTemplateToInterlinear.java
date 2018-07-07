@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import org.ocmc.ioc.liturgical.schemas.models.LDOM.LDOM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +14,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 
 import net.ages.alwb.utils.core.id.managers.IdManager;
-import net.ages.alwb.utils.transformers.adapters.models.LDOM;
 
 public class MetaTemplateToInterlinear {
 	private static final Logger logger = LoggerFactory.getLogger(MetaTemplateToInterlinear.class);

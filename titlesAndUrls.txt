@@ -1,0 +1,34 @@
+se.m04.d01.h1 - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/04/01/h1/en/index.html
+se.m04.d01.h36 - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/04/01/h36/en/index.html
+se.m04.d01.h36 - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/04/01/h36/gr-en/index.html
+se.m04.d01.h9 - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/04/01/h9/en/index.html
+se.m04.d01.li - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/04/01/li/en/index.html
+se.m04.d01.li8 - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/04/01/li8/en/index.html
+se.m04.d01.ma - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/04/01/ma/en/index.html
+se.m04.d01.ma2 - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/04/01/ma2/gr-en/index.html
+se.m04.d01.ve - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/03/31/ve/en/index.html
+se.m04.d02.em - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/04/01/em/en/index.html
+se.m04.d02.ve - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/04/01/ve/en/index.html
+se.m04.d03.pl - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/04/02/pl/gr-en/index.html
+se.m04.d03.pl8 - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/04/02/pl8/gr-en/index.html
+se.m04.d06.gh - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/04/06/gh/en/index.html
+se.m04.d06.vl - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/04/05/vl/en/index.html
+se.m04.d07.em3 - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/04/06/em3/en/index.html
+se.m04.d08.co1 - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/04/07/co1/en/index.html
+se.m04.d10.li4 - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/04/10/li4/gr-en/index.html
+se.m04.d10.ma4 - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/04/10/ma4/en/index.html
+se.m04.d10.ve - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/04/09/ve/gr-en/index.html
+se.m04.d10.ve4 - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/04/09/ve4/en/index.html
+se.m04.d15.li8 - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/04/15/li8/gr-en/index.html
+se.pe.d071.ma1 - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/04/08/ma1/en/index.html
+se.pe.d071.ma3 - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/04/08/ma3/en/index.html
+se.pe.d071.ma3 - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/04/08/ma3/gr-en/index.html
+se.m12.d24.gh - http://www.agesinitiatives.com/dcs/public/dcs/h/s/2018/12/24/gh/gr-en/index.html
+TRIODION - http://www.agesinitiatives.com/dcs/public/dcs/h/b/tr/d065/ve/en/index.html
+TRIODION - http://www.agesinitiatives.com/dcs/public/dcs/h/b/tr/d065/ma/en/index.html
+TRIODION - Presanctified Liturgy - http://www.agesinitiatives.com/dcs/public/dcs/h/b/tr/d066/pl/en/index.html
+TRIODION - Hours on Great and Holy Friday - http://www.agesinitiatives.com/dcs/public/dcs/h/b/tr/d069/gh/en/index.html
+TRIODION - http://www.agesinitiatives.com/dcs/public/dcs/h/b/tr/d070/em3/en/index.html
+TRIODION - http://www.agesinitiatives.com/dcs/public/dcs/h/b/tr/d071/vl/en/index.html
+TRIODION - http://www.agesinitiatives.com/dcs/public/dcs/h/b/tr/d071/vl/gr-en/index.html
+TRIODION - http://www.agesinitiatives.com/dcs/public/dcs/h/b/tr/d071/co1/en/index.html

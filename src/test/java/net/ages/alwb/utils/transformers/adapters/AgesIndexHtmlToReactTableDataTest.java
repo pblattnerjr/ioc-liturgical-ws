@@ -3,8 +3,7 @@ package net.ages.alwb.utils.transformers.adapters;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
-
-import net.ages.alwb.utils.transformers.adapters.models.AgesIndexTableData;
+import org.ocmc.ioc.liturgical.schemas.models.LDOM.AgesIndexTableData;
 
 public class AgesIndexHtmlToReactTableDataTest {
 

@@ -17,13 +17,14 @@ import com.google.gson.JsonObject;
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 
+import org.ocmc.ioc.liturgical.schemas.models.LDOM.LDOM;
+import org.ocmc.ioc.liturgical.schemas.models.LDOM.LDOM_Element;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 
 import net.ages.alwb.utils.core.id.managers.IdManager;
 import net.ages.alwb.utils.core.misc.AlwbUrl;
-import net.ages.alwb.utils.transformers.adapters.models.LDOM;
-import net.ages.alwb.utils.transformers.adapters.models.LDOM_Element;
+import net.ages.alwb.utils.transformers.adapters.models.LdomTitleRow;
 
 
 /**
@@ -38,6 +39,7 @@ public class AgesHtmlToLDOM {
 	private static final Logger logger = LoggerFactory.getLogger(AgesHtmlToLDOM.class);
 	private boolean printPretty = false;
 	private String url = "";
+	private String timestamp = "unknown";
 	private String leftLibrary = "";
 	private String centerLibrary = "";
 	private String rightLibrary = "";
@@ -237,7 +239,10 @@ public class AgesHtmlToLDOM {
 		IdManager result = null;
 		try {
 	    	String [] parts = dataKey.split("\\|");
-	    	String key = parts[1];
+	    	String key = "";
+	    	if (parts.length > 1) {
+	    		key = parts[1];
+	    	}
 	    	parts = parts[0].split("_");
 	    	String topic = parts[0];
 	    	String domain = "gr_GR_cog";
@@ -454,15 +459,7 @@ public class AgesHtmlToLDOM {
 	 * @throws Exception
 	 */
 	public LDOM toLDOM () throws Exception {
-		LDOM result = new LDOM(url, printPretty);
-		result.setLibraries(
-				leftLibrary
-				, centerLibrary
-				, rightLibrary
-				, leftFallback
-				, centerFallback
-				, rightFallback
-				);
+		LDOM result = null;
 		Document doc = null;
 		Element content = null;
 		Connection c = null;
@@ -479,6 +476,17 @@ public class AgesHtmlToLDOM {
 				doc = c.timeout(60*1000).maxBodySize(0).get();
 			}
 			AlwbUrl urlUtils = new AlwbUrl(url);
+			this.timestamp = doc.select("title").attr("data-timestamp");
+			result = new LDOM(url, timestamp, printPretty);
+			result.setLibraries(
+					leftLibrary
+					, centerLibrary
+					, rightLibrary
+					, leftFallback
+					, centerFallback
+					, rightFallback
+					);
+
 
 			/**
 			 * Major Step:  Do some preliminary setup.

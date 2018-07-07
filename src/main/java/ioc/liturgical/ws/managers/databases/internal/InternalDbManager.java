@@ -35,6 +35,7 @@ import org.ocmc.ioc.liturgical.schemas.models.ws.db.UserHash;
 import org.ocmc.ioc.liturgical.schemas.models.ws.db.UserPreferences;
 import org.ocmc.ioc.liturgical.schemas.models.ws.db.UserStatistics;
 import org.ocmc.ioc.liturgical.schemas.models.ws.db.Utility;
+import org.ocmc.ioc.liturgical.schemas.models.ws.db.UtilityPdfGeneration;
 import org.ocmc.ioc.liturgical.schemas.models.ws.db.ValueSchema;
 import org.ocmc.ioc.liturgical.schemas.models.ws.forms.AuthorizationCreateForm;
 import org.ocmc.ioc.liturgical.schemas.models.ws.forms.DomainCreateForm;
@@ -1887,9 +1888,16 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	 * @return
 	 */
 	private RequestStatus addUtility(String requestor, String json) {
+		// if you subtype Utility class, make sure you add the subtype to the Internal 
+		// schemas in the ioc-liturgical-schemas constants.
+		// and add an if clause like the one below for GeneratePdfFiles.
 		RequestStatus result = new RequestStatus();
 		Utility jsonObj =  new Utility();
 		jsonObj = (Utility) jsonObj.fromJsonString(json);
+		if (jsonObj.getName().equals(UTILITIES.GeneratePdfFiles.keyname)) {
+			jsonObj = new UtilityPdfGeneration();
+			jsonObj = (UtilityPdfGeneration) jsonObj.fromJsonString(json);
+		}
 		String validation = jsonObj.validate(json);
 		if (validation.length() == 0) {
 			try {
@@ -3461,8 +3469,19 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 
 	@Override
 	public RequestStatus deleteForId(String id) {
-		// TODO Auto-generated method stub
-		return null;
+		RequestStatus result = new RequestStatus();
+		try {
+			ResultJsonObjectArray json = getForId(id);
+			if (json.getResultCount() == 0) {
+				result.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
+				result.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message + " " + id);
+			} else {
+				manager.delete(json.getFirstObject());
+			}
+		} catch (SQLException e) {
+			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+		}
+		return result;
 	}
 
 	/**
@@ -3473,6 +3492,9 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	private void createUtilityDescriptions() {
 		for (Utility u : UTILITIES.toUtilityList()) {
 			String id = SYSTEM_MISC_LIBRARY_TOPICS.UTILITIES.toId(u.getName());
+			if (id.endsWith("GeneratePdfFiles")) {
+				this.deleteForId(id);
+			}
 			if (! this.existsUnique(id)) {
 				try {
 					RequestStatus status = this.addUtility("wsadmin", u.toJsonString());

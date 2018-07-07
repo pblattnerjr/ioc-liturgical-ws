@@ -11,6 +11,7 @@ public class AlwbUrl {
 	private String day = "";
 	private String name = "";
 	private int startIndex = 0;
+	private String mode = "";
 
 	public AlwbUrl(String url) {
 		this.urlString = url;
@@ -48,6 +49,10 @@ public class AlwbUrl {
 				} else {
 					name = "li2";
 				}
+			} else if (parts[7].equals("oc")) {
+				name = parts[7];
+				mode = parts[8];
+				day = parts[9];
 			}
 		} else {
 			name = parts[startIndex+1];
@@ -136,6 +141,14 @@ public class AlwbUrl {
 
 	public void setStartIndex(int startIndex) {
 		this.startIndex = startIndex;
+	}
+
+	public String getMode() {
+		return mode;
+	}
+
+	public void setMode(String mode) {
+		this.mode = mode;
 	}
 	
 }

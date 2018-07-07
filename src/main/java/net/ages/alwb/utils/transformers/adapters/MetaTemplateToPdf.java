@@ -1,5 +1,9 @@
 package net.ages.alwb.utils.transformers.adapters;
 
+import java.net.URI;
+import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -7,6 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 
+import org.ocmc.ioc.liturgical.schemas.models.LDOM.KvpCellElement;
+import org.ocmc.ioc.liturgical.schemas.models.LDOM.LDOM;
+import org.ocmc.ioc.liturgical.schemas.models.LDOM.LDOM_Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,11 +22,8 @@ import com.google.gson.JsonParseException;
 
 import net.ages.alwb.utils.core.id.managers.IdManager;
 import net.ages.alwb.utils.oslw.OslwUtils;
-import net.ages.alwb.utils.transformers.adapters.models.KvpCellElement;
-import net.ages.alwb.utils.transformers.adapters.models.LDOM;
 import net.ages.alwb.utils.transformers.adapters.models.OslwCellElement;
 import net.ages.alwb.utils.transformers.adapters.models.OslwRowElement;
-import net.ages.alwb.utils.transformers.adapters.models.LDOM_Element;
 
 /**
  * Liturgical books and services are provided by AGES Initiatives as
@@ -86,6 +90,7 @@ public class MetaTemplateToPdf {
 	}
 	
 	public void process() {
+
 		String chinese = "zh_";
 		String korean = "ko_";
 		boolean hasChinese = 
@@ -102,7 +107,7 @@ public class MetaTemplateToPdf {
 				(template.getCenterLibrary() == "" || template.getCenterLibrary().length() == 0)
 				&& (template.getRightLibrary() == "" || template.getRightLibrary().length() == 0)
 		;
-		this.texFileSb.append("\\documentclass[extrafontsizes,12pt]{memoir}\n");
+		this.texFileSb.append("\\documentclass[extrafontsizes,14pt]{memoir}\n");
 		
 		if (hasChinese) {
 			this.texFileSb.append("\\usepackage[hyphenate,chinese]{system/ocmc-liturgical-text}%\n");
@@ -126,9 +131,6 @@ public class MetaTemplateToPdf {
 		this.texFileSb.append("\\mainmatter%\n");
 		this.texFileSb.append("\\ltColumnsOn%\n");
 
-		if (singleColumn) {
-			this.texFileSb.append("\\begin{multicols}{2}%\n");
-		}
 		if (template.getLeftLibrary() != null && template.getLeftLibrary().length() > 0) {
 			IdManager m = new IdManager();
 			m.setLibrary(template.getLeftLibrary());
@@ -150,6 +152,32 @@ public class MetaTemplateToPdf {
 		}
 		this.valuesToOslw();
 		
+		if (template.getLeftTitle().length() == 0) {
+			StringBuffer sb = new StringBuffer();
+			if (template.getUrl().contains("/h/b/oc/")) {
+				try {
+					URL url = new URL(template.getUrl());
+					String [] parts = template.getUrl().split("/h/b/oc/");
+					parts = parts[parts.length-1].split("/");
+					if (parts.length > 3) {
+						String mode = parts[0];
+						String day = parts[1];
+						sb.append("Octoechos Mode ");
+						sb.append(mode.substring(1));
+						sb.append(" Day ");
+						sb.append(day.substring(1));
+						if (parts.length > 4) {
+							sb.append(" (Orthros)");
+						}
+					}
+					String title = sb.toString();
+					template.setLeftHeaderTitle(title);
+					template.setLeftTitle(title);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
 		// add the values for the titles
 		this.texFileSb.append(OslwUtils.getOslwTitleResources(
 				template.getLeftLibrary()
@@ -188,6 +216,9 @@ public class MetaTemplateToPdf {
 			this.texFileSb.append("\\ltServiceDate{pdf}{title.date}\n");
 		}
 		
+		if (singleColumn) {
+			this.texFileSb.append("\\begin{multicols}{2}%\n");
+		}
 		this.process(template.getTopElement());
 		int redirectCount = 0;
 		for (OslwRowElement rowElement : list) {
@@ -352,13 +383,22 @@ public class MetaTemplateToPdf {
 		// the current class name for an ALWB HTML data-key is kvp.  We used to use just key 
 		// as the classname.  Some html files on the AGES site still have the old class name.
 		if (e.getClassName().startsWith("kvp") || e.getClassName().startsWith("key")) {
+//			result.addCommand(e.parentClassName);
+			if (e.parentClassName.toLowerCase().equals("mixed")) {
+				result.addCommand("-text");
+			}
 			result.addKey(parseElement(e));
 			result.addKvpCellElement(new KvpCellElement(e));
 		} else {
-			result.addCommand(parseElement(e));
+//			if (e.getClassName().toLowerCase().equals("mixed")) {
+				result.addCommand(parseElement(e));
+//			}
 		}
 		for (LDOM_Element c : e.getChildren()) {
 			if (c.getClassName().startsWith("kvp") || c.getClassName().startsWith("key")) {
+				if (e.parentClassName.toLowerCase().equals("mixed")) {
+					result.addCommand("-text");
+				}
 				result.addKey(parseElement(c));
 				result.addKvpCellElement(new KvpCellElement(c));
 				if (c.getDataKey().endsWith("version.designation")) {
@@ -399,6 +439,9 @@ public class MetaTemplateToPdf {
 	public void valuesToOslw() {
 		for (Entry<String,String> entry :this.template.getValues().entrySet()) {
 			IdManager m = new IdManager(entry.getKey());
+			if (m.getKey().equals("OAnthraxToIsaia.text")) {
+				System.out.print("");
+			}
 			List<String> values = new ArrayList<String>();
 			values.add(entry.getKey());
 			String oslw = m.getOslwResourceForValue(entry.getValue());

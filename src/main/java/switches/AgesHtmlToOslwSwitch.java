@@ -749,7 +749,7 @@ public class AgesHtmlToOslwSwitch {
 			break;
 		}
 		case "p-hymn-versiondesignation": {
-			result = "HymnDesignation";
+			result = "Hymn";
 			break;
 		}
 		case "p-hymnlinefirst": {
@@ -1371,7 +1371,7 @@ public class AgesHtmlToOslwSwitch {
 		}
 
 		case "p-hymn-red-versiondesignation": {
-			result = "HymnDesignation";
+			result = "Para";
 			break;
 		}
 
@@ -1491,17 +1491,17 @@ public class AgesHtmlToOslwSwitch {
 		}
 
 		case "p-reading-red-versiondesignation": {
-			result = "ReadingVersion";
+			result = "Undefined";
 			break;
 		}
 
 		case "p-reading-versiondesignation": {
-			result = "ReadingVersion";
+			result = "Para";
 			break;
 		}
 
 		case "p-readingzero-versiondesignation": {
-			result = "ReadingVersion";
+			result = "Para";
 			break;
 		}
 
@@ -1531,7 +1531,7 @@ public class AgesHtmlToOslwSwitch {
 		}
 
 		case "p-verse-boldred-versiondesignation": {
-			result = "VerseRedBoldVersion";
+			result = "Para";
 			break;
 		}
 
@@ -1551,7 +1551,7 @@ public class AgesHtmlToOslwSwitch {
 		}
 
 		case "p-verse-versiondesignation": {
-			result = "VerseVersion";
+			result = "Para";
 			break;
 		}
 		default: {
@@ -1563,8 +1563,8 @@ public class AgesHtmlToOslwSwitch {
 		|| command.contains("emc_")) {
 			// ignore it
 		} else { // report the problem
-			ServiceProvider.sendMessage("switches.AgesHtmlToOslw: " + result + " command  - "  + command );
-			logger.error(result + " command: " + command);
+			ServiceProvider.sendMessage("switches.AgesHtmlToOslw: " + result + " command  - "  + strCommand );
+			logger.error(result + " command: " + strCommand);
 		}
 
 	}

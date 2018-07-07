@@ -6,8 +6,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.junit.Test;
+import org.ocmc.ioc.liturgical.schemas.models.LDOM.LDOM;
 
-import net.ages.alwb.utils.transformers.adapters.models.LDOM;
 
 public class AgesHtmlToDynamicHtmlTest {
 

@@ -40,12 +40,15 @@ import org.ocmc.ioc.liturgical.schemas.constants.ABBREVIATION_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.BIBLICAL_BOOKS;
 import org.ocmc.ioc.liturgical.schemas.constants.BIBTEX_ENTRY_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.BIBTEX_STYLES;
+import org.ocmc.ioc.liturgical.schemas.constants.FALLBACKS;
 
 import ioc.liturgical.ws.constants.Constants;
 
 import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
 import org.ocmc.ioc.liturgical.schemas.constants.LIBRARIES;
 import org.ocmc.ioc.liturgical.schemas.constants.LITURGICAL_BOOKS;
+import org.ocmc.ioc.liturgical.schemas.constants.MODES_TO_NEO4J;
+import org.ocmc.ioc.liturgical.schemas.constants.NEW_FORM_CLASSES_ADMIN_API;
 import org.ocmc.ioc.liturgical.schemas.constants.NEW_FORM_CLASSES_DB_API;
 import org.ocmc.ioc.liturgical.schemas.constants.NOTE_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.RELATIONSHIP_TYPES;
@@ -104,6 +107,7 @@ import org.ocmc.ioc.liturgical.schemas.models.supers.LTKLink;
 import org.ocmc.ioc.liturgical.schemas.models.ws.db.Domain;
 import org.ocmc.ioc.liturgical.schemas.models.ws.db.UserPreferences;
 import org.ocmc.ioc.liturgical.schemas.models.ws.db.Utility;
+import org.ocmc.ioc.liturgical.schemas.models.ws.db.UtilityPdfGeneration;
 import org.ocmc.ioc.liturgical.schemas.models.ws.forms.DomainCreateForm;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
@@ -124,6 +128,9 @@ import net.ages.alwb.tasks.TextDownloadsGenerationTask;
 import net.ages.alwb.tasks.WordAnalysisCreateTask;
 import org.ocmc.ioc.liturgical.schemas.models.DropdownArray;
 import org.ocmc.ioc.liturgical.schemas.models.DropdownItem;
+import org.ocmc.ioc.liturgical.schemas.models.LDOM.AbstractLDOM;
+import org.ocmc.ioc.liturgical.schemas.models.LDOM.AgesIndexTableData;
+import org.ocmc.ioc.liturgical.schemas.models.LDOM.LDOM;
 import org.ocmc.ioc.liturgical.schemas.models.bibliography.BibEntryReference;
 
 import net.ages.alwb.utils.core.datastores.json.exceptions.MissingSchemaIdException;
@@ -141,9 +148,6 @@ import net.ages.alwb.utils.transformers.SystemJsonLabels;
 import net.ages.alwb.utils.transformers.adapters.AgesHtmlToEditableLDOM;
 import net.ages.alwb.utils.transformers.adapters.AgesWebsiteIndexToReactTableData;
 import net.ages.alwb.utils.transformers.adapters.TemplateNodeCompiler;
-import net.ages.alwb.utils.transformers.adapters.models.AbstractLDOM;
-import net.ages.alwb.utils.transformers.adapters.models.AgesIndexTableData;
-import net.ages.alwb.utils.transformers.adapters.models.LDOM;
 import opennlp.tools.tokenize.SimpleTokenizer;
 import opennlp.tools.tokenize.Tokenizer;
 
@@ -4438,7 +4442,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, String fallbackLibrary
 				) {
 			String result = "";
-			String titleKey = url.getName()  + ".pdf." + titleType;
+			String titleKey = url.getName();
+			if (! titleKey.equals("oc")) {
+				titleKey = titleKey + ".pdf." + titleType;
+			}
 			// first initialize the result to the value for en_us_dedes in case nothing else matches
 			IdManager idManager = new IdManager(
 					"en_us_dedes" 
@@ -4484,8 +4491,35 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					LocaleDate localeDate = new LocaleDate(idManager.getLocale(), url.getYear(), url.getMonth(), "1");
 					result = result + " " + localeDate.getMonthNameFull() + " " + localeDate.getYear();
 				}
+				if (url.getName().equals("oc")) {
+					result = result + " " + this.getMode(url.getMode(), library, fallbackLibrary);
+				}
+				if (result.endsWith(".")) {
+					result = result.substring(0, result.length()-1);
+				}
 			} catch (Exception e) {
 				// ignore
+			}
+			return result;
+		}
+		
+		public String getMode(String key, String library, String fallbackLibrary) {
+			String result = key;
+			ResultJsonObjectArray queryResult = this.getForId(MODES_TO_NEO4J.getNeo4jId(key, library));
+			if (queryResult.status.code == HTTP_RESPONSE_CODES.OK.code) {
+				result = queryResult.getFirstObject().get("value").getAsString();
+			} else {
+				queryResult = this.getForId(MODES_TO_NEO4J.getNeo4jId(key, fallbackLibrary));
+				if (queryResult.status.code == HTTP_RESPONSE_CODES.OK.code) {
+					result = queryResult.getFirstObject().get("value").getAsString();
+				} else {
+					queryResult = this.getForId(MODES_TO_NEO4J.getNeo4jId(key, "en_us_dedes"));
+					if (queryResult.status.code == HTTP_RESPONSE_CODES.OK.code) {
+						result = queryResult.getFirstObject().get("value").getAsString();
+					} else {
+						result = key;
+					}
+				}
 			}
 			return result;
 		}
@@ -4659,7 +4693,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, String year
 				) {
 			ResultJsonObjectArray result = new ResultJsonObjectArray(this.printPretty);
-			AbstractLDOM ldom = new AbstractLDOM(templateId);
+			AbstractLDOM ldom = null;
 			try {
 				// get the template
 				ResultJsonObjectArray queryResult = this.getForId(templateId, TOPICS.TEMPLATE.label);
@@ -4675,6 +4709,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						compiler = new TemplateNodeCompiler(template, this);
 					}
 					TemplateNode compiledRootNode = compiler.getCompiledNodes();
+					// TODO: need to build the LDOM from the template node somehow
 					result.addValue(ldom.toJsonObject());
 				}  else {
 					result.setStatusCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
@@ -4717,6 +4752,26 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			}
 		}
 
+		public LDOM getLDOM(String url) {
+			LDOM result = null;
+			try {
+				IdManager idManager = new IdManager(
+						org.ocmc.ioc.liturgical.schemas.constants.Constants.LIBRARY_LITURGICAL_DOCUMENT_MODEL
+						, org.ocmc.ioc.liturgical.schemas.constants.Constants.TOPIC_LITURGICAL_DOCUMENT_MODEL
+						, url
+						);
+				ResultJsonObjectArray queryResult = this.getForId(idManager.getId());
+				if (queryResult.status.code == HTTP_RESPONSE_CODES.OK.code) {
+					result = (LDOM) gson.fromJson(
+							queryResult.getValues().get(0).get("ldom")
+							, LDOM.class
+					);	
+				}
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+			return result;
+		}
 		/**
 		 * Creates an ID by concatenating the request (username)
 		 * and the current timestamp
@@ -4787,7 +4842,9 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			try {
 				AgesHtmlToEditableLDOM ages = new AgesHtmlToEditableLDOM(
 						url
+						, this
 						, translationLibrary
+						, true // check Database to see if we already have the current LDOM
 						, this.printPretty // print pretty
 						);
 				LDOM template = ages.toLDOM();
@@ -5403,6 +5460,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			ResultDropdowns result = new ResultDropdowns(true);
 			result.setQuery(query);
 			result.setDomains(internalManager.getDomainDropdownsForUser(requestor));
+			result.setAdminForms(internalManager.getNewDocForms(requestor, ""));
 			result.setUiLabels(this.getUiLabelsAsJsonObject());
 			result.setOntologyTypesDropdown(
 					TOPICS.keyNamesTrueOntologyToDropdown()
@@ -5536,11 +5594,9 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		
 		/**
 		 * Run the utility specified by the paramter utilityName.
-		 * At this time, we are not doing anything with the json,
-		 * but it is available for future use.
-		 * @param requestor
-		 * @param utilityName
-		 * @param json
+		 * @param requestor - the username of the person who requested the action
+		 * @param utilityName - the name of the utility (matches the UTILITIES enum)
+		 * @param json - json string from a Utility subclass
 		 * @return
 		 */
 		public RequestStatus runUtility(
@@ -5549,7 +5605,6 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, String json
 				) {
 			RequestStatus result = new RequestStatus();
-			Utility form = gson.fromJson(json, Utility.class);
 			if (internalManager.isWsAdmin(requestor)) {
 				if (runningUtility) {
 					result.setCode(HTTP_RESPONSE_CODES.UNAUTHORIZED.code);
@@ -5573,6 +5628,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					case FetchPerseusTreebank: {
 						boolean deleteFirst = false;
 						result = runUtilityFetchPerseusTreebank(requestor, deleteFirst);
+						break;
+					}
+					case GeneratePdfFiles: {
+						result = runUtilityGeneratePdfFiles(requestor, json);
 						break;
 					}
 					case Tokenize: {
@@ -5724,6 +5783,34 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						);
 				status.setCode(addStatus.code);
 				status.setMessage(addStatus.userMessage);
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+				status.setCode(HTTP_RESPONSE_CODES.SERVER_ERROR.code);
+				status.setMessage(e.getMessage());
+			}
+			return status;
+		}
+
+		public RequestStatus runUtilityGeneratePdfFiles(
+				String requestor
+				, String json
+				) {
+			RequestStatus status = new RequestStatus();
+			try {
+				UtilityPdfGeneration form = gson.fromJson(json, UtilityPdfGeneration.class);
+				String hi = form.getLeftLibrary();
+				FALLBACKS leftFallback = form.getLeftFallback();
+				String center = form.getCenterLibrary();
+				FALLBACKS centerFallback = form.getCenterFallback();
+				String right = form.getRightLibrary();
+				FALLBACKS rightFallback = form.getRightFallback();
+				// get List<String> of AGES and LIML Urls
+				// do a pattern match on the URLs to determine which ones to process.
+					// Perhaps we could make a service pattern builder and a book pattern builder
+				// services: /h/s/2018/(04|05)/(01|31)/(ve|pl|co|ma|li|gh|vl|mo).*
+				// octoechos: /h/b/oc/(m1..m8)/d(1..7).*
+				// triodion:  /h/b/tr/(d001|d002)/(ve|ma|pl|gh|em3|vl|co1).*
+				// the book pattern is year, month, day, type
 			} catch (Exception e) {
 				ErrorUtils.report(logger, e);
 				status.setCode(HTTP_RESPONSE_CODES.SERVER_ERROR.code);

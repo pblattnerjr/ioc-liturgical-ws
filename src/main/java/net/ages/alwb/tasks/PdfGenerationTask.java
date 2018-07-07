@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import ioc.liturgical.ws.constants.Constants;
 
+import org.ocmc.ioc.liturgical.schemas.models.LDOM.LDOM;
 import org.ocmc.ioc.liturgical.schemas.models.generation.GenerationStatus;
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import org.ocmc.ioc.liturgical.utils.FileUtils;
@@ -16,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.ages.alwb.utils.transformers.adapters.MetaTemplateToPdf;
-import net.ages.alwb.utils.transformers.adapters.models.LDOM;
 
 /**
  * Runs a task (separate thread) to generate the Xelatex content for

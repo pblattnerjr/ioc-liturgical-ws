@@ -7,14 +7,16 @@ import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
+import org.ocmc.ioc.liturgical.schemas.models.LDOM.LDOM;
+import org.ocmc.ioc.liturgical.schemas.models.LDOM.LDOM_Element;
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ioc.liturgical.ws.constants.Constants;
+import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 import net.ages.alwb.utils.core.id.managers.IdManager;
-import net.ages.alwb.utils.transformers.adapters.models.LDOM;
-import net.ages.alwb.utils.transformers.adapters.models.LDOM_Element;
+import net.ages.alwb.utils.transformers.adapters.models.LdomTitleRow;
 
 import org.jsoup.nodes.Element;
 
@@ -24,38 +26,51 @@ import org.jsoup.nodes.Element;
  * on the left and AGES English on the right.
  * The center column will be used for the translation
  * the user is editing.
+ * 
+ * TODO: ideally we would save the LDOM in the database and reuse it if the
+ * timestamp has not changed on the AGES website.  But, the problem is
+ * that the editable version inserts a middle column.  So, we need to modify
+ * the code to save a version without the middle column, and insert it 
+ * after retrieving the LDOM from the database.  Then we can reuse the LDOMs.
  * @author mac002
  *
  */
 public class AgesHtmlToEditableLDOM {
 	private static final Logger logger = LoggerFactory.getLogger(AgesHtmlToEditableLDOM.class);
 	private boolean printPretty = false;
+	private boolean checkDb = true;
 	private String url = "";
 	private String centerLibrary = "";
 	private boolean isDailyReading = false;
 	private String readingYear = "";
 	private String readingMonth = "";
+	private ExternalDbManager dbManager = null;
+	private String timestamp = "unknown";
 	
-	public AgesHtmlToEditableLDOM(String url) {
-		this.url = url;
-	}
-	public AgesHtmlToEditableLDOM(String url, boolean printPretty) {
-		this.url = url;
-		this.printPretty = printPretty;
-	}
-
-	public AgesHtmlToEditableLDOM(String url, String centerLibrary) {
-		this.url = url;
-		this.centerLibrary = centerLibrary;
-	}
 	public AgesHtmlToEditableLDOM(
 			String url
-			, String centerLibrary
+			, ExternalDbManager dbManager
+			, boolean checkDb
 			, boolean printPretty
 			) {
 		this.url = url;
+		this.dbManager = dbManager;
+		this.printPretty = printPretty;
+		this.checkDb = checkDb;
+	}
+
+	public AgesHtmlToEditableLDOM(
+			String url
+			, ExternalDbManager dbManager
+			, String centerLibrary
+			, boolean checkDb
+			, boolean printPretty
+			) {
+		this.url = url;
+		this.dbManager = dbManager;
 		this.centerLibrary = centerLibrary;
 		this.printPretty = printPretty;
+		this.checkDb = checkDb;
 	}
 
 	/**
@@ -83,7 +98,7 @@ public class AgesHtmlToEditableLDOM {
 			Elements valueSpans
 			, Elements versionDesignations
 			) throws Exception {
-		LDOM result = new LDOM(url, printPretty);
+		LDOM result = new LDOM(url, this.timestamp, printPretty);
 		try {
 	        for (Element valueSpan : valueSpans) {
 	        	String tdClass = this.getClassOfTd(valueSpan);
@@ -253,13 +268,19 @@ public class AgesHtmlToEditableLDOM {
 	 * @throws Exception
 	 */
 	public LDOM toLDOM() throws Exception {
-		LDOM result = new LDOM(url, printPretty);
+		LDOM result = null;
 		Connection c = null;
 		Document doc = null;
 		Element content = null;
 		try {
 			c = Jsoup.connect(url);
 			doc = c.timeout(60*1000).maxBodySize(0).get();
+			this.timestamp = doc.select("title").attr("data-timestamp");
+			
+			if (this.checkDb) {
+			}
+			result = new LDOM(url, timestamp, printPretty);
+
 			content = doc.select("div.content").first();
 			// remove rows that contain a media-group
 			content.select("tr:has(div.media-group)").remove();
@@ -312,6 +333,18 @@ public class AgesHtmlToEditableLDOM {
 						boldred.attr("data-key", newKey);
 						boldred.parent().attr("class","designation");
 //						boldred.parent().tagName("h3");
+					}
+				}
+			}
+			
+			Elements htmlTabs = doc.select("span[data-key^=template.titles_gr_GR_cog]").select("span[data-key$=html.tab]");
+			if (htmlTabs.size() == 0) {
+				LdomTitleRow ldomTitleRow = new LdomTitleRow(this.dbManager, doc);
+				if (ldomTitleRow.needsTitleRow()) {
+					try {
+						doc.select("tr").first().before(ldomTitleRow.getTitleRowHtml());
+					} catch (Exception e) {
+						ErrorUtils.report(logger, e);
 					}
 				}
 			}

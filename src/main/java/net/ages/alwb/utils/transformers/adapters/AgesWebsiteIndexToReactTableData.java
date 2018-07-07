@@ -9,6 +9,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.ocmc.ioc.liturgical.schemas.models.LDOM.AgesIndexTableData;
+import org.ocmc.ioc.liturgical.schemas.models.LDOM.AgesIndexTableRowData;
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,8 +22,6 @@ import com.google.gson.JsonParser;
 
 import ioc.liturgical.ws.constants.Constants;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
-import net.ages.alwb.utils.transformers.adapters.models.AgesIndexTableData;
-import net.ages.alwb.utils.transformers.adapters.models.AgesIndexTableRowData;
 
 /**
  * Reads the index of available sacraments and services from
@@ -44,6 +44,9 @@ public class AgesWebsiteIndexToReactTableData {
 	private String agesOcmcIndex = "customindex.html";
 	private String readingsIndex = agesOcmcBaseUrl + agesOcmcIndex;
 	private String theophanyUrl = Constants.LIML_URL + Constants.LIML_STATIC + "theophany.html";
+	private String octoechosUrl = Constants.LIML_URL + Constants.LIML_STATIC + "dcs/h/b/oc/";
+	private String limlBooksUrl = Constants.LIML_URL + Constants.LIML_STATIC + "dcs/h/b/";
+	private String triodionUrl = Constants.LIML_URL + Constants.LIML_STATIC + "tr/h/b/";
 	private String basilUrl = Constants.LIML_URL + Constants.LIML_STATIC + "bk.liturgy.basil.html";
 	private List<AgesIndexTableRowData> additionalAgesBookRows = new ArrayList<AgesIndexTableRowData>();
 	private boolean printPretty = false;
@@ -183,11 +186,90 @@ public class AgesWebsiteIndexToReactTableData {
 			for (AgesIndexTableRowData row : this.additionalAgesBookRows) {
 				result.addRow(row);
 			}
+			for (AgesIndexTableRowData row : this.toReactTableDataOctoechos().getTableData()) {
+				result.addRow(row);
+			}
 		} catch (Exception e) {
 			ErrorUtils.report(logger, e);
 		}
 		return result;
 	}	
+	
+	private String getDayOfWeek(int j) {
+		String day = "";
+		switch (j) {
+		case (0): {
+			day = "Sunday Orthos (Matins)";
+			break;
+		}
+		case (1): {
+			day = "Saturday Evening / Sunday";
+			break;
+		}
+		case (2): {
+			day = "Sunday Evening / Monday";
+			break;
+		}
+		case (3): {
+			day = "Monday Evening / Tuesday";
+			break;
+		}
+		case (4): {
+			day = "Tuesday Evening / Wednesday";
+			break;
+		}
+		case (5): {
+			day = "Wednesday Evening / Thursday";
+			break;
+		}
+		case (6): {
+			day = "Thursday Evening / Friday";
+			break;
+		}
+		case (7): {
+			day = "Friday Evening / Saturday";
+			break;
+		}
+		}
+		return day;
+	}
+	
+	public AgesIndexTableData  toReactTableDataOctoechos() throws Exception {
+		AgesIndexTableData result = new AgesIndexTableData(printPretty);
+		int modeCount = 9;
+		int dayCount = 8;
+		for (int i = 1; i < modeCount; i++) {
+			for (int j = 1; j < dayCount; j++) {
+				StringBuilder path = new StringBuilder();
+				path.append("oc/m");
+				path.append(i);
+				path.append("/d");
+				path.append(j);
+				path.append("/gr-en/index.html");
+				AgesIndexTableRowData mode = new AgesIndexTableRowData(printPretty);
+				mode.setDayOfWeek(this.getDayOfWeek(j));
+				mode.setType("Octoechos Mode " + i + " Day " + j);
+				mode.setDate("any");
+				mode.setUrl(limlBooksUrl + path.toString());
+				result.addRow(mode);
+				if (j == 1) {
+					path = new StringBuilder();
+					path.append("oc/m");
+					path.append(i);
+					path.append("/d");
+					path.append(j);
+					path.append("/ma/gr-en/index.html");
+					mode = new AgesIndexTableRowData(printPretty);
+					mode.setDayOfWeek(this.getDayOfWeek(0));
+					mode.setType("Octoechos Mode " + i + " Day " + j);
+					mode.setDate("any");
+					mode.setUrl(limlBooksUrl + path.toString());
+					result.addRow(mode);
+				}
+			}
+		}
+		return result;
+	}
 	
 	public AgesIndexTableData  toReactTableDataFromDailyReadingHtml() throws Exception {
 		AgesIndexTableData result = new AgesIndexTableData(printPretty);

@@ -1,9 +1,5 @@
 package net.ages.alwb.utils.transformers.adapters;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Stack;
-
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.templates.Template;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.templates.TemplateNode;
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
@@ -12,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
-import net.ages.alwb.utils.transformers.adapters.models.AbstractLDOM;
 
 /**
  * Compiles a template's nodes.
