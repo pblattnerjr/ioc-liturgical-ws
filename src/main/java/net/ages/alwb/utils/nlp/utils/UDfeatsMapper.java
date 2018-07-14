@@ -1,88 +1,19 @@
 package net.ages.alwb.utils.nlp.utils;
 
-public class PerseusPostagMapper {
+import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.UDtbWord;
+import org.ocmc.ioc.liturgical.utils.ErrorUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-	public static String postagPartOfSpeech(String postag) {
-		String tag = String.valueOf(postag.charAt(0));
-		if (tag.equals("-")) {
-			return "";
-		} else {
-			return PerseusPostagMapper.partOfSpeech(tag);
-		}
-	}
+import net.ages.alwb.tasks.UdTreebankDataCreateTask;
 
-	public static String postagPerson(String postag) {
-		String tag = String.valueOf(postag.charAt(1));
-		if (tag.equals("-")) {
-			return "";
-		} else {
-			return PerseusPostagMapper.person(tag);
-		}
-	}
-
-	public static String postagNumber(String postag) {
-		String tag = String.valueOf(postag.charAt(2));
-		if (tag.equals("-")) {
-			return "";
-		} else {
-			return PerseusPostagMapper.number(tag);
-		}
-	}
-	
-	public static String postagTense(String postag) {
-		String tag = String.valueOf(postag.charAt(3));
-		if (tag.equals("-")) {
-			return "";
-		} else {
-			return PerseusPostagMapper.tense(tag);
-		}
-	}
-
-	public static String postagMood(String postag) {
-		String tag = String.valueOf(postag.charAt(4));
-		if (tag.equals("-")) {
-			return "";
-		} else {
-			return PerseusPostagMapper.mood(tag);
-		}
-	}
-
-	public static String postagVoice(String postag) {
-		String tag = String.valueOf(postag.charAt(5));
-		if (tag.equals("-")) {
-			return "";
-		} else {
-			return PerseusPostagMapper.voice(tag);
-		}
-	}
-
-	public static String postagGender(String postag) {
-		String tag = String.valueOf(postag.charAt(6));
-		if (tag.equals("-")) {
-			return "";
-		} else {
-			return PerseusPostagMapper.gender(tag);
-		}
-	}
-
-	public static String postagCase(String postag) {
-		String tag = String.valueOf(postag.charAt(7));
-		if (tag.equals("-")) {
-			return "";
-		} else {
-			return PerseusPostagMapper.gCase(tag);
-		}
-	}
-
-	public static String postagDegree(String postag) {
-		String tag = String.valueOf(postag.charAt(8));
-		if (tag.equals("-")) {
-			return "";
-		} else {
-			return PerseusPostagMapper.degree(tag);
-		}
-	}
-
+/**
+ * Maps values from feats property of Universal Dependency analysis for a token
+ * @author mac002
+ *
+ */
+public class UDfeatsMapper {
+	private static final Logger logger = LoggerFactory.getLogger(UDfeatsMapper.class);
 
 
 	public static String partOfSpeech(String tag) {
@@ -347,96 +278,100 @@ public class PerseusPostagMapper {
 		return result.toString();
 	}
 
-	/**
-		 * Issues:
-		 * 1. Infinitive shows up as a mood
-		 * 2. Participle shows up as both part of speech and mood
-		 * @param postag
-		 * @return
-		 */
-		public static String postagToGrammar(String postag) {
-			StringBuffer result = new StringBuffer();
-			if (postag.length() == 9) { // well formed
-				for (int i=0; i < 9; i++) {
-					String s = String.valueOf(postag.charAt(i));
-					if (s.equals("-") || s.equals("_")) {
-						s = "";
-					}
-					switch (i) {
-						case 0: { // part of speech
-							result.append(partOfSpeech(s));
-							break;
-					}
-					case 1: { // person
-						String tag = person(s);
-						if (tag.length() > 0) {
-							result.append(".");
-							result.append(tag);
-						}
-						break;
-					}
-					case 2: { // number
-						String tag = number(s);
-						if (tag.length() > 0) {
-							result.append(".");
-							result.append(tag);
-						}
-						break;
-					}
-					case 3: { // tense
-						String tag = tense(s);
-						if (tag.length() > 0) {
-							result.append(".");
-							result.append(tag);
-						}
-						break;
-					}
-					case 4: { // mood
-						String tag = mood(s);
-						if (tag.length() > 0) {
-							result.append(".");
-							result.append(tag);
-						}
-						break;
-					}
-					case 5: { // voice
-						String tag = voice(s);
-						if (tag.length() > 0) {
-							result.append(".");
-							result.append(tag);
-						}
-						break;
-					}
-					case 6: { // gender
-						String tag = gender(s);
-						if (tag.length() > 0) {
-							result.append(".");
-							result.append(tag);
-						}
-						break;
-					}
-					case 7: { // case
-						String tag = gCase(s);
-						if (tag.length() > 0) {
-							result.append(".");
-							result.append(tag);
-						}
-						break;
-					}
-					case 8: { // degree
-						String tag = degree(s);
-						if (tag.length() > 0) {
-							result.append(".");
-							result.append(tag);
-						}
-						break;
-					}
-					}
+	public static String featsToGrammar(UDtbWord word) {
+		StringBuffer sb = new StringBuffer();
+		if (word.getFeats().length() > 0 && ! word.getFeats().equals("_")) {
+			sb.append(word.getPos());
+			String [] features = word.getFeats().split("\\|");
+			for (String feat : features) {
+				String [] featKv = feat.split("="); 
+				try {
+					String value = featKv[1];
+					sb.append(".");
+					sb.append(value.toUpperCase());
+				} catch (Exception e) {
+					ErrorUtils.report(logger, e);
 				}
-			} else {
-				// TODO: report as error.
 			}
-			return result.toString();
+		}
+		return sb.toString();
+	}
+	public static UDtbWord featsToGrammarWithSwitch(UDtbWord word) {
+		/**
+		 * TODO:
+		 * 1. map the value to a normalized form.
+		 * 2. set the property in the UDtbWord.
+		 * 3. set the grammar based on the values in UDtbWord.
+		 */
+			String [] features = word.getFeats().split("|");
+			for (String feat : features) {
+				String [] featKv = feat.split("="); 
+				try {
+					String feature = featKv[0];
+					String value = featKv[1];
+					switch (feature) {
+					case("Aspect"): {
+						/**
+						 * Imp, Perf
+						 */
+						break;
+					}
+					case("Case"): {
+						// Acc, Dat, Gen, Nom, Voc
+						word.setgCase(value.toUpperCase());
+						break;
+					}
+					case ("Definite") : {
+						break;
+					}
+/**
+"Definite=Def"
+"Definite=Ind"
+"Degree=Cmp"
+"Degree=Pos"
+"Degree=Sup"
+"Foreign=Yes"
+"Gender=Fem"
+"Gender=Masc"
+"Gender=Neut"
+"Mood=Imp"
+"Mood=Ind"
+"Mood=Opt"
+"Mood=Sub"
+"NumType=Card"
+"NumType=Ord"
+"Number=Dual"
+"Number=Plur"
+"Number=Sing"
+"Person=1"
+"Person=2"
+"Person=3"
+"Poss=Yes"
+"PronType=Art"
+"PronType=Dem"
+"PronType=Ind"
+"PronType=Prs"
+"PronType=Rel"
+"Tense=Fut"
+"Tense=Past"
+"Tense=Pqp"
+"Tense=Pres"
+"VerbForm=Conv"
+"VerbForm=Fin"
+"VerbForm=Ger"
+"VerbForm=Inf"
+"VerbForm=Part"
+"Voice=Act"
+"Voice=Mid"
+"Voice=Pass"
+"_"
+						 */
+					}
+				} catch (Exception e) {
+					ErrorUtils.report(logger, e);
+				}
+			}
+			return word;
 		}
 
 	}

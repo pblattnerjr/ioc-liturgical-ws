@@ -256,6 +256,7 @@ public class NlpUtils {
 			, boolean removeDiacritics
 			) {
 		JsonArray result = new JsonArray();
+		String previous = "";
 		for (String token : getTokens(
 				text
 				, convertToLowerCase
@@ -264,7 +265,12 @@ public class NlpUtils {
 				, ignoreNumbers
 				, removeDiacritics
 				)) {
+			if (token.equals("̓")) { // we want to treated a contraction as a single token for our purposes
+				result.remove(result.size()-1);
+				token = previous + " " + token;
+			}
 			result.add(token);
+			previous = token;
 		}
 		return result;
 	}

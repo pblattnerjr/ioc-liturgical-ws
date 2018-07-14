@@ -344,6 +344,10 @@ public class ServiceProvider {
 			
 			if (synchEnabled) {
 				synchDomain = prop.getProperty("synch_domain");
+				String envSynchDomain  = System.getenv("SYNCH_DOMAIN");
+				if (envSynchDomain != null && envSynchDomain.length() > 0) {
+					synchDomain = envSynchDomain;
+				}
 				logger.info("synch_domain: " + synchDomain );
 
 				synchBoltPort = prop.getProperty("synch_bolt_port");

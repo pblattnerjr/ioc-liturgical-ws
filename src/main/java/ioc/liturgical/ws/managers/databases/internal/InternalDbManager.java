@@ -304,7 +304,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	public ResultJsonObjectArray getForId(String id) {
 		ResultJsonObjectArray result = new ResultJsonObjectArray(prettyPrint);
 		result.setQuery(id);
-		try {
+		try { 
 			List<JsonObject> dbResults = manager.queryForJsonWhereEqual(id);
 			result.setValueSchemas(getSchemas(dbResults, null));
 			result.setResult(dbResults);

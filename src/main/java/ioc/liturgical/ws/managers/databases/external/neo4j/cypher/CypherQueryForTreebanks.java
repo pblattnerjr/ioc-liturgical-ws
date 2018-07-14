@@ -27,6 +27,7 @@ public class CypherQueryForTreebanks {
 	private String LIBRARY = "";
 	private String LABEL = "";
 	private String WHERE = "";
+	private String WHERE_REL_LABEL_EQUALS = "";
 	private String CONTAINS = "";
 	private String EQUALS = "";
 	private String STARTS_WITH = "";
@@ -46,6 +47,7 @@ public class CypherQueryForTreebanks {
 			, String LIBRARY
 			, String LABEL
 			, String WHERE
+			, String WHERE_REL_LABEL_EQUALS
 			, String CONTAINS
 			, String EQUALS
 			, String STARTS_WITH
@@ -64,6 +66,7 @@ public class CypherQueryForTreebanks {
 		this.LIBRARY = LIBRARY;
 		this.LABEL = LABEL;
 		this.WHERE = WHERE;
+		this.WHERE_REL_LABEL_EQUALS = WHERE_REL_LABEL_EQUALS;
 		this.CONTAINS = CONTAINS;
 		this.EQUALS = EQUALS;
 		this.STARTS_WITH = STARTS_WITH;
@@ -80,10 +83,10 @@ public class CypherQueryForTreebanks {
 
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("MATCH (d:");
-		sb.append(LABEL);
-		sb.append(")-[");
-		sb.append("]->(c:");
+		sb.append("MATCH (c:");
+//		sb.append(LABEL);
+//		sb.append(")-[");
+//		sb.append("]->(c:");
 		sb.append(LABEL);
 		sb.append(")-[");
 		if (TYPE.length() >0) {
@@ -147,9 +150,25 @@ public class CypherQueryForTreebanks {
 			sb.append("type(to) = '" + EXCLUDE_TYPE + "' ");
 		}
 
+		if (WHERE_REL_LABEL_EQUALS.length() > 0) {
+			if (whereClause.length() > 0) {
+				sb.append(" AND ");
+			} else {
+				sb.append(" WHERE ");
+			}
+			sb.append("c.label = '" + WHERE_REL_LABEL_EQUALS + "' ");
+		}
+
 		if (whereClause.length() > 0) {
 			sb.append(whereClause);
-		}
+		}		
+		sb.append("OPTIONAL MATCH (d:");
+		sb.append(LABEL);
+		sb.append(")-[");
+		sb.append("]->(c:");
+		sb.append(LABEL);
+		sb.append(")");
+
 		sb.append(" RETURN " + RETURN);
 		sb.append(" ORDER BY " + ORDER_BY);
 		return sb.toString();

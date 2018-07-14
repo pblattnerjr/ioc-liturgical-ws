@@ -18,7 +18,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.ocmc.ioc.liturgical.schemas.constants.NOTE_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.SCHEMA_CLASSES;
-import org.ocmc.ioc.liturgical.schemas.constants.nlp.DEPENDENCY_LABELS;
+import org.ocmc.ioc.liturgical.schemas.constants.nlp.DEPENDENCY_LABELS_PERSEUS;
 import org.ocmc.ioc.liturgical.schemas.constants.nlp.GRAMMAR_ABBREVIATIONS;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.TokenAnalysis;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.notes.TextualNote;
@@ -637,7 +637,7 @@ public class TextInformationToPdf {
 	}
 	
 	public void loadAbbreviations() {
-		for (DEPENDENCY_LABELS v : DEPENDENCY_LABELS.values()) {
+		for (DEPENDENCY_LABELS_PERSEUS v : DEPENDENCY_LABELS_PERSEUS.values()) {
 			abbr.put(v.keyname, v.description);
 		}
 		for (GRAMMAR_ABBREVIATIONS v : GRAMMAR_ABBREVIATIONS.values()) {

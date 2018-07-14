@@ -69,6 +69,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 	  private boolean connectionOK = false;
 	  private boolean recordQueries = false;
 	  private boolean readOnly = false;
+	  private boolean synchOn = true;
 	  private static String doc = "doc.";
 	  private static String id = "id";
 	  private static SynchManager synchManager = null;
@@ -378,32 +379,36 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 	
 	public RequestStatus insertTransaction(Transaction doc) throws DbException {
 		RequestStatus result = new RequestStatus();
-		int count = 0;
-		setIdConstraint("Transaction");
-		doc.setRequestingMac(macAddress);
-		String query = "create (n:Transaction) set n = {props} return n";
-		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
-			Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
-			StatementResult neoResult = session.run(query, props);
-			count = neoResult.consume().counters().nodesCreated();
-			if (count > 0) {
-		    	result.setCode(HTTP_RESPONSE_CODES.CREATED.code);
-		    	result.setMessage(HTTP_RESPONSE_CODES.CREATED.message + ": created " + doc.whenTransactionRecordedInThisDatabase);
-			} else {
-		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + "  " + doc.whenTransactionRecordedInThisDatabase );
+		if (this.synchOn) {
+			int count = 0;
+			setIdConstraint("Transaction");
+			doc.setRequestingMac(macAddress);
+			String query = "create (n:Transaction) set n = {props} return n";
+			try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
+				Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
+				StatementResult neoResult = session.run(query, props);
+				count = neoResult.consume().counters().nodesCreated();
+				if (count > 0) {
+			    	result.setCode(HTTP_RESPONSE_CODES.CREATED.code);
+			    	result.setMessage(HTTP_RESPONSE_CODES.CREATED.message + ": created " + doc.whenTransactionRecordedInThisDatabase);
+				} else {
+			    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + "  " + doc.whenTransactionRecordedInThisDatabase );
+				}
+			} catch (Exception e){
+				if (e.getMessage().contains("already exists")) {
+					result.setCode(HTTP_RESPONSE_CODES.CONFLICT.code);
+					result.setDeveloperMessage(HTTP_RESPONSE_CODES.CONFLICT.message);
+				} else {
+					result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+					result.setDeveloperMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+				}
+				result.setUserMessage(e.getMessage());
 			}
-		} catch (Exception e){
-			if (e.getMessage().contains("already exists")) {
-				result.setCode(HTTP_RESPONSE_CODES.CONFLICT.code);
-				result.setDeveloperMessage(HTTP_RESPONSE_CODES.CONFLICT.message);
-			} else {
-				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
-				result.setDeveloperMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
-			}
-			result.setUserMessage(e.getMessage());
+	    	recordQuery(query, result.getCode(), count);
+		} else {
+			result.setMessage("Synch was disabled through a method in the Neo4jConnectionManager");
 		}
-    	recordQuery(query, result.getCode(), count);
 		return result;
 	}
 
@@ -661,7 +666,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			if (count > 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": updated " + doc.getId());
-		    	this.insertTransaction(new Transaction(query, doc, hostName));
+			    this.insertTransaction(new Transaction(query, doc, hostName));
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + " " + doc.getId());
@@ -1356,6 +1361,14 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			ErrorUtils.report(logger, e);
 		}
 		return result;
+	}
+
+	public boolean isSynchOn() {
+		return synchOn;
+	}
+
+	public void setSynchOn(boolean synchOn) {
+		this.synchOn = synchOn;
 	}
 
 

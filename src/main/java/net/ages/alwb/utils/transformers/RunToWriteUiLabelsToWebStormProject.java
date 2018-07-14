@@ -24,10 +24,10 @@ import com.google.gson.JsonObject;
 	 * @author mac002
 	 *
 	 */
-	public class LabelsNeoToJson {
+	public class RunToWriteUiLabelsToWebStormProject {
 		private Neo4jConnectionManager dbManager = null;
 		
-		public LabelsNeoToJson(
+		public RunToWriteUiLabelsToWebStormProject(
 				String url
 				, String uid
 				, String pwd
@@ -105,7 +105,7 @@ import com.google.gson.JsonObject;
 			Map<String, String> systems = new TreeMap<String,String>();
 			systems.put("ilr", reactPath);
 			systems.put("olw", olwPath);
-			LabelsNeoToJson labels2Neo = new LabelsNeoToJson(url, uid, pwd);
+			RunToWriteUiLabelsToWebStormProject labels2Neo = new RunToWriteUiLabelsToWebStormProject(url, uid, pwd);
 			for (Entry<String,String> system : systems.entrySet()) {
 				labels2Neo.process(system.getKey(), system.getValue());
 			}

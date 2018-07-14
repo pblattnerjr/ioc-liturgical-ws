@@ -19,6 +19,7 @@ public class CypherQueryBuilderForTreebanks {
 	private String EXCLUDE_TYPE;
 	private String LIBRARY = "";
 	private String WHERE = "";
+	private String WHERE_REL_LABEL_EQUALS = "";
 	private String EQUALS = "";
 	private String STARTS_WITH = "";
 	private String ENDS_WITH = "";
@@ -112,6 +113,14 @@ public class CypherQueryBuilderForTreebanks {
         return this;
     }
 
+    public CypherQueryBuilderForTreebanks WHERE_REL_LABEL_EQUALS(String WHERE) {
+    	if (WHERE.startsWith("*") || WHERE.toLowerCase().startsWith("all") || WHERE.length() == 0) {
+    		// ignore
+    	} else {
+            this.WHERE_REL_LABEL_EQUALS = WHERE;
+    	}
+        return this;
+    }
     public CypherQueryBuilderForTreebanks CONTAINS(String CONTAINS) {
     	if (CONTAINS.startsWith("*") || CONTAINS.toLowerCase().startsWith("all") || CONTAINS.length() == 0) {
     		// ignore
@@ -172,6 +181,7 @@ public class CypherQueryBuilderForTreebanks {
         		, LIBRARY
         		, LABEL
         		, WHERE
+        		, WHERE_REL_LABEL_EQUALS
         		, CONTAINS
         		, EQUALS
         		, STARTS_WITH

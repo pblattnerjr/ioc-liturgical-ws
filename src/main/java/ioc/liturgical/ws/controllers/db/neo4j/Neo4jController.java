@@ -362,7 +362,8 @@ public class Neo4jController {
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
         	return gson.toJson(externalManager.searchTreebanks(
         			requestor
-        			, request.queryParams("t")  // type (e.g. PtbWord)
+        			, request.queryParams("t")  // type (e.g. UD_ANCIENT_GREEK_PERSEUS)
+        			, request.queryParams("r")   // dependency relationship label
         			, request.queryParams("q")   // query
         			, request.queryParams("p") // property of the doc (e.g. the ID, the value)
         			, request.queryParams("m") // matcher (e.g. contains, starts with, regex)

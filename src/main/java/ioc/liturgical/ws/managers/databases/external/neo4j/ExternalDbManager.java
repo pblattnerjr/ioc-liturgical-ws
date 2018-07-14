@@ -40,6 +40,7 @@ import org.ocmc.ioc.liturgical.schemas.constants.ABBREVIATION_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.BIBLICAL_BOOKS;
 import org.ocmc.ioc.liturgical.schemas.constants.BIBTEX_ENTRY_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.BIBTEX_STYLES;
+import org.ocmc.ioc.liturgical.schemas.constants.DATA_SOURCES;
 import org.ocmc.ioc.liturgical.schemas.constants.FALLBACKS;
 
 import ioc.liturgical.ws.constants.Constants;
@@ -62,6 +63,7 @@ import org.ocmc.ioc.liturgical.schemas.constants.USER_INTERFACE_SYSTEMS;
 import org.ocmc.ioc.liturgical.schemas.constants.UTILITIES;
 import org.ocmc.ioc.liturgical.schemas.constants.VERBS;
 import org.ocmc.ioc.liturgical.schemas.constants.VISIBILITY;
+import org.ocmc.ioc.liturgical.schemas.constants.nlp.UD_DEP_REL_LABEL;
 import org.ocmc.ioc.liturgical.schemas.exceptions.BadIdException;
 import org.ocmc.ioc.liturgical.schemas.iso.lang.LocaleDate;
 
@@ -108,6 +110,7 @@ import org.ocmc.ioc.liturgical.schemas.models.ws.db.Domain;
 import org.ocmc.ioc.liturgical.schemas.models.ws.db.UserPreferences;
 import org.ocmc.ioc.liturgical.schemas.models.ws.db.Utility;
 import org.ocmc.ioc.liturgical.schemas.models.ws.db.UtilityPdfGeneration;
+import org.ocmc.ioc.liturgical.schemas.models.ws.db.UtilityUdLoader;
 import org.ocmc.ioc.liturgical.schemas.models.ws.forms.DomainCreateForm;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
@@ -125,6 +128,7 @@ import net.ages.alwb.tasks.OntologyTagsUpdateTask;
 import net.ages.alwb.tasks.PdfGenerationTask;
 import net.ages.alwb.tasks.PerseusTreebankDataCreateTask;
 import net.ages.alwb.tasks.TextDownloadsGenerationTask;
+import net.ages.alwb.tasks.UdTreebankDataCreateTask;
 import net.ages.alwb.tasks.WordAnalysisCreateTask;
 import org.ocmc.ioc.liturgical.schemas.models.DropdownArray;
 import org.ocmc.ioc.liturgical.schemas.models.DropdownItem;
@@ -203,6 +207,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  JsonObject relationshipTypesProperties = new JsonObject();
 	  JsonArray templateTypesArray = new JsonArray();
 	  JsonObject templateTypesProperties = new JsonObject();
+	  JsonArray treebankUdRelationshipLabelsArray = UD_DEP_REL_LABEL.toDropdownJsonArray(true);
+	  JsonArray treebankSourcesArray = DATA_SOURCES.toDropdownJsonArray(true);
 	  JsonArray treebankTypesArray = new JsonArray();
 	  JsonObject treebankTypesProperties = new JsonObject();
 	  JsonArray tagOperatorsDropdown = new JsonArray();
@@ -1376,6 +1382,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public ResultJsonObjectArray searchTreebanks(
 				String requestor
 				, String type
+				, String relationshipLabel
 				, String query
 				, String property
 				, String matcher
@@ -1383,17 +1390,18 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, String operator // for tags, e.g. AND, OR
 				) {
 			ResultJsonObjectArray result = null;
-
+			String theQuery = getCypherQueryForTreebanksSearch(
+					requestor
+					, type
+					, relationshipLabel
+					, GeneralUtils.toNfc(query)
+					, property
+					, matcher
+					, tags 
+					, operator
+					); 
 			result = getForQuery(
-					getCypherQueryForTreebanksSearch(
-							requestor
-							, type
-							, GeneralUtils.toNfc(query)
-							, property
-							, matcher
-							, tags 
-							, operator
-							)
+					theQuery
 					, true
 					, true
 					);
@@ -1920,6 +1928,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		private String getCypherQueryForTreebanksSearch(
 				String requestor
 				, String type
+				, String relationshipLabel
 				, String query
 				, String property
 				, String matcher
@@ -1927,7 +1936,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, String operator // for tags, e.g. AND, OR
 				) {
 			boolean prefixProps = false;
-			String theLabel = type;
+			String theLabel = DATA_SOURCES.valueOf(type).nodeLabel;
 			String theProperty = property;
 			if (theProperty.startsWith("*")) {
 				theProperty = "token";
@@ -1946,7 +1955,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						.WHERE(theProperty)
 						;
 			
-			MATCHERS matcherEnum = MATCHERS.forLabel(matcher);
+				if (relationshipLabel.length() > 0 && ! relationshipLabel.equals("*")) {
+					builder.WHERE_REL_LABEL_EQUALS(relationshipLabel);
+				}
+				MATCHERS matcherEnum = MATCHERS.forLabel(matcher);
 			
 			switch (matcherEnum) {
 			case STARTS_WITH: {
@@ -3640,7 +3652,9 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
 				JsonObject values = new JsonObject();
+				values.add("sourceList", this.treebankSourcesArray);
 				values.add("typeList", this.treebankTypesArray);
+				values.add("relLabels", this.treebankUdRelationshipLabelsArray);
 				values.add("typeProps", this.treebankTypesProperties);
 				values.add("typeTags", getTokenAnalysisTagsForAllTypes());
 				values.add("tagOperators", tagOperatorsDropdown);
@@ -3850,6 +3864,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				TOPICS topic = TOPICS.PERSEUS_TREEBANK_WORD;
 				if (ontologyTopic.equals("TOKEN_GRAMMAR")) {
 					topic = TOPICS.TOKEN_GRAMMAR;
+				} else { 
+					topic = TOPICS.UD_TREEBANK_WORD;
 				}
 				String treeId = LIBRARIES.LINGUISTICS.toSystemDomain()
 						+ Constants.ID_DELIMITER
@@ -4258,6 +4274,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					if (
 							t == TOPICS.TOKEN_GRAMMAR
 							|| t == TOPICS.PERSEUS_TREEBANK_WORD
+							|| t == TOPICS.UD_TREEBANK_WORD
 							) {
 						JsonArray value = getTags(t.label);
 						result.add(t.label, value);
@@ -4917,7 +4934,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public JsonObject getMostRecentNode(String nodeLabel) {
 			JsonObject result = null;
 			try {
-				String query = "match (n:)" + nodeLabel + ") return n.id, n.topic, n.key, n.createdWhen order by n.createdWhen descending limit 1";
+				String query = "match (n:" + nodeLabel + ") return properties(n) order by n.createdWhen descending limit 1";
 				ResultJsonObjectArray searchResults = 
 						this.getForQuery(
 						query
@@ -4925,7 +4942,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						, false
 						);
 				if (searchResults.valueCount == 1) { // we found the most recently created sentence
-						result = searchResults.getFirstObject();
+						result = searchResults.getFirstObject().getAsJsonObject().get("properties(n)").getAsJsonObject();
 				}
 			} catch (Exception e) {
 				ErrorUtils.report(logger, e);
@@ -5634,6 +5651,10 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						result = runUtilityGeneratePdfFiles(requestor, json);
 						break;
 					}
+					case LoadUniversalDependencyTreebank: {
+						result = runUtilityUdTreebank(requestor, json, -1);
+						break;
+					}
 					case Tokenize: {
 						result = runUtilityTokenize(requestor, "gr_gr_cog", 0);
 						break;
@@ -5921,7 +5942,38 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			}
 			return status;
 		}
-		/**
+
+		public RequestStatus runUtilityUdTreebank(
+				String requestor
+				, String json
+				, long nbrSentencesToLoad
+				) {
+			RequestStatus status = new RequestStatus();
+			try {
+				// parse the json
+				UtilityUdLoader form = gson.fromJson(json, UtilityUdLoader.class);
+				// run it as a thread
+				ExecutorService executorService = Executors.newSingleThreadExecutor();
+				executorService.execute(
+						new UdTreebankDataCreateTask(
+								this
+								, requestor
+								, form.getDataSource()
+								, form.isPullFirst()
+								, form.isDeleteFirst()
+								, form.isSimulate()
+								, nbrSentencesToLoad // -1  unlimited
+							)
+				);
+				executorService.shutdown();
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+				status.setCode(HTTP_RESPONSE_CODES.SERVER_ERROR.code);
+				status.setMessage(e.getMessage());
+			}
+			return status;
+		}
+/**
 		 * Create a relationship between the two specified nodes
 		 * @param requestor
 		 * @param idOfStartNode

@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>ioc</groupId>
   <artifactId>liturgical-ws</artifactId>
-  <version>v2018.07.07.1</version>
+  <version>v2018.07.14.1</version>
   <name>IOC Liturgical Web Services</name>
   
   	<properties>
@@ -241,6 +241,11 @@
 		    <groupId>org.eclipse.jgit</groupId>
 		    <artifactId>org.eclipse.jgit</artifactId>
 		    <version>4.9.0.201710071750-r</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.gitlab4j</groupId>
+		    <artifactId>gitlab4j-api</artifactId>
+		    <version>4.7.15</version>
 		</dependency>
     </dependencies>
   
