@@ -168,6 +168,9 @@ public class AgesHtmlToLDOM {
 	        	} else {
 		        	dataKey = valueSpan.attr("data-key");
 	        	}
+	        	if (dataKey.length() < 5) {
+	        		continue; // skip this iteration
+	        	}
 	        	idManager = this.dataKeyToIdManager(dataKey);
 	        	domain = idManager.getLibrary();
 	        	String value = "";
@@ -240,24 +243,27 @@ public class AgesHtmlToLDOM {
 		try {
 	    	String [] parts = dataKey.split("\\|");
 	    	String key = "";
-	    	if (parts.length > 1) {
-	    		key = parts[1];
+	    	try {
+		    	if (parts.length > 1) {
+		    		key = parts[1];
+		    	}
+		    	parts = parts[0].split("_");
+		    	String topic = parts[0];
+		    	String domain = "gr_GR_cog";
+		    	if (parts.length == 4) {
+			    	domain = parts[1] 
+							+ Constants.DOMAIN_DELIMITER 
+							+ parts[2].toLowerCase() 
+							+ Constants.DOMAIN_DELIMITER 
+			    			+ parts[3]
+			    	;
+		    	}
+		    	domain = domain.toLowerCase();
+		    	result = new IdManager(domain + Constants.ID_DELIMITER + topic + Constants.ID_DELIMITER + key);
+	    	} catch (Exception e) {
+				ErrorUtils.report(logger, e);
 	    	}
-	    	parts = parts[0].split("_");
-	    	String topic = parts[0];
-	    	String domain = "gr_GR_cog";
-	    	if (parts.length == 4) {
-		    	domain = parts[1] 
-						+ Constants.DOMAIN_DELIMITER 
-						+ parts[2].toLowerCase() 
-						+ Constants.DOMAIN_DELIMITER 
-		    			+ parts[3]
-		    	;
-	    	}
-	    	domain = domain.toLowerCase();
-	    	result = new IdManager(domain + Constants.ID_DELIMITER + topic + Constants.ID_DELIMITER + key);
 		} catch (Exception e) {
-			ErrorUtils.report(logger, e);
 		}
 		return result;
 	}
@@ -268,9 +274,15 @@ public class AgesHtmlToLDOM {
 	        for (Element valueSpan : valueSpans) {
 	        	String tdClass = this.getClassOfTd(valueSpan);
 	        	String dataKey = valueSpan.attr("data-original");
+	        	if (dataKey.length() < 5) {
+	        		continue;
+	        	}
 	        	IdManager idManager = new IdManager(dataKey);
 	        	String originalDomain = idManager.getLibrary();
 	        	dataKey = valueSpan.attr("data-key");
+	        	if (dataKey.length() < 5) {
+	        		continue; // skip this iteration
+	        	}
 	        	idManager = new IdManager(dataKey);
 	        	String domain = idManager.getLibrary();
 	        	String fallbackDomain = "";
@@ -373,6 +385,9 @@ public class AgesHtmlToLDOM {
 							eChild.setParentClassName(child.parent().attr("class"));
 						}
 			        	String dataKey = child.attr("data-key");
+			        	if (dataKey.length() < 5) {
+			        		continue;
+			        	}
 			        	IdManager idManager = new IdManager(dataKey);
 						eChild.setDataKey(idManager.getId());
 						eChild.setTopicKey(idManager.getTopicKey());

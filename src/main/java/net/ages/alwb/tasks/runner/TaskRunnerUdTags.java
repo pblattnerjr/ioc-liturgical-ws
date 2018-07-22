@@ -8,6 +8,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
+import org.ocmc.ioc.liturgical.schemas.constants.nlp.ANSWER_TO;
 import org.ocmc.ioc.liturgical.schemas.constants.nlp.UD_ASPECT;
 import org.ocmc.ioc.liturgical.schemas.constants.nlp.UD_CASE;
 import org.ocmc.ioc.liturgical.schemas.constants.nlp.UD_DEFINITE;
@@ -78,21 +79,22 @@ public class TaskRunnerUdTags extends SuperTaskRunner {
 	public static void main(String[] args) {
 		String uid = System.getenv("uid");
 		String pwd = System.getenv("pwd");
-		String dbHost = "localhost"; // "159.203.89.233"; 
+		String dbHost = "159.203.89.233"; // "localhost"; 
 		Map<String,JsonArray> tags = new TreeMap<String,JsonArray>();
-		tags.put("UDtagsDepRel", UD_DEP_REL_LABEL.toJsonArray());
-		tags.put("UDtagsAspect", UD_ASPECT.toJsonArray());
-		tags.put("UDtagsCase", UD_CASE.toJsonArray());
-		tags.put("UDtagsDefinite", UD_DEFINITE.toJsonArray());
-		tags.put("UDtagsDegree", UD_DEGREE.toJsonArray());
-		tags.put("UDtagsGender", UD_GENDER.toJsonArray());
-		tags.put("UDtagsMood", UD_MOOD.toJsonArray());
-		tags.put("UDtagsNumber", UD_NUMBER.toJsonArray());
-		tags.put("UDtagsPos", UD_POS.toJsonArray());
-		tags.put("UDtagsPerson", UD_PERSON.toJsonArray());
-		tags.put("UDtagsTense", UD_TENSE.toJsonArray());
-		tags.put("UDtagsVerbForm", UD_VERB_FORM.toJsonArray());
-		tags.put("UDtagsVoice", UD_VOICE.toJsonArray());
+		tags.put("Answertags", ANSWER_TO.toJsonArray());
+//		tags.put("UDtagsDepRel", UD_DEP_REL_LABEL.toJsonArray());
+//		tags.put("UDtagsAspect", UD_ASPECT.toJsonArray());
+//		tags.put("UDtagsCase", UD_CASE.toJsonArray());
+//		tags.put("UDtagsDefinite", UD_DEFINITE.toJsonArray());
+//		tags.put("UDtagsDegree", UD_DEGREE.toJsonArray());
+//		tags.put("UDtagsGender", UD_GENDER.toJsonArray());
+//		tags.put("UDtagsMood", UD_MOOD.toJsonArray());
+//		tags.put("UDtagsNumber", UD_NUMBER.toJsonArray());
+//		tags.put("UDtagsPos", UD_POS.toJsonArray());
+//		tags.put("UDtagsPerson", UD_PERSON.toJsonArray());
+//		tags.put("UDtagsTense", UD_TENSE.toJsonArray());
+//		tags.put("UDtagsVerbForm", UD_VERB_FORM.toJsonArray());
+//		tags.put("UDtagsVoice", UD_VOICE.toJsonArray());
 
 		/**
 		 * deleteFirst if
