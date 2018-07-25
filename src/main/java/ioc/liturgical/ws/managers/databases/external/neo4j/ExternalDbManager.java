@@ -63,7 +63,7 @@ import org.ocmc.ioc.liturgical.schemas.constants.USER_INTERFACE_SYSTEMS;
 import org.ocmc.ioc.liturgical.schemas.constants.UTILITIES;
 import org.ocmc.ioc.liturgical.schemas.constants.VERBS;
 import org.ocmc.ioc.liturgical.schemas.constants.VISIBILITY;
-import org.ocmc.ioc.liturgical.schemas.constants.nlp.UD_DEP_REL_LABEL;
+import org.ocmc.ioc.liturgical.schemas.constants.nlp.UD_DEPENDENCY_LABELS;
 import org.ocmc.ioc.liturgical.schemas.exceptions.BadIdException;
 import org.ocmc.ioc.liturgical.schemas.iso.lang.LocaleDate;
 
@@ -207,7 +207,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  JsonObject relationshipTypesProperties = new JsonObject();
 	  JsonArray templateTypesArray = new JsonArray();
 	  JsonObject templateTypesProperties = new JsonObject();
-	  JsonArray treebankUdRelationshipLabelsArray = UD_DEP_REL_LABEL.toDropdownJsonArray(true);
+	  JsonArray treebankUdRelationshipLabelsArray = UD_DEPENDENCY_LABELS.toDropdownJsonArray(true);
 	  JsonArray treebankSourcesArray = DATA_SOURCES.toDropdownJsonArray(true);
 	  JsonArray treebankTypesArray = new JsonArray();
 	  JsonObject treebankTypesProperties = new JsonObject();

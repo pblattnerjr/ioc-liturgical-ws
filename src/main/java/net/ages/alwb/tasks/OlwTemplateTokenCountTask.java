@@ -30,7 +30,8 @@ public class OlwTemplateTokenCountTask implements Runnable {
 	private String requestor = "";
 	private String out = "";
 	private Map<String,Long> tokenMap = new TreeMap<String,Long>();
-	private StringBuffer sb = new StringBuffer();
+	private StringBuffer texSb = new StringBuffer();
+	private StringBuffer txtSb = new StringBuffer();
 
 	
 	public OlwTemplateTokenCountTask (
@@ -138,12 +139,12 @@ public class OlwTemplateTokenCountTask implements Runnable {
 					String day = row.getType().substring(20, row.getType().length());
 					if (! mode.equals(lastMode)) {
 						if (lastMode.length() > 0) {
-							sb.append("\n\\end{tabular}\n\\end{center}");
+							texSb.append("\n\\end{tabular}\n\\end{center}");
 						}
-						sb.append("\n\\begin{center}");
-						sb.append(mode);
-						sb.append("\n\\begin{tabular}{ c | c | c | c | c | c | c}");
-						sb.append("\nDay & Keys & Sentences & Tokens (all) & Hymns & Tokens (Hymns) & No Eng\\\\ [0.5ex]"
+						texSb.append("\n\\begin{center}");
+						texSb.append(mode);
+						texSb.append("\n\\begin{tabular}{ c | c | c | c | c | c | c}");
+						texSb.append("\nDay & Keys & Sentences & Tokens (all) & Hymns & Tokens (Hymns) & No Eng\\\\ [0.5ex]"
 								);
 						lastMode = mode;
 					}
@@ -160,7 +161,24 @@ public class OlwTemplateTokenCountTask implements Runnable {
 							);
 					LDOM template = ages.toLDOM();
 					this.tokenizeLdom(template, row);
-					sb.append("\n"
+					txtSb.append("\n"
+							+ mode
+							+ ","
+							+ day 
+							+ ","
+							+ row.getKeyCount() 
+							+ ","
+							+ row.getSentenceCount()
+							+ ","
+							+ row.getTokenCount()
+							+ ","
+							+ row.getTextCount()
+							+ ","
+							+ row.getTextTokenCount()
+							+ ","
+							+ row.getNoEnglishCount()
+					);
+					texSb.append("\n"
 							+ day 
 							+ " & " 
 									+ this.f(row.getKeyCount()) 
@@ -183,8 +201,8 @@ public class OlwTemplateTokenCountTask implements Runnable {
 					textTokenCount = textTokenCount + row.getTextTokenCount();
 				}
 			}
-			sb.append("\n\\end{tabular}\n\\end{center}");
-			sb.append("\nTotals"
+			texSb.append("\n\\end{tabular}\n\\end{center}");
+			texSb.append("\nTotals"
 					+ "\nk=" 
 					+ this.f(keyCount) 
 			+	"|s="
@@ -198,7 +216,8 @@ public class OlwTemplateTokenCountTask implements Runnable {
 			+	"|ut="
 			+ this.f(this.tokenMap.size())
 			);
-			System.out.println(sb.toString());
+			System.out.println(texSb.toString());
+			System.out.println(this.txtSb.toString());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

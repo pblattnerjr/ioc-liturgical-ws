@@ -1,7 +1,5 @@
 package net.ages.alwb.tasks.runner;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
@@ -13,11 +11,14 @@ import org.ocmc.ioc.liturgical.schemas.constants.nlp.UD_ASPECT;
 import org.ocmc.ioc.liturgical.schemas.constants.nlp.UD_CASE;
 import org.ocmc.ioc.liturgical.schemas.constants.nlp.UD_DEFINITE;
 import org.ocmc.ioc.liturgical.schemas.constants.nlp.UD_DEGREE;
-import org.ocmc.ioc.liturgical.schemas.constants.nlp.UD_DEP_REL_LABEL;
+import org.ocmc.ioc.liturgical.schemas.constants.nlp.UD_DEPENDENCY_LABELS;
 import org.ocmc.ioc.liturgical.schemas.constants.nlp.UD_GENDER;
 import org.ocmc.ioc.liturgical.schemas.constants.nlp.UD_MOOD;
 import org.ocmc.ioc.liturgical.schemas.constants.nlp.UD_NUMBER;
+import org.ocmc.ioc.liturgical.schemas.constants.nlp.UD_NUM_TYPE;
 import org.ocmc.ioc.liturgical.schemas.constants.nlp.UD_POS;
+import org.ocmc.ioc.liturgical.schemas.constants.nlp.UD_POSS;
+import org.ocmc.ioc.liturgical.schemas.constants.nlp.UD_PRON_TYPE;
 import org.ocmc.ioc.liturgical.schemas.constants.nlp.UD_PERSON;
 import org.ocmc.ioc.liturgical.schemas.constants.nlp.UD_TENSE;
 import org.ocmc.ioc.liturgical.schemas.constants.nlp.UD_VERB_FORM;
@@ -79,9 +80,9 @@ public class TaskRunnerUdTags extends SuperTaskRunner {
 	public static void main(String[] args) {
 		String uid = System.getenv("uid");
 		String pwd = System.getenv("pwd");
-		String dbHost = "159.203.89.233"; // "localhost"; 
+		String dbHost =  "localhost"; // ; "159.203.89.233"
 		Map<String,JsonArray> tags = new TreeMap<String,JsonArray>();
-		tags.put("Answertags", ANSWER_TO.toJsonArray());
+//		tags.put("Answertags", ANSWER_TO.toJsonArray());
 //		tags.put("UDtagsDepRel", UD_DEP_REL_LABEL.toJsonArray());
 //		tags.put("UDtagsAspect", UD_ASPECT.toJsonArray());
 //		tags.put("UDtagsCase", UD_CASE.toJsonArray());
@@ -90,8 +91,11 @@ public class TaskRunnerUdTags extends SuperTaskRunner {
 //		tags.put("UDtagsGender", UD_GENDER.toJsonArray());
 //		tags.put("UDtagsMood", UD_MOOD.toJsonArray());
 //		tags.put("UDtagsNumber", UD_NUMBER.toJsonArray());
+		tags.put("UDtagsNumType", UD_NUM_TYPE.toJsonArray());
 //		tags.put("UDtagsPos", UD_POS.toJsonArray());
+		tags.put("UDtagsPoss", UD_POSS.toJsonArray());
 //		tags.put("UDtagsPerson", UD_PERSON.toJsonArray());
+		tags.put("UDtagsPronType", UD_PRON_TYPE.toJsonArray());
 //		tags.put("UDtagsTense", UD_TENSE.toJsonArray());
 //		tags.put("UDtagsVerbForm", UD_VERB_FORM.toJsonArray());
 //		tags.put("UDtagsVoice", UD_VOICE.toJsonArray());

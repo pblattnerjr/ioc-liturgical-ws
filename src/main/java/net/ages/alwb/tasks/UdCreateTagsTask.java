@@ -27,7 +27,8 @@ import org.w3c.dom.NodeList;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 
 import org.ocmc.ioc.liturgical.schemas.constants.DATA_SOURCES;
-import org.ocmc.ioc.liturgical.schemas.constants.nlp.UD_DEP_REL_LABEL;
+import org.ocmc.ioc.liturgical.schemas.constants.VISIBILITY;
+import org.ocmc.ioc.liturgical.schemas.constants.nlp.UD_DEPENDENCY_LABELS;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.UDtbSentence;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.UDtbWord;
 import org.ocmc.ioc.liturgical.schemas.models.labels.UiLabel;
@@ -79,9 +80,7 @@ public class UdCreateTagsTask implements Runnable {
 				String key = o.get("key").getAsString();
 				String value = o.get("value").getAsString();
 				UiLabel label = new UiLabel(this.enLibrary, topic, key, value);
-				System.out.println(label.id + " = " + label.value);
-				this.manager.addLTKDbObject(this.requestor, label.toJsonString());
-				label = new UiLabel(this.elLibrary, topic, key, value);
+				label.setVisibility(VISIBILITY.PUBLIC);
 				System.out.println(label.id + " = " + label.value);
 				this.manager.addLTKDbObject(this.requestor, label.toJsonString());
 			}
