@@ -20,6 +20,7 @@ import org.ocmc.ioc.liturgical.schemas.constants.NOTE_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.SCHEMA_CLASSES;
 import org.ocmc.ioc.liturgical.schemas.constants.nlp.DEPENDENCY_LABELS_PERSEUS;
 import org.ocmc.ioc.liturgical.schemas.constants.nlp.GRAMMAR_ABBREVIATIONS;
+import org.ocmc.ioc.liturgical.schemas.constants.nlp.UD_DEPENDENCY_LABELS;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.TokenAnalysis;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.notes.TextualNote;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.notes.UserNote;
@@ -639,6 +640,9 @@ public class TextInformationToPdf {
 	public void loadAbbreviations() {
 		for (DEPENDENCY_LABELS_PERSEUS v : DEPENDENCY_LABELS_PERSEUS.values()) {
 			abbr.put(v.keyname, v.description);
+		}
+		for (UD_DEPENDENCY_LABELS v : UD_DEPENDENCY_LABELS.values()) {
+			abbr.put(v.keyname, v.fullname);
 		}
 		for (GRAMMAR_ABBREVIATIONS v : GRAMMAR_ABBREVIATIONS.values()) {
 			abbr.put(v.keyname, v.description);
