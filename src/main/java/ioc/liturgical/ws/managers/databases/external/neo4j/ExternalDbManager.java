@@ -55,6 +55,7 @@ import org.ocmc.ioc.liturgical.schemas.constants.NOTE_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.RELATIONSHIP_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.SCHEMA_CLASSES;
 import org.ocmc.ioc.liturgical.schemas.constants.SINGLETON_KEYS;
+import org.ocmc.ioc.liturgical.schemas.constants.STATUS;
 import org.ocmc.ioc.liturgical.schemas.constants.TEMPLATE_CONFIG_MODELS;
 import org.ocmc.ioc.liturgical.schemas.constants.TEMPLATE_NODE_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.TOPICS;
@@ -2794,15 +2795,20 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				result = updateLTKDbObject(requestor, obj.toJsonString());
 				// start a thread to create a word analysis from this token
 				// analysis if one does not already exist.
-				ExecutorService executorService = Executors.newSingleThreadExecutor();
-				executorService.execute(
-						new WordAnalysisCreateTask(
-								this
-								, requestor
-								, obj
-							)
-				);
-				executorService.shutdown();
+				if (obj.getStatus().equals(STATUS.FINALIZED)
+						|| obj.getStatus().equals(STATUS.READY_TO_RELEASE)
+						|| obj.getStatus().equals(STATUS.RELEASED)
+						) {
+					ExecutorService executorService = Executors.newSingleThreadExecutor();
+					executorService.execute(
+							new WordAnalysisCreateTask(
+									this
+									, requestor
+									, obj
+								)
+					);
+					executorService.shutdown();
+				}
 			} catch (Exception e) {
 				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 				result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
@@ -3718,7 +3724,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		}
 
 		/**
-		 * Get analyses for the tokens in the test that matches the supplied ID
+		 * Get analyses for the tokens in the text that match the supplied ID
 		 * @param requestor
 		 * @param id
 		 * @return

@@ -104,6 +104,9 @@ public class AgesHtmlToEditableLDOM {
 	        	String tdClass = this.getClassOfTd(valueSpan);
 	        	String dataKey = valueSpan.attr("data-key");
 	        	String [] parts = dataKey.split("\\|");
+	        	if (parts.length == 0) {
+	        		continue;
+	        	}
 	        	String key = parts[1];
 	        	parts = parts[0].split("_");
 	        	String domain = "";
@@ -227,6 +230,9 @@ public class AgesHtmlToEditableLDOM {
 					if (child.hasAttr("data-key")) {
 			        	String dataKey = child.attr("data-key");
 			        	String [] parts = dataKey.split("\\|");
+			        	if (parts.length == 0) {
+			        		continue;
+			        	}
 			        	String key = parts[1];
 			        	parts = parts[0].split("_");
 			        	String domain = "gr_GR_cog";
