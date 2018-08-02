@@ -7,7 +7,7 @@
 /dependency-reduced-pom.xml
 /hs_err_pid6868.log
 /hs_err_pid6874.log
-
+*.db
 repo
 
 *.tex
