@@ -53,6 +53,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.ocmc.ioc.liturgical.schemas.constants.ENDPOINTS_DB_API;
 import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
 import org.ocmc.ioc.liturgical.schemas.models.messaging.Message;
+import org.ocmc.ioc.liturgical.schemas.models.ws.response.RequestStatus;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import org.ocmc.ioc.liturgical.utils.MessageUtils;
@@ -411,6 +412,21 @@ public class ServiceProvider {
 			storeManager.setMaxInactiveMinutes(maxInactiveMinutes);
 			storeManager.setPrettyPrint(debug); // if debugging, json will be pretty print formatted
 			
+			/**
+			 * One-off delete for internal DB record
+			 */
+//			String deleteId = "";
+//			try {
+//				if (storeManager.existsUnique(deleteId)) {
+//					RequestStatus deleteStatus = storeManager.deleteForId(deleteId);
+//					logger.info("Delete status for " + deleteId + " = " + deleteStatus.code);
+//				}
+//			} catch (Exception e) {
+//				logger.error("error deleting " + deleteId);
+//				ErrorUtils.report(logger, e);
+//			}
+			
+			
 			if (initializeExternalDb) {
 				docService = new ExternalDbManager(
 						externalDbDomain
@@ -484,6 +500,9 @@ public class ServiceProvider {
 							)
 						|| (
 								request.pathInfo().toLowerCase().contains("dropdowns")
+							)
+						|| (
+								request.pathInfo().toLowerCase().contains("publications")
 							)
 						|| (
 								request.pathInfo().toLowerCase().endsWith(ENDPOINTS_DB_API.UI_LABELS.pathname)

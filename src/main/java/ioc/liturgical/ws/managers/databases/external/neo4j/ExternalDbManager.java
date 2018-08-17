@@ -121,6 +121,9 @@ import org.ocmc.ioc.liturgical.schemas.models.ws.response.column.editor.LibraryT
 import org.ocmc.ioc.liturgical.schemas.models.db.links.LinkRefersToBiblicalText;
 import org.ocmc.ioc.liturgical.schemas.models.db.returns.LinkRefersToTextToTextTableRow;
 import org.ocmc.ioc.liturgical.schemas.models.db.returns.ResultDropdowns;
+import org.ocmc.ioc.liturgical.schemas.models.db.stats.LocationLog;
+import org.ocmc.ioc.liturgical.schemas.models.db.stats.LoginLog;
+import org.ocmc.ioc.liturgical.schemas.models.db.stats.SearchLog;
 
 import ioc.liturgical.ws.nlp.Utils;
 import net.ages.alwb.tasks.DependencyNodesCreateTask;
@@ -130,11 +133,14 @@ import net.ages.alwb.tasks.PdfGenerationTask;
 import net.ages.alwb.tasks.PerseusTreebankDataCreateTask;
 import net.ages.alwb.tasks.TextDownloadsGenerationTask;
 import net.ages.alwb.tasks.UdTreebankDataCreateTask;
+import net.ages.alwb.tasks.UpdateLocationsTask;
 import net.ages.alwb.tasks.WordAnalysisCreateTask;
 import org.ocmc.ioc.liturgical.schemas.models.DropdownArray;
 import org.ocmc.ioc.liturgical.schemas.models.DropdownItem;
+import org.ocmc.ioc.liturgical.schemas.models.ModelHelpers;
 import org.ocmc.ioc.liturgical.schemas.models.LDOM.AbstractLDOM;
 import org.ocmc.ioc.liturgical.schemas.models.LDOM.AgesIndexTableData;
+import org.ocmc.ioc.liturgical.schemas.models.LDOM.AgesIndexTableRowData;
 import org.ocmc.ioc.liturgical.schemas.models.LDOM.LDOM;
 import org.ocmc.ioc.liturgical.schemas.models.bibliography.BibEntryReference;
 
@@ -234,6 +240,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  public static Neo4jConnectionManager neo4jManager = null;
 	  public static InternalDbManager internalManager = null;
 	  SynchManager synchManager = null;
+	 private static LoginLog loginLog = null;
+	 private static SearchLog searchLog = null;
 	  
 	  public ExternalDbManager(
 			  String neo4jDomain
@@ -286,6 +294,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  // this.fixWordAnalysis(); // I think this was a one-off fix.
 
 		  if (neo4jManager.isConnectionOK()) {
+			  ExternalDbManager.loginLog = getLoginLog();
+			  ExternalDbManager.searchLog = getSearchLog();
 			  buildAbbreviationDropdownMaps();
 			  buildBibliographyDropdownMaps();
 			  buildNotesDropdownMaps();
@@ -309,7 +319,35 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  }
 	  }
 	  
-	  private void loadEthnologue() {
+		public SearchLog getSearchLog() {
+			SearchLog log = new SearchLog();
+			String query = "match (n:SearchLog) where n.id = '" + log.getId() + "' return properties(n)";
+			try {
+				ResultJsonObjectArray result = this.getForQuery(query, false, false);
+				if (result.valueCount > 0) {
+					log = gson.fromJson(result.getFirstObject().get("properties(n)").getAsJsonObject(), SearchLog.class);
+				}
+			} catch (Exception e){
+				ErrorUtils.report(logger, e, "Can't initialize search log");
+			}
+			return log;
+		}
+
+		public LoginLog getLoginLog() {
+			LoginLog log = new LoginLog();
+			String query = "match (n:LoginLog) where n.id = '" + log.getId() + "' return properties(n)";
+			try {
+				ResultJsonObjectArray result = this.getForQuery(query, false, false);
+				if (result.valueCount > 0) {
+					log = gson.fromJson(result.getFirstObject().get("properties(n)").getAsJsonObject(), LoginLog.class);
+				}
+			} catch (Exception e){
+				ErrorUtils.report(logger, e, "Can't initialize login log");
+			}
+			return log;
+		}
+
+		private void loadEthnologue() {
 		  ResultJsonObjectArray result = new ResultJsonObjectArray(false);
 		  String query = "match (n:Ethnologue) return properties(n)";
 		  try {
@@ -1178,6 +1216,41 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
+		public synchronized void updateLocationStats(String location) {
+				try {
+					ExecutorService executorService = Executors.newSingleThreadExecutor();
+					executorService.execute(
+							new UpdateLocationsTask(this, location)
+							);
+					executorService.shutdown();
+				} catch (Exception e) {
+					ErrorUtils.report(logger, e);
+				}
+		}
+
+		public synchronized void updateQueryStats(String location) {
+				try {
+					ExternalDbManager.searchLog.setLastSearchedTimestamp(Instant.now().toString());
+					ExternalDbManager.searchLog.setSearchCount(ExternalDbManager.searchLog.getSearchCount()+1);
+					ExternalDbManager.neo4jManager.mergeWhereEqual("SearchLog", ExternalDbManager.searchLog);
+					this.updateLocationStats(location);
+				} catch (Exception e) {
+					ErrorUtils.report(logger, e);
+				}
+		}
+
+		public synchronized void updateLoginStats(String location) {
+			try {
+				ExternalDbManager.loginLog.setLastTimestamp(Instant.now().toString());
+				ExternalDbManager.loginLog.setCount(ExternalDbManager.loginLog.getCount()+1);
+				ExternalDbManager.neo4jManager.mergeWhereEqual("LoginLog", ExternalDbManager.loginLog);
+				this.updateLocationStats(location);
+			} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+			}
+				
+		}
+
 		/**
 		 * Search the database for notes that match the supplied parameters.
 		 * At this time, only known to work for type NoteUser.
@@ -1648,7 +1721,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				break;
 			}
 			}
-			builder.RETURN("id, library, topic, key, value, seq, _valueSchemaId, ");
+			builder.RETURN("id, library, topic, key, value, seq, visibility, status, _valueSchemaId, ");
 			builder.ORDER_BY("doc.seq"); // TODO: in future this could be a parameter in REST API
 
 			CypherQueryForDocs q = builder.build();
@@ -2358,7 +2431,11 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 									.classForSchemaName(
 											form.get_valueSchemaId())
 									.ltkDb.getClass());
-						    record.setValue(record.getValueFormatted());
+							if (record.getValueFormatted() == null) {
+							    record.setValueFormatted(record.getValue());
+							} else {
+								record.setValue(record.getValueFormatted()); 
+							}
 							record.setSubClassProperties(json);
 							record.setActive(true);
 							record.setCreatedBy(requestor);
@@ -2509,8 +2586,19 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						, idManager.getTopic()
 						, idManager.getKey()
 						);
+				JsonObject obj = this.parser.parse(json).getAsJsonObject();
 				text = gson.fromJson(queryResult.getFirstObject().toString(), TextLiturgical.class);
-				text.setValue(this.parser.parse(json).getAsJsonObject().get("value").getAsString());
+				text.setValue(obj.get("value").getAsString());
+				try {
+					if (obj.has("status")) {
+						text.setStatus(STATUS.getStatusForName(obj.get("status").getAsString()));
+					}
+					if (obj.has("visibility")) {
+						text.setVisibility(VISIBILITY.getVisibilityForName(obj.get("visibility").getAsString()));
+					}
+				} catch (Exception e) {
+					ErrorUtils.report(logger, e);
+				}
 				status = this.updateLTKDbObject(requestor, text.toJsonString());
 			} else {
 				TextLiturgicalTranslationCreateForm text = new TextLiturgicalTranslationCreateForm(
@@ -3806,6 +3894,14 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			return result;
 		}
 
+		public ResultJsonObjectArray getLocationStatistics() {
+			String query = "match (n:LocationLog) where n.id starts with '" 
+					+ org.ocmc.ioc.liturgical.schemas.constants.Constants.LIBRARY_LOCATION 
+					+ "' return properties(n) order by n.id";
+			ResultJsonObjectArray result = this.getForQuery(query, false, false);
+			return result;
+		}
+
 		public ResultJsonObjectArray getUserActivity(
 				String requestor
 				, String from
@@ -3822,12 +3918,97 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 //						+ "' and n.modifiedWhen < '" + to + "' return n.modifiedBy as who, n.modifiedWhen as when, n.id as what order by n.modifiedBy + n.modifiedWhen";
 				ResultJsonObjectArray queryResult  = ExternalDbManager.neo4jManager.getForQuery(query);
 				result.setValues(queryResult.getValues());
+				JsonObject loginObj = new JsonObject();
+				loginObj.addProperty("who", "login stats");
+				loginObj.addProperty("when", ExternalDbManager.loginLog.lastTimestamp);
+				loginObj.addProperty("what", ExternalDbManager.loginLog.count);
+				result.addValue(loginObj);
+				JsonObject searchObj = new JsonObject();
+				searchObj.addProperty("who", "text search stats");
+				searchObj.addProperty("when", ExternalDbManager.searchLog.lastSearchedTimestamp);
+				searchObj.addProperty("what", ExternalDbManager.searchLog.searchCount);
+				result.addValue(searchObj);
+				for (JsonObject obj : this.getLocationStatistics().values) {
+					try {
+						LocationLog log = gson.fromJson(obj.get("properties(n)").getAsJsonObject(), LocationLog.class);
+						JsonObject locObj = new JsonObject();
+						locObj.addProperty("who", "location " + log.getCountry() + " " + log.getRegionName() + " " + log.getCity());
+						locObj.addProperty("when", log.getLastAccessedTimestamp());
+						locObj.addProperty("what", log.getCount());
+						result.addValue(locObj);
+					} catch (Exception e) {
+						ErrorUtils.report(logger, e);
+					}
+				}
 				result.setQuery("get user activity from  " + from + " to " + to);
 			} catch (Exception e) {
 				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 				result.setStatusMessage(e.getMessage());
 			}
 			return result;
+		}
+
+		public ResultJsonObjectArray getPublications(
+			) {
+			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
+			List<String> titles = new ArrayList<String>();
+			List<String> languages = new ArrayList<String>();
+			List<String> regions = new ArrayList<String>();
+			List<String> countries = new ArrayList<String>();
+			List<String> publishers = new ArrayList<String>();
+			List<String> filetypes = new ArrayList<String>();
+			
+			try {
+				// Get AGES publications.  TODO: load this via a thread that runs every so often
+				AgesWebsiteIndexToReactTableData ages = new AgesWebsiteIndexToReactTableData(this.printPretty);
+				AgesIndexTableData data = ages.toReactTableDataFromJson(
+					AgesWebsiteIndexToReactTableData.typePdf
+				);
+				JsonArray rows = new JsonArray();	
+				for (AgesIndexTableRowData row : data.getTableData()) {
+					JsonObject resultObj = new JsonObject();
+					resultObj.addProperty("url", row.getUrl());
+					resultObj.addProperty("titleType", row.getTypeCode());
+					resultObj.addProperty("title", row.getType());
+					if (! titles.contains(row.getType())) {titles.add(row.getType());}
+					resultObj.addProperty("date", row.getDate());
+					resultObj.addProperty("dow", row.getDayOfWeek());
+					resultObj.addProperty("languageCodes", row.getLanguages());
+					String language = "Greek-English";
+					resultObj.addProperty("language", language);
+					if (! titles.contains(language)) {titles.add(language);}
+					String region = "North America";
+					resultObj.addProperty("region", region);
+					if (! titles.contains(region)) {titles.add(region);}
+					resultObj.addProperty("countryCode", "USA");
+					resultObj.addProperty("country", "United States of America");
+					resultObj.addProperty("publisher", "AGES, Initiatives, Inc.");
+					resultObj.addProperty("filetype", row.getFileType());
+					if (! titles.contains(row.getFileType())) {titles.add(row.getFileType());}
+					rows.add(resultObj);
+				}
+				JsonObject rowData = new JsonObject();
+				rowData.add("rowData", rows);
+				result.addValue(rowData);
+				JsonObject titleData = new JsonObject();
+				titleData.add("titleData", this.listToDropdown(titles).toJsonObject());
+				result.addValue(titleData);
+				result.setQuery("get published resources");
+			} catch (Exception e) {
+				result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setStatusMessage(e.getMessage());
+			}
+			return result;
+		}
+		
+		private DropdownArray listToDropdown(List<String> list) {
+			DropdownArray array = new DropdownArray();
+			Collections.sort(list);
+			array.add(new DropdownItem("any","any"));
+			for (String s : list) {
+				array.add(new DropdownItem(s,s));
+			}
+			return array;
 		}
 
 		/**
@@ -4416,7 +4597,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(this.printPretty);
 			try {
 				AgesWebsiteIndexToReactTableData ages = new AgesWebsiteIndexToReactTableData(this.printPretty);
-				AgesIndexTableData data = ages.toReactTableDataFromJson();
+				AgesIndexTableData data = ages.toReactTableDataFromJson(AgesWebsiteIndexToReactTableData.typeText);
 				AgesIndexTableData readingData = ages.toReactTableDataFromDailyReadingHtml();
 				data.addList(readingData);
 				AgesIndexTableData bookData = ages.toReactTableDataFromOlwBooksHtml();

@@ -94,6 +94,15 @@ public class Neo4jController {
         			);
 		});
 
+		// GET publications
+		pCnt++;
+		path = "/db/api/v1/publications";
+		ControllerUtils.reportPath(logger, "GET", path, pCnt);
+		get(path, (request, response) -> {
+			response.type(Constants.UTF_JSON);
+        	return gson.toJson(externalManager.getPublications());
+		});
+
 		// GET suggestions, e.g. Abbreviations and Bibliography entries
 		pCnt++;
 		path = ENDPOINTS_DB_API.SUGGESTIONS.pathname;
@@ -205,6 +214,7 @@ public class Neo4jController {
 			String requestor = "*";
 			try {
 				requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+				externalManager.updateQueryStats(request.queryParams("l"));
 			} catch (Exception e) {
 				requestor = "*";
 			}
@@ -380,6 +390,7 @@ public class Neo4jController {
 			response.type(Constants.UTF_JSON);
 			String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+			externalManager.updateLoginStats(request.queryParams("l"));
 			JsonObject json = externalManager.getUserDropdowns(requestor, query);
 			if (json.get("valueCount").getAsInt() > 0) {
 				response.status(HTTP_RESPONSE_CODES.OK.code);

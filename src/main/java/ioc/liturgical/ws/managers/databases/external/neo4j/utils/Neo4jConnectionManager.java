@@ -492,6 +492,52 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 				ErrorUtils.report(logger, e, "Could not create SynchLog");
 			}
 	}
+/**
+ * Create a singleton instance of a LTKLite doc.
+ * @param doc the LTKLite doc to create
+ * @param props the properties map, get it by calling ModelHelpers.getAsPropertiesMap(doc)
+ * @throws DbException
+ */
+	public void createSingleton(LTKLite doc, Map<String,Object> props) throws DbException {
+		this.setIdConstraint(doc.getClass().getSimpleName());
+		StringBuffer query = new StringBuffer();
+		query.append("create (doc:");
+		query.append(doc.getClass().getSimpleName());
+		query.append(") set doc = {props} return doc");
+
+			try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
+				session.run(
+						query.toString()
+						, props
+						);
+			} catch (Exception e){
+				ErrorUtils.report(logger, e, "Could not create singleton " + doc.getId());
+			}
+	}
+
+	/**
+	 * Updates a singleton instance of a LTKLite doc.
+	 * @param doc the LTKLite doc to update
+	 * @param props the properties map.  Get it by calling ModelHelpers.getAsPropertiesMap(doc)
+	 * @throws DbException
+	 */
+	public void updateSingleton(LTKLite doc, Map<String,Object> props) throws DbException {
+		StringBuffer query = new StringBuffer();
+		//	private static final String synchLogUpdateQuery = "match (doc:SynchLog) where doc.id = '" + SynchLog.singletonId + "' set doc = {props} return doc";
+		query.append("match (doc:");
+		query.append(doc.getClass().getSimpleName());
+		query.append(") where doc.id = '");
+		query.append(doc.getId());
+		query.append("' set doc = {props} return doc");
+		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
+			session.run(
+					query.toString()
+					, ModelHelpers.getAsPropertiesMap(doc)
+					);
+		} catch (Exception e){
+			ErrorUtils.report(logger, e, "Could not update Singleton " + doc.getId());
+		}
+	}
 
 	/**
 	 * Creates a relationship between two nodes, and adds the LTKDb
@@ -1314,7 +1360,6 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 	public RequestStatus dropConstraint(String label, String property) {
 		RequestStatus result = new RequestStatus();
 		String query = "DROP CONSTRAINT ON ( n:" + label + " ) ASSERT n." + property + " IS UNIQUE";
-		int count = 0;
 		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			ResultJsonObjectArray s = getForQuery(query);
 			result.setMessage("Dropped constraint on " + label + " for property " + property);

@@ -23,7 +23,6 @@ import org.w3c.dom.NodeList;
 import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.PtbSentence;
 import org.ocmc.ioc.liturgical.schemas.models.db.docs.nlp.PtbWord;
-import org.ocmc.ioc.liturgical.schemas.models.supers.LTK;
 import org.ocmc.ioc.liturgical.schemas.models.ws.response.ResultJsonObjectArray;
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import org.ocmc.ioc.liturgical.utils.FileUtils;
