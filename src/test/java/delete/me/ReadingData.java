@@ -8,9 +8,16 @@ public class ReadingData {
 	
 	public ReadingData(String book, String chapter, String verseFrom, String verseTo) {
 		this.book = book;
-		this.chapter = chapter;
-		this.verseFrom = verseFrom;
-		this.verseTo = verseTo;
+		this.chapter = this.pC(chapter);
+		this.verseFrom = this.pad(verseFrom);
+		this.verseTo = this.pad(verseTo);
+	}
+	
+	private String pC(String s) {
+		return "C" + String.format ("%03d", Integer.parseInt(s));
+	}
+	private String pad(String s) {
+		return String.format ("%03d", Integer.parseInt(s));
 	}
 	public String getBook() {
 		return book;

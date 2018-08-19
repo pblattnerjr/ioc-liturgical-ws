@@ -6,6 +6,7 @@ import java.util.List;
 public class PericopeData {
 	Integer size = 0;
 	List<ReadingData> readingParts = new ArrayList<ReadingData>();
+	String pericopeId = "";
 	String topicKey = "";
 	String Book = "";
 	String Citation = "";
@@ -40,6 +41,7 @@ public class PericopeData {
 	
 	private void process(String csv) {
 		String [] parts = csv.split(",");
+		StringBuffer sb = new StringBuffer();
 		this.size = parts.length;
 		this.topicKey = parts[0];
 		this.Book = parts[1];
@@ -47,39 +49,19 @@ public class PericopeData {
 		for (int i = 3; i < parts.length; i = i  + 4 ) {
 			ReadingData d = new ReadingData(parts[i], parts[i+1], parts[i+2], parts[i+3]);
 			this.readingParts.add(d);
+			if (sb.length() > 0) {
+				sb.append("|");
+			}
+			sb.append(d.book);
+			sb.append("~");
+			sb.append(d.chapter);
+			sb.append(":");
+			sb.append(d.verseFrom);
+			sb.append("-");
+			sb.append(d.verseTo);
 		}
+		this.pericopeId = sb.toString();
 	}
-/** 
- * 	topic~key
-	Pericope
-	Book
-	Citation
-	bk1
-	c1
-	vf1
-	vt1
-	bk2
-	c2
-	vf2
-	vt2
-	bk3
-	c3
-	vf3
-	vt3
-	bk4
-	c4
-	vf4
-	vf4
-	bk5
-	c5
-	vf5
-	vt5
-	bk6
-	c6
-	vf6
-	vt6
-
- */
 	public String getBook() {
 		return Book;
 	}
@@ -248,6 +230,26 @@ public class PericopeData {
 	}
 
 	public void setSize(int size) {
+		this.size = size;
+	}
+
+	public List<ReadingData> getReadingParts() {
+		return readingParts;
+	}
+
+	public void setReadingParts(List<ReadingData> readingParts) {
+		this.readingParts = readingParts;
+	}
+
+	public String getPericopeId() {
+		return pericopeId;
+	}
+
+	public void setPericopeId(String pericopeId) {
+		this.pericopeId = pericopeId;
+	}
+
+	public void setSize(Integer size) {
 		this.size = size;
 	}
 }
