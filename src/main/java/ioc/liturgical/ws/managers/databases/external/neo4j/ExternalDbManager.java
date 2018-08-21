@@ -190,7 +190,9 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	private String runningUtilityName = "";
 	public Gson gson = new Gson();
 	private String adminUserId = "";
-	
+	private ResultJsonObjectArray keyList = null;
+    Tokenizer tokenizer = SimpleTokenizer.INSTANCE;
+
 	  JsonParser parser = new JsonParser();
 	  Pattern punctPattern = Pattern.compile("[˙·,.;!?(){}\\[\\]<>%]"); // punctuation 
 	  public DomainTopicMapBuilder domainTopicMapbuilder = new DomainTopicMapBuilder();
@@ -286,23 +288,24 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  }
 		  this.logAllQueries = logQueries;
 		  this.logQueriesWithNoMatches = logQueriesWithNoMatches;
-		  buildDomainTopicMap();
-		  buildRelationshipDropdownMaps();
-		  buildNoteTypesDropdown();
-		  buildBiblicalDropdowns();
+		  this.buildDomainTopicMap();
+		  this.buildRelationshipDropdownMaps();
+		  this.buildNoteTypesDropdown();
+		  this.buildBiblicalDropdowns();
 		  this.buildLiturgicalBookNamesDropdown();
 		  // this.fixWordAnalysis(); // I think this was a one-off fix.
 
 		  if (neo4jManager.isConnectionOK()) {
-			  ExternalDbManager.loginLog = getLoginLog();
-			  ExternalDbManager.searchLog = getSearchLog();
-			  buildAbbreviationDropdownMaps();
-			  buildBibliographyDropdownMaps();
-			  buildNotesDropdownMaps();
-			  buildOntologyDropdownMaps();
-			  buildTemplatesDropdownMaps();
-			  buildTreebanksDropdownMaps(); 
-			  initializeOntology();
+			  ExternalDbManager.loginLog = this.getLoginLog();
+			  ExternalDbManager.searchLog = this.getSearchLog();
+			  this.buildAbbreviationDropdownMaps();
+			  this.buildBibliographyDropdownMaps();
+			  this.buildNotesDropdownMaps();
+			  this.buildOntologyDropdownMaps();
+			  this.buildTemplatesDropdownMaps();
+			  this.buildTreebanksDropdownMaps(); 
+			  this.initializeOntology();
+//			  this.initializeKeyList();
 			  if (! this.existsWordAnalyses("ἀβλαβεῖς")) {
 				  this.loadTheophanyGrammar();
 			  }
@@ -319,7 +322,26 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  }
 	  }
 	  
-		public SearchLog getSearchLog() {
+	  /**
+	   * Not used for the moment.  This is for the future when 
+	   * we have an online template builder and need a way to select
+	   * a topic-key.
+	   */
+	  private void initializeKeyList () {
+		  // profile: 356,819 total db hits in 828 ms.  
+			String query = "match (n:Root:Liturgical) where n.nnpFirstFive starts with 'gr_gr_cog' or n.nnpFirstFive starts with 'en_us_dedes' return n.nnpFirstFive as key order by key";
+			// profile match (n:Root:Liturgical) where n.nnpFirstFive starts with 'gr_gr_cog' or n.nnpFirstFive starts with 'en_us_dedes' return n.topic as topic, n.key as key, n.nnpFirstFive as nnp order by n.seq
+			// 713636 total db hits in 1286 ms
+			// without unique constraint on nnpFirstFive: 2,629,286 total db hits in 2575 ms
+			
+			try {
+				this.keyList =  this.getForQuery(query, false, false);
+			} catch (Exception e){
+				ErrorUtils.report(logger, e, "Can't initialize key list");
+			}
+	  }
+
+	  public SearchLog getSearchLog() {
 			SearchLog log = new SearchLog();
 			String query = "match (n:SearchLog) where n.id = '" + log.getId() + "' return properties(n)";
 			try {
@@ -349,7 +371,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 
 		private void loadEthnologue() {
 		  ResultJsonObjectArray result = new ResultJsonObjectArray(false);
-		  String query = "match (n:Ethnologue) return properties(n)";
+		  String query = "match (n:Root:Ethnologue) return properties(n)";
 		  try {
 			  result = this.getForQuery(query, false, false);
 			  for (JsonObject obj : result.values) {
@@ -362,7 +384,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  
 	  private void loadIsoCountries() {
 		  ResultJsonObjectArray result = new ResultJsonObjectArray(false);
-		  String query = "match (n:IsoCountry) return properties(n)";
+		  String query = "match (n:Root:IsoCountry) return properties(n)";
 		  try {
 			  result = this.getForQuery(query, false, false);
 			  for (JsonObject obj : result.values) {
@@ -429,7 +451,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	   * out call to the method.
 	   */
 	  private void fixWordAnalysis() {
-		  String query = "match (n:" 
+		  String query = "match (n:Root:" 
 				  + TOPICS.WORD_GRAMMAR.label 
 				  + ") where n.id starts with 'en_sys_linguistics' and n._valueSchemaId = 'PerseusAnalysis:1.1' return properties(n)"
 				 ;
@@ -450,7 +472,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  
 	  public List<String> getLiturgicalLibraries() {
 		  List<String> result = new ArrayList<String>();
-		  String query = "match (n:Liturgical) return distinct n.library order by n.library";
+		  String query = "match (n:Root:Liturgical) return distinct n.library order by n.library";
 		  ResultJsonObjectArray queryResult = this.getForQuery(
 				  query
 				  , false
@@ -506,7 +528,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	  
 	  public long getCalendarDayCount(String library, int year) {
 		 long count = 0;
-		  String query = "match (n:Liturgical) where n.id starts with '" 
+		  String query = "match (n:Root:Liturgical) where n.id starts with '" 
 		 + library 
 		 + Constants.ID_DELIMITER 
 		 + "calendar"
@@ -551,7 +573,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	   * @return
 	   */
 	  public ResultJsonObjectArray getWordAnalyses(String word) {
-		  String query = "match (n:" + TOPICS.WORD_GRAMMAR.label + ") where n.id starts with \"en_sys_linguistics~"
+		  String query = "match (n:Root:" + TOPICS.WORD_GRAMMAR.label + ") where n.id starts with \"en_sys_linguistics~"
 				+  GeneralUtils.toNfc(word).toLowerCase() + "~\" return properties(n)"
 				 ;
 		  ResultJsonObjectArray queryResult = this.getForQuery(
@@ -1114,7 +1136,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			  String label
 			  , String idRegEx
 			  ) {
-		  String query = "MATCH (n:" 
+		  String query = "MATCH (n:Root:" 
 				  + label 
 				  + ")"
 				  + " WHERE n.id =~ \""
@@ -2703,7 +2725,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						record.setModifiedBy(requestor);
 						record.setCreatedWhen(getTimestamp());
 						record.setModifiedWhen(record.getCreatedWhen());
-						neo4jManager.updateWhereEqual(record);
+						neo4jManager.updateWhereEqual(record, true);
 						this.updateObjects(record.ontologyTopic);
 					} else {
 						result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
@@ -2752,7 +2774,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						record.setModifiedBy(requestor);
 						record.setCreatedWhen(getTimestamp());
 						record.setModifiedWhen(record.getCreatedWhen());
-						neo4jManager.updateWhereEqual(record);
+						neo4jManager.updateWhereEqual(record, true);
 						this.updateObjects(record.ontologyTopic);
 					} else {
 						result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
@@ -2864,7 +2886,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		 * 
 		 * Updates a word (token) analysis.
 		 * TODO: should create link between its predecessor and successor
-		 * (n:Liturgical)<-[a:NextToken]-(o:WordAnalysis)<-[b:NextToken]- ...etc.
+		 * (n:Root:Liturgical)<-[a:NextToken]-(o:WordAnalysis)<-[b:NextToken]- ...etc.
 		 * @param requestor
 		 * @param id
 		 * @param json must be from on object of type LTKDb
@@ -3397,7 +3419,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public ResultJsonObjectArray getUiLabels(String library) {
 			ResultJsonObjectArray result = new ResultJsonObjectArray(this.printPretty);
 			try {
-				String query = "match (n:UiLabel) where n.library ends with '" 
+				String query = "match (n:Root:UiLabel) where n.library ends with '" 
 						+ library 
 						+ "' return n.id as id, n.value as value";
 				  ResultJsonObjectArray queryResult = this.getForQuery(
@@ -3416,7 +3438,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		}
 
 		public List<String> getUiTemplateKeysList(String system) {
-			String query = "match (n:UiLabel) where n.library = 'en_sys_" + system + "' return distinct n.topic + '~' + n.key as topicKey";
+			String query = "match (n:Root:UiLabel) where n.library = 'en_sys_" + system + "' return distinct n.topic + '~' + n.key as topicKey";
 			ResultJsonObjectArray queryResult = this.getForQuery(
 					  query
 					  , false
@@ -4234,7 +4256,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public JsonArray getTags(String type) {
 			JsonArray result  = new JsonArray();
 			try {
-				String q = "match (n:"+ type + ") return distinct n.tags as " + type;
+				String q = "match (n:Root:"+ type + ") return distinct n.tags as " + type;
 				ResultJsonObjectArray query = neo4jManager.getForQuery(q);
 				if (query.getResultCount() > 0) {
 					TreeSet<String> labels  = new TreeSet<String>();
@@ -4264,7 +4286,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public JsonArray getTags(String library, String type) {
 			JsonArray result  = new JsonArray();
 			try {
-				String q = "match (n:"+ type + ") where n.library = '" + library + "' return distinct n.tags as " + type;
+				String q = "match (n:Root:"+ type + ") where n.library = '" + library + "' return distinct n.tags as " + type;
 				ResultJsonObjectArray query = neo4jManager.getForQuery(q);
 				if (query.getResultCount() > 0) {
 					TreeSet<String> labels  = new TreeSet<String>();
@@ -4295,7 +4317,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public JsonArray getOntologyTags(String type) {
 			JsonArray result  = new JsonArray();
 			try {
-				String q = "match (n:"+ type + ") return distinct n.tags as " + type;
+				String q = "match (n:Root:"+ type + ") return distinct n.tags as " + type;
 				ResultJsonObjectArray query = neo4jManager.getForQuery(q);
 				if (query.getResultCount() > 0) {
 					TreeSet<String> labels  = new TreeSet<String>();
@@ -4574,7 +4596,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public ResultJsonObjectArray getTopicsDropdown() {
 			ResultJsonObjectArray result  = new ResultJsonObjectArray(true);
 			try {
-				String query = "match (n:gr_gr_cog) return distinct n.topic order by n.topic";
+				String query = "match (n:Root:gr_gr_cog) return distinct n.topic order by n.topic";
 				ResultJsonObjectArray queryResult = this.getForQuery(query, false, false);
 				DropdownArray array = new DropdownArray();
 				for (JsonObject o : queryResult.getValues()) {
@@ -4598,7 +4620,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			try {
 				AgesWebsiteIndexToReactTableData ages = new AgesWebsiteIndexToReactTableData(this.printPretty);
 				AgesIndexTableData data = ages.toReactTableDataFromJson(AgesWebsiteIndexToReactTableData.typeText);
-				AgesIndexTableData readingData = ages.toReactTableDataFromDailyReadingHtml();
+				AgesIndexTableData readingData = ages.toReactTableDataFromDailyReadingHtmlUsingJson();
 				data.addList(readingData);
 				AgesIndexTableData bookData = ages.toReactTableDataFromOlwBooksHtml();
 				data.addList(bookData);
@@ -5121,7 +5143,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public JsonObject getMostRecentNode(String nodeLabel) {
 			JsonObject result = null;
 			try {
-				String query = "match (n:" + nodeLabel + ") return properties(n) order by n.createdWhen descending limit 1";
+				String query = "match (n:Root:" + nodeLabel + ") return properties(n) order by n.createdWhen descending limit 1";
 				ResultJsonObjectArray searchResults = 
 						this.getForQuery(
 						query
@@ -5150,7 +5172,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				, String library
 				, String topic
 				) {
-			String query = "match (n:" + library + ") where n.id starts with '" 
+			String query = "match (n:Root:" + library + ") where n.id starts with '" 
 					+ library 
 					+ Constants.ID_DELIMITER 
 					+ topic 
@@ -5286,7 +5308,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					, printPretty
 					);
 			try {
-				String query = "match (n:" + docLabel + ") where n.id starts with '" 
+				String query = "match (n:Root:" + docLabel + ") where n.id starts with '" 
 						+ library 
 						+ "~" 
 						+ topic 
@@ -5358,7 +5380,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public boolean dbHasOntologyEntries() {
 			boolean result = false;
 			try {
-				ResultJsonObjectArray entries = getForQuery("match (n:" + TOPICS.ONTOLOGY_ROOT.label  + ") where not (n:Text) return count(n)", false, false);
+				ResultJsonObjectArray entries = getForQuery("match (n:Root:" + TOPICS.ONTOLOGY_ROOT.label  + ") where not (n:Text) return count(n)", false, false);
 				Long count = entries.getValueCount();
 				result = count > 0;
 			} catch (Exception e) {
@@ -5375,7 +5397,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		public JsonArray getDropdownInstancesForOntologyType(String type) {
 				JsonArray result = new JsonArray();
 				StringBuffer query = new StringBuffer();
-				query.append("match (n:OntologyRoot:");
+				query.append("match (n:Root:OntologyRoot:");
 				query.append(type);
 				query.append(") return n.id as id, n.name as name");
 				ResultJsonObjectArray entries = getForQuery(query.toString(), false, false);
@@ -5598,7 +5620,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		
 		public JsonObject getUiLabelsAsJsonObject() {
 			JsonObject result = new JsonObject();
-			String query = "match (n:UiLabel) return distinct split(n.library, \"_\")[2] as item";
+			String query = "match (n:Root:UiLabel) return distinct split(n.library, \"_\")[2] as item";
 			ResultJsonObjectArray queryResult = neo4jManager.getResultObjectForQuery(query);
 			List<String> systems = new ArrayList<String>();
 			for (JsonObject json : queryResult.values) {
@@ -5612,7 +5634,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		
 		public JsonObject getUiLabelsAsJsonObject(String system) {
 			JsonObject result = new JsonObject();
-			String query = "match (n:UiLabel) return distinct split(n.library, \"_\")[0] as item";
+			String query = "match (n:Root:UiLabel) return distinct split(n.library, \"_\")[0] as item";
 			ResultJsonObjectArray queryResult = neo4jManager.getResultObjectForQuery(query);
 			List<String> languages = new ArrayList<String>();
 			for (JsonObject json : queryResult.values) {
@@ -5621,7 +5643,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			for (String language : languages) {
 				JsonObject langJson = new JsonObject();
 				String library = language + "_sys_" + system; 
-				query = "match (n:UiLabel) where n.library starts with '" + language + "' and n.library ends with '" +  system + "' return distinct n.topic as item";
+				query = "match (n:Root:UiLabel) where n.library starts with '" + language + "' and n.library ends with '" +  system + "' return distinct n.topic as item";
 				ResultJsonObjectArray langQueryResult = neo4jManager.getResultObjectForQuery(query);
 				List<String> topics = new ArrayList<String>();
 				for (JsonObject json : langQueryResult.values) {
@@ -5629,7 +5651,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				}
 				for (String topic : topics) {
 					JsonObject topicsJson = new JsonObject();
-					query = "match (n:UiLabel) where n.library = '" + library +"' and n.topic = '" + topic + "' return distinct n.key as label, n.value as value";
+					query = "match (n:Root:UiLabel) where n.library = '" + library +"' and n.topic = '" + topic + "' return distinct n.key as label, n.value as value";
 					ResultJsonObjectArray topicQueryResult = neo4jManager.getResultObjectForQuery(query);
 					for (JsonObject json : topicQueryResult.values) {
 						String label = json.get("label").getAsString();
@@ -5748,7 +5770,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		
 		public JsonObject getUiLabelTopics() {
 			JsonObject result = new JsonObject();
-			String query = "match (n:UiLabel) return distinct n.topic as topic";
+			String query = "match (n:Root:UiLabel) return distinct n.topic as topic";
 			ResultJsonObjectArray queryResult = neo4jManager.getResultObjectForQuery(query);
 			for (JsonObject topic : queryResult.getValues()) {
 				String theTopic = topic.get("topic").getAsString();
@@ -5888,7 +5910,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			RequestStatus status = new RequestStatus();
 			
 			StringBuffer sb = new StringBuffer();
-			sb.append("MATCH (n:Liturgical) where n.id starts with \"");
+			sb.append("MATCH (n:Root:Liturgical) where n.id starts with \"");
 			sb.append(library);
 			sb.append("\" and not n.value contains \"gr_GR_cog\"") ;
 			sb.append("RETURN n.id, n.value");
@@ -5900,8 +5922,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 								, false
 								, false
 								);
-				queryResult = this.getForQuery("MATCH (n:WordInflected) delete n return count(n)", false, false);
-				queryResult = this.getForQuery("MATCH (n:TextConcordance) delete n return count(n)", false, false);
+				queryResult = this.getForQuery("MATCH (n:Root:WordInflected) delete n return count(n)", false, false);
+				queryResult = this.getForQuery("MATCH (n:Root:TextConcordance) delete n return count(n)", false, false);
 				queryResult = this.getForQuery(sb.toString(), false, false);
 				MultiMapWithList<WordInflected, ConcordanceLine> forms = NlpUtils.getWordListWithFrequencies(
 						queryResult.getValuesAsJsonArray()
@@ -5966,7 +5988,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				ResultJsonObjectArray queryResult = null;
 				if (deleteFirst) {
 					queryResult = this.getForQuery(
-							"MATCH (n:WordSenseGev) delete n return count(n)"
+							"MATCH (n:Root:WordSenseGev) delete n return count(n)"
 							, false
 							, false
 							);
@@ -6040,13 +6062,13 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				ResultJsonObjectArray queryResult = null;
 				if (deleteFirst) {
 					queryResult = this.getForQuery(
-							"MATCH (n:WordGrammar) delete n return count(n)"
+							"MATCH (n:Root:WordGrammar) delete n return count(n)"
 							, false
 							, false
 							);
 				}
 				queryResult = this.getForQuery(
-						"MATCH (n:WordInflected) return n.key"
+						"MATCH (n:Root:WordInflected) return n.key"
 						, false
 						, false
 				);
@@ -6059,7 +6081,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			    	if (startWith.length() == 0 || token.startsWith(startWith)) {
 				    	if (! deleteFirst) {
 				    		ResultJsonObjectArray exists = this.getForQuery(
-									"MATCH (n:WordGrammar) where n.topic = \"" 
+									"MATCH (n:Root:WordGrammar) where n.topic = \"" 
 											+ token 
 												+ "\" return n.topic limit 1"
 									, false

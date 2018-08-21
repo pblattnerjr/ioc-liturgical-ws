@@ -15,6 +15,7 @@ import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -43,6 +44,7 @@ public class AgesWebsiteIndexToReactTableData {
 	private String olwBooksUrl = olwBaseUrl + "booksindex.html";
 	private String agesOcmcBaseUrl = "http://www.agesinitiatives.com/dcs/ocmc/dcs/";
 	private String agesOcmcIndex = "customindex.html";
+	private String agesOcmcJsonIndex = agesOcmcBaseUrl + "h/c/index.json";
 	private String readingsIndex = agesOcmcBaseUrl + agesOcmcIndex;
 	private String theophanyUrl = Constants.LIML_URL + Constants.LIML_STATIC + "theophany.html";
 	private String octoechosUrl = Constants.LIML_URL + Constants.LIML_STATIC + "dcs/h/b/oc/";
@@ -51,7 +53,8 @@ public class AgesWebsiteIndexToReactTableData {
 	private String basilUrl = Constants.LIML_URL + Constants.LIML_STATIC + "bk.liturgy.basil.html";
 	private List<AgesIndexTableRowData> additionalAgesBookRows = new ArrayList<AgesIndexTableRowData>();
 	private boolean printPretty = false;
-
+	private Gson gson = new com.google.gson.Gson();
+	
 	public AgesWebsiteIndexToReactTableData() {
 		this.addAdditionalUrls();
 	}
@@ -552,6 +555,24 @@ public class AgesWebsiteIndexToReactTableData {
 		return result;
 	}
 
+	public AgesIndexTableData  toReactTableDataFromDailyReadingHtmlUsingJson() throws Exception {
+		AgesIndexTableData result = new AgesIndexTableData(printPretty);
+		Connection serviceIndexConnection = null;
+		try {
+			serviceIndexConnection = Jsoup.connect(this.agesOcmcJsonIndex);
+			String s  = serviceIndexConnection
+					.timeout(60*1000)
+					.maxBodySize(0)
+					.ignoreContentType(true)
+					.execute()
+					.body();
+			result = this.gson.fromJson(s, AgesIndexTableData.class);
+		} catch (Exception e) {
+				ErrorUtils.report(logger, e);
+		}
+		return result;
+	}
+	
 	public AgesIndexTableData  toReactTableDataFromJson(String fileType) throws Exception {
 		AgesIndexTableData result = new AgesIndexTableData(printPretty);
 		Connection serviceIndexConnection = null;

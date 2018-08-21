@@ -214,7 +214,9 @@ public class Neo4jController {
 			String requestor = "*";
 			try {
 				requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
-				externalManager.updateQueryStats(request.queryParams("l"));
+				if (requestor != "wsadmin" && requestor != "mcolburn") {
+					externalManager.updateQueryStats(request.queryParams("l"));
+				}
 			} catch (Exception e) {
 				requestor = "*";
 			}
@@ -390,7 +392,9 @@ public class Neo4jController {
 			response.type(Constants.UTF_JSON);
 			String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
-			externalManager.updateLoginStats(request.queryParams("l"));
+			if (requestor != "wsadmin" && requestor != "mcolburn") {
+				externalManager.updateLoginStats(request.queryParams("l"));
+			}
 			JsonObject json = externalManager.getUserDropdowns(requestor, query);
 			if (json.get("valueCount").getAsInt() > 0) {
 				response.status(HTTP_RESPONSE_CODES.OK.code);

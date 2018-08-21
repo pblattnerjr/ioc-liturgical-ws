@@ -130,7 +130,7 @@ public class Neo4jQuickAndDirty {
 							// System.out.println(labelUpdateResult.getStatus().code);
 							ResultJsonObjectArray idUpdateResult = neo4jManager.getForQuery(idQuery);
 							// System.out.println(idUpdateResult.getStatus().code);
-							RequestStatus status = neo4jManager.updateWhereEqual(textNew);
+							RequestStatus status = neo4jManager.updateWhereEqual(textNew,false);
 							// System.out.println(status.code);
 						} catch (Exception e) {
 							e.printStackTrace();

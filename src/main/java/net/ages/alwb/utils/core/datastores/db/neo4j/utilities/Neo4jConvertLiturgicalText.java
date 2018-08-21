@@ -45,7 +45,7 @@ public class Neo4jConvertLiturgicalText {
 				  if (p.has("comment")) {
 					  t.setComment(p.get("comment").getAsString());
 				  }
-				  m.updateWhereEqual(t);
+				  m.updateWhereEqual(t,false);
 				  blockCounter++;
 				  processed++;
 				  if (blockCounter == block) {

@@ -836,7 +836,7 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 	}
 
 
-	public RequestStatus updateWhereEqual(LTKDb doc) throws DbException {
+	public RequestStatus updateWhereEqual(LTKDb doc, boolean createTransaction) throws DbException {
 		RequestStatus result = new RequestStatus();
 		int count = 0;
 		setIdConstraint(doc.toSchemaAsLabel());
@@ -851,13 +851,15 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 			if (count > 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": updated " + doc.getId());
-		    	this.insertTransaction(new Transaction(
-		    			this.getMergeQuery(
-		    					doc.getId()
-		    					, doc.fetchOntologyLabels()
-		    					)
-		    			, doc, hostName)
-		      );
+		    	if (createTransaction) {
+			    	this.insertTransaction(new Transaction(
+			    			this.getMergeQuery(
+			    					doc.getId()
+			    					, doc.fetchOntologyLabels()
+			    					)
+			    			, doc, hostName)
+			      );
+		    	}
 			} else {
 		    	result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message + " " + doc.getId());

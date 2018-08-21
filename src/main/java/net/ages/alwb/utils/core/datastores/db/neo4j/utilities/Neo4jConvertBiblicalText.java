@@ -47,7 +47,7 @@ public class Neo4jConvertBiblicalText {
 				  t.setSeq(p.get("seq").getAsString());
 				  t.setValue(p.get("value").getAsString());
 				  t.setVerse(p.get("verse").getAsString());
-				  m.updateWhereEqual(t);
+				  m.updateWhereEqual(t,false);
 				  blockCounter++;
 				  processed++;
 				  if (blockCounter == block) {
