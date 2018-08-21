@@ -39,7 +39,6 @@ public class SetNnpFirstFiveTask implements Runnable {
 						text.setValue(text.getValue());
 						ExternalDbManager.neo4jManager.updateWhereEqual(text, false);
 						lastId = text.getId();
-						System.out.println(lastId);
 					} catch (DbException e) {
 						e.printStackTrace();
 					}
