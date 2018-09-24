@@ -84,9 +84,6 @@ public class CypherQueryForTreebanks {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("MATCH (c:");
-//		sb.append(LABEL);
-//		sb.append(")-[");
-//		sb.append("]->(c:");
 		sb.append(LABEL);
 		sb.append(")-[");
 		if (TYPE.length() >0) {

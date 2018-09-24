@@ -165,47 +165,54 @@ public class AgesHtmlToEditableLDOM {
 	        for (Element valueSpan : versionDesignations) {
 	        	String tdClass = this.getClassOfTd(valueSpan);
 	        	String dataKey = valueSpan.select("span.key").attr("data-key");
-	        	String [] parts = dataKey.split("\\|");
-	        	String key = parts[1];
-	        	parts = parts[0].split("_");
-	        	String domain = "";
-	        	if (tdClass.equals("centerCell")) {
-	        		domain = this.centerLibrary;
+	        	if (dataKey.length() > 0) {
+		        	String key = "";
+		        	String [] parts = dataKey.split("\\|");
+		        	if (parts.length == 2) {
+			        	key = parts[1];
+			        	parts = parts[0].split("_");
+			        	String domain = "";
+			        	if (tdClass.equals("centerCell")) {
+			        		domain = this.centerLibrary;
+			        	} else {
+			        		domain =
+				        			parts[1] 
+				    						+ Constants.DOMAIN_DELIMITER 
+				    						+ parts[2].toLowerCase() 
+				    						+ Constants.DOMAIN_DELIMITER 
+				    	        			+ parts[3]
+				    	        	;
+			        	}
+			        	String topic = parts[0];
+			        	String value = "";
+			        	if (valueSpan.hasClass("key")) {
+			        		value = valueSpan.parent().text();
+			        	} else {
+				        	value = valueSpan.text();
+			        	}
+			        	if (value.contains("~")) {
+			        		value = value.replaceAll("~", " ~ ");
+			        	}
+			        	String topicKey = topic + Constants.ID_DELIMITER + key;
+			        	IdManager idManager = new IdManager(domain, topic, key);
+			        	result.addDomain(domain);
+			        	result.addTopicKey(topicKey);
+			        	result.addValue(idManager.getId(), value, true);
+			        	if (tdClass.equals("centerCell")) {
+			        		valueSpan.attr(
+			        				"data-key"
+			        				, topic
+			        					+ "_" 
+			        						+ domain 
+			        						+ "|" 
+			        						+ key
+			        		); 
+			        		valueSpan.addClass("kvp");
+			        		valueSpan.children().remove();
+			        	}
+		        	}
 	        	} else {
-	        		domain =
-		        			parts[1] 
-		    						+ Constants.DOMAIN_DELIMITER 
-		    						+ parts[2].toLowerCase() 
-		    						+ Constants.DOMAIN_DELIMITER 
-		    	        			+ parts[3]
-		    	        	;
-	        	}
-	        	String topic = parts[0];
-	        	String value = "";
-	        	if (valueSpan.hasClass("key")) {
-	        		value = valueSpan.parent().text();
-	        	} else {
-		        	value = valueSpan.text();
-	        	}
-	        	if (value.contains("~")) {
-	        		value = value.replaceAll("~", " ~ ");
-	        	}
-	        	String topicKey = topic + Constants.ID_DELIMITER + key;
-	        	IdManager idManager = new IdManager(domain, topic, key);
-	        	result.addDomain(domain);
-	        	result.addTopicKey(topicKey);
-	        	result.addValue(idManager.getId(), value, true);
-	        	if (tdClass.equals("centerCell")) {
-	        		valueSpan.attr(
-	        				"data-key"
-	        				, topic
-	        					+ "_" 
-	        						+ domain 
-	        						+ "|" 
-	        						+ key
-	        		); 
-	        		valueSpan.addClass("kvp");
-	        		valueSpan.children().remove();
+	        		logger.error("VersionDesignation missing dataKey " + valueSpan);
 	        	}
 	        }
 		} catch (Exception e) {

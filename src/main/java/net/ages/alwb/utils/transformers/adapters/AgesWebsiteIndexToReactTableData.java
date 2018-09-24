@@ -35,7 +35,7 @@ public class AgesWebsiteIndexToReactTableData {
 	private static final Logger logger = LoggerFactory.getLogger(AgesWebsiteIndexToReactTableData.class);
 	public static String typePdf = "PDF/Print";
 	public static String typeText = "Text/Music";
-	private String baseUrl = "http://www.agesinitiatives.com/dcs/public/dcs/";
+	private String baseUrl = "http://www.agesinitiatives.com/dcs/public/dcs/"; 
 	private String booksPath = "h/b/";
 	private String servicesIndex = baseUrl + "servicesindex.html";
 	private String booksIndex = baseUrl + "booksindex.html";
@@ -51,6 +51,7 @@ public class AgesWebsiteIndexToReactTableData {
 	private String limlBooksUrl = Constants.LIML_URL + Constants.LIML_STATIC + "dcs/h/b/";
 	private String triodionUrl = Constants.LIML_URL + Constants.LIML_STATIC + "tr/h/b/";
 	private String basilUrl = Constants.LIML_URL + Constants.LIML_STATIC + "bk.liturgy.basil.html";
+	private String akathistCanon = baseUrl + "h/b/tr/d56_canon/gr-en/index.html";
 	private List<AgesIndexTableRowData> additionalAgesBookRows = new ArrayList<AgesIndexTableRowData>();
 	private boolean printPretty = false;
 	private Gson gson = new com.google.gson.Gson();
@@ -90,6 +91,13 @@ public class AgesWebsiteIndexToReactTableData {
 		row.setType("Holy Week Bridegroom Service on Sunday Evening - Matins of Holy Monday (Μεγάλη Ἑβδομάδα· Ἀκολουθία τοῦ Νυμφίου τῇ Κυριακῇ τὸ Βράδυ  Ὄρθρος τῆς Μεγάλης Δευτέρας ΑΚΟΛΟΥΘΙΑ ΤΟΥ ΟΡΘΡΟΥ)");
 		row.setDate("Triodion d065");
 		row.setUrl("http://www.agesinitiatives.com/dcs/public/dcs/h/b/tr/d065/ma/gr-en/index.html");		
+		this.additionalAgesBookRows.add(row);
+		// Day 56 Akathist Canon
+		row = new AgesIndexTableRowData(printPretty);
+		row.setDayOfWeek("Saturday of the Fifth Week");
+		row.setType("The Canon of the Akathist (Ὁ Κανὼν τοῦ Ἀακαθίστου)");
+		row.setDate("Triodion d056");
+		row.setUrl(this.akathistCanon);		
 		this.additionalAgesBookRows.add(row);
 		// Palm Sunday Eveing Vespers
 		row = new AgesIndexTableRowData(printPretty);

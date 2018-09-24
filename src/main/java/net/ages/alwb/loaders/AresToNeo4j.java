@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.joda.time.Instant;
 import org.neo4j.driver.v1.AuthTokens;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.GraphDatabase;
@@ -60,10 +61,9 @@ public class AresToNeo4j {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-
-		String user = args[0];
-		String pwd = args[1];
-		String url = args[2];
+		String user =        System.getenv("UID");
+		String pwd =      System.getenv("PWD");
+		String url =         System.getenv("URL");
 
 		boolean updateDatabaseNodes = true; 
 		boolean updateDatabaseRelationships = true; 
@@ -71,7 +71,7 @@ public class AresToNeo4j {
 		// and, if true, there won't be any relationships between nodes
 		
 		boolean includeComment = true;
-		boolean inspectLine = true; // if true, you can set a breakpoint for
+		boolean inspectLine = false; // if true, you can set a breakpoint for
 										// when it matches idOfLineToInspect
 		String idOfLineToInspect = "en_uk_lash~me.m01.d01~meHO.note1";
 		String idSeparator = "~";
@@ -79,7 +79,8 @@ public class AresToNeo4j {
 		
 		// Load the ares
 		LibraryProxyManager libProxyManager;
-		String alwbPath = "/Users/mac002/Git/alwb-repositories/ages";
+		String alwbPath = "/Users/mac002/canBeRemoved/gitlab/db2ares";
+//		String alwbPath = "/Users/mac002/Git/alwb-repositories/ages";
 //		String alwbPath = "/Users/mac002/Git/alwb-repositories/kenya";
 		List<String> domainsToProcess = new ArrayList<String>();
 		/**
@@ -92,12 +93,12 @@ public class AresToNeo4j {
 //		domainsToProcess.add("en_US_dedes");
 //		domainsToProcess.add("en_US_goa");
 //		domainsToProcess.add("en_US_holycross");
-		domainsToProcess.add("en_UK_lash");
+//		domainsToProcess.add("en_UK_lash");
 //		domainsToProcess.add("en_US_oca");
 //		domainsToProcess.add("en_US_public");
 //		domainsToProcess.add("en_US_repass");
 //		domainsToProcess.add("en_US_unknown");
-//		domainsToProcess.add("gr_GR_cog");
+		domainsToProcess.add("gr_GR_cog");
 		
 		// ages scripture
 //		domainsToProcess.add("en_UK_kjv");
@@ -107,12 +108,10 @@ public class AresToNeo4j {
 //		domainsToProcess.add("en_US_nkjv");
 //		domainsToProcess.add("en_US_rsv");
 //		domainsToProcess.add("en_US_saas");
-		
 
-		
 		// Kenya
-		domainsToProcess.add("kik_KE_oak");
-		domainsToProcess.add("swh_KE_oak");
+//		domainsToProcess.add("kik_KE_oak");
+//		domainsToProcess.add("swh_KE_oak");
 		
 		// added by Meg
 //		domainsToProcess.add("fra_FR_oaf");
@@ -174,6 +173,10 @@ public class AresToNeo4j {
 									+ idSeparator 
 									+ line.getLineNbr()
 									);
+							theNode.setCreatedBy("wsadmin");
+							theNode.setModifiedBy("wsadmin");
+							theNode.setCreatedWhen(Instant.now().toString());
+							theNode.setModifiedWhen(theNode.getCreatedWhen());
 							if (line.isSimpleKeyValue()) {
 								String value = Normalizer.normalize(LibraryUtils.escapeQuotes(line.getValue()),Normalizer.Form.NFC);
 								theNode.setValue(value);

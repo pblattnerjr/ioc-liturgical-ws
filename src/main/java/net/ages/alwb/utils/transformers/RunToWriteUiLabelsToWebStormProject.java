@@ -97,8 +97,8 @@ import com.google.gson.JsonObject;
 		}
 		
 		public static void main(String[] args) {
-			String reactPath = "/Users/mac002/Git/ocmc-translation-projects/ioc-liturgical-react/src/classes";
-			String olwPath = "/Users/mac002/Git/ocmc-translation-projects/ioc-tms-app/src/labels";
+			String reactPath = "/Users/mac002/Git/ocmc/ioc-liturgical-react/src/classes";
+			String olwPath = "/Users/mac002/Git/ocmc/ioc-tms-app/src/labels";
 			String uid = System.getenv("uid");
 			String pwd = System.getenv("pwd");
 			String url= "localhost"; // "159.203.89.233";

@@ -737,7 +737,8 @@ public class Neo4jConnectionManager implements LowLevelDataStoreInterface {
 		try (org.neo4j.driver.v1.Session session = dbDriver.session()) {
 			Map<String,Object> props = ModelHelpers.getAsPropertiesMap(doc);
 			StatementResult neoResult = session.run(query, props);
-			count = neoResult.consume().counters().propertiesSet();
+			SummaryCounters summary = neoResult.consume().counters();
+			count = summary.propertiesSet();
 			if (count > 0) {
 		    	result.setCode(HTTP_RESPONSE_CODES.OK.code);
 		    	result.setMessage(HTTP_RESPONSE_CODES.OK.message + ": updated " + doc.getId());

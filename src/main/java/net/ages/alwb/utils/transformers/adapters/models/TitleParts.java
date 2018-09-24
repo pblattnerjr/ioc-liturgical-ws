@@ -65,7 +65,13 @@ public class TitleParts {
 						this.day = uriParts[3];
 					} else if (uriParts[1].equals("tr")) {
 						this.name = uriParts[1];
-						this.day = uriParts[2].replace("_olw", "");
+						this.day = uriParts[2];
+						if (this.day.contains("_")) {
+							String []  dayParts = this.day.split("_");
+							if (dayParts.length == 2) {
+								this.day = dayParts[0];
+							}
+						}
 						this.day = Integer.toString(Integer.parseInt(this.day.substring(1)));
 						this.displayTitle = this.name + " Day " + this.day;
 					}

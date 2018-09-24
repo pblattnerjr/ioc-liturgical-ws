@@ -2280,6 +2280,42 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		}
 
 		/**
+		 * Converts a LTK object to its LTKDb subclass.
+		 * This is useful, for example, when there is a CreateForm
+		 * that needs to be converted to its database form.
+		 * @param json the json for the LTKDb object
+		 * @return the LTKDb object for that json
+		 */
+		public LTKDb convertLtkToLtkDb(String json) {
+			LTKDb record = null;
+			LTK form = gson.fromJson(json, LTK.class);
+			String validation = SCHEMA_CLASSES.validate(json);
+			if (validation != null && validation.length() == 0) {
+					try {
+						LTKDb ltkDbClass = null;
+						ltkDbClass = SCHEMA_CLASSES.ltkDbForSchemaName(form.get_valueSchemaId());
+						String ltkDbSchema = ltkDbClass._valueSchemaId;
+						record = 
+								 gson.fromJson(
+										json
+										, ltkDbClass.getClass()
+							);
+						record.set_valueSchemaId(ltkDbSchema);
+					} catch (Exception e) {
+						record = 
+								 gson.fromJson(
+										json
+										, SCHEMA_CLASSES
+											.classForSchemaName(
+													form.get_valueSchemaId())
+											.ltkDb.getClass()
+							);
+					}
+			}
+			return record;
+		}
+
+		/**
 		 * @param requestor
 		 * @param json string of the Json Object
 		 * @return the status of the request
@@ -2296,15 +2332,20 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			if (internalManager.authorized(requestor, VERBS.POST, form.getLibrary())) {
 				String validation = SCHEMA_CLASSES.validate(json);
 				if (validation != null && validation.length() == 0) {
-				try {
-						LTKDb record = 
-								 gson.fromJson(
-										json
-										, SCHEMA_CLASSES
-											.classForSchemaName(
-													form.get_valueSchemaId())
-											.ltkDb.getClass()
-							);
+					LTKDb record = null;
+					try {
+						if (form.get_valueSchemaId().contains("CreateForm")) {
+							record = this.convertLtkToLtkDb(json);
+						} else {
+							record = 
+									 gson.fromJson(
+											json
+											, SCHEMA_CLASSES
+												.classForSchemaName(
+														form.get_valueSchemaId())
+												.ltkDb.getClass()
+								);
+						}
 						if (record.getVisibility() != VISIBILITY.PUBLIC) {
 							if (record.getLibrary().equals(this.getUserDomain(requestor))) {
 								record.setVisibility(VISIBILITY.PERSONAL);
@@ -2314,6 +2355,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 						}
 						record.setSubClassProperties(json);
 						record.setActive(true);
+						record.setDataSource(DATA_SOURCES.ONLINE);
 						record.setCreatedBy(requestor);
 						record.setModifiedBy(requestor);
 						record.setCreatedWhen(getTimestamp());
@@ -2623,7 +2665,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 				}
 				status = this.updateLTKDbObject(requestor, text.toJsonString());
 			} else {
-				TextLiturgicalTranslationCreateForm text = new TextLiturgicalTranslationCreateForm(
+				TextLiturgical text = new TextLiturgical(
 						idManager.getLibrary()
 						, idManager.getTopic()
 						, idManager.getKey()
@@ -2634,10 +2676,16 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 					text.setSeq(this.parser.parse(json).getAsJsonObject().get("seq").getAsString());
 				} else {
 					try {
+						TextLiturgicalTranslationCreateForm temp = new TextLiturgicalTranslationCreateForm(
+								idManager.getLibrary()
+								, idManager.getTopic()
+								, idManager.getKey()
+								);
 						idManager = new IdManager("gr_gr_cog", text.getTopic(), text.getKey());
 						ResultJsonObjectArray greek = this.getForId(idManager.getId());
 						if (greek.valueCount == 1) {
-							text.convertSeq(greek.getFirstObject().get("seq").getAsString());
+							temp.convertSeq(greek.getFirstObject().get("seq").getAsString());
+							text.setSeq(temp.getSeq());
 						}
 					} catch (Exception innerE) {
 						ErrorUtils.report(logger, innerE);

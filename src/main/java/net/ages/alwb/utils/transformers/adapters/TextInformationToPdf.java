@@ -67,8 +67,9 @@ public class TextInformationToPdf {
 	private Map<String,JsonObject> biblioJsonStrings = new TreeMap<String,JsonObject>();
 	private Map<String,String> usedAbbreviations = new TreeMap<String,String>();
 	private List<TextualNote> notesList = new ArrayList<TextualNote>();
-	private List<TextualNote> summaryList = new ArrayList<TextualNote>();
+	private List<TextualNote> checkBibleList = new ArrayList<TextualNote>();
 	private List<TextualNote> adviceList = new ArrayList<TextualNote>();
+	private List<TextualNote> summaryList = new ArrayList<TextualNote>();
 	private List<UserNote> userList = new ArrayList<UserNote>();
 	private List<String> noteIds = new ArrayList<String>();
 	private Map<String,String> domainMap = null;
@@ -90,6 +91,7 @@ public class TextInformationToPdf {
 	private String authorAffiliation = "";
 	private String citestyle = "authoryear";
 	private StringBuffer textFile = new StringBuffer();
+	private String NETS = "Quotations marked NETS are taken from A New English Translation of the Septuagint, ©2007 by the International Organization for Septuagint and Cognate Studies, Inc. Used by permission of Oxford University Press. All rights reserved.";
 	
 	public TextInformationToPdf (
 			JsonObject jsonObject
@@ -359,8 +361,11 @@ public class TextInformationToPdf {
 			this.texFileSb.append(".bib}%\n\n");
 			this.bibtexFileSb.append(this.createBibFileContent());
 		}
+//		this.texFileSb.append("\\OnehalfSpacing");
+		this.texFileSb.append("\\linespread{1.0}%\n");
+		this.texFileSb.append("\\setaftersecskip{0}");
 		this.texFileSb.append("\\begin{document}%\n");
-		this.texFileSb.append("\\parskip=12pt");
+		this.texFileSb.append("\\parskip=6pt");
 		this.texFileSb.append(this.getTitlePage());
 		if (this.createToc) {
 			this.texFileSb.append(this.getTableOfContents());
@@ -463,8 +468,11 @@ public class TextInformationToPdf {
 		sb.append("\n\\subsection{Dependency Diagram}\n");
 		sb.append("This section uses a dependency diagram to show the syntactic structure of the text.  \\textit{Syntax} means \\textit{the grammatical relationship between words}, that is, \\textit{the way words are put together to create phrases and clauses and sentences}.  This diagram shows the structure based on a type of grammar theory called dependency grammar. The order of each Greek word in the diagram is based on the word it depends on. It appears indented and after the word it depends on. The first word to appear in the diagram is the root of the structure.\n");
 		sb.append("\\newline");
-		sb.append(this.processNode(null, new StringBuffer()));
-		sb.append("\n\\sectionline\n");
+		sb.append("{\\footnotesize	");
+//		sb.append("\\begin{Verbatim}[showspaces=true,fontsize=\\small]\n");
+		sb.append(this.processNode(null, new StringBuffer(),0));
+//		sb.append("\\end{Verbatim}\n");
+		sb.append("}\n\\sectionline\n");
 		return sb.toString();
 	}
 	
@@ -587,13 +595,25 @@ public class TextInformationToPdf {
 	private StringBuffer processNode(
 			TokenAnalysis node
 			, StringBuffer sb
+			, int spaces
 			) {
 		String key = "";
 	    if (node == null) {
 	        key = "Root";
 	     } else {
-	 	    sb.append("\\begin{mdframed}");
-		    sb.append("[everyline=true,style=dependency]");
+	    	 sb.append("\\newline");
+	    	 sb.append("\\color{white}");
+	    	 sb.append("$\\vert$");
+	    	 for (int i=0; i < spaces; i++) {
+	    		 if (i == spaces - 2) {
+		    		 sb.append("\\color{black}$\\vert$");
+	    		 } else {
+		    		 sb.append("--");
+	    		 }
+	    	 }
+//		 	sb.append("\\begin{minipage}{\\dimexpr\\textwidth-1cm}");
+//	 	    sb.append("\\begin{mdframed}");
+//		    sb.append("[nobreak=false,everyline=false,aboveskip=0pt,belowskip=0pt,needspace=50pt,style=dependency]");
 	         key  = node.getKey();
 	         int intKey = Integer.parseInt(key);
 	         intKey++;
@@ -628,11 +648,13 @@ public class TextInformationToPdf {
 		if (this.map.containsKey(key)) {
 			List<TokenAnalysis> children = this.map.get(key);
 			for (TokenAnalysis child : children) {
-				this.processNode(child, sb);
+				this.processNode(child, sb, spaces+2);
 			}
 		}
 	    if (node != null) {
-		    sb.append("\\end{mdframed}\n");
+//		    sb.append("\\end{minipage}\n\n");
+//		    sb.append("\\prevdepth\n\n");
+//		    sb.append("\\end{mdframed}\n");
 	    }
 		return sb;
 	}
@@ -689,11 +711,18 @@ public class TextInformationToPdf {
 			sb.append(note.getValue());
 			sb.append("\n");
 		}
-		sb.append("\\subsection{Discussion}\n");
+		if (! this.checkBibleList.isEmpty()) {
+//			sb.append("\\vfill%\n");
+			sb.append("\n\\subsection{References to the Bible}\n\n");
+			sb.append("This liturgical text makes the following references to the Bible:\n");
+			sb.append(this.processCheckBibleNotes());
+		}
+		sb.append("\n\n\\subsection{Discussion}\n");
 		if (this.combineNotes) {
-			sb.append("\nThe notes are sorted based the order of words in the ");
+			sb.append("The notes are sorted based the order of words in the ");
 			sb.append(this.alignmentLibraryLatex);
 			sb.append(" version of the text.\n");
+//			sb.append("\\vfill%\n");
 			sb.append(this.combineNotes());
 		} else {
 			sb.append(this.processNotesByType());
@@ -702,6 +731,7 @@ public class TextInformationToPdf {
 				sb.append(this.processAdviceNotes());
 			}
 		}
+//		sb.append("\n\\vfill%");
 		sb.append("\n\\sectionline\n");
 		sb.append("\\vfill%\n");
 		return sb.toString();
@@ -849,7 +879,7 @@ public class TextInformationToPdf {
 			TextualNote sample = scopeMap.get(sampleKey).get(0);
 			String scope = sample.getLiturgicalScope().trim();
 			String lemma = sample.getLiturgicalLemma();
-			combo.append("\n\n\\noteLexical{");
+			combo.append("\n\\noteLexical{");
 			combo.append(scope);
 			combo.append("}{");
 			combo.append(lemma);
@@ -924,8 +954,10 @@ public class TextInformationToPdf {
 					}
 				}
 			}
+			sb.append("\n");
 			sb.append(combo.toString());
 		}
+		sb.append("\n\\vfill%");
 		return sb.toString();
 	}
 	
@@ -941,6 +973,8 @@ public class TextInformationToPdf {
 			note.setValueFormatted(this.htmlToLatex(note.getValueFormatted()));
 			if (note.getNoteType() == NOTE_TYPES.UNIT) {
 				this.summaryList.add(note);
+			} else if (note.getNoteType() == NOTE_TYPES.REF_TO_BIBLE) {
+				this.checkBibleList.add(note);
 			} else 	if (note.getNoteType() == NOTE_TYPES.ADVICE_FOR_TRANSLATION_CHECKERS
 					|| note.getNoteType() == NOTE_TYPES.ADVICE_FOR_TRANSLATORS
 					) {
@@ -952,11 +986,6 @@ public class TextInformationToPdf {
 		if (this.includeAdviceNotes) {
 			this.adviceList = this.sortNotes(tempAdviceList); // sorts using the followsNoteId property
 		}
-//		if (! this.combineNotes) {
-//			this.notesList = this.sortNotes(tempTopicsList); // sorts using the followsNoteId property
-//		} else {
-//			this.notesList = tempTopicsList;
-//		}
 		Collections.sort(tempTopicsList);
 		this.notesList = tempTopicsList;
 		if (this.includePersonalNotes) {
@@ -978,9 +1007,6 @@ public class TextInformationToPdf {
 		Collections.sort(
 				this.notesList
 				, TextualNote.noteTypeLiturgicalScopeComparator);
-//		Collections.sort(
-//				this.notesList
-//				, TextualNote.noteTypeAdHocComparator);
 		for (TextualNote note : this.notesList) {
 			NOTE_TYPES type = note.getNoteType();
 			if (currentType != type) {
@@ -990,7 +1016,7 @@ public class TextInformationToPdf {
 				currentType = type;
 			}
 			if (type == NOTE_TYPES.REF_TO_BIBLE) {
-				sb.append(this.getNoteAsLatexForBibleRef(note));
+//				sb.append(this.getNoteAsLatexForBibleRef(note));
 			} else if (type.name().startsWith("REF_TO")){
 				sb.append(
 						this.getNoteAsLatexRefersTo(
@@ -1005,6 +1031,17 @@ public class TextInformationToPdf {
 						)
 				);
 			}
+		}
+		return sb.toString();
+	}
+
+	private String processCheckBibleNotes() {
+		StringBuffer sb = new StringBuffer();
+		Collections.sort(
+				this.checkBibleList
+				, TextualNote.noteTypeLiturgicalScopeComparator);
+		for (TextualNote note : this.checkBibleList) {
+				sb.append(this.getNoteAsLatexForBibleRef(note));
 		}
 		return sb.toString();
 	}
@@ -1033,20 +1070,24 @@ public class TextInformationToPdf {
 			TextualNote note
 			) {
 		StringBuffer sb = new StringBuffer();
+		if (note.value.trim().length() > 0) {
 			sb.append("\n\\noteLexicalRefToBibleTitle{");
-			sb.append(note.liturgicalScope.trim());
+		} else {
+			sb.append("\n\\noteLexicalRefToBible{");
+	    }
+		sb.append(note.liturgicalScope.trim());
+		sb.append("}{");
+		sb.append(note.liturgicalLemma);
+		sb.append("}{");
+		sb.append(note.biblicalScope);
+		sb.append("}{");
+		sb.append(note.biblicalLemma);
+		if (note.noteTitle.trim().length() > 0) {
 			sb.append("}{");
-			sb.append(note.liturgicalLemma);
+			sb.append(note.noteTitle);
+		}
+		if (note.value.trim().length() > 0) {
 			sb.append("}{");
-			sb.append(note.biblicalScope);
-			sb.append("}{");
-			sb.append(note.biblicalLemma);
-			if (note.noteTitle.trim().length() > 0) {
-				sb.append("}{");
-				sb.append(note.noteTitle);
-			}
-			if (note.value.trim().length() > 0) {
-				sb.append("}{");
 				sb.append(note.value);
 			}
 		sb.append("}\n");
@@ -1074,6 +1115,7 @@ public class TextInformationToPdf {
 	private String htmlToLatex(String html) {
 		try {
 			// process the anchors, which represent an abbreviation or a citation
+			// e.g. @
 			Document doc = Jsoup.parse(html);
 			Elements anchors = doc.select("a");
 			for (Element anchor : anchors) {
@@ -1082,43 +1124,51 @@ public class TextInformationToPdf {
 					URL url = new URL(id);
 					id = url.getPath().substring(1);
 				}
-				String dataValue = anchor.attr("data-value");
-				IdManager idManager = new IdManager(id);
-				switch (idManager.getTopic()) {
-				case ("abbreviation"): {
-					if (! this.abbrJsonStrings.containsKey(id)) {
-						try {
-							ResultJsonObjectArray queryResult = this.dbManager.getForId(id);
-							if (queryResult.valueCount > 0) {
-								this.abbrJsonStrings.put(id, queryResult.getFirstObjectValueAsObject());
+				if (id.contains("~")) {
+					String dataValue = anchor.attr("data-value");
+					IdManager idManager = new IdManager(id);
+					switch (idManager.getTopic()) {
+					case ("abbreviation"): {
+						if (! this.abbrJsonStrings.containsKey(id)) {
+							try {
+								ResultJsonObjectArray queryResult = this.dbManager.getForId(id);
+								if (queryResult.valueCount > 0) {
+									this.abbrJsonStrings.put(id, queryResult.getFirstObjectValueAsObject());
+								}
+							} catch (Exception e) {
+								ErrorUtils.report(logger, e, id + " not found");
 							}
-						} catch (Exception e) {
-							ErrorUtils.report(logger, e, id + " not found");
 						}
+						break;
 					}
-					break;
-				}
-				case ("biblioentry"): {
-					if (! this.biblioJsonStrings.containsKey(id)) {
-						try {
-							ResultJsonObjectArray queryResult = this.dbManager.getForId(id);
-							if (queryResult.valueCount > 0) {
-								this.biblioJsonStrings.put(id, queryResult.getFirstObjectValueAsObject());
+					case ("biblioentry"): {
+						if (! this.biblioJsonStrings.containsKey(id)) {
+							try {
+								ResultJsonObjectArray queryResult = this.dbManager.getForId(id);
+								if (queryResult.valueCount > 0) {
+									this.biblioJsonStrings.put(id, queryResult.getFirstObjectValueAsObject());
+								}
+							} catch (Exception e) {
+								ErrorUtils.report(logger, e, id + " not found");
 							}
-						} catch (Exception e) {
-							ErrorUtils.report(logger, e, id + " not found");
 						}
+						break;
 					}
-					break;
+					default: {
+					}
+					}
+					// convert to latex citation
+					anchor.tagName("span");
+					// TODO: language selection should be automatic in Babel but not working.
+					// it is printing και for and, as in Louw και Nida.  So, for now, force it to be English
+					anchor.text("\\selectlanguage{english}\\cite{" + dataValue + "}");
+				} else {
+					// this is a real macoy anchor and href
+					anchor.tagName("span");
+					String href = anchor.attr("href");
+					String innerText = anchor.text();
+					anchor.text(innerText + "\\footnote{\\url{" + href + "}})");
 				}
-				default: {
-				}
-				}
-				// convert to latex citation
-				anchor.tagName("span");
-				// TODO: language selection should be automatic in Babel but not working.
-				// it is printing και for and, as in Louw και Nida.  So, for now, force it to be English
-				anchor.text("\\selectlanguage{english}\\cite{" + dataValue + "}");
 			}
 			html = doc.html();
 			html = html.replaceAll("<p>", "");

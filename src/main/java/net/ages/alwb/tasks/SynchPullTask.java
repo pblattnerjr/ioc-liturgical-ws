@@ -97,6 +97,7 @@ public class SynchPullTask implements Runnable {
 																		ltkDb.get_valueSchemaId())
 																.ltkDb.getClass()
 												);
+										Thread.sleep(15000); // slow down the rate at which we update the db
 										RequestStatus status = dbManager.processTransaction(trans);
 										if (status.getCode() == HTTP_RESPONSE_CODES.OK.code) {
 											if (this.printpretty) {

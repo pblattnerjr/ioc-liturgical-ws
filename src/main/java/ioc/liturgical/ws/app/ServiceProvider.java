@@ -415,7 +415,7 @@ public class ServiceProvider {
 			/**
 			 * One-off delete for internal DB record
 			 */
-//			String deleteId = "";
+//			String deleteId = "misc~domains~en_UK_ware";
 //			try {
 //				if (storeManager.existsUnique(deleteId)) {
 //					RequestStatus deleteStatus = storeManager.deleteForId(deleteId);
