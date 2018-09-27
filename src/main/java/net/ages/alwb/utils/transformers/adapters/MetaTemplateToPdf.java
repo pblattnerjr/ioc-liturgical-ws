@@ -91,8 +91,8 @@ public class MetaTemplateToPdf {
 	
 	public void process() {
 
-		String chinese = "zh_";
-		String korean = "ko_";
+		String chinese = "zho_";
+		String korean = "kor_";
 		boolean hasChinese = 
 				template.getLeftLibrary().startsWith(chinese)
 				|| template.getCenterLibrary().startsWith(chinese)

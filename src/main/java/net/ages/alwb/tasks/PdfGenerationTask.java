@@ -107,20 +107,5 @@ public class PdfGenerationTask implements Runnable {
 		return "1";
 
 	}
-	
-	private void createMakeFile(
-			String identifier
-			, String path
-			) {
-		StringBuffer result = new StringBuffer();
-		result.append("filename=" + identifier + "\n\n");
-		result.append("pdf:\n");
-		result.append("\txelatex ${filename}\n");
-		result.append("\txelatex ${filename}\n");
-		FileUtils.writeFile(path + "/make", result.toString());
-		File make = new File(path + "/make");
-		make.setExecutable(true, true);
-		FileUtils.writeFile(path + "/makefile", result.toString());
-	}
 
 }
