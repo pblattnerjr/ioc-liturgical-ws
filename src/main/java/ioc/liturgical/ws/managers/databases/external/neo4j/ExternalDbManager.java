@@ -428,6 +428,8 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		  }
 	  }
 	  
+	
+	  
 	  /**
 	   * Checks to see if the database contains analyses for the given word
 	   * @param word
@@ -1208,6 +1210,15 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			if (type == null) {
 				type = TOPICS.TEXT.label;
 			}
+
+			/**
+			 * The following is a one-off special request from Fr. Juvenal Repass.
+			 * 
+			 */
+			if (domain.equals("spa_es_mpeterson")) {
+				this.cloneLibrary("en_us_jrepass", "spa_es_mpeterson");
+			}
+
 			/**
 			 * This is a workaround for ambiguity between the codes used with the Hieratikon sections
 			 * and those of the Horologion.  Fr. Seraphim uses "s01" etc for both, but with different meaning.
@@ -2743,6 +2754,79 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			}
 			return result;
 		}
+		
+		public List<String> getTopicKeys(String library) {
+			List<String> result = new ArrayList<String>();
+			try {
+				String query = "match (n:Root) where n.library = '" + library + "' and size(trim(n.value)) > 0 return n.topic + '~' + n.key as topicKey order by topicKey;";
+				ResultJsonObjectArray qResult = this.neo4jManager.getForQuery(query);
+				for (JsonObject o : qResult.getValues()) {
+					try {
+						String topicKey = o.get("topicKey").getAsString();
+						result.add(topicKey);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return result;
+		}
+
+		private List<String> getDiff(String lib1, String lib2) {
+			List<String> result = new ArrayList<String>();
+			try {
+				Collection<String> lib1TopicKeys = this.getTopicKeys(lib1);
+				Collection<String> lib2TopicKeys = this.getTopicKeys(lib2);
+				result = new ArrayList<String>(lib1TopicKeys);
+				result.removeAll(lib2TopicKeys);
+			} catch (Exception e) {
+				e.printStackTrace();;
+			}
+			
+			return result;
+		}
+		
+		  /**
+		   * This method is used to ensure that for each topic~key
+		   * found in libFrom, there is a corresponding topic~key
+		   * node found in libTo.  Where there is not, one is created.
+		   * 
+		   * This is a one-off method, created originally to support 
+		   * a request by Fr. Juvenal Repass, who wanted all his
+		   * translations to be available for someone to translate into
+		   * Spanish.  It should not be used if the fromLib is very large.
+		   * @param libFrom the library to be copied from
+		   * @param libTo the library to copy to
+		   */
+		public void cloneLibrary (String libFrom, String libTo) {
+			try {
+				for (String topicKey : this.getDiff(libFrom, libTo)) {
+					String query = "match (n:Root) where n.id = '" + libFrom + "~" + topicKey + "' and (not n.topic starts with 'tr.' return properties(n) as props";
+					ResultJsonObjectArray qResult = neo4jManager.getForQuery(query);
+					JsonObject o = qResult.getFirstObject().get("props").getAsJsonObject();
+					LTKDb doc = 
+							gson.fromJson(
+									o.toString()
+									, SCHEMA_CLASSES
+										.classForSchemaName(
+												o.get("_valueSchemaId").getAsString())
+										.ltkDb.getClass()
+						);
+					doc.setLibrary(libTo);
+					IdManager idManager = new IdManager(libTo, o.get("topic").getAsString(), o.get("key").getAsString());
+					doc.setId(idManager.getId());
+					doc.setVisibility(VISIBILITY.PRIVATE);
+					System.out.println(doc.getId());
+					neo4jManager.insert(doc);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+		}
+
 
 		public RequestStatus updateLTKDbObject(
 				String requestor
