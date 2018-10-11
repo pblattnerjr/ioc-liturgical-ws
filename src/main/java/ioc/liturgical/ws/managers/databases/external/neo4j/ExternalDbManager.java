@@ -3393,7 +3393,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 		}
 
  		public ResultJsonObjectArray getUsersNotes(String requestor) {
-			return getForIdStartsWith(this.internalManager.getUserDomain(requestor), TOPICS.NOTE_USER);
+ 				return getForIdStartsWith(this.internalManager.getUserDomain(requestor), TOPICS.NOTE_USER);
 		}
 
 		/**

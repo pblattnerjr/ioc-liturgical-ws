@@ -3,6 +3,9 @@ package ioc.liturgical.ws.managers.databases.external.neo4j.cypher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ioc.liturgical.ws.app.ServiceProvider;
+import ioc.liturgical.ws.managers.databases.external.neo4j.ExternalDbManager;
+
 import org.ocmc.ioc.liturgical.utils.ErrorUtils;
 
 /**
@@ -120,13 +123,13 @@ public class CypherQueryForNotes {
 			whereClause.append(tagMatcher("to.tags", TAGS, TAG_OPERATOR));
 		}
 		
-		if (addWherePublic) {
+		if (addWherePublic && (! this.REQUESTOR.equals(ServiceProvider.ws_usr))) {
 			if (whereClause.length() > 0) {
 				whereClause.append(" AND ");
 			} else {
 				whereClause.append(" WHERE");
 			}
-			if (this.REQUESTOR.length() > 0 && (! this.REQUESTOR.startsWith("*"))) {
+			 if (this.REQUESTOR.length() > 0 || (! this.REQUESTOR.startsWith("*"))) {
 				whereClause.append(" (to.visibility = 'PUBLIC' or to.createdBy = '");
 				whereClause.append(this.REQUESTOR);
 				whereClause.append("' or to.assignedTo = '");

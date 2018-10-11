@@ -786,7 +786,15 @@ public class Neo4jController {
 			response.type(Constants.UTF_JSON);
 			String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
 			String id = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
-			RequestStatus requestStatus = externalManager.deleteForId(requestor, id);
+			String library = "";
+			String topic = "";
+			String key = "";
+			if (request.splat().length == 3) {
+				library = request.splat()[0];
+				topic = request.splat()[1];
+				key = request.splat()[2];
+			}
+			RequestStatus requestStatus = externalManager.deleteForId(requestor, library, topic, key);
 			response.status(requestStatus.getCode());
 			return requestStatus.toJsonString();
 		});

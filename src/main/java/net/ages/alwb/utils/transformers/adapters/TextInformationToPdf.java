@@ -1105,10 +1105,11 @@ public class TextInformationToPdf {
 		sb.append(note.liturgicalLemma);
 		sb.append("}{");
 		sb.append(note.noteTitle);
-		sb.append("}{");
-		sb.append(note.value);
+		if (note.value.trim().length() > 0) {
+			sb.append("}{");
+			sb.append(note.value);
+		}
 		sb.append("}\n");
-
 		return sb.toString();
 	}
 	

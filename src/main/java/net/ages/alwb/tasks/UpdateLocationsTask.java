@@ -62,6 +62,9 @@ public class UpdateLocationsTask implements Runnable {
 						log = this.manager.gson.fromJson(result.getFirstObject().get("properties(n)").getAsJsonObject(), LocationLog.class);
 				   } catch (Exception e) {
 				   }
+				   if (country.equals("country")) {
+					   country = "unknown";
+				   }
 				   log.setCountry(country);
 				   log.setRegionName(regionName);
 				   log.increment();
