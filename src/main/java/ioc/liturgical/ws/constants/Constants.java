@@ -3,7 +3,7 @@ package ioc.liturgical.ws.constants;
 import java.util.concurrent.TimeUnit;
 
 public class Constants {
-		public static final String VERSION = "2018.10.17.1"; // should match most recent jar
+		public static final String VERSION = "2018.11.29.3"; // should match most recent jar
 		public static final String ID_DELIMITER = "~";
 		public static final String ID_SPLITTER = "~";
 		public static final String PIPE_SPLITTER = "\\|";
@@ -41,6 +41,7 @@ public class Constants {
 		public static final String TOPIC_SYNCH_LOG = "synch";
 		public static final String KEY_SYNCH_LOG = "log";
 		public static final String PATH_DELETE = "/delete";
+		public static final String PATH_DELETE_USER = "/delete/user/*";
 		public static final String PATH_LIBRARY_WILDCARD = "/*";
 		public static final String PATH_LIBRARY_TOPIC_WILDCARD = "/*/*";
 		public static final String PATH_LIBRARY_TOPIC_KEY_WILDCARD = "/*/*/*";

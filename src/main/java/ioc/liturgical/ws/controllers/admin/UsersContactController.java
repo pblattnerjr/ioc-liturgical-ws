@@ -1,5 +1,6 @@
 package ioc.liturgical.ws.controllers.admin;
 
+import static spark.Spark.delete;
 import static spark.Spark.post;
 import static spark.Spark.put;
 
@@ -24,6 +25,7 @@ public class UsersContactController {
 		 * GET is handled generically by ServiceProvider because users is a library.
 		 */
 		
+
 		/**
 		 * POST controllers
 		 */

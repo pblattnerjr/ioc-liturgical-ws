@@ -693,11 +693,11 @@ public class AgesHtmlToOslwSwitch {
 		}
 		case "p-heirmos": {
 		// {he.h.m1}{SouITropaiouchos.text} (http://www.agesinitiatives.com/dcs/public/dcs/h/s/2017/08/13/ma2/gr-en/index.html)
-			result = "Verse";
+			result = "Heirmos";
 			break;
 		}
 		case "p-heirmosheirmos": {
-			result = "Verse";
+			result = "Hiermos";
 			break;
 		}
 		case "p-heirmos-designation": {
@@ -705,7 +705,7 @@ public class AgesHtmlToOslwSwitch {
 			break;
 		}
 		case "p-heirmos-red": {
-			result = "Rubric";
+			result = "HeirmosRubric";
 			break;
 		}
 		case "p-heirmos-red-designation": {

@@ -179,6 +179,20 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		return result.toJsonObject();
 	}
 	
+	public JsonObject getWhereEndsWith(String pattern) {
+		ResultJsonObjectArray result = new ResultJsonObjectArray(prettyPrint);
+		result.setQuery(pattern.replaceAll("%", "*"));
+		try {
+			List<JsonObject> dbResults = filter(manager.queryForJsonWhereEndsWith(pattern));
+			result.setValueSchemas(getSchemas(dbResults, null));
+			result.setResult(dbResults);
+		} catch (SQLException e) {
+			result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setStatusMessage(e.getMessage());
+		}
+		return result.toJsonObject();
+	}
+
 	/**
 	 * Get all docs whose id starts with specified pattern
 	 * @param pattern, e.g. _users
@@ -280,6 +294,20 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		return result;
 	}
 	
+	public ResultJsonObjectArray getForIdEndsWith(String s) {
+		ResultJsonObjectArray result = new ResultJsonObjectArray(prettyPrint);
+		result.setQuery(s);
+		try {
+			List<JsonObject> dbResults = filter(manager.queryForJsonWhereEndsWith(s));
+			result.setValueSchemas(getSchemas(dbResults, null));
+			result.setResult(dbResults);
+		} catch (SQLException e) {
+			result.setStatusCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setStatusMessage(e.getMessage());
+		}
+		return result;
+	}
+
 	/**
 	 * Filter out user hashes from the list
 	 * @param list
@@ -1125,6 +1153,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		}
 		logger.info("test user " + user.getUsername() + " added");
 	}
+	
 	private void initializeTable() {
 		logger.info("Initializing table " + tablename + " for database " + storename);
 		initialized = false;
@@ -1723,7 +1752,9 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			// first create a UserContact
 			UserContact user = new UserContact();
 			user.setFirstname(userForm.getFirstname());
-			user.setLastname(userForm.getLastname());
+			String lastName = userForm.getLastname();
+			lastName = lastName.replaceAll("-", ""); // disallow names with hyphen
+			user.setLastname(lastName);
 			user.setEmail(userForm.getEmail());
 			user.setTitle(userForm.getTitle());
 			user.setDomain(
@@ -1785,6 +1816,33 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 	}
 	return result;
 }
+	
+	public RequestStatus deleteUser(
+			String requestor
+			, String username
+			) {
+		RequestStatus result = new RequestStatus();
+		if (username == null || username.length() == 0) {
+			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+		} else if ( ! this.isDbAdmin(requestor)){
+			result.setCode(HTTP_RESPONSE_CODES.UNAUTHORIZED.code);
+			result.setMessage(HTTP_RESPONSE_CODES.UNAUTHORIZED.message);
+		} else {
+			try {
+				ResultJsonObjectArray query = this.getForIdEndsWith(username);
+				for (JsonObject o : query.values) {
+					String id = o.get("_id").getAsString();
+					logger.info(requestor + " deleted " + id);
+					this.deleteForId(id);
+				}
+			} catch (Exception e) {
+				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+				result.setMessage(HTTP_RESPONSE_CODES.BAD_REQUEST.message);
+			}
+		}
+		return result;
+	}
 
 	/**
 	 * 
@@ -3050,7 +3108,7 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		}
 		return result;
 	}
-	
+
 	public JsonArray getDomainsUserCanAuthor(String username) {
 		JsonArray result = new JsonArray();
 		JsonObject json = getWhereLike(ROLES.AUTHOR.keyname + "%" + username);
@@ -3060,6 +3118,8 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 		return result;
 	}
 	
+
+
 	public JsonArray getDomainsUserCanView(String username) {
 		JsonArray result =  new JsonArray();
 		List<String> domains = new ArrayList<String>();
@@ -3480,6 +3540,32 @@ public class InternalDbManager implements HighLevelDataStoreInterface {
 			}
 		} catch (SQLException e) {
 			result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+		}
+		return result;
+	}
+
+	public RequestStatus deleteForId(String requestor, String id) {
+		RequestStatus result = new RequestStatus();
+		IdManager idManager = new IdManager(id);
+		if (this.isDbAdmin(requestor) && (! id.endsWith(requestor))) { // can't delete yourself
+			try {
+				if (id.startsWith("users")) {
+					// we need to delete everything associated with the user
+					result = this.deleteUser(requestor, idManager.getKey());
+				} else {
+					ResultJsonObjectArray json = getForId(id);
+					if (json.getResultCount() == 0) {
+						result.setCode(HTTP_RESPONSE_CODES.NOT_FOUND.code);
+						result.setMessage(HTTP_RESPONSE_CODES.NOT_FOUND.message + " " + id);
+					} else {
+						manager.delete(json.getFirstObject());
+					}
+				}
+			} catch (SQLException e) {
+				result.setCode(HTTP_RESPONSE_CODES.BAD_REQUEST.code);
+			}
+		} else {
+			result.setMessage("Not authorized");
 		}
 		return result;
 	}

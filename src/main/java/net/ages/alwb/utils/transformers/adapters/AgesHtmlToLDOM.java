@@ -172,7 +172,11 @@ public class AgesHtmlToLDOM {
 	        		continue; // skip this iteration
 	        	}
 	        	idManager = this.dataKeyToIdManager(dataKey);
-	        	domain = idManager.getLibrary();
+	        	try {
+		        	domain = idManager.getLibrary();
+	        	} catch (Exception e) {
+	        		ErrorUtils.report(logger, e);
+	        	}
 	        	String value = "";
 	        	if (valueSpan.hasClass("key")) {
 	        		value = valueSpan.parent().text().trim();

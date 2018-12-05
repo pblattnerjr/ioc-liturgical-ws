@@ -49,10 +49,16 @@ public class AlwbUrl {
 				} else {
 					name = "li2";
 				}
-			} else if (parts[7].equals("oc")) {
-				name = parts[7];
-				mode = parts[8];
-				day = parts[9];
+			} else if (parts[4].contains("mexico")) {
+				if (parts[5].contains("basil")) {
+					name = "li";
+				}
+			} else {
+				if (parts[7].equals("oc")) {
+					name = parts[7];
+					mode = parts[8];
+					day = parts[9];
+				}
 			}
 		} else {
 			name = parts[startIndex+1];

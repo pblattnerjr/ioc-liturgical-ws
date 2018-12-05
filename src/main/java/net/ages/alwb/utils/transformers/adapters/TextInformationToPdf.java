@@ -16,6 +16,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.ocmc.ioc.liturgical.schemas.constants.BIBLIOGRAPHY_CITATION_OVERRIDE;
 import org.ocmc.ioc.liturgical.schemas.constants.NOTE_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.SCHEMA_CLASSES;
 import org.ocmc.ioc.liturgical.schemas.constants.nlp.DEPENDENCY_LABELS_PERSEUS;
@@ -66,6 +67,7 @@ public class TextInformationToPdf {
 	private Map<String,JsonObject> abbrJsonStrings = new TreeMap<String,JsonObject>();
 	private Map<String,JsonObject> biblioJsonStrings = new TreeMap<String,JsonObject>();
 	private Map<String,String> usedAbbreviations = new TreeMap<String,String>();
+    private String biblioLibraryTopic = "";
 	private List<TextualNote> notesList = new ArrayList<TextualNote>();
 	private List<TextualNote> checkBibleList = new ArrayList<TextualNote>();
 	private List<TextualNote> adviceList = new ArrayList<TextualNote>();
@@ -76,6 +78,10 @@ public class TextInformationToPdf {
 	private ExternalDbManager dbManager = null;
 	private String fileId = "";
 	private boolean hasBibliography = false;
+	private boolean hasBibliographyList = false;
+	private boolean hasBibliographyPrimary = false;
+	private boolean hasBibliographySecondary = false;
+	private boolean hasBibliographyTertiary = false;
 	private boolean includeAdviceNotes = false;
 	private boolean includeGrammar = false;
 	private boolean includePersonalNotes = false;
@@ -214,6 +220,25 @@ public class TextInformationToPdf {
 									json.get("_valueSchemaId").getAsString())
 									.ltkDb.getClass()
 				);
+				// we use hasBibliographyList later to determine whether to print an abbreviation based bibliography
+				if (this.hasBibliographyList) {
+					// ignore
+				} else {
+					if (record.citeoverride != BIBLIOGRAPHY_CITATION_OVERRIDE.NONE) {
+						this.hasBibliographyList = true;
+					}
+				}
+				switch (record.getSourceType()) {
+				case PRIMARY:
+					this.hasBibliographyPrimary = true;
+					break;
+				case SECONDARY:
+					this.hasBibliographySecondary = true;
+					break;
+				case TERTIARY:
+					this.hasBibliographyTertiary = true;
+					break;
+				}
 				String bibTex = record.toBibtex();
 				sb.append(bibTex);
 				sb.append("\n");
@@ -360,6 +385,10 @@ public class TextInformationToPdf {
 			this.texFileSb.append(this.fileId);
 			this.texFileSb.append(".bib}%\n\n");
 			this.bibtexFileSb.append(this.createBibFileContent());
+			this.texFileSb.append("\n\\DeclareFieldFormat*{citetitle}{\\textnormal{\\textit{#1}}}\n");
+			this.texFileSb.append("\\newcommand{\\ltCitePrimary}[1]{\n");
+			this.texFileSb.append("\\citeauthor*{#1}. \\citetitle*{#1}.%\n");
+			this.texFileSb.append("}\n");
 		}
 //		this.texFileSb.append("\\OnehalfSpacing");
 		this.texFileSb.append("\\linespread{1.0}%\n");
@@ -412,7 +441,27 @@ public class TextInformationToPdf {
 		if (this.hasBibliography) {
 			this.texFileSb.append("\n\\section{Bibliography}\n\n");
 			this.texFileSb.append("\\selectlanguage{english}\n");
-			this.texFileSb.append("\\printbibliography[heading=bibempty]\n");
+			if (this.hasBibliographyList) {
+				this.texFileSb.append("\\small{\\textbf{By Abbreviation}}\n\n");				
+				this.texFileSb.append("\\printbiblist[heading=bibempty]{shorttitle}\n\n");
+			}
+			if (this.hasBibliographyPrimary || this.hasBibliographySecondary || this.hasBibliographyTertiary) {
+				if (this.hasBibliographyPrimary) {
+					this.texFileSb.append("\\small{\\textbf{By Author (Primary Sources)}}\n\n");
+					this.texFileSb.append("\\printbibliography[heading=bibempty,keyword=primary]\n");
+				}
+				if (this.hasBibliographySecondary) {
+					this.texFileSb.append("\\small{\\textbf{By Author (Secondary Sources)}}\n\n");
+					this.texFileSb.append("\\printbibliography[heading=bibempty,keyword=secondary]\n");
+				}
+				if (this.hasBibliographyTertiary) {
+					this.texFileSb.append("\\small{\\textbf{By Author (Tertiary Sources)}}\n\n");
+					this.texFileSb.append("\\printbibliography[heading=bibempty,keyword=tertiary]\n");
+				}
+			} else {
+				this.texFileSb.append("\\small{\\textbf{By Author}}\n\n");
+				this.texFileSb.append("\\printbibliography[heading=bibempty]\n");
+			}
 		}
 		if (this.includePersonalNotes) {
 			this.texFileSb.append(this.getUserNotesAsLatex());
@@ -1145,6 +1194,9 @@ public class TextInformationToPdf {
 					case ("biblioentry"): {
 						if (! this.biblioJsonStrings.containsKey(id)) {
 							try {
+								if (this.biblioLibraryTopic.length() < 1) {
+									this.biblioLibraryTopic = idManager.getLibrary() + "~" + idManager.getTopic();
+								}
 								ResultJsonObjectArray queryResult = this.dbManager.getForId(id);
 								if (queryResult.valueCount > 0) {
 									this.biblioJsonStrings.put(id, queryResult.getFirstObjectValueAsObject());
@@ -1162,7 +1214,32 @@ public class TextInformationToPdf {
 					anchor.tagName("span");
 					// TODO: language selection should be automatic in Babel but not working.
 					// it is printing και for and, as in Louw και Nida.  So, for now, force it to be English
-					anchor.text("\\selectlanguage{english}\\cite{" + dataValue + "}");
+						try {
+							JsonObject o = this.biblioJsonStrings.get(this.biblioLibraryTopic + "~" + dataValue);
+							String shortTitle = o.get("shorttitle").getAsString();
+							String citeOverride = o.get("citeoverride").getAsString();
+							if (shortTitle.trim().length() > 0) {
+								switch (citeOverride) {
+								case ("NONE"): {
+									anchor.text("\\selectlanguage{english}\\cite{" + dataValue + "}");
+									break;
+								}
+								case ("AUTHOR_TITLE"): {
+									anchor.text("\\selectlanguage{english}\\ltCitePrimary{" + dataValue + "}");
+									break;
+								}
+								case ("SHORT_TITLE"): {
+									anchor.text("\\selectlanguage{english}\\citetitle{" + dataValue + "}");
+									break;
+								}
+								}
+							} else {
+								anchor.text("\\selectlanguage{english}\\cite{" + dataValue + "}");
+							}
+						} catch (Exception e) {
+							ErrorUtils.report(logger, e);
+							anchor.text("\\selectlanguage{english}\\cite{" + dataValue + "}");
+						}
 				} else {
 					// this is a real macoy anchor and href
 					anchor.tagName("span");

@@ -49,7 +49,6 @@ import org.ocmc.ioc.liturgical.schemas.constants.HTTP_RESPONSE_CODES;
 import org.ocmc.ioc.liturgical.schemas.constants.LIBRARIES;
 import org.ocmc.ioc.liturgical.schemas.constants.LITURGICAL_BOOKS;
 import org.ocmc.ioc.liturgical.schemas.constants.MODES_TO_NEO4J;
-import org.ocmc.ioc.liturgical.schemas.constants.NEW_FORM_CLASSES_ADMIN_API;
 import org.ocmc.ioc.liturgical.schemas.constants.NEW_FORM_CLASSES_DB_API;
 import org.ocmc.ioc.liturgical.schemas.constants.NOTE_TYPES;
 import org.ocmc.ioc.liturgical.schemas.constants.RELATIONSHIP_TYPES;
@@ -107,9 +106,7 @@ import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDb;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDbNote;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTKDbOntologyEntry;
 import org.ocmc.ioc.liturgical.schemas.models.supers.LTKLink;
-import org.ocmc.ioc.liturgical.schemas.models.ws.db.Domain;
 import org.ocmc.ioc.liturgical.schemas.models.ws.db.UserPreferences;
-import org.ocmc.ioc.liturgical.schemas.models.ws.db.Utility;
 import org.ocmc.ioc.liturgical.schemas.models.ws.db.UtilityPdfGeneration;
 import org.ocmc.ioc.liturgical.schemas.models.ws.db.UtilityUdLoader;
 import org.ocmc.ioc.liturgical.schemas.models.ws.forms.DomainCreateForm;
@@ -137,7 +134,6 @@ import net.ages.alwb.tasks.UpdateLocationsTask;
 import net.ages.alwb.tasks.WordAnalysisCreateTask;
 import org.ocmc.ioc.liturgical.schemas.models.DropdownArray;
 import org.ocmc.ioc.liturgical.schemas.models.DropdownItem;
-import org.ocmc.ioc.liturgical.schemas.models.ModelHelpers;
 import org.ocmc.ioc.liturgical.schemas.models.LDOM.AbstractLDOM;
 import org.ocmc.ioc.liturgical.schemas.models.LDOM.AgesIndexTableData;
 import org.ocmc.ioc.liturgical.schemas.models.LDOM.AgesIndexTableRowData;
@@ -155,7 +151,6 @@ import net.ages.alwb.utils.nlp.fetchers.PerseusMorph;
 import net.ages.alwb.utils.nlp.models.GevLexicon;
 import net.ages.alwb.utils.nlp.utils.NlpUtils;
 import net.ages.alwb.utils.transformers.adapters.AgesHtmlToLDOM;
-import net.ages.alwb.utils.transformers.SystemJsonLabels;
 import net.ages.alwb.utils.transformers.adapters.AgesHtmlToEditableLDOM;
 import net.ages.alwb.utils.transformers.adapters.AgesWebsiteIndexToReactTableData;
 import net.ages.alwb.utils.transformers.adapters.TemplateNodeCompiler;
@@ -255,7 +250,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			  , String pwd
 			  ) {
 		  this.adminUserId = ServiceProvider.ws_usr;
-		  this.internalManager = internalManager; 
+		  ExternalDbManager.internalManager = internalManager; 
 		  initializeUiLibraries();
 		  this.readOnly = readOnly;
 		  // in case the database is not yet initialized, we will wait 
@@ -314,6 +309,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			  }
 			  this.loadEthnologue();
 			  this.loadIsoCountries();
+//			  this.cloneUiLabels();
 //			  logger.info("Creating calendars");
 //			  this.createCalendars(Calendar.getInstance().get(Calendar.YEAR));
 //			  logger.info("Calendars created");
@@ -400,35 +396,49 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 	   * and if not, clone one from the English.
 	   */
 	  private void cloneUiLabels() {
+		  List<UiLabel> labelsToClone = new ArrayList<UiLabel>();
+		  for (String domainId : USER_INTERFACE_SYSTEMS.toDomainsForLanguage("en")) {
+			  ResultJsonObjectArray labelResults = this.getUiLabels(domainId);
+			  for (JsonElement jsonElement : labelResults.getFirstObjectValueAsObject().get("labels").getAsJsonArray()) {
+				  JsonObject jsonObject = jsonElement.getAsJsonObject().get("props").getAsJsonObject();
+				  UiLabel label = gson.fromJson(jsonObject.toString(), UiLabel.class);
+				  labelsToClone.add(label);
+			  }
+		  }
+		  List<String> languages = new ArrayList<String>();
 		  for (String domainId : USER_INTERFACE_DOMAINS.getMap().keySet()) {
-			  if (! domainId.startsWith("en")) {
-				  Domain  domain = ExternalDbManager.internalManager.getDomain(domainId);
-				  if (domain.isActive()) {
-					  this.cloneUiLabels(domainId);
+			  String [] parts = domainId.split("_");
+			  if (! parts[0].equals("en")) {
+				  if (! languages.contains(parts[0])) {
+					  languages.add(parts[0]);
 				  }
+			  }
+		  }
+		  
+		  for (String language : languages) {
+//			  if (! domainId.startsWith("en")) {
+			  if (language.equals("spa")) {
+					  this.cloneUiLabels(language, labelsToClone);
 			  }
 		  }
 	  }
 
-	  private void cloneUiLabels(String toLibrary) {
-		  List<UiLabel> labelsToClone = new ArrayList<UiLabel>();
-		  for (String domainId : USER_INTERFACE_SYSTEMS.toDomainsForLanguage("en")) {
-			  for (JsonObject labelJson : this.getUiLabels(domainId).getValues()) {
-				  UiLabel label = gson.fromJson(labelJson, UiLabel.class);
-				  labelsToClone.add(label);
-			  }
-		  }
+	  private void cloneUiLabels(String toLanguage, List<UiLabel> labelsToClone) {
 		  for (UiLabel label : labelsToClone) {
-			  IdManager idManager = new IdManager(label.getId());
-			  idManager.setLibrary(toLibrary);
-			  label.setLibrary(idManager.getLibrary());
-			  if (! this.existsUnique(label.getId())) {
-				  this.addLTKDbObject("wsadmin", label.toJsonString());
+			  try {
+				  String [] parts = label.getLibrary().split("_");
+				  String library = toLanguage + "_" + parts[1] + "_" + parts[2];
+				  String newId = library + "~" + label.getTopic() + "~" + label.getKey();
+				  if (! this.existsUnique(newId)) {
+					  label.setLibrary(library);
+					  label.setId(newId);
+					  this.addLTKDbObject("wsadmin", label.toJsonString());
+				  }
+			  } catch (Exception e) {
+				  ErrorUtils.report(logger, e);
 			  }
 		  }
 	  }
-	  
-	
 	  
 	  /**
 	   * Checks to see if the database contains analyses for the given word
@@ -3553,7 +3563,7 @@ public class ExternalDbManager implements HighLevelDataStoreInterface{
 			try {
 				String query = "match (n:Root:UiLabel) where n.library ends with '" 
 						+ library 
-						+ "' return n.id as id, n.value as value";
+						+ "' return properties(n) as props order by n.id";
 				  ResultJsonObjectArray queryResult = this.getForQuery(
 						  query
 						  , false

@@ -47,6 +47,7 @@ public class AgesWebsiteIndexToReactTableData {
 	private String agesOcmcJsonIndex = agesOcmcBaseUrl + "h/c/index.json";
 	private String readingsIndex = agesOcmcBaseUrl + agesOcmcIndex;
 	private String theophanyUrl = Constants.LIML_URL + Constants.LIML_STATIC + "theophany.html";
+	private String mexicoLiUrl = Constants.LIML_URL + Constants.LIML_STATIC + "mexico/bk.li.chrysbasil.html";
 	private String octoechosUrl = Constants.LIML_URL + Constants.LIML_STATIC + "dcs/h/b/oc/";
 	private String limlBooksUrl = Constants.LIML_URL + Constants.LIML_STATIC + "dcs/h/b/";
 	private String triodionUrl = Constants.LIML_URL + Constants.LIML_STATIC + "tr/h/b/";
@@ -67,6 +68,7 @@ public class AgesWebsiteIndexToReactTableData {
 	private void addAdditionalUrls() {
 		String base = this.baseUrl + this.booksPath;
 		AgesIndexTableRowData row = new AgesIndexTableRowData(printPretty);
+
 		row.setDayOfWeek("any");
 		row.setType("Service of Preparation for Holy Communion (Ἀκολουθία τῆς Θείας Μεταλήψεως)");
 		row.setDate("any");
@@ -365,6 +367,14 @@ public class AgesWebsiteIndexToReactTableData {
 			theophany.setDate("m01/d06");
 			theophany.setUrl(theophanyUrl);
 			result.addRow(theophany);
+			
+			AgesIndexTableRowData liMexico = new AgesIndexTableRowData(printPretty);
+			liMexico.setDayOfWeek("any");
+			liMexico.setType("Divine Liturgy for Greek Orthodox Metropolis of Mexico, Central America, Colombia and Venezuela, and the Caribbean Islands");
+			liMexico.setDate("any");
+			liMexico.setUrl(mexicoLiUrl);		
+			this.additionalAgesBookRows.add(liMexico);
+
 			AgesIndexTableRowData basil = new AgesIndexTableRowData(printPretty);
 			basil.setDayOfWeek("any");
 			basil.setType("Divine Liturgy of St. Basil");

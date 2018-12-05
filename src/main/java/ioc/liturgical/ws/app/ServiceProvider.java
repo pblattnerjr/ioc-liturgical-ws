@@ -285,11 +285,14 @@ public class ServiceProvider {
 				externalDbDomain = envExternalDbDomain;
 			}
 			logger.info("external_db_domain: " + externalDbDomain);
-
 			useExternalStaticFiles = toBoolean(debug, prop.getProperty("useExternalStaticFiles"));
 			logger.info("useExternalStaticFiles: " + useExternalStaticFiles);
 
-			ServiceProvider.staticExternalFileLocation = prop.getProperty("staticExternalFileLocation");
+			if (useExternalStaticFiles) {
+				ServiceProvider.staticExternalFileLocation = prop.getProperty("staticExternalFileLocation");
+			} else {
+				ServiceProvider.staticExternalFileLocation = "/public";
+			}
 			logger.info("staticExternalFileLocation: " + ServiceProvider.staticExternalFileLocation);
 
 			datastore_type = prop.getProperty("datastore_type");
@@ -725,6 +728,14 @@ public class ServiceProvider {
 					response.status(HTTP_RESPONSE_CODES.NOT_FOUND.code);
 				}
 				return json.toJsonString();
+			});
+
+			delete(Constants.INTERNAL_DATASTORE_API_PATH + "/*/*/*", (request, response) -> {
+				response.type(Constants.UTF_JSON);
+				String requestor = new AuthDecoder(request.headers("Authorization")).getUsername();
+				String query = ServiceProvider.createStringFromSplat(request.splat(), Constants.ID_DELIMITER);
+				RequestStatus status = storeManager.deleteForId(requestor, query);
+				return status.toJsonString();
 			});
 
 			/**
