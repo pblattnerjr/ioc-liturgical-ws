@@ -72,6 +72,7 @@ public class TextInformationToPdf {
 	private List<TextualNote> checkBibleList = new ArrayList<TextualNote>();
 	private List<TextualNote> adviceList = new ArrayList<TextualNote>();
 	private List<TextualNote> summaryList = new ArrayList<TextualNote>();
+	private List<TextualNote> supplementalList = new ArrayList<TextualNote>();
 	private List<UserNote> userList = new ArrayList<UserNote>();
 	private List<String> noteIds = new ArrayList<String>();
 	private Map<String,String> domainMap = null;
@@ -308,6 +309,20 @@ public class TextInformationToPdf {
 		return sb.toString();
 	}
 	
+	private String getPreface() {
+		StringBuffer sb = new StringBuffer();
+		sb.append("\\pagebreak\\n\\renewcommand*{\\pagenumbering}[1]{}\\n\\section{Purpose}\n");
+		sb.append("This handbook is for people who speak English as a foreign language and are translating the liturgical texts into a non-Indoeuropean language. It answers the following questions: What does the Greek text say? What does it mean?  What problems might I have translating it and how might I solve those problems?  It answers these questions by providing the Greek text, example English translations, notes about each Greek word or phrase, and a detailed grammatical analysis\\footnote{Comments, corrections, and suggestions for improvement should be sent to Michael Colburn at m.colburn@ocmc.org.}.");
+		sb.append("\n\\section{Types of Translations}\n");
+		sb.append("The type of translation a person creates depends on what the priority is. If the priority is to preserve the order of the Greek words and phrases and to use words that give the literal meaning of the Greek, I call this a \\textit{Structure-Oriented Translation}.  I created the GE-SOT as an example. If the priority is to convey the meaning of the Greek text, I call this a \\textit{Meaning-Oriented Translation}. I created the GE-MOT as an example. Some translations balance these two priorities, for example, the translation in \\textit{The Festal Menaion} by His Eminence Kallistos Ware and Mother Mary (TFM). I created the GEV as another example. Whether or not a translation is structure-oriented, or meaning-oriented, or falls in between, when you translate a hymn, it is important to create a translation that can be sung based on a melody.  So, the translation sometimes has to be adjusted by using different words or a different word order. Fr. Seraphim Dedes' translation is an example.");
+		sb.append("\n\\section{About the Global English Translations}\n");
+		sb.append("");
+		sb.append("\nThe GEV, GE-SOT and GE-MOT use the Oxford 3000\\footnote{\\url{https://www.oxfordlearnersdictionaries.com/us/about/oxford3000}.} list of the most important English words. People who speak English as a second language should know these words. By trying to use only these 3000 words, the Global English translations have to adjust the translation in ways similar to what happens when people translate the Greek into non-Indoeuropean languages. These translations demonstrate three types of translation.  The GE-SOT is the closest to the Greek word order and the literal meaning.  It is used for the word by word discussion of the meaning and for the interlinear grammar and dependency diagram.  The GE-MOT will help you understand the meaning.  It does this by adding information that is implied by the Greek text.  If you must translate from English, ask your Bishop which translation He prefers. If He is not available to ask, then use the GEV.\n");
+		sb.append("\n\\section{How to Use this Handbook}\n");
+		sb.append("If you can, first read the Greek text. Then study the  translations. Note what is similar and different. Make a first draft translation from the Greek or the GEV. Write down questions you have. Look for answers in the notes and grammar sections. Make changes to your translation based on what you read. Let other people read your translation.  Ask questions to learn how they understand it.  Make changes as needed. Adjust the translation to fit the melody it will be sung to.");
+		return sb.toString();
+	}
+	
 	private String getTitlePage() {
 		StringBuffer sb = new StringBuffer();
 		sb.append("\\begin{titlingpage}%\n");
@@ -399,6 +414,8 @@ public class TextInformationToPdf {
 		if (this.createToc) {
 			this.texFileSb.append(this.getTableOfContents());
 		}
+		this.texFileSb.append("\n");
+		this.texFileSb.append(this.getPreface());
 		this.texFileSb.append("\n");
 		this.texFileSb.append("\\mainmatter%\n");
 		this.texFileSb.append("\\nopartblankpage");
@@ -503,9 +520,8 @@ public class TextInformationToPdf {
 	
 	public String getInterlinearAsLatex() {
 		StringBuffer sb = new StringBuffer();
-//		sb.append("\n\\vfill\n\\newpage\n");
 		sb.append("\n\\subsection{Interlinear Text}\n");
-		sb.append("This section provides information about the grammar of words (that is, the morphology). The Greek words appear in the same order as they do in the source text.\n\n");
+		sb.append("This section provides information about the grammar of words (that is, the morphology) \\footnote{You can read about Greek grammar at \\url{https://ancientgreek.pressbooks.com}.}. The Greek words appear in the same order as they do in the source text.\n");
 		sb.append(this.nodesToInterlinear());
 		sb.append("\n\\sectionline\n");
 		return sb.toString();
@@ -513,14 +529,11 @@ public class TextInformationToPdf {
 
 	public String getDependencyDiagramAsLatex() {
 		StringBuffer sb = new StringBuffer();
-//		sb.append("\n\\vfill\n\\newpage\n");
 		sb.append("\n\\subsection{Dependency Diagram}\n");
-		sb.append("This section uses a dependency diagram to show the syntactic structure of the text.  \\textit{Syntax} means \\textit{the grammatical relationship between words}, that is, \\textit{the way words are put together to create phrases and clauses and sentences}.  This diagram shows the structure based on a type of grammar theory called dependency grammar. The order of each Greek word in the diagram is based on the word it depends on. It appears indented and after the word it depends on. The first word to appear in the diagram is the root of the structure.\n");
+		sb.append("A dependency diagram shows the syntax of the text. \\textit{Syntax} means \\textit{the grammatical relationship between words}.  It shows the relationships based on dependency grammar\\footnote{See \\url{http://universaldependencies.org}}. The order of each Greek word in the diagram is based on the word it depends on\\footnote{\\textit{depends on} means \\textit{is governed by or subordinate to}.}. It appears indented and after the word it depends on. The first word in the diagram is the root, that is, the starting point of the dependencies.");
 		sb.append("\\newline");
 		sb.append("{\\footnotesize	");
-//		sb.append("\\begin{Verbatim}[showspaces=true,fontsize=\\small]\n");
 		sb.append(this.processNode(null, new StringBuffer(),0));
-//		sb.append("\\end{Verbatim}\n");
 		sb.append("}\n\\sectionline\n");
 		return sb.toString();
 	}
@@ -660,9 +673,6 @@ public class TextInformationToPdf {
 		    		 sb.append("--");
 	    		 }
 	    	 }
-//		 	sb.append("\\begin{minipage}{\\dimexpr\\textwidth-1cm}");
-//	 	    sb.append("\\begin{mdframed}");
-//		    sb.append("[nobreak=false,everyline=false,aboveskip=0pt,belowskip=0pt,needspace=50pt,style=dependency]");
 	         key  = node.getKey();
 	         int intKey = Integer.parseInt(key);
 	         intKey++;
@@ -770,7 +780,7 @@ public class TextInformationToPdf {
 		if (this.combineNotes) {
 			sb.append("The notes are sorted based the order of words in the ");
 			sb.append(this.alignmentLibraryLatex);
-			sb.append(" version of the text.\n");
+			sb.append(" version of the text. English quotations from the Bible are from the World English Bible British Edition (WEBBE) unless otherwise stated.\n");
 //			sb.append("\\vfill%\n");
 			sb.append(this.combineNotes());
 		} else {
@@ -780,9 +790,22 @@ public class TextInformationToPdf {
 				sb.append(this.processAdviceNotes());
 			}
 		}
-//		sb.append("\n\\vfill%");
+		if (this.supplementalList.size() > 0) {
+			sb.append("\n\\subsection{Supplemental Notes}\n");
+			for (TextualNote note : this.supplementalList) {
+				sb.append(
+						this.getNoteAsLatexForNonRef(
+							note
+							, true
+						)
+				);
+//				sb.append(note.getValue());
+				sb.append("\n");
+			}
+		}
 		sb.append("\n\\sectionline\n");
 		sb.append("\\vfill%\n");
+
 		return sb.toString();
 	}
 	
@@ -850,14 +873,13 @@ public class TextInformationToPdf {
 	private Map<Integer, String> getAlignmentList() {
 		Map<String, List<String>> indexMap = new TreeMap<String, List<String>>();
 		TextLiturgical dummy = new TextLiturgical("en_us_system", "a", "b");
-//		dummy.setValue("Never align");
 		dummy.setValue(this.alignmentText);
-		String nnp = " " + dummy.getNnp() + " ";
+		String nnp = ' ' + dummy.getNnp() + ' ';
 		List<String> notFound = new ArrayList<String>();
 		for (String scope : this.bigMap.keySet()) {
 			scope = scope.trim();
 			dummy.setValue(scope);
-			String scopeNnp = " " + dummy.getNnp() + " ";
+			String scopeNnp = ' ' + dummy.getNnp() + ' ';
 			int i = 0;
 			if (nnp.contains(scopeNnp)) {
 				while (i > -1) {
@@ -1028,6 +1050,8 @@ public class TextInformationToPdf {
 					|| note.getNoteType() == NOTE_TYPES.ADVICE_FOR_TRANSLATORS
 					) {
 					tempAdviceList.add(note);
+			} else if (note.getNoteType() == NOTE_TYPES.SUPPLEMENTAL_NOTE) {
+				this.supplementalList.add(note);
 			} else {
 				tempTopicsList.add(note);
 			}
@@ -1176,6 +1200,13 @@ public class TextInformationToPdf {
 				}
 				if (id.contains("~")) {
 					String dataValue = anchor.attr("data-value");
+					if (dataValue == null || dataValue.length() == 0) {
+						try {
+							dataValue = anchor.attr("href").split("~")[2];
+						} catch (Exception e) {
+							// ignore
+						}
+					}
 					IdManager idManager = new IdManager(id);
 					switch (idManager.getTopic()) {
 					case ("abbreviation"): {
@@ -1216,7 +1247,12 @@ public class TextInformationToPdf {
 					// it is printing και for and, as in Louw και Nida.  So, for now, force it to be English
 						try {
 							JsonObject o = this.biblioJsonStrings.get(this.biblioLibraryTopic + "~" + dataValue);
-							String shortTitle = o.get("shorttitle").getAsString();
+							String shortTitle = "";
+							try {
+								shortTitle = o.get("shorttitle").getAsString();
+							} catch (Exception e) {
+								ErrorUtils.report(logger, e);
+							}
 							String citeOverride = o.get("citeoverride").getAsString();
 							if (shortTitle.trim().length() > 0) {
 								switch (citeOverride) {
@@ -1305,6 +1341,8 @@ public class TextInformationToPdf {
 		String gevSotLatex = "";
 		String gevSotValue = "";
 		String libraryLatex = "";
+		String tfmLibrary = "en_uk_tfm";
+		String dedesLibrary = "en_us_dedes";
 		StringBuffer lf  = new StringBuffer();
 		greekLatex = lf.toString();
 
@@ -1350,7 +1388,7 @@ public class TextInformationToPdf {
 				} else if (library.equals(gevSotLibrary)) {
 					gevSotValue = value;
 					gevSotLatex = lf.toString();
-				} else {
+				} else if (library.equals(tfmLibrary) || library.equals(dedesLibrary)){
 					transSb.append(libraryLatex);
 					transSb.append(" & ");
 					transSb.append(value);
@@ -1358,20 +1396,22 @@ public class TextInformationToPdf {
 					transSb.append("\n\\hline\n");
 				}
 				// add the version (library) to the list of those used
-				if (! this.usedAbbreviations.containsKey(libraryLatex)) {
-					String description = "";
-					if (this.domainMap.containsKey(idManager.getLibrary())) {
-						description = this.domainMap.get(idManager.getLibrary());
-						if (idManager.getId().equals(description)) { // this means the description is missing
+				if (library.equals(greekLibrary) || library.equals(gevSotLibrary) || library.equals(gevMotLibrary) || library.equals(gevLibrary) || library.equals(tfmLibrary) || library.equals(dedesLibrary)) {
+					if (! this.usedAbbreviations.containsKey(libraryLatex)) {
+						String description = "";
+						if (this.domainMap.containsKey(idManager.getLibrary())) {
+							description = this.domainMap.get(idManager.getLibrary());
+							if (idManager.getId().equals(description)) { // this means the description is missing
+								description = "";
+							}
+						} else {
 							description = "";
 						}
-					} else {
-						description = "";
+						if (description.contains("_")) {
+							description = "(description unavailable)";
+						}
+						this.usedAbbreviations.put(libraryLatex, description);
 					}
-					if (description.contains("_")) {
-						description = "(description unavailable)";
-					}
-					this.usedAbbreviations.put(libraryLatex, description);
 				}
 			}
 		}
@@ -1379,12 +1419,14 @@ public class TextInformationToPdf {
 		if (hasScansion) {
 			transSb.append("Note: some liturgical hymns originally used punctuation marks to indicate the boundary of metric feet. They do not have a grammatical role.  They are called \\textit{scansion} symbols. In the modern version of source text or translations you might see asterisks (*) or forward slashes (/) used as scansion symbols.\n");
 		}
+		transSb.append("\n\\begin{center}\\n\\includegraphics[width=1.0\\textwidth]{system/images/translationContinuumWhite.jpg}\\n\\end{center}\\n");
 
 		result.append("\\section{The Text and Translations}");
 		this.appendText("The Text and Translations");
 		result.append(ages);
 		if (greekValue.length() > 0) {
 			result.append("\\subsection{Source Text}\n");
+			result.append("If you know Greek, use this as your source text:\n\n");
 			this.appendText("Source Text");
 			result.append("\\setlength{\\arrayrulewidth}{0.4pt}");
 			result.append("\\setlength{\\tabcolsep}{18pt}");
@@ -1401,6 +1443,7 @@ public class TextInformationToPdf {
 		}
 		if (this.includeAdviceNotes && (gevValue.length() > 0 || gevSotValue.length() > 0 || gevMotValue.length() > 0) ) {
 			result.append("\\subsection{Global English Translations}\n");
+			result.append("If you do not know Greek, you can use the en\\textunderscore uk\\textunderscore gev as your source text (model):\n");
 			result.append("\\setlength{\\arrayrulewidth}{0.4pt}");
 			result.append("\\setlength{\\tabcolsep}{18pt}");
 			result.append("\\renewcommand{\\arraystretch}{1.5}");
