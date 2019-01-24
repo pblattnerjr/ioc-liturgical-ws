@@ -415,7 +415,9 @@ public class TextInformationToPdf {
 			this.texFileSb.append(this.getTableOfContents());
 		}
 		this.texFileSb.append("\n");
-		this.texFileSb.append(this.getPreface());
+		if (this.includeAdviceNotes && this.author.contains("Colburn")) {
+			this.texFileSb.append(this.getPreface());
+		}
 		this.texFileSb.append("\n");
 		this.texFileSb.append("\\mainmatter%\n");
 		this.texFileSb.append("\\nopartblankpage");
@@ -1419,8 +1421,9 @@ public class TextInformationToPdf {
 		if (hasScansion) {
 			transSb.append("Note: some liturgical hymns originally used punctuation marks to indicate the boundary of metric feet. They do not have a grammatical role.  They are called \\textit{scansion} symbols. In the modern version of source text or translations you might see asterisks (*) or forward slashes (/) used as scansion symbols.\n");
 		}
-		transSb.append("\n\\begin{center}\\n\\includegraphics[width=1.0\\textwidth]{system/images/translationContinuumWhite.jpg}\\n\\end{center}\\n");
-
+		if (this.includeAdviceNotes && this.author.contains("Colburn")) {
+			transSb.append("\n\\begin{center}\\n\\includegraphics[width=1.0\\textwidth]{system/images/translationContinuumWhite.jpg}\\n\\end{center}\\n");
+		}
 		result.append("\\section{The Text and Translations}");
 		this.appendText("The Text and Translations");
 		result.append(ages);
