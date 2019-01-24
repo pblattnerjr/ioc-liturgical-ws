@@ -1396,6 +1396,12 @@ public class TextInformationToPdf {
 					transSb.append(value);
 					transSb.append(" \\\\ ");
 					transSb.append("\n\\hline\n");
+				} else if (! this.author.contains("Colburn")) {
+					transSb.append(libraryLatex);
+					transSb.append(" & ");
+					transSb.append(value);
+					transSb.append(" \\\\ ");
+					transSb.append("\n\\hline\n");
 				}
 				// add the version (library) to the list of those used
 				if (library.equals(greekLibrary) || library.equals(gevSotLibrary) || library.equals(gevMotLibrary) || library.equals(gevLibrary) || library.equals(tfmLibrary) || library.equals(dedesLibrary)) {
