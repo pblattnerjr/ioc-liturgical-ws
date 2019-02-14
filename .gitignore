@@ -11,3 +11,5 @@
 repo
 
 *.tex
+.idea/
+liturgical-ws (1).iml
